@@ -48,13 +48,8 @@ void TutorialScene::Initialize() {
   Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
   ParticleManager::GetInstance()->Setcamera(camera_.get());
 
-  camera = std::make_unique<Camera>();
-  camera->SetRotate({0.3f, 0.0f, 0.0f});
-
-  camera->SetTranslate({0.0f, 0.0f, -5.0f});
-
-  Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
-  ParticleManager::GetInstance()->Setcamera(camera.get());
+  Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
+  ParticleManager::GetInstance()->Setcamera(camera_.get());
 
   bgmHandle_ =  Audio::GetInstance()->LoadAudio("resources/sounds/tutorial.wav");
   enterHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/enter.wav");
@@ -620,40 +615,41 @@ void TutorialScene::UpdateTutorialSteps() {
       waitTimer_ = kPhaseWaitTime_;
     }
     break;
-  case TutorialPhase::kComplete:
-    // メニュー操作 (上入力)
+  case TutorialPhase::kComplete: { // スコープを明確にするための波カッコ
+    bool isChanged = false;
+
+    // --- メニュー操作 (上入力) ---
     if (Input::GetInstance()->TriggerKeyDown(DIK_W) ||
         Input::GetInstance()->TriggerKeyDown(DIK_UP)) {
-        Audio::GetInstance()->PlayAudio(selectHandle_,false);
+      Audio::GetInstance()->PlayAudio(selectHandle_, false);
+      isChanged = true;
 
-      if (currentOption_ == CompleteOption::kRetry) {
-        currentOption_ = CompleteOption::kGoToSelect;
       if (currentOption_ == CompleteOption::kGoToSelect) {
         currentOption_ = CompleteOption::kBackToTitle; // 一番上なら一番下へ
       } else if (currentOption_ == CompleteOption::kRetry) {
-        currentOption_ = CompleteOption::kGoToSelect; // 真ん中なら一番上へ
+        currentOption_ = CompleteOption::kGoToSelect;
       } else if (currentOption_ == CompleteOption::kBackToTitle) {
-        currentOption_ = CompleteOption::kRetry; // 一番下なら真ん中へ
+        currentOption_ = CompleteOption::kRetry;
       }
-    }
+    } // ← ここで上入力のifを閉じる
 
-    // メニュー操作 (下入力)
+    // --- メニュー操作 (下入力) ---
     if (Input::GetInstance()->TriggerKeyDown(DIK_S) ||
         Input::GetInstance()->TriggerKeyDown(DIK_DOWN)) {
-        Audio::GetInstance()->PlayAudio(selectHandle_, false);
-
+      Audio::GetInstance()->PlayAudio(selectHandle_, false);
+      isChanged = true;
 
       if (currentOption_ == CompleteOption::kGoToSelect) {
-        currentOption_ = CompleteOption::kRetry; // 一番上なら真ん中へ
+        currentOption_ = CompleteOption::kRetry;
       } else if (currentOption_ == CompleteOption::kRetry) {
-        currentOption_ = CompleteOption::kBackToTitle; // 真ん中なら一番下へ
+        currentOption_ = CompleteOption::kBackToTitle;
       } else if (currentOption_ == CompleteOption::kBackToTitle) {
         currentOption_ = CompleteOption::kGoToSelect; // 一番下なら一番上へ
       }
     }
 
     // --- 色更新 ---
-    // 描画の並び順（上から下）に合わせてセット
+    // 入力があったとき、または毎フレーム更新
     Vector4 sel = {1.0f, 1.0f, 1.0f, 1.0f};
     Vector4 unsel = {1.0f, 1.0f, 1.0f, alpha_};
 
@@ -664,14 +660,14 @@ void TutorialScene::UpdateTutorialSteps() {
     backTitleText_->SetColor(
         currentOption_ == CompleteOption::kBackToTitle ? sel : unsel);
 
-    // 決定
+    // --- 決定 ---
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_A) ||
         Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
       sceneState_ = SceneState::kFadeOut;
       fade_->Start(Fade::Phase::kFadeOut);
       Audio::GetInstance()->PlayAudio(enterHandle_);
     }
-    break;
+  } break;
   }
 }
 

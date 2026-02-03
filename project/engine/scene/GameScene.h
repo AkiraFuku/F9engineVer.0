@@ -100,6 +100,10 @@ private:
     std::vector<std::unique_ptr<Goal>> goals_;
     std::vector<std::unique_ptr<Object3d>> goalModels_;
 
+    std::unique_ptr<Sprite> moveText_;                  // 移動操作
+    std::unique_ptr<Sprite> meterImpactText_; // 障害物説明
+    std::unique_ptr<Sprite> driftText_;                 // ドリフト操作
+
     // スタート前のカウントダウン
     int32_t countdownTimer_ = 180;
     // ゲーム開始フラグ

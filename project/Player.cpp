@@ -363,92 +363,85 @@ AABB Player::GetAABB()
     return aabb;
 }
 
-void Player::OnCollision(const ObstacleSlow* obstacleSlow)
-{
-    // スコア加算処理
+void Player::OnCollision(const ObstacleSlow *obstacleSlow) {
+  // スコア加算処理
 }
 
-void Player::OnCollision(const ObstacleNormal* obstacleNormal)
-{
-    if (isDead_)
-    {
-        return;
-    }
+void Player::OnCollision(const ObstacleNormal *obstacleNormal) {
+  if (isDead_) {
+    return;
+  }
 
-    // プレイヤーの速度が一定以下なら
-    if (currentSpeedStage_ < SpeedStage::kNormal)
-    {
-        isDead_ = true;
-      if (gameScene_) {
-        gameScene_->SetGameOver(true);
-        if (!Audio::GetInstance()->IsPlaying(deathHandle_))
-        {
-            Audio::GetInstance()->PlayAudio(deathHandle_, false);
-        }
-    }
-}
-
-void Player::OnCollision(const ObstacleFast* obstacleFast)
-{
-    if (isDead_)
-    {
-        return;
-    }
-
-    // プレイヤーの速度が一定以下なら
-    if (currentSpeedStage_ < SpeedStage::kFast)
-    {
-        isDead_ = true;
-      if (gameScene_) {
-        gameScene_->SetGameOver(true);
-        if (!Audio::GetInstance()->IsPlaying(deathHandle_))
-        {
-            Audio::GetInstance()->PlayAudio(deathHandle_, false);
-        }
-    }
-}
-
-void Player::OnCollision(const ObstacleMax* obstacleMax)
-{
-    // プレイヤーの速度が一定以下なら
-    if (currentSpeedStage_ < SpeedStage::kMax)
-    {
-        isDead_ = true;
-      if (gameScene_) {
-        gameScene_->SetGameOver(true);
-        if (!Audio::GetInstance()->IsPlaying(deathHandle_))
-        {
-            Audio::GetInstance()->PlayAudio(deathHandle_, false);
-        }
-    }
-}
-
-void Player::OnCollision(const Goal* goal)
-{
-    if (isGoal_)
-    {
-        return;
-    }
-
-    isGoal_ = true;
-    gameScene_->SetCleared(true);
-
-}
-
-void Player::OnCollision(const CourseWall* courseWall)
-{
-    if (isDead_)
-    {
-        return;
-    }
-
+  // プレイヤーの速度が一定以下なら
+  if (currentSpeedStage_ < SpeedStage::kNormal) {
     isDead_ = true;
+    if (gameScene_) {
+
+      gameScene_->SetGameOver(true);
+    }
+    if (!Audio::GetInstance()->IsPlaying(deathHandle_)) {
+      Audio::GetInstance()->PlayAudio(deathHandle_, false);
+    }
+  }
+}
+
+void Player::OnCollision(const ObstacleFast *obstacleFast) {
+  if (isDead_) {
+    return;
+  }
+
+  // プレイヤーの速度が一定以下なら
+  if (currentSpeedStage_ < SpeedStage::kFast) {
+    isDead_ = true;
+    if (gameScene_) {
+      gameScene_->SetGameOver(true);
+    }
+    if (!Audio::GetInstance()->IsPlaying(deathHandle_)) {
+      Audio::GetInstance()->PlayAudio(deathHandle_, false);
+    }
+  }
+}
+
+void Player::OnCollision(const ObstacleMax *obstacleMax) {
+  if (isDead_) {
+    return;
+  }
+
+  // プレイヤーの速度が一定以下なら
+  if (currentSpeedStage_ < SpeedStage::kMax) {
+    isDead_ = true;
+    if (gameScene_) {
+      gameScene_->SetGameOver(true);
+    }
+    if (!Audio::GetInstance()->IsPlaying(deathHandle_)) {
+      Audio::GetInstance()->PlayAudio(deathHandle_, false);
+    }
+  }
+}
+
+void Player::OnCollision(const Goal *goal) {
+  if (isGoal_) {
+    return;
+  }
+
+  isGoal_ = true;
+  if (gameScene_) {
+    gameScene_->SetCleared(true);
+  }
+}
+
+void Player::OnCollision(const CourseWall *courseWall) {
+  if (isDead_) {
+    return;
+  }
+
+  isDead_ = true;
   if (gameScene_) {
     gameScene_->SetGameOver(true);
-    if (!Audio::GetInstance()->IsPlaying(deathHandle_))
-    {
-        Audio::GetInstance()->PlayAudio(deathHandle_, false);
-    }
+  }
+  if (!Audio::GetInstance()->IsPlaying(deathHandle_)) {
+    Audio::GetInstance()->PlayAudio(deathHandle_, false);
+  }
 }
 
 

@@ -79,6 +79,26 @@ void GameScene::Initialize() {
     sprite->SetBlendMode(BlendMode::Add);
     sprite->SetAnchorPoint(Vector2{ 0.5f, 0.5f });
 
+    auto CreateControlSprite = [&](const std::string &path, const Vector2 &size,
+                                   const Vector2 &pos) {
+      auto s = std::make_unique<Sprite>();
+      s->Initialize(path);
+      s->SetAnchorPoint({0.0f, 1.0f}); // 下端中央アンカー
+      s->SetSize(size);
+      s->SetPosition(pos);
+      return s;
+    };
+
+    // スプライトの生成
+    moveText_ = CreateControlSprite("resources/tutorial/move.png",
+                                    {230.0f, 80.0f}, {20.0f, 100.0f});
+    meterImpactText_ =
+        CreateControlSprite("resources/tutorial/meterImpact.png",
+                                           {300.0f, 210.0f}, {20.0f, 680.0f});
+    // ※位置やサイズは適宜調整してください
+    driftText_ = CreateControlSprite("resources/tutorial/drift.png",
+                                     {200.0f, 80.0f}, {250.0f, 100.0f});
+
     //}
 
     // object3d の初期化
@@ -176,6 +196,16 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
+
+    if (moveText_) {
+    moveText_->Update();
+  }
+  if (meterImpactText_) {
+    meterImpactText_->Update();
+  }
+    if (driftText_) {
+    driftText_->Update();
+  }
 
     emitter->Update();
 
@@ -461,7 +491,7 @@ void GameScene::Update() {
 
 
 
-    
+    #endif
 
 
 #ifdef USE_IMGUI
@@ -536,6 +566,10 @@ void GameScene::Draw() {
         clearText_->Draw();
         scoreText_->Draw();
         pressSpaceText_-> Draw();
+    } else {
+      moveText_->Draw();
+      driftText_->Draw();
+      meterImpactText_->Draw();    
     }
 
     for (auto& scoreFont : scoreBitmappedFonts_)
@@ -961,7 +995,7 @@ void GameScene::SetScore(int score, int num, int count)
     int scoreDigit = (score / num) % 10;
 
     auto newFont = std::make_unique<Bitmappedfont>();
-    newFont->Initialize(&bitmappedFontSprites_, camera.get());
+    newFont->Initialize(bitmappedFontSprite_, camera.get());
     newFont->SetNumber(scoreDigit);
 
     float startX = 500.0f;
