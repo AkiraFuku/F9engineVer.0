@@ -348,6 +348,7 @@ void GameScene::Update() {
         ImGui::End();
     }
 
+    ImGui::End();
 #endif
 
 
