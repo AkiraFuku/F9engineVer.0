@@ -839,7 +839,7 @@ void GameScene::GenerateFieldObjects() {
                     // 障害物(普通)の初期化
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("cube.obj");
+                    model->SetModel("taru.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
@@ -858,7 +858,7 @@ void GameScene::GenerateFieldObjects() {
                     // 障害物(速い)の初期化
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("taru.obj");
+                    model->SetModel("shark.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
