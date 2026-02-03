@@ -54,13 +54,10 @@ void GameScene::Initialize() {
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
     ParticleManager::GetInstance()->Setcamera(camera.get());
 
-
-    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
-
-
-
-    Audio::GetInstance()->PlayAudio(handle_, true);
-
+    bgmHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/play.wav");
+    enterHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/enter.wav");
+    clearHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/clear.wav");
+    gameOverHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/gameover.wav");
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
@@ -136,23 +133,20 @@ void GameScene::Initialize() {
     bitmappedFont_ = std::make_unique<Bitmappedfont>();
 
    
-    // ビットマップフォントのスプライト読み込み (0～9番)
+    // ビットマップフォントの生成と初期化
+    bitmappedFont_ = std::make_unique<Bitmappedfont>();
+    // ビットマップフォントのスプライト
     for (int i = 0; i < 10; ++i) {
-
         // ファイル名の作成
         std::string filePath = "resources/" + std::to_string(i) + ".png";
 
     }
-// 【修正】ベクターのアドレスを渡す
-    bitmappedFont_->Initialize(&bitmappedFontSprites_, camera.get());
-     
-
 
     // 背景モデルの生成と初期化
     backgroundModel_ = std::make_unique<Object3d>();
     backgroundModel_->SetModel("field.obj");
     backgroundModel_->Initialize();
-    backgroundModel_->SetTranslate(Vector3{ 200.0f,0.0f,1400.0f });
+    backgroundModel_->SetTranslate(Vector3{200.0f,0.0f,1250.0f});
     backgroundModel_->SetRadius(2000.0f);
 
     // テキスト画像の生成と初期化
@@ -167,7 +161,7 @@ void GameScene::Initialize() {
     scoreText_->SetPosition(Vector2{ 50.0f, 300.0f });
     pressSpaceText_ = std::make_unique<Sprite>();
     pressSpaceText_->Initialize("resources/pressSpace.png");
-    pressSpaceText_->SetPosition(Vector2{ 100.0f, 3000.0f });
+    pressSpaceText_->SetPosition(Vector2{ 100.0f, 500.0f });
 
 
     fade_ = std::make_unique<Fade>();
@@ -233,6 +227,12 @@ void GameScene::Update() {
     // クリアしていたら
     if (isCleared_)
     {
+        if (Audio::GetInstance()->IsPlaying(bgmHandle_))
+        {
+            Audio::GetInstance()->StopAudio(bgmHandle_);
+        }
+
+
         clearText_->Update();
         scoreText_->Update();
         pressSpaceText_->Update();
@@ -246,6 +246,8 @@ void GameScene::Update() {
         if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE))
         {
             GetSceneManager()->ChangeScene("TitleScene");
+            Audio::GetInstance()->PlayAudio(enterHandle_, false);
+            Audio::GetInstance()->StopAudio(clearHandle_);
         }
 
     }
@@ -254,11 +256,23 @@ void GameScene::Update() {
     // ゲームオーバーになったら
     if (isGameOver_)
     {
+        if (Audio::GetInstance()->IsPlaying(bgmHandle_))
+        {
+            Audio::GetInstance()->StopAudio(bgmHandle_);
+        }
+
+        if (!Audio::GetInstance()->IsPlaying(gameOverHandle_))
+        {
+            Audio::GetInstance()->PlayAudio(gameOverHandle_, false);
+        }
+
         gameOverText_->Update();
         pressSpaceText_->Update();
         if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE))
         {
             GetSceneManager()->ChangeScene("TitleScene");
+            Audio::GetInstance()->PlayAudio(enterHandle_, false);
+            Audio::GetInstance()->StopAudio(gameOverHandle_);
         }
     }
 
@@ -301,55 +315,6 @@ void GameScene::Update() {
     CheckAllCollisions();
 
 
-    fade_->Update();
-
-#ifdef USE_IMGUI
-    ImGui::Begin("Debug");
-    ImGui::Text("Sphere");
-    Vector3 pos = object3d->GetTranslate();
-    Vector3 scale = object3d->GetScale();
-    ImGui::SliderFloat3("Pos", &(pos.x), 0.1f, 1000.0f);
-    ImGui::DragFloat3("scale", &(scale.x), 0.1f, 1000.0f);
-    object3d->SetTranslate(pos);
-    object3d->SetScale(scale);
-    if (LightManager::GetInstance()->GetPointLightCount() > 0) {
-        ImGui::Begin("Light Setting");
-
-        // 0番目のポイントライトのデータを参照で取得
-        // "auto&" にすることで、ここで書き換えた内容が直接LightManager内のデータに反映されます
-        auto& pointLight2 = LightManager::GetInstance()->GetPointLight(1);
-
-        // 位置の調整
-        ImGui::DragFloat3("Point Light2 Pos", &pointLight2.position.x, 0.1f);
-
-        // 色の調整
-        ImGui::ColorEdit4("Point Light2 Color", &pointLight2.color.x);
-
-        // 強度の調整
-        ImGui::DragFloat("Point Light2 Intensity", &pointLight2.intensity, 0.1f, 0.0f, 100.0f);
-
-        // 減衰率の調整
-        ImGui::DragFloat("Point Light2 Decay", &pointLight2.decay, 0.1f, 0.0f, 10.0f);
-        auto& pointLight1 = LightManager::GetInstance()->GetPointLight(0);
-
-        // 位置の調整
-        ImGui::DragFloat3("Point Light Pos", &pointLight1.position.x, 0.1f);
-
-        // 色の調整
-        ImGui::ColorEdit4("Point Light Color", &pointLight1.color.x);
-
-        // 強度の調整
-        ImGui::DragFloat("Point Light Intensity", &pointLight1.intensity, 0.1f, 0.0f, 100.0f);
-
-        // 減衰率の調整
-        ImGui::DragFloat("Point Light Decay", &pointLight1.decay, 0.1f, 0.0f, 10.0f);
-        ImGui::DragFloat("Point Light rad", &pointLight1.radius, 0.1f, 0.0f, 10.0f);
-
-        ImGui::End();
-    }
-
-
-
 
     // 障害物の削除処理
     obstacleSlow_.erase(std::remove_if(obstacleSlow_.begin(), obstacleSlow_.end(),
@@ -385,6 +350,7 @@ void GameScene::Update() {
         if (countdownTimer_ <= 0)
         {
             isStarted_ = true;
+            Audio::GetInstance()->PlayAudio(bgmHandle_, true);
         }
         else
         {
@@ -396,6 +362,57 @@ void GameScene::Update() {
 
         }
     }
+
+    fade_->Update();
+
+#ifdef USE_IMGUI
+    //ImGui::Begin("Debug");
+    //ImGui::Text("Sphere");
+    //Vector3 pos = object3d->GetTranslate();
+    //Vector3 scale = object3d->GetScale();
+    //ImGui::SliderFloat3("Pos", &(pos.x), 0.1f, 1000.0f);
+    //ImGui::DragFloat3("scale", &(scale.x), 0.1f, 1000.0f);
+    //object3d->SetTranslate(pos);
+    //object3d->SetScale(scale);
+    //if (LightManager::GetInstance()->GetPointLightCount() > 0) {
+    //    ImGui::Begin("Light Setting");
+
+    //    // 0番目のポイントライトのデータを参照で取得
+    //    // "auto&" にすることで、ここで書き換えた内容が直接LightManager内のデータに反映されます
+    //    auto& pointLight2 = LightManager::GetInstance()->GetPointLight(1);
+
+    //    // 位置の調整
+    //    ImGui::DragFloat3("Point Light2 Pos", &pointLight2.position.x, 0.1f);
+
+    //    // 色の調整
+    //    ImGui::ColorEdit4("Point Light2 Color", &pointLight2.color.x);
+
+    //    // 強度の調整
+    //    ImGui::DragFloat("Point Light2 Intensity", &pointLight2.intensity, 0.1f, 0.0f, 100.0f);
+
+    //    // 減衰率の調整
+    //    ImGui::DragFloat("Point Light2 Decay", &pointLight2.decay, 0.1f, 0.0f, 10.0f);
+    //    auto& pointLight1 = LightManager::GetInstance()->GetPointLight(0);
+
+    //    // 位置の調整
+    //    ImGui::DragFloat3("Point Light Pos", &pointLight1.position.x, 0.1f);
+
+    //    // 色の調整
+    //    ImGui::ColorEdit4("Point Light Color", &pointLight1.color.x);
+
+    //    // 強度の調整
+    //    ImGui::DragFloat("Point Light Intensity", &pointLight1.intensity, 0.1f, 0.0f, 100.0f);
+
+    //    // 減衰率の調整
+    //    ImGui::DragFloat("Point Light Decay", &pointLight1.decay, 0.1f, 0.0f, 10.0f);
+    //    ImGui::DragFloat("Point Light rad", &pointLight1.radius, 0.1f, 0.0f, 10.0f);
+
+    //    ImGui::End();
+    //}
+
+
+#endif
+
 
 #ifdef USE_IMGUI
     //ImGui::Begin("Debug");
@@ -735,6 +752,7 @@ void GameScene::GenerateFieldObjects() {
                 playerModel_->SetModel("maguro.obj");
                 playerModel_->Initialize();
                 player_->Initialize(playerModel_.get(), camera.get(), pos);
+                player_->SetGameScene(this);
             }
             break;
             }
@@ -946,9 +964,9 @@ void GameScene::SetScore(int score, int num, int count)
     newFont->Initialize(bitmappedFontSprite_, camera.get());
     newFont->SetNumber(scoreDigit);
 
-    float startX = 400.0f;
+    float startX = 500.0f;
     float posY = 300.0f;
-    float fontWidth = 64.0f;
+    float fontWidth = 128.0f;
 
     Vector2 position = { startX + (count * fontWidth), posY };
     newFont->SetPosition(position);

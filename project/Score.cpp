@@ -30,6 +30,9 @@ void Score::Initialize(Object3d* model, Camera* camera, const Vector3& position,
     transform_.translate.z +=  randomValue;
     model_->SetTranslate(transform_.translate);
     model_->Update();
+
+    // SEの読み込み
+    scoreHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/score.wav");
 }
 
 void Score::Update()
@@ -86,10 +89,14 @@ AABB Score::GetAABB()
 
 void Score::OnCollision()
 {
+    if (isDead_) return;
+
     // スコアを加算
     player->AddScore(score_);
     // デスフラグを立てる
     isDead_ = true;
+    // SE再生
+    Audio::GetInstance()->PlayAudio(scoreHandle_, false);
 }
 
 Score::~Score()

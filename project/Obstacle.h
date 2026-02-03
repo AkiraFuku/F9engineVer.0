@@ -4,6 +4,7 @@
 #include"Object3D.h"
 #include "Model.h"
 #include "Camera.h"
+#include <Audio.h>
 #include <memory>
 
 class Player;
@@ -36,6 +37,9 @@ protected:
 
     // プレイヤー
     Player* player_;
+
+    // SE
+    uint32_t deathHandle_ = 0;
 
 public:
 

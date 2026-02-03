@@ -52,8 +52,7 @@ private:
   std::unique_ptr<Object3d> object3d2;
   std::unique_ptr<Object3d> object3d;
   std::unique_ptr<ParicleEmitter> emitter;
-  Audio::SoundHandle handle_;
-
+  
   // 自キャラ
   std::unique_ptr<Player> player_;
   // プレイヤーのモデル
@@ -143,6 +142,11 @@ public:
   std::unique_ptr<Sprite> retryText_;
   std::unique_ptr<Sprite> stageSelectText_;
   std::unique_ptr<Sprite> tutorialClearedText_;
+
+  // BGM、SEの読み込み
+  uint32_t bgmHandle_ = 0;
+  uint32_t enterHandle_ = 0;
+  uint32_t selectHandle_ = 0;
 
   float alpha_ = 0.3f;
 

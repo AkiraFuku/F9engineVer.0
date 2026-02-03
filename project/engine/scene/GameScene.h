@@ -45,12 +45,19 @@ public:
     // 開始フラグを取得
     bool IsStarted() const { return isStarted_; }
     // クリアフラグをセット
-    void SetCleared(bool isCleared) { isCleared_ = isCleared; }
+    void SetCleared(bool isCleared){
+        isCleared_ = isCleared;
+
+        if (!Audio::GetInstance()->IsPlaying(clearHandle_))
+        {
+            Audio::GetInstance()->PlayAudio(clearHandle_, false);
+        }
+    }
     // ゲームオーバーフラグをセット
-    void SetGameOver(bool isGameOver) { isGameOver_ = isGameOver; }
+    void SetGameOver(bool isGameOver) {isGameOver_ = isGameOver;}
 
     // スコアをセット
-    void SetScore(int score,int num,int count);
+    void SetScore(int score, int num, int count);
 
 
 private:
@@ -59,7 +66,6 @@ private:
     std::unique_ptr<Object3d> object3d2;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<ParicleEmitter> emitter;
-    Audio::SoundHandle handle_;
 
     // 背景のモデル
     std::unique_ptr<Object3d> backgroundModel_;
@@ -88,7 +94,7 @@ private:
 
     // ビットマップフォント
     std::unique_ptr<Bitmappedfont> bitmappedFont_;
-    std::vector<std::unique_ptr<Sprite>> bitmappedFontSprites_;
+    std::vector<std::unique_ptr<Sprite>> bitmappedFontSprite_[10];
 
     // ゴール
     std::vector<std::unique_ptr<Goal>> goals_;
@@ -109,6 +115,12 @@ private:
     std::unique_ptr<Sprite> scoreText_;
     std::unique_ptr<Sprite> pressSpaceText_;
 
+    // BGM、SEの読み込み
+    uint32_t bgmHandle_ = 0;
+    uint32_t enterHandle_ = 0;
+    uint32_t clearHandle_ = 0;
+    uint32_t gameOverHandle_ = 0;
+
     // スコア
     std::vector < std::unique_ptr<Bitmappedfont> > scoreBitmappedFonts_;
 
@@ -117,7 +129,7 @@ private:
     // ブロック用のワールドトランスフォーム
     std::vector<std::vector<Transform*>> worldTransformObjects;
 
-// メンバ
+    // メンバ
     std::unique_ptr<Fade> fade_;
     bool requestSceneChange_ = false;
 

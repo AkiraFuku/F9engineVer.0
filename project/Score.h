@@ -5,6 +5,7 @@
 #include "Model.h"
 #include "Camera.h"
 #include "Rand.h"
+#include <Audio.h>
 #include <memory>
 
 class Player;
@@ -41,6 +42,9 @@ private:
     // 当たり判定サイズ
     static inline float kWidth = 2.0f;
     static inline float kHeight = 2.0f;
+
+    // SE
+    uint32_t scoreHandle_ = 0;
 
 public:
     // 初期化

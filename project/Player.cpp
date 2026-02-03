@@ -74,6 +74,10 @@ void Player::Initialize(Object3d* model, Camera* camera, const Vector3& position
     speedMeter_ = std::make_unique<SpeedMeter>();
     speedMeter_->Initialize(speedMeterSprite_.get(), baseSprite_.get(), camera_, this);
 
+    // BGM、SEのロード
+    driftHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/drift.wav");
+    speedUpHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/speedUp.wav");
+    deathHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/obstacle.wav");
 }
 
 void Player::Update(bool isGameStarted)
@@ -131,6 +135,9 @@ void Player::Update(bool isGameStarted)
                     preSpeedZ_ = speedZ_;
                     // 開始時の角度を記録
                     angleY_ = transform_.rotate.y;
+
+                    // ドリフト開始音を再生
+                    Audio::GetInstance()->PlayAudio(driftHandle_, false);
                 }
             }
 
@@ -171,7 +178,7 @@ void Player::Draw()
     // プレイヤーの描画
     model_->Draw();
 
-    if (!isDead_)
+    if (!isDead_ && !isGoal_)
     {
 
         if (!isGameStarted_)
@@ -288,6 +295,8 @@ void Player::Drift()
                 topSpeedZ_ = preSpeedZ_ + (driftAngle_ * driftTimer_);
                 // 加速開始フラグを立てる
                 isAcceleration_ = true;
+                // 加速音を再生
+                Audio::GetInstance()->PlayAudio(speedUpHandle_, false);
             }
 
             if (topSpeedZ_ > kMaxSpeedZ)
@@ -359,31 +368,58 @@ void Player::OnCollision(const ObstacleSlow* obstacleSlow)
 
 void Player::OnCollision(const ObstacleNormal* obstacleNormal)
 {
+    if (isDead_)
+    {
+        return;
+    }
+
     // プレイヤーの速度が一定以下なら
     if (currentSpeedStage_ < SpeedStage::kNormal)
     {
         isDead_ = true;
         gameScene_->SetGameOver(true);
+        if (!Audio::GetInstance()->IsPlaying(deathHandle_))
+        {
+            Audio::GetInstance()->PlayAudio(deathHandle_, false);
+        }
     }
 }
 
 void Player::OnCollision(const ObstacleFast* obstacleFast)
 {
+    if (isDead_)
+    {
+        return;
+    }
+
     // プレイヤーの速度が一定以下なら
     if (currentSpeedStage_ < SpeedStage::kFast)
     {
         isDead_ = true;
         gameScene_->SetGameOver(true);
+        if (!Audio::GetInstance()->IsPlaying(deathHandle_))
+        {
+            Audio::GetInstance()->PlayAudio(deathHandle_, false);
+        }
     }
 }
 
 void Player::OnCollision(const ObstacleMax* obstacleMax)
 {
+    if (isDead_)
+    {
+        return;
+    }
+
     // プレイヤーの速度が一定以下なら
     if (currentSpeedStage_ < SpeedStage::kMax)
     {
         isDead_ = true;
         gameScene_->SetGameOver(true);
+        if (!Audio::GetInstance()->IsPlaying(deathHandle_))
+        {
+            Audio::GetInstance()->PlayAudio(deathHandle_, false);
+        }
     }
 }
 
@@ -396,12 +432,22 @@ void Player::OnCollision(const Goal* goal)
 
     isGoal_ = true;
     gameScene_->SetCleared(true);
+
 }
 
 void Player::OnCollision(const CourseWall* courseWall)
 {
+    if (isDead_)
+    {
+        return;
+    }
+
     isDead_ = true;
     gameScene_->SetGameOver(true);
+    if (!Audio::GetInstance()->IsPlaying(deathHandle_))
+    {
+        Audio::GetInstance()->PlayAudio(deathHandle_, false);
+    }
 }
 
 

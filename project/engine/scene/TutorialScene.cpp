@@ -49,9 +49,10 @@ void TutorialScene::Initialize() {
   Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
   ParticleManager::GetInstance()->Setcamera(camera.get());
 
-  handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
-
-  Audio::GetInstance()->PlayAudio(handle_, true);
+  bgmHandle_ =  Audio::GetInstance()->LoadAudio("resources/sounds/tutorial.wav");
+  enterHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/enter.wav");
+  selectHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/cursor.wav");
+  Audio::GetInstance()->PlayAudio(bgmHandle_, true);
 
   TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
@@ -386,10 +387,12 @@ void TutorialScene::Update() {
 
       case CompleteOption::kGoToSelect:
         GetSceneManager()->ChangeScene("SelectScene");
+        Audio::GetInstance()->StopAudio(bgmHandle_);
         break;
 
       case CompleteOption::kBackToTitle:
         GetSceneManager()->ChangeScene("TitleScene");
+        Audio::GetInstance()->StopAudio(bgmHandle_);
         break;
       }
     }
@@ -1103,6 +1106,7 @@ void TutorialScene::UpdateTutorialSteps() {
     //  ここではW/UPキーを中心に判定します
     if (Input::GetInstance()->TriggerKeyDown(DIK_W) ||
         Input::GetInstance()->TriggerKeyDown(DIK_UP)) {
+        Audio::GetInstance()->PlayAudio(selectHandle_,false);
 
       if (currentOption_ == CompleteOption::kRetry) {
         currentOption_ = CompleteOption::kGoToSelect;
@@ -1114,6 +1118,8 @@ void TutorialScene::UpdateTutorialSteps() {
     // 下入力 (選択肢を下に移動)
     if (Input::GetInstance()->TriggerKeyDown(DIK_S) ||
         Input::GetInstance()->TriggerKeyDown(DIK_DOWN)) {
+        Audio::GetInstance()->PlayAudio(selectHandle_, false);
+
 
       if (currentOption_ == CompleteOption::kGoToSelect) {
         currentOption_ = CompleteOption::kRetry;
@@ -1160,6 +1166,7 @@ void TutorialScene::UpdateTutorialSteps() {
       // ここでフェードアウトを開始
       sceneState_ = SceneState::kFadeOut;
       fade_->Start(Fade::Phase::kFadeOut);
+      Audio::GetInstance()->PlayAudio(enterHandle_);
     }
     break;
   }
