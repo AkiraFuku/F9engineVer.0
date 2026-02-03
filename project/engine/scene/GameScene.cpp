@@ -259,6 +259,60 @@ void GameScene::Update() {
 
     fade_->Update();
 
+    // 障害物の削除処理
+    obstacleSlow_.erase(
+        std::remove_if(obstacleSlow_.begin(), obstacleSlow_.end(),
+                       [](const std::unique_ptr<ObstacleSlow> &obstacle) {
+                         return obstacle->IsScoreNone();
+                       }),
+        obstacleSlow_.end());
+
+    obstacleNormal_.erase(
+        std::remove_if(obstacleNormal_.begin(), obstacleNormal_.end(),
+                       [](const std::unique_ptr<ObstacleNormal> &obstacle) {
+                         return obstacle->IsScoreNone();
+                       }),
+
+        obstacleNormal_.end());
+
+    obstacleFast_.erase(
+        std::remove_if(obstacleFast_.begin(), obstacleFast_.end(),
+                       [](const std::unique_ptr<ObstacleFast> &obstacle) {
+                         return obstacle->IsScoreNone();
+                       }),
+
+        obstacleFast_.end());
+
+    obstacleMax_.erase(
+        std::remove_if(obstacleMax_.begin(), obstacleMax_.end(),
+                       [](const std::unique_ptr<ObstacleMax> &obstacle) {
+                         return obstacle->IsScoreNone();
+                       }),
+
+        obstacleMax_.end());
+
+    if (!isStarted_) {
+      if (countdownTimer_ <= 0) {
+        isStarted_ = true;
+      } else {
+        countdownTimer_--;
+
+        // 【修正】残り時間から表示すべき数字(インデックス)を計算
+        // 180~121 -> 3, 120~61 -> 2, 60~1 -> 1 となる計算式
+        // (timer + 59) / 60 で切り上げ計算になります
+        int displayNum = (countdownTimer_ + 59) / 60;
+
+        // 0以下にならないように、また画像範囲外にならないように制御
+        if (displayNum < 0)
+          displayNum = 0;
+        if (displayNum > 9)
+          displayNum = 9;
+
+        bitmappedFont_->SetNumber(displayNum);
+        bitmappedFont_->Update();
+      }
+    }
+
 #ifdef USE_IMGUI
     ImGui::Begin("Debug");
     ImGui::Text("Sphere");
@@ -306,60 +360,7 @@ void GameScene::Update() {
 
 
 
-    // 障害物の削除処理
-    obstacleSlow_.erase(std::remove_if(obstacleSlow_.begin(), obstacleSlow_.end(),
-        [](const std::unique_ptr<ObstacleSlow>& obstacle) {
-            return obstacle->IsScoreNone();
-        }),
-        obstacleSlow_.end());
-
-    obstacleNormal_.erase(std::remove_if(obstacleNormal_.begin(), obstacleNormal_.end(),
-        [](const std::unique_ptr<ObstacleNormal>& obstacle) {
-            return obstacle->IsScoreNone();
-        }),
-
-        obstacleNormal_.end());
-
-    obstacleFast_.erase(std::remove_if(obstacleFast_.begin(), obstacleFast_.end(),
-        [](const std::unique_ptr<ObstacleFast>& obstacle) {
-            return obstacle->IsScoreNone();
-        }),
-
-        obstacleFast_.end());
-
-    obstacleMax_.erase(std::remove_if(obstacleMax_.begin(), obstacleMax_.end(),
-        [](const std::unique_ptr<ObstacleMax>& obstacle) {
-            return obstacle->IsScoreNone();
-
-        }),
-
-        obstacleMax_.end());
-
-    if (!isStarted_)
-    {
-        if (countdownTimer_ <= 0)
-        {
-            isStarted_ = true;
-        }
-        else
-        {
-          countdownTimer_--;
-
-          // 【修正】残り時間から表示すべき数字(インデックス)を計算
-          // 180~121 -> 3, 120~61 -> 2, 60~1 -> 1 となる計算式
-          // (timer + 59) / 60 で切り上げ計算になります
-          int displayNum = (countdownTimer_ + 59) / 60;
-
-          // 0以下にならないように、また画像範囲外にならないように制御
-          if (displayNum < 0)
-            displayNum = 0;
-          if (displayNum > 9)
-            displayNum = 9;
-
-          bitmappedFont_->SetNumber(displayNum);
-          bitmappedFont_->Update();
-        }
-    }
+    
 
 
 #ifdef USE_IMGUI
