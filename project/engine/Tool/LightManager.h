@@ -69,6 +69,7 @@ public: // メンバ関数
     DirectionalLightData& GetDirectionalLight(size_t index);
     PointLightData& GetPointLight(size_t index);
     SpotLightData& GetSpotLight(size_t index);
+    AreaLightData& GetAreaLight(size_t index);
 
     // 平行光源 (Directional Light) の設定
     void SetDirectionalLight(size_t index, const Vector4& color, const Vector3& direction, float intensity);

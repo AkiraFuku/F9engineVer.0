@@ -53,6 +53,11 @@ LightManager::SpotLightData& LightManager::GetSpotLight(size_t index)
     return spotLights_[index];
 }
 
+LightManager::AreaLightData& LightManager::GetAreaLight(size_t index)
+{
+ assert(index < areaLights_.size() && "AreaLight index out of range.");
+    return areaLights_[index];}
+
 void LightManager::SetDirectionalLight(size_t index, const Vector4& color, const Vector3& direction, float intensity) {
     if (index < directionalLights_.size()) {
         directionalLights_[index].color = color;

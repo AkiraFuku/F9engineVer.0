@@ -12,7 +12,7 @@ void GameEngine::Initialize() {
    SceneManager::GetInstance()->SetSceneFactory(sceneFactory_.get());
 
    
-   SceneManager::GetInstance()->ChangeScene("TitleScene");
+   SceneManager::GetInstance()->ChangeScene("GameScene");
 
 };
 void GameEngine::Finalize() {  

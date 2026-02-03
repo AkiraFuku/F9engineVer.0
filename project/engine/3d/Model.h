@@ -69,7 +69,7 @@ public:
     static Node ReadNode(aiNode*node );
 
 private:
-
+    std::string name_;
     ModelData modelData_;
 
     //頂点リソース

@@ -17,15 +17,15 @@ void GameScene::Initialize() {
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_, true);
-   // LightManager::GetInstance()->AddDirectionalLight( { 1,1,1,1 }, { 0,-1,0 }, 1.0f); // メインライト
-    //LightManager::GetInstance()->AddDirectionalLight( { 1,1,1,1 }, { 0,-1,0 }, 1.0f); // メインライト
-  //  LightManager::GetInstance()->AddSpotLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 2.0f, 1.25f, 0.0f }, 4.0f, Normalize({ -1.0f,-1.0f,0.0f }), 7.0f, 2.0f, std::cos(std::numbers::pi_v<float> / 3.0f), 1.0f); // メインライト
-   // LightManager::GetInstance()->AddSpotLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 2.0f, 1.25f, 0.0f }, 4.0f, Normalize({ -1.0f,-1.0f,0.0f }), 7.0f, 2.0f, std::cos(std::numbers::pi_v<float> / 3.0f), 1.0f); // メインライト
+   // Audio::GetInstance()->PlayAudio(handle_, true);
+  //  LightManager::GetInstance()->AddDirectionalLight( { 1,1,1,1 }, { 0,-1,0 }, 1.0f); // メインライト
+  // LightManager::GetInstance()->AddDirectionalLight( { 1,1,1,1 }, { 0,-1,0 }, 1.0f); // メインライト
+    LightManager::GetInstance()->AddSpotLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 2.0f, 1.25f, 0.0f }, 4.0f, Normalize({ -1.0f,-1.0f,0.0f }), 7.0f, 2.0f, std::cos(std::numbers::pi_v<float> / 3.0f), 1.0f); // メインライト
+   LightManager::GetInstance()->AddSpotLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 2.0f, 1.25f, 0.0f }, 4.0f, Normalize({ -1.0f,-1.0f,0.0f }), 7.0f, 2.0f, std::cos(std::numbers::pi_v<float> / 3.0f), 1.0f); // メインライト
 
     Vector3 point1 = { 0,0,0 };
-   /* LightManager::GetInstance()->AddPointLight({ 1.0f, 1.0f, 1.0f, 1.0f }, point1, 4.0f, 2.0f, 0.1f);
-    LightManager::GetInstance()->AddPointLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0,0,0 }, 4.0f, 2.0f, 0.1f);*/
+    LightManager::GetInstance()->AddPointLight({ 1.0f, 1.0f, 1.0f, 1.0f }, point1, 4.0f, 2.0f, 0.1f);
+    LightManager::GetInstance()->AddPointLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0,0,0 }, 4.0f, 2.0f, 0.1f);
         TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
@@ -68,19 +68,33 @@ float range = 10.0f;
         decay,
         range
     );
+    // --- ライトの登録 ---
+    LightManager::GetInstance()->AddAreaLight(
+        color,
+        position,
+        intensity,
+        right,
+        up,
+        decay,
+        range
+    );
    // object3d の初期化
     object3d2 = std::make_unique<Object3d>();
     object3d2->Initialize();
+    object3d3 = std::make_unique<Object3d>();
+    object3d3->Initialize();
 
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
 
+    ModelManager::GetInstance()->LoadModel("plane.gltf");
     ModelManager::GetInstance()->LoadModel("plane.obj");
-    ModelManager::GetInstance()->LoadModel("axis.obj");
     ModelManager::GetInstance()->LoadModel("terrain.obj");
     ModelManager::GetInstance()->CreateSphereModel("MySphere", 16);
     // object3d2->SetTranslate(Vector3{ 0.0f,10.0f,0.0f });
-    object3d2->SetModel("terrain.obj");
+   //
+    object3d2->SetModel("plane.gltf");
+    object3d3->SetModel("plane.obj");
     object3d->SetModel("MySphere");
 
     camera->SetTranslate({ 0.0f,0.0f,-10.0f });
@@ -135,13 +149,13 @@ void GameScene::Update() {
 
     //マウスホイールの入力取得
 
-    if (Input::GetInstance()->GetMouseMove().z)
-    {
-        Vector3 cameraTranslate = camera->GetTranslate();
-        cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-        camera->SetTranslate(cameraTranslate);
+    //if (Input::GetInstance()->GetMouseMove().z)
+    //{
+    //    Vector3 cameraTranslate = camera->GetTranslate();
+    //    cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
+    //    camera->SetTranslate(cameraTranslate);
 
-    }
+    //}
     /*if (Input::GetInstance()->TriggerMouseDown(0))
     {
         if (!Audio::GetInstance()->IsPlaying(handle_))
@@ -193,45 +207,44 @@ void GameScene::Update() {
     camera->Update();
     object3d->Update();
     object3d2->Update();
+    object3d3->Update();
 
 
 #ifdef USE_IMGUI
     ImGui::Begin("Debug");
-    ImGui::Text("Sphere");
-    Vector3 pos = object3d->GetTranslate();
-    Vector3 scale = object3d->GetScale();
-    Vector3 rotate = object3d->GetRotate();
-    ImGui::DragFloat3("Pos", &(pos.x), 0.1f, 1000.0f);
-    ImGui::DragFloat3("scale", &(scale.x), 0.1f, 1000.0f);
-    ImGui::DragFloat3("rotate", &(rotate.x), 0.1f, 1000.0f);
+    ImGui::Text("plane.obj");
+    Vector3 pos3 = object3d3->GetTranslate();
+    Vector3 scale3 = object3d3->GetScale();
+    Vector3 rotate3 = object3d3->GetRotate();
+    ImGui::DragFloat3("Pos3", &(pos3.x), 0.1f, 1000.0f);
+    ImGui::DragFloat3("scale3", &(scale3.x), 0.1f, 1000.0f);
+    ImGui::DragFloat3("rotate3", &(rotate3.x), 0.1f, 1000.0f);
     
-    object3d->SetTranslate(pos);
-    object3d->SetScale(scale);
-    object3d->SetRotate(rotate);
-ImGui::DragFloat3("Apos", &(position.x), 0.1f, 1000.0f);
-// --- エリアライトのパラメータ設定 ---
-  Vector3 right = { 2.0f, 0.0f, 0.0f }; // 長さ2.0 (幅4.0)
-
-// Up: Z軸方向 (奥行き) 
-// ※ここをY軸(0,1,0)にすると「壁」になりますが、Z軸(0,0,1)にすると「床/天井」と平行になります
-Vector3 up    = { 0.0f, 0.0f, 2.0f }; // 長さ2.0 (奥行き4.0)
-/// その他パラメータ
-Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-float intensity = 2.0f;
-float decay = 1.0f;
-float range = 10.0f;
-//
-//    // --- ライトの登録 ---
-    LightManager::GetInstance()->SetAreaLight(
-        0,
-        color,
-        position,
-        intensity,
-        right,
-        up,
-        decay,
-        range
-    );
+    object3d3->SetTranslate(pos3);
+    object3d3->SetScale(scale3);
+    object3d3->SetRotate(rotate3);
+    ImGui::Text("plane.gltf");
+    Vector3 pos2 = object3d2->GetTranslate();
+    Vector3 scale2 = object3d2->GetScale();
+    Vector3 rotate2 = object3d2->GetRotate();
+    ImGui::DragFloat3("Pos2", &(pos2.x), 0.1f, 1000.0f);
+    ImGui::DragFloat3("scale2", &(scale2.x), 0.1f, 1000.0f);
+    ImGui::DragFloat3("rotate2", &(rotate2.x), 0.1f, 1000.0f);
+    
+    object3d2->SetTranslate(pos2);
+    object3d2->SetScale(scale2);
+    object3d2->SetRotate(rotate2);
+    ImGui::Text("Sphere");
+    Vector3 pos1 = object3d->GetTranslate();
+    Vector3 scale1 = object3d->GetScale();
+    Vector3 rotate1 = object3d->GetRotate();
+    ImGui::DragFloat3("Pos1", &(pos1.x), 0.1f, 1000.0f);
+    ImGui::DragFloat3("scale1", &(scale1.x), 0.1f, 1000.0f);
+    ImGui::DragFloat3("rotate1", &(rotate1.x), 0.1f, 1000.0f);
+    
+    object3d->SetTranslate(pos1);
+    object3d->SetScale(scale1);
+    object3d->SetRotate(rotate1);
     if (LightManager::GetInstance()->GetPointLightCount() > 0) {
         ImGui::Begin("Light Setting");
 
@@ -264,26 +277,27 @@ float range = 10.0f;
         // 減衰率の調整
         ImGui::DragFloat("Point Light Decay", &pointLight1.decay, 0.1f, 0.0f, 10.0f);
         ImGui::DragFloat("Point Light rad", &pointLight1.radius, 0.1f, 0.0f, 10.0f);
+        // 0番目のポイントライトのデータを参照で取得
+        // "auto&" にすることで、ここで書き換えた内容が直接LightManager内のデータに反映されます
         auto& spotLight2 = LightManager::GetInstance()->GetSpotLight(1);
 
         // 位置の調整
         ImGui::DragFloat3("spot Light2 Pos", &spotLight2.position.x, 0.1f);
-        ImGui::DragFloat3("spot Light Pos", &spotLight2.direction.x, 0.1f);
+        ImGui::DragFloat3("spot Light2 dir", &spotLight2.direction.x, 0.1f);
 
         // 色の調整
-        ImGui::ColorEdit4("spot Light2 Color", &spotLight2.color.x);
+        ImGui::ColorEdit4("Spot Light2 Color", &spotLight2.color.x);
 
         // 強度の調整
-        ImGui::DragFloat("spot Light2 Intensity", &spotLight2.intensity, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Spot Light2 Intensity", &spotLight2.intensity, 0.1f, 0.0f, 100.0f);
 
         // 減衰率の調整
         ImGui::DragFloat("spot Light2 Decay", &spotLight2.decay, 0.1f, 0.0f, 10.0f);
         auto& spotLight1 = LightManager::GetInstance()->GetSpotLight(0);
 
         // 位置の調整
-        ImGui::DragFloat3("spot Light Pos", &spotLight1.position.x, 0.1f);
-        ImGui::DragFloat3("spot Light ", &spotLight1.direction.x, 0.1f);
-
+        ImGui::DragFloat3("Spot Light Pos", &spotLight1.position.x, 0.1f);
+         ImGui::DragFloat3("spot Light dir", &spotLight1.direction.x, 0.1f);
         // 色の調整
         ImGui::ColorEdit4("spot Light Color", &spotLight1.color.x);
 
@@ -292,7 +306,32 @@ float range = 10.0f;
 
         // 減衰率の調整
         ImGui::DragFloat("spot Light Decay", &spotLight1.decay, 0.1f, 0.0f, 10.0f);
-        ImGui::DragFloat("spot Light rad", &spotLight1.distance, 0.1f, 0.0f, 10.0f);
+        auto& AreaLight2 = LightManager::GetInstance()->GetAreaLight(1);
+
+        // 位置の調整
+        ImGui::DragFloat3("area Light2 Pos", &AreaLight2.position.x, 0.1f);
+
+        // 色の調整
+        ImGui::ColorEdit4("area Light2 Color", &AreaLight2.color.x);
+
+        // 強度の調整
+        ImGui::DragFloat("area Light2 Intensity", &AreaLight2.intensity, 0.1f, 0.0f, 100.0f);
+
+        // 減衰率の調整
+        ImGui::DragFloat("spot Light2 Decay", &AreaLight2.decay, 0.1f, 0.0f, 10.0f);
+        auto& AreaLight1 = LightManager::GetInstance()->GetAreaLight(0);
+
+        // 位置の調整
+        ImGui::DragFloat3("area Light Pos", &AreaLight1.position.x, 0.1f);
+
+        // 色の調整
+        ImGui::ColorEdit4("area Light Color", &AreaLight1.color.x);
+
+        // 強度の調整
+        ImGui::DragFloat("area Light Intensity", &AreaLight1.intensity, 0.1f, 0.0f, 100.0f);
+
+        // 減衰率の調整
+        ImGui::DragFloat("area Light Decay", &AreaLight1.decay, 0.1f, 0.0f, 10.0f);
 
         ImGui::End();
     }
@@ -325,7 +364,8 @@ float range = 10.0f;
     sprite->Update();
 }
 void GameScene::Draw() {
-   // object3d2->Draw();
+    object3d2->Draw();
+    object3d3->Draw();
     object3d->Draw();
     // ParticleManager::GetInstance()->Draw();
      ///////スプライトの描画

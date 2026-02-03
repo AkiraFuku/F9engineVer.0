@@ -143,7 +143,13 @@ PixelShaderOutput main(VertexShaderOutput input)
     // ライティングが無効ならそのまま返す
     if (gMaterial.enableLighting == 0)
     {
+        
         output.color = gMaterial.Color * textureColor;
+         // アルファテスト
+        if (output.color.a < 0.01f)
+        {
+            discard;
+        }
         return output;
     }
 
@@ -166,8 +172,9 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         // 強度が0以下のライトは計算スキップ
         if (gPointLights[j].intensity <= 0.0f)
+        {
             continue;
-
+        }
         float3 directionToPointLight = gPointLights[j].position - input.worldPosition;
     // 距離による減衰は計算せず、正規化して方向だけ使う
         float3 L_point = normalize(directionToPointLight);
@@ -180,7 +187,10 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         // 強度が0以下のライトは計算スキップ
         if (gSpotLights[k].intensity <= 0.0f)
+        {
             continue;
+        }
+         
  // 1. 光源への方向ベクトルと距離を計算
         float3 directionToSpotLight = gSpotLights[k].position - input.worldPosition;
         float distanceSpot = length(directionToSpotLight);
@@ -204,8 +214,9 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         // 強度が0以下のライトは計算スキップ
         if (gAreaLights[a].intensity <= 0.0f)
+        {
             continue;
-
+        }
         // 1. エリアライトの矩形上で、現在のピクセル位置に最も近い点を算出
         // 定義済みの ClosestPointOnRect 関数を使用
         float3 closestPoint = ClosestPointOnRect(input.worldPosition, gAreaLights[a].position, gAreaLights[a].right, gAreaLights[a].up);

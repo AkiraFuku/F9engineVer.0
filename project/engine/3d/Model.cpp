@@ -13,7 +13,7 @@
 void Model::Initialize(const std::string& directryPath, const std::string& filename)
 {
 
-
+    name_=filename;
     modelData_ = LoadModelFile(directryPath, filename);
     if (modelData_.material.textureFilePath.empty()) {
         modelData_.material.textureFilePath = "resources/uvChecker.png"; // 確実に存在する画像を指定
@@ -37,7 +37,8 @@ void Model::Initialize(const std::string& directryPath, const std::string& filen
 void Model::Update()
 {
 #ifdef USE_IMGUI
-    ImGui::Begin("Settings");
+    std::string title=name_;
+    ImGui::Begin(title.c_str());
             int* pEnableLighting = reinterpret_cast<int*>(&materialData_->enableLighting);
             ImGui::Checkbox("Enable Lighting", (bool*)pEnableLighting);
             if (materialData_->enableLighting) {
@@ -195,6 +196,7 @@ Model* Model::CreateSphere(uint32_t subdivision)
 {
     Model* model = new Model();
 
+    model->name_="Sphere";
     // 1. メモリ確保（頂点リソース作成など既存のInitializeの一部が必要だが、
     // ここではvertex生成に集中し、後でリソース生成関数を呼ぶ流れにします）
     // ※TextureManagerへの依存があるため、適当な白画像などをデフォルトにする必要があります

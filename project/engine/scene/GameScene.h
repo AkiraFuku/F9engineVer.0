@@ -20,6 +20,7 @@ private:
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<Object3d> object3d2;
+    std::unique_ptr<Object3d> object3d3;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<ParicleEmitter> emitter;
   uint32_t handle_=0;
