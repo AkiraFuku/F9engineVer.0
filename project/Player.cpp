@@ -113,7 +113,9 @@ void Player::Update(bool isGameStarted)
                 // 死亡させる
                 speedZ_ = 0.0f;
                 isDead_ = true;
-                gameScene_->SetGameOver(true);
+                if (gameScene_) {
+                  gameScene_->SetGameOver(true);
+                }
                 return;
             }
 
@@ -377,6 +379,7 @@ void Player::OnCollision(const ObstacleNormal* obstacleNormal)
     if (currentSpeedStage_ < SpeedStage::kNormal)
     {
         isDead_ = true;
+      if (gameScene_) {
         gameScene_->SetGameOver(true);
         if (!Audio::GetInstance()->IsPlaying(deathHandle_))
         {
@@ -396,6 +399,7 @@ void Player::OnCollision(const ObstacleFast* obstacleFast)
     if (currentSpeedStage_ < SpeedStage::kFast)
     {
         isDead_ = true;
+      if (gameScene_) {
         gameScene_->SetGameOver(true);
         if (!Audio::GetInstance()->IsPlaying(deathHandle_))
         {
@@ -406,15 +410,11 @@ void Player::OnCollision(const ObstacleFast* obstacleFast)
 
 void Player::OnCollision(const ObstacleMax* obstacleMax)
 {
-    if (isDead_)
-    {
-        return;
-    }
-
     // プレイヤーの速度が一定以下なら
     if (currentSpeedStage_ < SpeedStage::kMax)
     {
         isDead_ = true;
+      if (gameScene_) {
         gameScene_->SetGameOver(true);
         if (!Audio::GetInstance()->IsPlaying(deathHandle_))
         {
@@ -443,6 +443,7 @@ void Player::OnCollision(const CourseWall* courseWall)
     }
 
     isDead_ = true;
+  if (gameScene_) {
     gameScene_->SetGameOver(true);
     if (!Audio::GetInstance()->IsPlaying(deathHandle_))
     {

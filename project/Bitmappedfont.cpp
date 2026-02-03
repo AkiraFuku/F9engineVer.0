@@ -56,10 +56,17 @@ void Bitmappedfont::SetNumber(int index)
     // 数字に対応した画像をロードし直す（設計的に許容範囲であればこれが一番確実です）
     std::string filePath = "resources/" + std::to_string(index) + ".png";
     mySprite_->Initialize(filePath.c_str());
+    mySprite_->SetSize(size_);
 
     // 保持している座標を反映
     mySprite_->SetPosition(Vector2{ transform_.translate.x, transform_.translate.y });
 
+}
+void Bitmappedfont::SetSize(const Vector2 &size) {
+  size_ = size;
+  if (mySprite_) {
+    mySprite_->SetSize(size_);
+  }
 }
 
 Bitmappedfont::~Bitmappedfont()

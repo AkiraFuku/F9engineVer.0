@@ -20,6 +20,7 @@ class SpeedMeter;
 class GameScene;
 class Goal;
 class CourseWall;
+class GameScene;
 
 // 速さの段階
 enum class SpeedStage

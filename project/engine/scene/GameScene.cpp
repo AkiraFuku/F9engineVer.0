@@ -501,7 +501,7 @@ void GameScene::Update() {
 
     //ImGui::End();
 #endif // USE_IMGUI
-
+#ifdef USE_IMGUI
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
     sprite->Update();
 
@@ -801,7 +801,7 @@ void GameScene::GenerateFieldObjects() {
                     // 障害物(普通)の初期化
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("cube.obj");
+                    model->SetModel("taru.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
@@ -820,7 +820,7 @@ void GameScene::GenerateFieldObjects() {
                     // 障害物(速い)の初期化
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("taru.obj");
+                    model->SetModel("shark.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
@@ -961,7 +961,7 @@ void GameScene::SetScore(int score, int num, int count)
     int scoreDigit = (score / num) % 10;
 
     auto newFont = std::make_unique<Bitmappedfont>();
-    newFont->Initialize(bitmappedFontSprite_, camera.get());
+    newFont->Initialize(&bitmappedFontSprites_, camera.get());
     newFont->SetNumber(scoreDigit);
 
     float startX = 500.0f;
