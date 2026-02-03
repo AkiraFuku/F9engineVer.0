@@ -348,7 +348,7 @@ void GameScene::Update() {
         ImGui::End();
     }
 
-
+#endif
 
 
     // 障害物の削除処理
@@ -442,7 +442,7 @@ void GameScene::Update() {
     //    ImGui::End();
     //}
 
-
+    #endif
 
     
 
@@ -484,7 +484,7 @@ void GameScene::Update() {
 
     //ImGui::End();
 #endif // USE_IMGUI
-
+#ifdef USE_IMGUI
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
     sprite->Update();
 
@@ -735,6 +735,7 @@ void GameScene::GenerateFieldObjects() {
                 playerModel_->SetModel("maguro.obj");
                 playerModel_->Initialize();
                 player_->Initialize(playerModel_.get(), camera.get(), pos);
+                player_->SetGameScene(this);
             }
             break;
             }
@@ -943,7 +944,7 @@ void GameScene::SetScore(int score, int num, int count)
     int scoreDigit = (score / num) % 10;
 
     auto newFont = std::make_unique<Bitmappedfont>();
-    newFont->Initialize(bitmappedFontSprite_, camera.get());
+    newFont->Initialize(&bitmappedFontSprites_, camera.get());
     newFont->SetNumber(scoreDigit);
 
     float startX = 400.0f;
