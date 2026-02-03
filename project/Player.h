@@ -5,6 +5,7 @@
 #include "Model.h"
 #include "Sprite.h"
 #include "Camera.h"
+#include <Audio.h>
 #include <memory>
 
 class ObstacleSlow;
@@ -16,6 +17,7 @@ class MoveEffect;
 class DriftEffect;
 class RotateArrow;
 class SpeedMeter;
+class GameScene;
 class Goal;
 class CourseWall;
 
@@ -113,6 +115,9 @@ private:
     // スコア
     int score_ = 0;
 
+    // ゲームシーンのポインタ
+    GameScene* gameScene_ = nullptr;
+
     // 死亡時のプレイヤーの角度
     Vector3 deadRotate_ = {0.0f,0.0f,3.0f};
 
@@ -123,6 +128,11 @@ private:
     bool isGoal_ = false;
 
     bool isGameStarted_ = false;
+
+    // BGM、SEのハンドル
+    uint32_t driftHandle_ = 0;
+    uint32_t speedUpHandle_ = 0;
+    uint32_t deathHandle_ = 0;
 
 public:
     // 初期化
@@ -174,6 +184,8 @@ public:
     // スコアを加算
     void AddScore(int score) { score_ += score; }
     int GetScore() const { return score_; }
+    // ゲームシーンのポインタを取得
+    void SetGameScene(GameScene* gamescene) { gameScene_ = gamescene; }
     // コンストラクタとデストラクタ
     Player();
     ~Player();

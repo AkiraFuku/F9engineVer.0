@@ -31,8 +31,15 @@ public:
 private:
   std::unique_ptr<Camera> camera;
   std::unique_ptr<Sprite> sprite;
+  std::unique_ptr<Sprite> titleLogoSprite;
+  std::unique_ptr<Sprite> pressStartSprite;
 
-  uint32_t handle_ = 0;
+  // タイトルロゴを動かす用の変数
+  float amplitude_ = 4.0f;
+  float theta_ = 0.0f;
+
+  uint32_t bgmHandle_ = 0;
+  uint32_t enterHandle_ = 0;
 
   // メンバ
   std::unique_ptr<Fade> fade_;

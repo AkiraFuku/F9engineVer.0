@@ -25,6 +25,9 @@ void ObstacleMax::Initialize(Object3d* model, Camera* camera, const Vector3& pos
     // モデルの更新
     model_->SetTranslate(transform_.translate);
     model_->Update();
+
+    // SEの読み込み
+    deathHandle_ = Audio::GetInstance()->LoadAudio("resources/sounds/crash.wav");
 }
 
 void ObstacleMax::OnCollision(const Player* player)
@@ -33,6 +36,10 @@ void ObstacleMax::OnCollision(const Player* player)
     if (player->GetSpeedStage() >= SpeedStage::kMax)
     {
         if (isDead_) return;
+
+        // SE再生
+        Audio::GetInstance()->PlayAudio(deathHandle_, false);
+
         // スコアの生成と初期化
         for (int i = 0; i < kNumScores; i++)
         {
