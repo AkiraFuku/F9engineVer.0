@@ -25,7 +25,10 @@ void SpeedMeter::Update()
 {
     // プレイヤーの速度に応じて角度を変更
     float speedZ = player->GetSpeedZ();
-    float rotation = speedZ * 4.0f; // 速度に応じて回転角度を計算
+    // 現在の角度を記録
+    float rotation = sprite_->GetRotation();
+    // 速度に応じて回転角度を計算
+    rotation =  + (speedZ * 1.3f);
     sprite_->SetRotation(rotation);
 
     sprite_->Update();

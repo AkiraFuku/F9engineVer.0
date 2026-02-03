@@ -18,6 +18,7 @@ class RotateArrow;
 class SpeedMeter;
 class Goal;
 class CourseWall;
+class GameScene;
 
 // 速さの段階
 enum class SpeedStage
@@ -124,6 +125,8 @@ private:
 
     bool isGameStarted_ = false;
 
+    GameScene *gameScene_ = nullptr;
+
 public:
     // 初期化
     void Initialize(Object3d* model, Camera* camera, const Vector3& position);
@@ -165,6 +168,8 @@ public:
     bool IsGoal() const { return isGoal_; }
     // マップチップフィールドのセット
     void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
+    void SetGameScene(GameScene *gameScene) { gameScene_ = gameScene; }
     // 角度を取得
     Vector3 GetRotate() const { return transform_.rotate; }
     // 加速フラグを取得

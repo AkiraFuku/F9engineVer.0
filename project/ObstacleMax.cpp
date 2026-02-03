@@ -37,7 +37,7 @@ void ObstacleMax::OnCollision(const Player* player)
         for (int i = 0; i < kNumScores; i++)
         {
             auto model = std::make_unique<Object3d>();
-            model->SetModel("axis.obj");
+            model->SetModel("maxScore.obj");
             model->Initialize();
             scoreModels_.push_back(std::move(model));
             auto score = std::make_unique<Score>();

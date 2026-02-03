@@ -44,6 +44,14 @@ public:
 
     // 開始フラグを取得
     bool IsStarted() const { return isStarted_; }
+    // クリアフラグをセット
+    void SetCleared(bool isCleared) { isCleared_ = isCleared; }
+    // ゲームオーバーフラグをセット
+    void SetGameOver(bool isGameOver) { isGameOver_ = isGameOver; }
+
+    // スコアをセット
+    void SetScore(int score,int num,int count);
+
 
 private:
     std::unique_ptr<Camera> camera;
@@ -52,6 +60,9 @@ private:
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<ParicleEmitter> emitter;
     Audio::SoundHandle handle_;
+
+    // 背景のモデル
+    std::unique_ptr<Object3d> backgroundModel_;
 
     // 自キャラ
     std::unique_ptr<Player> player_;
@@ -87,6 +98,19 @@ private:
     int32_t countdownTimer_ = 180;
     // ゲーム開始フラグ
     bool isStarted_ = false;
+    // クリアフラグ
+    bool isCleared_ = false;
+    // ゲームオーバーフラグ
+    bool isGameOver_ = false;
+
+    // テキスト
+    std::unique_ptr<Sprite> clearText_;
+    std::unique_ptr<Sprite> gameOverText_;
+    std::unique_ptr<Sprite> scoreText_;
+    std::unique_ptr<Sprite> pressSpaceText_;
+
+    // スコア
+    std::vector < std::unique_ptr<Bitmappedfont> > scoreBitmappedFonts_;
 
     // マップチップフィールド
     std::unique_ptr<MapChipField> mapChipField_;
@@ -96,5 +120,6 @@ private:
 // メンバ
     std::unique_ptr<Fade> fade_;
     bool requestSceneChange_ = false;
+
 
 };

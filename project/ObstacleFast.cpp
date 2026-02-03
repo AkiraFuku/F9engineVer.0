@@ -40,7 +40,7 @@ void ObstacleFast::OnCollision(const Player* player)
         {
 
             auto model = std::make_unique<Object3d>();
-            model->SetModel("axis.obj");
+            model->SetModel("fastScore.obj");
             model->Initialize();
             scoreModels_.push_back(std::move(model));
             auto score = std::make_unique<Score>();

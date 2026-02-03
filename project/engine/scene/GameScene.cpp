@@ -17,7 +17,11 @@
 #include "imgui.h"
 #include "Bitmappedfont.h"
 #include "Goal.h"
+
+#include "Sprite.h"
+
 #include "GameContext.h"
+
 
 // コンストラクタ
 GameScene::GameScene() = default;
@@ -97,8 +101,10 @@ void GameScene::Initialize() {
     Transform M = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
     emitter = std::make_unique<ParicleEmitter>("Test", M, 10, 5.0f, 0.0f);
 
+
     // マップチップフィールドの初期化
     mapChipField_ = std::make_unique<MapChipField>();
+
 
     int currentStage = GameContext::GetInstance()->GetStageNum();
     std::string csvPath = "resources/stage1.csv"; // デフォルト
@@ -129,36 +135,40 @@ void GameScene::Initialize() {
     // ビットマップフォントの生成と初期化
     bitmappedFont_ = std::make_unique<Bitmappedfont>();
 
-    // 【修正】ベクターをクリアしておく
-    bitmappedFontSprites_.clear();
-
+   
     // ビットマップフォントのスプライト読み込み (0～9番)
     for (int i = 0; i < 10; ++i) {
-      // 画像ファイル名の作成 (数字に対応した画像を読み込む場合)
-      // 実在するパスに合わせて修正してください。例: "resources/number0.png"
-      // std::string filePath = "resources/number" + std::to_string(i) + ".png";
 
-      std::string path = "resources/numbers/" + std::to_string(i) + ".png";
+        // ファイル名の作成
+        std::string filePath = "resources/" + std::to_string(i) + ".png";
 
-      // TextureManagerでロード（2回呼んでも内部で同じ画像データが使い回されるので無駄はありません）
-      TextureManager::GetInstance()->LoadTexture(path);
-
-      // スプライトのインスタンスを作成
-      auto sprite = std::make_unique<Sprite>();
-
-      // スプライトの初期化
-      sprite->Initialize(path);
-
-      // ★重要: 数字を表示したい位置に設定 (画面中央など)
-      sprite->SetPosition(Vector2{640.0f, 360.0f});
-      sprite->SetAnchorPoint({0.5f, 0.5f}); // 中心基準にしておくと配置しやすい
-
-      // 【修正】単一の vector に追加していく
-      bitmappedFontSprites_.push_back(std::move(sprite));
     }
-
-    // 【修正】ベクターのアドレスを渡す
+// 【修正】ベクターのアドレスを渡す
     bitmappedFont_->Initialize(&bitmappedFontSprites_, camera.get());
+     
+
+
+    // 背景モデルの生成と初期化
+    backgroundModel_ = std::make_unique<Object3d>();
+    backgroundModel_->SetModel("field.obj");
+    backgroundModel_->Initialize();
+    backgroundModel_->SetTranslate(Vector3{ 200.0f,0.0f,1400.0f });
+    backgroundModel_->SetRadius(2000.0f);
+
+    // テキスト画像の生成と初期化
+    clearText_ = std::make_unique<Sprite>();
+    clearText_->Initialize("resources/clear.png");
+    clearText_->SetPosition(Vector2{ 100.0f, 50.0f });
+    gameOverText_ = std::make_unique<Sprite>();
+    gameOverText_->Initialize("resources/GameOver.png");
+    gameOverText_->SetPosition(Vector2{ 100.0f, 50.0f });
+    scoreText_ = std::make_unique<Sprite>();
+    scoreText_->Initialize("resources/score.png");
+    scoreText_->SetPosition(Vector2{ 50.0f, 300.0f });
+    pressSpaceText_ = std::make_unique<Sprite>();
+    pressSpaceText_->Initialize("resources/pressSpace.png");
+    pressSpaceText_->SetPosition(Vector2{ 100.0f, 3000.0f });
+
 
     fade_ = std::make_unique<Fade>();
     fade_->Initialize(camera.get());
@@ -220,9 +230,42 @@ void GameScene::Update() {
         camera->SetTranslate(camreaTranslate);
     }
 
+    // クリアしていたら
+    if (isCleared_)
+    {
+        clearText_->Update();
+        scoreText_->Update();
+        pressSpaceText_->Update();
+
+        scoreBitmappedFonts_.clear();
+        SetScore(player_->GetScore(), 10000, 0);
+        for (auto& scoreFont : scoreBitmappedFonts_) {
+            scoreFont->Update();
+        }
+
+        if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE))
+        {
+            GetSceneManager()->ChangeScene("TitleScene");
+        }
+
+    }
+
+
+    // ゲームオーバーになったら
+    if (isGameOver_)
+    {
+        gameOverText_->Update();
+        pressSpaceText_->Update();
+        if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE))
+        {
+            GetSceneManager()->ChangeScene("TitleScene");
+        }
+    }
+
     camera->Update();
     object3d->Update();
     object3d2->Update();
+    backgroundModel_->Update();
 
     // プレイヤーの更新処理
     player_->Update(isStarted_);
@@ -256,6 +299,7 @@ void GameScene::Update() {
 
     // 当たり判定
     CheckAllCollisions();
+
 
     fade_->Update();
 
@@ -358,51 +402,150 @@ void GameScene::Update() {
         ImGui::End();
     }
 
+    ImGui::End();
+#endif
 
+
+    // 障害物の削除処理
+    obstacleSlow_.erase(std::remove_if(obstacleSlow_.begin(), obstacleSlow_.end(),
+        [](const std::unique_ptr<ObstacleSlow>& obstacle) {
+            return obstacle->IsScoreNone();
+        }),
+        obstacleSlow_.end());
+
+    obstacleNormal_.erase(std::remove_if(obstacleNormal_.begin(), obstacleNormal_.end(),
+        [](const std::unique_ptr<ObstacleNormal>& obstacle) {
+            return obstacle->IsScoreNone();
+        }),
+
+        obstacleNormal_.end());
+
+    obstacleFast_.erase(std::remove_if(obstacleFast_.begin(), obstacleFast_.end(),
+        [](const std::unique_ptr<ObstacleFast>& obstacle) {
+            return obstacle->IsScoreNone();
+        }),
+
+        obstacleFast_.end());
+
+    obstacleMax_.erase(std::remove_if(obstacleMax_.begin(), obstacleMax_.end(),
+        [](const std::unique_ptr<ObstacleMax>& obstacle) {
+            return obstacle->IsScoreNone();
+
+        }),
+
+        obstacleMax_.end());
+
+    if (!isStarted_)
+    {
+        if (countdownTimer_ <= 0)
+        {
+            isStarted_ = true;
+        }
+        else
+        {
+
+            countdownTimer_--;
+            bitmappedFont_->SetNumber(countdownTimer_ / 60 + 1);
+            bitmappedFont_->SetPosition(Vector2{ 500.0f,200.0f });
+            bitmappedFont_->Update();
+
+        }
+    }
+
+#ifdef USE_IMGUI
+    //ImGui::Begin("Debug");
+    //ImGui::Text("Sphere");
+    //Vector3 pos = object3d->GetTranslate();
+    //Vector3 scale = object3d->GetScale();
+    //ImGui::SliderFloat3("Pos", &(pos.x), 0.1f, 1000.0f);
+    //ImGui::DragFloat3("scale", &(scale.x), 0.1f, 1000.0f);
+    //object3d->SetTranslate(pos);
+    //object3d->SetScale(scale);
+    //if (LightManager::GetInstance()->GetPointLightCount() > 0) {
+    //    ImGui::Begin("Light Setting");
+
+    //    // 0番目のポイントライトのデータを参照で取得
+    //    // "auto&" にすることで、ここで書き換えた内容が直接LightManager内のデータに反映されます
+    //    auto& pointLight2 = LightManager::GetInstance()->GetPointLight(1);
+
+    //    // 位置の調整
+    //    ImGui::DragFloat3("Point Light2 Pos", &pointLight2.position.x, 0.1f);
+
+    //    // 色の調整
+    //    ImGui::ColorEdit4("Point Light2 Color", &pointLight2.color.x);
+
+    //    // 強度の調整
+    //    ImGui::DragFloat("Point Light2 Intensity", &pointLight2.intensity, 0.1f, 0.0f, 100.0f);
+
+    //    // 減衰率の調整
+    //    ImGui::DragFloat("Point Light2 Decay", &pointLight2.decay, 0.1f, 0.0f, 10.0f);
+    //    auto& pointLight1 = LightManager::GetInstance()->GetPointLight(0);
+
+    //    // 位置の調整
+    //    ImGui::DragFloat3("Point Light Pos", &pointLight1.position.x, 0.1f);
+
+    //    // 色の調整
+    //    ImGui::ColorEdit4("Point Light Color", &pointLight1.color.x);
+
+    //    // 強度の調整
+    //    ImGui::DragFloat("Point Light Intensity", &pointLight1.intensity, 0.1f, 0.0f, 100.0f);
+
+    //    // 減衰率の調整
+    //    ImGui::DragFloat("Point Light Decay", &pointLight1.decay, 0.1f, 0.0f, 10.0f);
+    //    ImGui::DragFloat("Point Light rad", &pointLight1.radius, 0.1f, 0.0f, 10.0f);
+
+    //    ImGui::End();
+    //}
+
+    #endif
 
     
 
 
 #ifdef USE_IMGUI
-    ImGui::Begin("Debug");
+    //ImGui::Begin("Debug");
 
 
-    /* Vector3 direction= object3d->GetDirectionalLightDirection();
-     if(ImGui::DragFloat3("Light Direction", &direction.x)){
-     object3d->SetDirectionalLightDirection(direction);
-     }
-     float intensity= object3d->GetDirectionalLightIntensity();
-     if(ImGui::InputFloat("intensity",&intensity)){
-      object3d->SetDirectionalLightIntensity(intensity);
-     }*/
+    ///* Vector3 direction= object3d->GetDirectionalLightDirection();
+    // if(ImGui::DragFloat3("Light Direction", &direction.x)){
+    // object3d->SetDirectionalLightDirection(direction);
+    // }
+    // float intensity= object3d->GetDirectionalLightIntensity();
+    // if(ImGui::InputFloat("intensity",&intensity)){
+    //  object3d->SetDirectionalLightIntensity(intensity);
+    // }*/
 
-    ImGui::Text("Sprite");
-    Vector2 Position =
-        sprite->GetPosition();
-    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
-    sprite->SetPosition(Position);
+    //ImGui::Text("Sprite");
+    //Vector2 Position =
+    //    sprite->GetPosition();
+    //ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
+    //sprite->SetPosition(Position);
 
-    ImGui::Text("PlayerSpeed");
-    float playerSpeedZ = player_->GetSpeedZ();
-    ImGui::SliderFloat("SpeedZ", &playerSpeedZ, 0.0f, 2.0f);
+    //ImGui::Text("PlayerSpeed");
+    //float playerSpeedZ = player_->GetSpeedZ();
+    //ImGui::SliderFloat("SpeedZ", &playerSpeedZ, 0.0f, 2.0f);
 
-    ImGui::Text("Speed Stage");
-    SpeedStage speedStage = player_->GetSpeedStage();
-    ImGui::Text("Current Speed Stage: %d", static_cast<int>(speedStage));
+    //ImGui::Text("Speed Stage");
+    //SpeedStage speedStage = player_->GetSpeedStage();
+    //ImGui::Text("Current Speed Stage: %d", static_cast<int>(speedStage));
 
 
-    ImGui::Text("Score");
-    ImGui::Text("Current Score: %d", player_->GetScore());
+    //ImGui::Text("Score");
+    //ImGui::Text("Current Score: %d", player_->GetScore());
 
-    ImGui::End();
+    //ImGui::Text("Player");
+    //Vector3 playerPos = player_->GetWorldPosition();
+    //ImGui::SliderFloat3("Player Pos", &(playerPos.x), 0.0f, 0.0f);
+
+    //ImGui::End();
 #endif // USE_IMGUI
-
+#ifdef USE_IMGUI
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
     sprite->Update();
 
 
 
-    ImGui::End();
+    //ImGui::End();
 #endif // USE_IMGUI
 
     // sprite->SetRotation(sprite->GetRotation() + 0.1f);
@@ -412,9 +555,13 @@ void GameScene::Update() {
 
 
 void GameScene::Draw() {
-     object3d2->Draw();
-     object3d->Draw();
-     ParticleManager::GetInstance()->Draw();
+
+    // object3d2->Draw();
+    // object3d->Draw();
+    // ParticleManager::GetInstance()->Draw();
+    backgroundModel_->Draw();
+
+  
 
 
     if (!isStarted_)
@@ -422,6 +569,24 @@ void GameScene::Draw() {
         bitmappedFont_->Draw();
     }
 
+    if (isCleared_)
+    {
+        clearText_->Draw();
+        scoreText_->Draw();
+        pressSpaceText_-> Draw();
+    }
+
+    for (auto& scoreFont : scoreBitmappedFonts_)
+    {
+        scoreFont->Draw();
+    }
+
+
+    if (isGameOver_)
+    {
+        gameOverText_->Draw();
+        pressSpaceText_->Draw();
+    }
 
 
     // プレイヤーの描画処理
@@ -622,9 +787,10 @@ void GameScene::GenerateFieldObjects() {
                 player_ = std::make_unique<Player>();
                 playerModel_ = std::make_unique<Object3d>();
                 playerModel_->SetTranslate(pos);
-                playerModel_->SetModel("cube.obj");
+                playerModel_->SetModel("maguro.obj");
                 playerModel_->Initialize();
                 player_->Initialize(playerModel_.get(), camera.get(), pos);
+                player_->SetGameScene(this);
             }
             break;
             }
@@ -655,7 +821,7 @@ void GameScene::GenerateFieldObjects() {
                 {
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("cube.obj");
+                    model->SetModel("ika.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
@@ -692,7 +858,7 @@ void GameScene::GenerateFieldObjects() {
                     // 障害物(速い)の初期化
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("cube.obj");
+                    model->SetModel("taru.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
@@ -711,7 +877,7 @@ void GameScene::GenerateFieldObjects() {
                     // 障害物(最大速度)の初期化
                     // モデルを生成してリストに追加
                     auto model = std::make_unique<Object3d>();
-                    model->SetModel("cube.obj");
+                    model->SetModel("ship.obj");
                     model->Initialize();
 
                     // 本体を生成してリストに追加
@@ -733,7 +899,7 @@ void GameScene::GenerateFieldObjects() {
             case MapChipType::kGoal:
             {
                 auto goalModel = std::make_unique<Object3d>();
-                goalModel->SetModel("cube.obj");
+                goalModel->SetModel("goal.obj");
                 goalModel->Initialize();
                 auto goal = std::make_unique<Goal>();
                 goal->Initialize(goalModel.get(), camera.get(), pos);
@@ -745,7 +911,7 @@ void GameScene::GenerateFieldObjects() {
             case MapChipType::kWallStraight: {
                 // 1) モデルを生成してリストに追加
                 auto model = std::make_unique<Object3d>();
-                model->SetModel("cube.obj"); // ここを壁モデルに（例: "wall.obj" とか）
+                model->SetModel("wall.obj"); // ここを壁モデルに（例: "wall.obj" とか）
                 model->Initialize();
 
                 // 2) 置く位置を少し上げたいなら（壁が地面に埋まるなら）
@@ -769,7 +935,7 @@ void GameScene::GenerateFieldObjects() {
             } break;
             case MapChipType::kWallTurn: {
                 auto model = std::make_unique<Object3d>();
-                model->SetModel("cube.obj");
+                model->SetModel("wall.obj");
                 model->Initialize();
 
                 Vector3 wallPos = pos; // まず2.0グリッド中心
@@ -821,6 +987,33 @@ void GameScene::GenerateFieldObjects() {
 
 
 
+}
+
+void GameScene::SetScore(int score, int num, int count)
+{
+    // 0除算防止と、全ての桁（1の位まで）出し切ったら終了
+    if (num < 1) return;
+
+    // その桁の数字だけをきれいに抜く
+    // 例: score=200, num=100 の時 -> (200 / 100) % 10 = 2
+    int scoreDigit = (score / num) % 10;
+
+    auto newFont = std::make_unique<Bitmappedfont>();
+    newFont->Initialize(&bitmappedFontSprites_, camera.get());
+    newFont->SetNumber(scoreDigit);
+
+    float startX = 400.0f;
+    float posY = 300.0f;
+    float fontWidth = 64.0f;
+
+    Vector2 position = { startX + (count * fontWidth), posY };
+    newFont->SetPosition(position);
+
+    scoreBitmappedFonts_.push_back(std::move(newFont));
+
+    // 次の桁（numを10分の1にする）へ進む。
+    // score / num の判定はせず、numが0になるまで必ず回す。
+    SetScore(score, num / 10, count + 1);
 }
 
 

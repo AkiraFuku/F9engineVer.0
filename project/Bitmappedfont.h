@@ -14,6 +14,7 @@ private:
 
     // スプライト
     std::vector<std::unique_ptr<Sprite>>* sprite_;
+    std::unique_ptr<Sprite> mySprite_;
 
     // カメラ
     Camera* camera_ = nullptr;
@@ -29,7 +30,9 @@ public:
     // 描画
     void Draw();
     // 文字設定
-    void SetNumber(int index) { index_ = index; }
+    void SetNumber(int index);
+    // 位置を設定
+    void SetPosition(const Vector2& position);
     // コンストラクタとデストラクタ
     Bitmappedfont();
     ~Bitmappedfont();
