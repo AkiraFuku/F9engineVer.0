@@ -101,7 +101,7 @@ void TutorialScene::Initialize() {
 
   // --- マップチップ ---
   mapChipField_ = std::make_unique<MapChipField>();
-  mapChipField_->LoadMapChipCsv("resources/stage2.csv");
+  mapChipField_->LoadMapChipCsv("resources/tutorial.csv");
   GenerateFieldObjects();
 
   // --- チュートリアル状態初期化 ---

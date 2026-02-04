@@ -275,7 +275,7 @@ void GameScene::Update() {
 
         if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE))
         {
-            GetSceneManager()->ChangeScene("TitleScene");
+            GetSceneManager()->ChangeScene("SelectScene");
             Audio::GetInstance()->PlayAudio(enterHandle_, false);
             Audio::GetInstance()->StopAudio(clearHandle_);
         }
@@ -300,7 +300,7 @@ void GameScene::Update() {
         pressSpaceText_->Update();
         if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE))
         {
-            GetSceneManager()->ChangeScene("TitleScene");
+            GetSceneManager()->ChangeScene("SelectScene");
             Audio::GetInstance()->PlayAudio(enterHandle_, false);
             Audio::GetInstance()->StopAudio(gameOverHandle_);
         }
