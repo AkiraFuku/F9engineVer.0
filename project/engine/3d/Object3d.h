@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Object3dCommon.h"
 #include "PSOMnager.h"
+#include "MathFunction.h"
 class Object3d
 {
 
@@ -67,18 +68,16 @@ public:
     void SetFillMode(FillMode fillMode) {
         fillMode_ = fillMode;
     }
+
+    void SetRadius(float radius) { radius_ = radius; }
 private:
 
-
+    float radius_ = 1.0f;
     std::shared_ptr<Model> model_ = nullptr;
     //WVP行列リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
     TransformationMatrix* wvpResource_ = nullptr;
     void CreateWVPResource();
-    ////平行光源
-    //Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_;
-    //DirectionalLight* directionalLightData_ = nullptr;
-    //void CreateDirectionalLightResource();
 
     Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
     CameraForGPU* cameraData_ = nullptr;
