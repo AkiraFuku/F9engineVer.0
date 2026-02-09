@@ -30,6 +30,9 @@ public:
     struct CameraForGPU
     {
         Vector3 worldPosition;
+        float farClip;
+        Vector3 cameraForward; // ★追加: カメラの前方ベクトル
+        float padding;
     };
     void Initialize();
     void Update();
@@ -61,7 +64,7 @@ public:
     const Vector3& GetTranslate()const {
         return transform_.translate;
     }
-   
+
     void SetBlendMode(BlendMode blendMode) {
         blendMode_ = blendMode;
     }
@@ -69,10 +72,10 @@ public:
         fillMode_ = fillMode;
     }
 
-    void SetRadius(float radius) { radius_ = radius; }
+    //void SetRadius(float radius) { radius_ = radius; }
 private:
 
-    float radius_ = 1.0f;
+    //float radius_ = 1.0f;
     std::shared_ptr<Model> model_ = nullptr;
     //WVP行列リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
