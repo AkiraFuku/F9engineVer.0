@@ -42,6 +42,8 @@ struct Camera
 {
     float3 worldPosition;
     float farClip;
+    float3 cameraForward; // ★追加
+    float padding;
 };
 struct LightCounts
 {
@@ -113,14 +115,22 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
     
+  // ★視錐台(平面)カリング処理 --------------------------
     
-    float distanceToCamera = length(gCamera.worldPosition - input.worldPosition);
+    // 1. カメラからピクセルへのベクトル
+    float3 toPixel = input.worldPosition - gCamera.worldPosition;
 
-    // 設定された最大距離(farClip)を超えていたら描画しない
-    if (distanceToCamera > gCamera.farClip)
+    // 2. カメラの前方ベクトルとの内積を取る
+    //    これで「カメラの向いている方向の距離(Z深度)」だけが計算されます
+    float zDepth = dot(toPixel, gCamera.cameraForward);
+
+    // 3. 深度が FarClip より奥なら描画しない (平面でスパッと切れる)
+    //    ※ zDepth < 0 (カメラより後ろ) の場合も消したいなら条件に追加
+    if (zDepth > gCamera.farClip || zDepth < 0.0f)
     {
-        discard; // このピクセルの処理をここで打ち切り、出力しない
+        discard;
     }
+    // --------------------------------------------------------
     
     float4 textureColor = gTexture.Sample(gSampler, input.texCoord); // UV変換はVSで行っている前提、または必要ならここで計算
 

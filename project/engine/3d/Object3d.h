@@ -31,6 +31,8 @@ public:
     {
         Vector3 worldPosition;
         float farClip;
+        Vector3 cameraForward; // ★追加: カメラの前方ベクトル
+        float padding;
     };
     void Initialize();
     void Update();
@@ -62,7 +64,7 @@ public:
     const Vector3& GetTranslate()const {
         return transform_.translate;
     }
-   
+
     void SetBlendMode(BlendMode blendMode) {
         blendMode_ = blendMode;
     }

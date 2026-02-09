@@ -44,6 +44,12 @@ void Object3d::Update()
     {
         cameraData_->worldPosition = camera_->GetTranslate();
         cameraData_->farClip = camera_->GetFarCrip(); // ★ここを追加
+        // ★追加: カメラのワールド行列から前方ベクトル(Z軸)を抽出
+        // 一般的な行優先(Row-Major)の4x4行列の場合、3行目(m[2])がZ軸(Forward)です
+        const Matrix4x4& mat = camera_->GetWorldMatrix();
+        // 正規化されているはずですが、念のため正規化して送ると安全です
+        Vector3 forward = { mat.m[2][0], mat.m[2][1], mat.m[2][2] };
+        cameraData_->cameraForward = Normalize(forward);
     }
 }
 
@@ -151,10 +157,20 @@ void Object3d::CreateCameraResource()
     {
         cameraData_->worldPosition = camera_->GetTranslate();
         cameraData_->farClip = camera_->GetFarCrip(); // ★ここを追加
+
+        // ★追加: カメラのワールド行列から前方ベクトル(Z軸)を抽出
+        // 一般的な行優先(Row-Major)の4x4行列の場合、3行目(m[2])がZ軸(Forward)です
+        const Matrix4x4& mat = camera_->GetWorldMatrix();
+        // 正規化されているはずですが、念のため正規化して送ると安全です
+        Vector3 forward = { mat.m[2][0], mat.m[2][1], mat.m[2][2] };
+        cameraData_->cameraForward = Normalize(forward);
+
     } else
     {
         cameraData_->worldPosition = Vector3{ 1.0f,1.0f,1.0f };
         cameraData_->farClip = 1000.0f;
+        cameraData_->cameraForward = Vector3{ 0.0f,0.0f,1.0f };
+
     }
 
 }
