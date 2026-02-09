@@ -65,6 +65,7 @@ public:
     static ModelData LoadModelFile(const std::string& directryPath, const std::string& filename);
 
     static Model* CreateSphere(uint32_t subdivision = 16);
+   // static Model* CreatePlane();
 
     static Node ReadNode(aiNode*node );
 

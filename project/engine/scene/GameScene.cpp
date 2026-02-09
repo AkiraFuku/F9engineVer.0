@@ -28,7 +28,7 @@ void GameScene::Initialize() {
     LightManager::GetInstance()->AddPointLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0,0,0 }, 4.0f, 2.0f, 0.1f);
         TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
@@ -64,7 +64,7 @@ void GameScene::Initialize() {
 
     camera->SetTranslate({ 0.0f,0.0f,-10.0f });
     Transform M = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-    emitter = std::make_unique<ParicleEmitter>("Test", M, 10, 5.0f, 0.0f);
+    emitter = std::make_unique<ParicleEmitter>("Test", M, 3, 5.0f, 0.0f);
 }
 void GameScene::Finalize() {
 
@@ -275,9 +275,9 @@ void GameScene::Update() {
     sprite->Update();
 }
 void GameScene::Draw() {
-    object3d2->Draw();
-    object3d->Draw();
-    // ParticleManager::GetInstance()->Draw();
+  /*  object3d2->Draw();
+    object3d->Draw();*/
+     ParticleManager::GetInstance()->Draw();
      ///////スプライトの描画
     //sprite->Draw();
 }

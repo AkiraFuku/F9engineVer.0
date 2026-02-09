@@ -88,7 +88,7 @@ void ParticleManager::Update() {
                 Matrix4x4 worldMatrix = {};
                 /*  if (isBillboard)
                   {*/
-                (*particleIterator).transfom.rotate.z += 1.0f / 60.0f;
+                //(*particleIterator).transfom.rotate.z += 1.0f / 60.0f;
 
 
                 worldMatrix = MakeBillboardMatrix((*particleIterator).transfom.scale, (*particleIterator).transfom.rotate, billboardMatrix, (*particleIterator).transfom.translate);
@@ -164,19 +164,20 @@ void ParticleManager::Emit(const std::string name, const Vector3& postion, uint3
 
     std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
     std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
+    std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
 
     for (uint32_t i = 0; i < count; ++i)
     {
         Particle particle;
-        particle.transfom.scale = { 1.0f,1.0f,1.0f };
-        particle.transfom.rotate = { 0.0f,0.0f,0.0f };
+        particle.transfom.scale = { 0.05f,distScale(randomEngine_),1.0f };
+        particle.transfom.rotate = { 0.0f,0.0f, distribution(randomEngine_) };
         Vector3 randamTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
-        particle.transfom.translate = postion + randamTranslate;
-        particle.velocity = { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_) };
+        particle.transfom.translate = postion ;//+ randamTranslate;
+        particle.velocity ={0.0f,0.0f,0.0f};// { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_) };
 
-        particle.color = { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_),1.0f };
+        particle.color ={1.0f,1.0f,1.0f,1.0f};// { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_),1.0f };
 
-        particle.lifeTime = distTime(randomEngine_);
+        particle.lifeTime = 1.0f;//distTime(randomEngine_);
         particle.currentTime = 0.0f;
         particleGroups[name].particles.push_back(particle);
     }
