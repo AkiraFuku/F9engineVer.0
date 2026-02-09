@@ -41,6 +41,7 @@ struct SpotLight
 struct Camera
 {
     float3 worldPosition;
+    float farClip;
 };
 struct LightCounts
 {
@@ -111,6 +112,15 @@ float3 CalculateLight(float3 N, float3 L, float3 V, float3 lightColor, float int
 PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
+    
+    
+    float distanceToCamera = length(gCamera.worldPosition - input.worldPosition);
+
+    // 設定された最大距離(farClip)を超えていたら描画しない
+    if (distanceToCamera > gCamera.farClip)
+    {
+        discard; // このピクセルの処理をここで打ち切り、出力しない
+    }
     
     float4 textureColor = gTexture.Sample(gSampler, input.texCoord); // UV変換はVSで行っている前提、または必要ならここで計算
 
