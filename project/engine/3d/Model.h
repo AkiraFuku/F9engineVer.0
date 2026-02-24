@@ -70,6 +70,7 @@ public:
 
 private:
 
+
     ModelData modelData_;
 
     //頂点リソース
