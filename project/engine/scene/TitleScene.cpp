@@ -15,9 +15,9 @@ void TitleScene::Initialize() {
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
     ParticleManager::GetInstance()->Setcamera(camera.get());
 
-     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
+    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_,true);
+    Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
@@ -29,11 +29,11 @@ void TitleScene::Initialize() {
     // sprite->Initialize(spritecommon,"resources/monsterBall.png");
     sprite->Initialize("resources/monsterBall.png");
 
-    sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });
+    sprite->SetPosition(Vector2{ 100.0f,100.0f });
     // sprite->SetSize(Vector2{ 100.0f,100.0f });
     //sprites.push_back(sprite);
    // sprite->SetBlendMode(BlendMode::Add);
-    sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
+   // sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
 
     //}
 
@@ -58,14 +58,14 @@ void TitleScene::Update() {
     // 現在のジョイスティックを取得
     if (Input::GetInstance()->TriggerMouseDown(0))
     {
-      if (Audio::GetInstance()->IsPlaying(handle_))
+        if (Audio::GetInstance()->IsPlaying(handle_))
         {
             Audio::GetInstance()->PauseAudio(handle_);
-      } else
-      {
-          Audio::GetInstance()->ResumeAudio(handle_);
-       
-      }
+        } else
+        {
+            Audio::GetInstance()->ResumeAudio(handle_);
+
+        }
     }
 
 
@@ -81,7 +81,7 @@ void TitleScene::Update() {
 
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
-            
+
             Audio::GetInstance()->StopAudio(handle_);
         }
 
@@ -120,7 +120,10 @@ void TitleScene::Update() {
 
 
 #ifdef USE_IMGUI
-    ImGui::Begin("Debug");
+    ImVec2 fixedSize = ImVec2(400, 300);
+    ImGui::SetNextWindowSize(fixedSize, ImGuiCond_FirstUseEver); // 初回起動時にサイズを反映
+
+    ImGui::Begin("Debug",NULL, ImGuiWindowFlags_NoResize);
 
     ImGui::Text("Sprite");
     Vector2 Position =
