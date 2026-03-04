@@ -128,7 +128,7 @@ void TitleScene::Update() {
     ImGui::Text("Sprite");
     Vector2 Position =
         sprite->GetPosition();
-    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
+    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f,"%.1f");
     sprite->SetPosition(Position);
 
     ImGui::End();
