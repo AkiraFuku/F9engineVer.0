@@ -1,17 +1,21 @@
 #include "SceneManager.h"
 #include <cassert>
 // 静的メンバ変数の実体
-SceneManager* SceneManager::instance = nullptr;
+std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
 
 SceneManager* SceneManager::GetInstance() {
     if (instance == nullptr) {
-        instance = new SceneManager();
+        instance.reset(new SceneManager());
+        //instance = std::make_unique<SceneManager>();
     }
-    return instance;
+    return instance.get();
 }
 
 void SceneManager::Finalize() {
-    delete instance;
+    if (scene_) {
+        scene_->Finalize();
+        scene_ = nullptr;
+    }
     instance = nullptr;
 }
 
@@ -34,7 +38,7 @@ void SceneManager::Update() {
 
         }
         scene_ = std::move(nextScene_);
-       
+      
 
         scene_->SetSceneManager(this);
         scene_->Initialize();

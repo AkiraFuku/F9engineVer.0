@@ -6,7 +6,7 @@ class SceneManager
 {
 private:
     // シングルトン用静的インスタンス
-    static SceneManager* instance;
+    static std::unique_ptr<SceneManager> instance;
 
     // コンストラクタ・デストラクタをprivateにする
     SceneManager() = default;
@@ -17,6 +17,7 @@ private:
     SceneManager& operator=(const SceneManager&) = delete;
 
 public:
+     friend struct std::default_delete<SceneManager>;
     // インスタンス取得
     static SceneManager* GetInstance();
 
