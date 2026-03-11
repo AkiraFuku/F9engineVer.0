@@ -1,4 +1,6 @@
 #include "GameEngine.h"
+#include "ImGuiManager.h"//フレームワークに移植
+#include "SrvManager.h"//フレームワークに移植
 
 void GameEngine::Initialize() {
 
@@ -28,12 +30,18 @@ void GameEngine::Update() {
  
 };
 void GameEngine::Draw() {
-
+    DXCommon::GetInstance()->PreDraw();
+    SrvManager::GetInstance()->PreDraw();
    
   
     SceneManager::GetInstance()->Draw();
 
-    Framework::Draw();
+      ImGuiManager::GetInstance()->End();
+    ImGuiManager::GetInstance()->Draw();
+    DXCommon::GetInstance()->PostDraw();
+    TextureManager::GetInstance()->ReleaseIntermediateResources();
+
+//    Framework::Draw();
     ///
 
 

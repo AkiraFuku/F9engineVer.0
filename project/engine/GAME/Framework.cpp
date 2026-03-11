@@ -130,7 +130,7 @@ void Framework::Update()
 {
     //メッセージがある限りGetMessageを呼び出す
     if (WinApp::GetInstance()->ProcessMessage()) {
-        endReqest_ = true;
+        endRequest_ = true;
 
 
     }
@@ -140,17 +140,17 @@ void Framework::Update()
     Input::GetInstance()->Update();
     Audio::GetInstance()-> Update();
     LightManager::GetInstance()->Update();
-    DXCommon::GetInstance()->PreDraw();
-    SrvManager::GetInstance()->PreDraw();
+    //DXCommon::GetInstance()->PreDraw();
+    //SrvManager::GetInstance()->PreDraw();
   
 }
 
 void Framework::Draw()
 {
-    ImGuiManager::GetInstance()->End();
+  /*  ImGuiManager::GetInstance()->End();
     ImGuiManager::GetInstance()->Draw();
     DXCommon::GetInstance()->PostDraw();
-    TextureManager::GetInstance()->ReleaseIntermediateResources();
+    TextureManager::GetInstance()->ReleaseIntermediateResources();*/
 
     // 基底クラスの描画処理（純粋仮想関数として宣言されているため、必ずオーバーライドする必要があります）
 }
