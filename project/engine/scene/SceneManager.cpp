@@ -5,9 +5,14 @@ std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
 
 SceneManager* SceneManager::GetInstance() {
     if (instance == nullptr) {
-        instance.reset(new SceneManager());
-        //instance = std::make_unique<SceneManager>();
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public SceneManager {
+            Helper() : SceneManager() {
+            }
+        };
+        instance = std::make_unique<Helper>();
     }
+
     return instance.get();
 }
 

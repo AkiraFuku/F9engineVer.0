@@ -133,7 +133,7 @@ private:
 
 
     //buffer
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourse_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
     Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
     VertexData* vertexData_ = nullptr;
     uint32_t* indexData_ = nullptr;
@@ -143,7 +143,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
     Material* materialData_ = nullptr;
     //座標変換
-    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourse_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
     TransformationMatrix* transformationMatrixData_ = nullptr;
     uint32_t textureIndex_ = 0;
     std::string textureFilePath_;

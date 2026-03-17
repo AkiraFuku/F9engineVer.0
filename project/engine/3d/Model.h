@@ -65,7 +65,7 @@ public:
     //OBJファイルの読み込み
     static ModelData LoadModelFile(const std::string& directryPath, const std::string& filename);
 
-    static std::unique_ptr<Model>CreateSphere(uint32_t subdivision = 16);
+    static std::shared_ptr<Model>CreateSphere(uint32_t subdivision = 16);
 
     static Node ReadNode(aiNode*node );
 

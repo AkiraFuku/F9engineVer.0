@@ -29,6 +29,8 @@ void DXCommon::Initialize()
     InitializeFixFPS();
     CreateDevice();
     CreateCommand();
+    hr_ = commandList_->Close();
+    assert(SUCCEEDED(hr_));
     CreateSwapChain();
     CreateDepthStencilTextureResource();
     CreateDescriptorHeaps();
@@ -39,10 +41,24 @@ void DXCommon::Initialize()
     CreateScissorRect();
     CreateDXCompiler();
 
+    // 初期化時にコマンドリストをリセット
+    hr_ = commandAllocator_->Reset();
+    assert(SUCCEEDED(hr_));
+    hr_ = commandList_->Reset(commandAllocator_.Get(), nullptr);
+    assert(SUCCEEDED(hr_));
 }
 
 void DXCommon::Finalize()
 {
+    // GPU処理の完了を待機
+    WaitForGPUCompletion();
+
+    // フェンスイベントのクリーンアップ
+    if (fenceEvent_ != nullptr) {
+        CloseHandle(fenceEvent_);
+        fenceEvent_ = nullptr;
+    }
+
     instance.reset();
 }
 
@@ -112,28 +128,38 @@ void DXCommon::PostDraw()
     //画面に表示する
     hr_ = swapChain_->Present(1, 0);
     assert(SUCCEEDED(hr_));
-    //次のフレームへ
+
+    //次のフレームへ：GPU側の処理をSignal
     fenceValue_++;
     commandQueue_->Signal(fence_.Get(), fenceValue_);
-    //待機
-    //現在のフェンス値がゴール値に到達しているか確認
-    if (fence_.Get()->GetCompletedValue() < fenceValue_)
-    {
-        HANDLE fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
-        assert(fenceEvent_ != nullptr);
-        fence_.Get()->SetEventOnCompletion(fenceValue_, fenceEvent_);
-        WaitForSingleObject(fenceEvent_, INFINITE);
-        CloseHandle(fenceEvent_);
-    }
+
+    // GPU処理の完了を待機
+    WaitForGPUCompletion();
+
     //コマンドアロケーターのリセット
     hr_ = commandAllocator_->Reset();
     assert(SUCCEEDED(hr_));
     //コマンドリストのリセット
     hr_ = commandList_->Reset(commandAllocator_.Get(), nullptr);
     assert(SUCCEEDED(hr_));
-
 }
 
+// GPU同期処理を専用メソッドに抽出
+void DXCommon::WaitForGPUCompletion()
+{
+    //現在のフェンス値がゴール値に到達しているか確認
+    if (fence_->GetCompletedValue() < fenceValue_) {
+        // 初回のみイベントを作成
+        if (fenceEvent_ == nullptr) {
+            fenceEvent_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            assert(fenceEvent_ != nullptr);
+        }
+        // フェンス値到達時にイベントをシグナル
+        fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+        // イベントの発火を待機
+        WaitForSingleObject(fenceEvent_, INFINITE);
+    }
+}
 
 //D3D12_CPU_DESCRIPTOR_HANDLE DXCommon::GetSRVCPUDescriptorHandle(uint32_t index)
 //{
@@ -256,10 +282,10 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DXCommon::CreateTextureResourse(const Dir
     assert(SUCCEEDED(hr));
     return resource;
 }
+
 [[nodiscard]]
 Microsoft::WRL::ComPtr<ID3D12Resource> DXCommon::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> textur, const DirectX::ScratchImage& mipImages)
 {
-
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
     DirectX::PrepareUpload(
         device_.Get(),
@@ -292,11 +318,29 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DXCommon::UploadTextureData(const Microso
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;//コピー先の状態
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;//読み取り可能な状態
     commandList_.Get()->ResourceBarrier(1, &barrier);//バリアを設定
+
+    // テクスチャアップロード後、GPU処理の完了を待機する
+    // Close→Execute→Signal→Waitのサイクルを実行
+    hr_ = commandList_->Close();
+    assert(SUCCEEDED(hr_));
+
+    ID3D12CommandList* commandLists[] = { commandList_.Get() };
+    commandQueue_->ExecuteCommandLists(1, commandLists);
+
+    fenceValue_++;
+    commandQueue_->Signal(fence_.Get(), fenceValue_);
+
+    // GPU処理完了を待機
+    WaitForGPUCompletion();
+
+    // コマンドリストをリセットして再利用可能にする
+    hr_ = commandAllocator_->Reset();
+    assert(SUCCEEDED(hr_));
+    hr_ = commandList_->Reset(commandAllocator_.Get(), nullptr);
+    assert(SUCCEEDED(hr_));
+
     return intermediateResource;
-
 }
-
-
 
 void DXCommon::InitializeFixFPS()
 {
@@ -587,8 +631,6 @@ void DXCommon::CreateDepthStencilView()
 
 void DXCommon::CreateFence()
 {
-
-
     uint64_t fenceValue = 0;
     hr_ = device_->CreateFence(
         fenceValue,
@@ -596,8 +638,6 @@ void DXCommon::CreateFence()
         IID_PPV_ARGS(&fence_)
     );
     assert(SUCCEEDED(hr_));
-    /* fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
-     assert(fenceEvent_ != nullptr);*/
 }
 
 void DXCommon::CreateViewport()
@@ -632,7 +672,6 @@ void DXCommon::CreateDXCompiler()
     assert(SUCCEEDED(hr_));
     hr_ = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
     assert(SUCCEEDED(hr_));
-
 }
 
 

@@ -8,14 +8,14 @@ void Sprite::Initialize(std::string textureFilePath) {
 
 
 
-    vertexResourse_ =
+    vertexResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(VertexData) * 4);
     indexResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(uint32_t) * 6);
     vertexBufferView_.BufferLocation =
-        vertexResourse_.Get()->GetGPUVirtualAddress();
+        vertexResource_.Get()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
@@ -24,7 +24,7 @@ void Sprite::Initialize(std::string textureFilePath) {
     indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;//32ビット整数
 
-    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+    vertexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
     indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
 
     //
@@ -38,10 +38,10 @@ void Sprite::Initialize(std::string textureFilePath) {
     materialData_->enableLighting = false;
     materialData_->uvTransform = Makeidetity4x4();
     //座標変換
-    transformationMatrixResourse_ =
+    transformationMatrixResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(TransformationMatrix));
-    transformationMatrixResourse_.Get()->
+    transformationMatrixResource_.Get()->
         Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
     transformationMatrixData_->WVP = Makeidetity4x4();
     transformationMatrixData_->World = Makeidetity4x4();
@@ -145,7 +145,7 @@ void Sprite::Draw()
     //座標変換行列の設定
     DXCommon::GetInstance()->
         GetCommandList()->
-        SetGraphicsRootConstantBufferView(1, transformationMatrixResourse_->GetGPUVirtualAddress());
+        SetGraphicsRootConstantBufferView(1, transformationMatrixResource_->GetGPUVirtualAddress());
 
     DXCommon::GetInstance()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }

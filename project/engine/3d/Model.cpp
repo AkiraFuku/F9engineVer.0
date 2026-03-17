@@ -191,9 +191,9 @@ aiProcess_PreTransformVertices
 
 }
 
-std::unique_ptr<Model> Model::CreateSphere(uint32_t subdivision)
+std::shared_ptr<Model> Model::CreateSphere(uint32_t subdivision)
 {
-    std::unique_ptr<Model> model = 
+    std::shared_ptr<Model> model = 
         std::make_unique<Model>();
 
     // 1. メモリ確保（頂点リソース作成など既存のInitializeの一部が必要だが、
