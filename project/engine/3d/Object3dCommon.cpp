@@ -5,29 +5,33 @@
 // 静的メンバ変数の初期化
 std::unique_ptr<Object3dCommon> Object3dCommon::instance = nullptr;
 Object3dCommon* Object3dCommon::GetInstance() {
-   if (instance == nullptr) {
-        // privateコンストラクタのため reset(new ...) を使用
-        instance.reset(new Object3dCommon());
+    if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public Object3dCommon {
+            Helper() : Object3dCommon() {
+            }
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }
 
 void Object3dCommon::Finalize() {
-  instance.reset(); // 解放
+    instance.reset(); // 解放
 }
 void Object3dCommon::Initialize()
 {
-       PsoProperty pso={PipelineType::Object3d,BlendMode::None,FillMode::kSolid};
-    PsoSet psoset=PSOMnager::GetInstance()->GetPsoSet(pso);
-    graphicsPipelineState_=psoset.pipelineState;
-    rootSignature_=psoset.rootSignature;
+    PsoProperty pso = { PipelineType::Object3d,BlendMode::None,FillMode::kSolid };
+    PsoSet psoset = PSOMnager::GetInstance()->GetPsoSet(pso);
+    graphicsPipelineState_ = psoset.pipelineState;
+    rootSignature_ = psoset.rootSignature;
 
-    
- //   CreatePSO();
+
+    //   CreatePSO();
 }
 void Object3dCommon::Object3dCommonDraw()
 {
-      // RootSignatureの設定
+    // RootSignatureの設定
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
     //  //PSOの設定
     DXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
@@ -36,7 +40,7 @@ void Object3dCommon::Object3dCommonDraw()
 }
 void Object3dCommon::CreateRootSignature()
 {
-///ディスクプリプターレンジの作成
+    ///ディスクプリプターレンジの作成
     D3D12_DESCRIPTOR_RANGE descriptorRange[1]{};
     descriptorRange[0].BaseShaderRegister = 0;//シェーダーのレジスタ番号0
     descriptorRange[0].NumDescriptors = 1;//ディスクリプタの数1つ
@@ -103,8 +107,8 @@ void Object3dCommon::CreateRootSignature()
     );
     assert(SUCCEEDED(hr_));
 }
-void Object3dCommon::CreatePSO(){
-     CreateRootSignature();
+void Object3dCommon::CreatePSO() {
+    CreateRootSignature();
     //InputLayoutの設定
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
     inputElementDescs[0].SemanticName = "POSITION";

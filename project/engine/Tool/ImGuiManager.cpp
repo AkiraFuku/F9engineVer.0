@@ -7,10 +7,15 @@
 std::unique_ptr<ImGuiManager> ImGuiManager::instance = nullptr;
 
 ImGuiManager* ImGuiManager::GetInstance() {
-    if (instance == nullptr) {
-        // コンストラクタがprivateなので reset(new ...) を使用
-        instance.reset(new ImGuiManager());
+      if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public ImGuiManager {
+            Helper() : ImGuiManager() {
+            }
+        };
+        instance= std::make_unique<Helper>();
     }
+
     return instance.get();
 }
 

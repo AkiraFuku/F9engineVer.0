@@ -13,8 +13,8 @@ public:
     //Modelロード
     void LoadModel(const std::string& filePath);
     //Model検索
-    std::shared_ptr<Model> findModel(const std::string& filePath);
-    static std::unique_ptr<ModelManager> instance;
+    std::unique_ptr<Model> findModel(const std::string& filePath);
+    static std::unique_ptr<ModelManager> instance_;
     friend struct std::default_delete<ModelManager>;
     void CreateSphereModel(const std::string& modelName, uint32_t subdivision = 16);
 private:
@@ -25,6 +25,6 @@ private:
     ModelManager(ModelManager&) = delete;
     ModelManager& operator=(ModelManager&) = delete;
 
-    std::map<std::string, std::shared_ptr<Model>> models;
+    std::map<std::string, std::unique_ptr<Model>> models;
 };
 

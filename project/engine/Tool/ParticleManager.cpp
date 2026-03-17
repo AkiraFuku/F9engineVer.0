@@ -29,13 +29,14 @@ void ParticleManager::Initialize() {
     CreateMaterialBuffer();
 }
 ParticleManager* ParticleManager::GetInstance() {
-    if (instance == nullptr)
-    {
-        // privateコンストラクタのため reset(new ...) を使用
-        instance.reset(new ParticleManager());
+      if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public ParticleManager {
+            Helper() : ParticleManager() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
-
 };
 void ParticleManager::Finalize() {
 

@@ -7,8 +7,13 @@
 std::unique_ptr<SpriteCommon> SpriteCommon::instance = nullptr;
 
 SpriteCommon* SpriteCommon::GetInstance() {
-    if (instance == nullptr) {
-        instance.reset(new SpriteCommon());
+   if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public SpriteCommon {
+            Helper() : SpriteCommon() {
+            }
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }

@@ -6,8 +6,12 @@
 std::unique_ptr<LightManager> LightManager::instance = nullptr;
 
 LightManager* LightManager::GetInstance() {
-    if (instance == nullptr) {
-        instance.reset(new LightManager());
+     if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public LightManager {
+            Helper() : LightManager() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }

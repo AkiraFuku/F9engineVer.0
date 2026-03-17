@@ -6,16 +6,21 @@ const uint32_t SrvManager::kMaxSRVCount = 512;
 // インスタンス取得の実装
 SrvManager* SrvManager::GetInstance() {
     if (instance == nullptr) {
-        // コンストラクタがprivateなのでmake_uniqueではなくnewしてresetする
-        instance.reset(new SrvManager());
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public SrvManager {
+            Helper() : SrvManager() {
+            }
+        };
+        instance = std::make_unique<Helper>();
     }
+
     return instance.get();
 }// 静的メンバ変数の初期化
 void SrvManager::Initialize() {
-    
-   
-    descriptorHeap_=DXCommon::GetInstance()->CreateDescriptorHeap( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
-    descriptorSize_=DXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+
+    descriptorHeap_ = DXCommon::GetInstance()->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+    descriptorSize_ = DXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 void SrvManager::Finalize() {
     // インスタンスを破棄（デストラクタが呼ばれ、ComPtrも解放される）
