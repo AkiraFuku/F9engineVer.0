@@ -21,12 +21,12 @@ public:
     virtual void Update();
     virtual void Draw() = 0;
     bool IsEnd() {
-        return endRequest_;
+        return endReqest_;
     }
     void Run();
 
     void RequestEnd() {
-        endRequest_ = true;
+        endReqest_ = true;
     }
 
     AbstractSceneFactory* GetSceneFactory() {
@@ -34,7 +34,7 @@ public:
     }
 
 private:
-    bool endRequest_ = false;
+    bool endReqest_ = false;
 
     D3DResourceLeakChecker LeakCheck;
     

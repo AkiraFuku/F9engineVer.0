@@ -8,8 +8,9 @@
 #include "Model.h"
 #include "Camera.h"
 #include "Object3dCommon.h"
-#include "PSOMnager.h"
+#include "PSOManager.h"
 #include "MathFunction.h"
+class Animation;
 class Object3d
 {
 
@@ -71,6 +72,19 @@ public:
     void SetFillMode(FillMode fillMode) {
         fillMode_ = fillMode;
     }
+    void SetAnimations(Animation* animation) {
+        if (model_) {
+            model_->SetAnimation(animation);
+        }
+    }
+    void SetAnimationTime(float time) {
+        if (model_) {
+            model_->SetAnimationTime(time);
+        }
+    }
+    void SetPsoName(const std::string& psoName) {
+        psoName_ = psoName;
+    }
 
     //void SetRadius(float radius) { radius_ = radius; }
 private:
@@ -86,11 +100,14 @@ private:
     CameraForGPU* cameraData_ = nullptr;
     void  CreateCameraResource();
     //トランスフォーム
-    Transform transform_ = {};
+    EulerTransform transform_ = {};
     //カメラ　
     Camera* camera_ = nullptr;
 
     FillMode fillMode_ = FillMode::kSolid;
     BlendMode blendMode_ = BlendMode::None;
+
+    std::string psoName_ = "Object3d";
+
 };
 

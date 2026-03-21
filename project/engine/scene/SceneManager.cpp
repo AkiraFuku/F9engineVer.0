@@ -1,26 +1,17 @@
 #include "SceneManager.h"
 #include <cassert>
 // 静的メンバ変数の実体
-std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
+SceneManager* SceneManager::instance = nullptr;
 
 SceneManager* SceneManager::GetInstance() {
     if (instance == nullptr) {
-        // privateコンストラクタを呼び出せるヘルパー構造体
-        struct Helper : public SceneManager {
-            Helper() : SceneManager() {
-            }
-        };
-        instance = std::make_unique<Helper>();
+        instance = new SceneManager();
     }
-
-    return instance.get();
+    return instance;
 }
 
 void SceneManager::Finalize() {
-    if (scene_) {
-        scene_->Finalize();
-        scene_ = nullptr;
-    }
+    delete instance;
     instance = nullptr;
 }
 
@@ -34,6 +25,8 @@ SceneManager::~SceneManager()
 
 void SceneManager::Update() {
     // シーン切り替え処理
+
+
     if (nextScene_) {
 
         if (scene_)
@@ -42,14 +35,15 @@ void SceneManager::Update() {
             scene_ = nullptr;
 
         }
+
         scene_ = std::move(nextScene_);
-      
 
         scene_->SetSceneManager(this);
         scene_->Initialize();
 
     }
 
+    
     if (scene_) {
         scene_->Update();
     }
@@ -64,6 +58,7 @@ void SceneManager::Draw() {
 void SceneManager::ChangeScene(const std::string& sceneName)
 {
     assert(sceneFactory_);
-    assert(nextScene_ == nullptr);
+    //assert(nextScene_ == nullptr);
     nextScene_ = sceneFactory_->CreateScene(sceneName);
+    
 }

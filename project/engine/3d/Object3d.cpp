@@ -30,10 +30,10 @@ void Object3d::Update()
     if (camera_)
     {
         cameraData_->worldPosition = camera_->GetTranslate();
-      worldViewProjectionMatrix = Multiply( Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix), camera_->GetViewProtectionMatrix());
-     //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
+        worldViewProjectionMatrix = Multiply(Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix), camera_->GetViewProtectionMatrix());
+        //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
     } else {
-        worldViewProjectionMatrix =Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix);
+        worldViewProjectionMatrix = Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix);
     }
     //行列をGPUに転送
     wvpResource_->WVP = worldViewProjectionMatrix;
@@ -59,13 +59,15 @@ void Object3d::Draw()
     if (!camera_) return;
 
 
-
     Object3dCommon::GetInstance()->Object3dCommonDraw();
-    PsoProperty psoProp = { PipelineType::Object3d, blendMode_ ,fillMode_ };
-    PsoSet psoSet = PSOMnager::GetInstance()->GetPsoSet(psoProp);
+    auto psoSet = PSOManager::GetInstance()->GetPso(psoName_, blendMode_, fillMode_);
+
+    auto commandList = DXCommon::GetInstance()->GetCommandList();
+    commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
+    commandList->SetPipelineState(psoSet.pipelineState.Get());
 
     // PSOをセット
-    DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
+   // DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
     //WVP行列リソースの設定
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());
     //light

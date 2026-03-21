@@ -14,9 +14,16 @@ Camera::Camera()
 void Camera::Update() {
 
     worldMatrix = MakeAfineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+
+}
+
+void Camera::UpdateView()
+{
     viewMatrix = Inverse(worldMatrix);
+}
+
+void Camera::UpdateViewProjection()
+{
     projectionMatrix = MakePerspectiveFovMatrix(fovY, aspect, nearCrip, farCrip);
-
     viewProtectionMatrix = Multiply(viewMatrix, projectionMatrix);
-
 }

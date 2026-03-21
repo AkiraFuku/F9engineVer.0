@@ -18,13 +18,9 @@ std::unique_ptr<Audio> Audio::instance = nullptr;
 
 Audio* Audio::GetInstance()
 {
-     if (instance == nullptr) {
-        // privateコンストラクタを呼び出せるヘルパー構造体
-        struct Helper : public Audio {
-            Helper() : Audio() {
-            }
-        };
-        instance = std::make_unique<Helper>();
+    if (instance == nullptr)
+    {
+        instance.reset(new Audio());
     }
     return instance.get();
 }

@@ -27,7 +27,7 @@ struct Plane
 };
 struct Triangle
 {
-	Vector3 vertces[3];//頂点1
+	Vector3 vertices[3];//頂点1
 
 };
 struct AABB{
@@ -92,6 +92,7 @@ struct AABB{
 
 Vector3 Project(const Vector3& v1,const Vector3& v2);
 Vector3 ClosestPoint(const Vector3& point,const Segment& segment);
+float DistanceSqPointToSegment(const Vector3& p, const Vector3& a, const Vector3& b);
 
 bool IsCollision(const Sphere& si,const Sphere& s2);
 bool IsCollision(const Sphere& sphere,const Plane& plane);

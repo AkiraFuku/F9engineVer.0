@@ -1,7 +1,7 @@
 #include "ParicleEmitter.h"
 #include "DXCommon.h"
 
-ParicleEmitter::ParicleEmitter(const  std::string name, Transform transfom, uint32_t count, float frequency, float frequencyTime) {
+ParicleEmitter::ParicleEmitter(const  std::string name, EulerTransform transfom, uint32_t count, float frequency, float frequencyTime) {
     transfom_ = transfom;
     count_ = count;
     frequency_ = frequency;

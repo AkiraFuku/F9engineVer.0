@@ -3,19 +3,19 @@
 #include "MathFunction.h"
 #include "TextureManager.h"
 #include "DXCommon.h"
-
+#include "Transform.h"
 void Sprite::Initialize(std::string textureFilePath) {
 
 
 
-    vertexResource_ =
+    vertexResourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(VertexData) * 4);
     indexResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(uint32_t) * 6);
     vertexBufferView_.BufferLocation =
-        vertexResource_.Get()->GetGPUVirtualAddress();
+        vertexResourse_.Get()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
@@ -24,7 +24,7 @@ void Sprite::Initialize(std::string textureFilePath) {
     indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;//32ビット整数
 
-    vertexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
     indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
 
     //
@@ -38,10 +38,10 @@ void Sprite::Initialize(std::string textureFilePath) {
     materialData_->enableLighting = false;
     materialData_->uvTransform = Makeidetity4x4();
     //座標変換
-    transformationMatrixResource_ =
+    transformationMatrixResourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(TransformationMatrix));
-    transformationMatrixResource_.Get()->
+    transformationMatrixResourse_.Get()->
         Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
     transformationMatrixData_->WVP = Makeidetity4x4();
     transformationMatrixData_->World = Makeidetity4x4();
@@ -104,7 +104,7 @@ void Sprite::Update() {
 
 
 
-    Transform transform{ {size_.x,size_.y,1.0f},{0.0f,0.0f,rotation_},{position_.x,position_.y,0.0f} };
+    EulerTransform transform{ {size_.x,size_.y,1.0f},{0.0f,0.0f,rotation_},{position_.x,position_.y,0.0f} };
 
     Matrix4x4 worldMatrix = MakeAfineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 viewMatrix = Makeidetity4x4();
@@ -120,9 +120,8 @@ void Sprite::Update() {
 void Sprite::Draw()
 {
     SpriteCommon::GetInstance()->SpriteCommonDraw();
-    // Object3d用のパイプラインタイプと、自身のブレンドモードを指定
-    PsoProperty psoProp = { PipelineType::Sprite, blendMode_,fillMode_ };
-    PsoSet psoSet = PSOMnager::GetInstance()->GetPsoSet(psoProp);
+    //Object3dCommon::GetInstance()->Object3dCommonDraw();
+    auto psoSet = PSOManager::GetInstance()->GetPso("Sprite", blendMode_, fillMode_);
 
     // PSOをセット
     DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
@@ -145,7 +144,7 @@ void Sprite::Draw()
     //座標変換行列の設定
     DXCommon::GetInstance()->
         GetCommandList()->
-        SetGraphicsRootConstantBufferView(1, transformationMatrixResource_->GetGPUVirtualAddress());
+        SetGraphicsRootConstantBufferView(1, transformationMatrixResourse_->GetGPUVirtualAddress());
 
     DXCommon::GetInstance()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }

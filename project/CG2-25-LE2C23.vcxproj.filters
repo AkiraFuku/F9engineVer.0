@@ -64,6 +64,12 @@
     <Filter Include="シェーダー ファイル\sprite">
       <UniqueIdentifier>{59a31dd0-920a-45c1-997f-36c5996bd533}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App">
+      <UniqueIdentifier>{ac384670-1800-4520-96d7-ae4fa2d7bf6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Scene">
+      <UniqueIdentifier>{c759ee72-dd47-40d0-97a2-f45ec1bb6ed3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -165,12 +171,6 @@
     <ClCompile Include="engine\GAME\GameEngine.cpp">
       <Filter>engine\GAME</Filter>
     </ClCompile>
-    <ClCompile Include="engine\scene\GameScene.cpp">
-      <Filter>engine\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\scene\TitleScene.cpp">
-      <Filter>engine\scene</Filter>
-    </ClCompile>
     <ClCompile Include="engine\scene\Scene.cpp">
       <Filter>engine\scene</Filter>
     </ClCompile>
@@ -180,11 +180,35 @@
     <ClCompile Include="engine\scene\SceneFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\base\PSOMnager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="LightManager.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\GameScene.cpp">
+      <Filter>App\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\TitleScene.cpp">
+      <Filter>App\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\math\Mass.cpp">
+      <Filter>engine\math</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\math\Quanternion.cpp">
+      <Filter>engine\math</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\math\RotateFunction.cpp">
+      <Filter>engine\math</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\base\PSOManager.cpp">
+      <Filter>engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>engine\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="application\debugCamera\DebugCamera.cpp">
+      <Filter>engine\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="application\debugCamera\DebugCameraFunction.cpp">
+      <Filter>engine\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -290,12 +314,6 @@
     <ClInclude Include="engine\GAME\Framework.h">
       <Filter>engine\GAME</Filter>
     </ClInclude>
-    <ClInclude Include="engine\scene\GameScene.h">
-      <Filter>engine\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\scene\TitleScene.h">
-      <Filter>engine\scene</Filter>
-    </ClInclude>
     <ClInclude Include="engine\scene\Scene.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
@@ -308,11 +326,38 @@
     <ClInclude Include="engine\scene\SceneFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\base\PSOMnager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="LightManager.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\debugCamera\DebugCamera.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\debugCamera\DebugCameraFunction.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\GameScene.h">
+      <Filter>App\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\TitleScene.h">
+      <Filter>App\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\math\Mass.h">
+      <Filter>engine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\math\Quanternion.h">
+      <Filter>engine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\math\RotateFunction.h">
+      <Filter>engine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\math\Transform.h">
+      <Filter>engine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\base\PSOManager.h">
+      <Filter>engine\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

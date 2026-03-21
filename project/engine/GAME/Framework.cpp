@@ -10,12 +10,11 @@
 #include "SpriteCommon.h"//フレームワークに移植
 #include "TextureManager.h"//フレームワークに移植
 #include"Object3DCommon.h"//フレームワークに移植
-#include "ModelCommon.h"//フレームワークに移植
 #include "ModelManager.h"//フレームワークに移植
 #include "SrvManager.h"//フレームワークに移植
 #include <fstream>
 #include <iostream> 
-#include "PSOMnager.h"
+#include "PSOManager.h"
 #include "LightManager.h"
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
     //ダンプファイルの作成
@@ -86,7 +85,7 @@ void Framework::Initialize()
     DXCommon::GetInstance()->Initialize();
  
     SrvManager::GetInstance()->Initialize();
-PSOMnager::GetInstance()->Initialize();
+PSOManager::GetInstance()->Initialize();
 
   
 
@@ -112,7 +111,7 @@ void Framework::Finalize()
     SrvManager::GetInstance()->Finalize();
     SceneManager::GetInstance()->Finalize();
     DXCommon::GetInstance()->Finalize();
-    PSOMnager::GetInstance()->Finalize();
+    PSOManager::GetInstance()->Finalize();
     Audio::GetInstance()->Finalize();
     Input::GetInstance()->Finalize();
     Object3dCommon::GetInstance()->Finalize();
@@ -130,7 +129,7 @@ void Framework::Update()
 {
     //メッセージがある限りGetMessageを呼び出す
     if (WinApp::GetInstance()->ProcessMessage()) {
-        endRequest_ = true;
+        endReqest_ = true;
 
 
     }
@@ -140,17 +139,17 @@ void Framework::Update()
     Input::GetInstance()->Update();
     Audio::GetInstance()-> Update();
     LightManager::GetInstance()->Update();
-    //DXCommon::GetInstance()->PreDraw();
-    //SrvManager::GetInstance()->PreDraw();
+    DXCommon::GetInstance()->PreDraw();
+    SrvManager::GetInstance()->PreDraw();
   
 }
 
 void Framework::Draw()
 {
-  /*  ImGuiManager::GetInstance()->End();
+    ImGuiManager::GetInstance()->End();
     ImGuiManager::GetInstance()->Draw();
     DXCommon::GetInstance()->PostDraw();
-    TextureManager::GetInstance()->ReleaseIntermediateResources();*/
+    TextureManager::GetInstance()->ReleaseIntermediateResources();
 
     // 基底クラスの描画処理（純粋仮想関数として宣言されているため、必ずオーバーライドする必要があります）
 }

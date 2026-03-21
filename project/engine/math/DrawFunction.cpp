@@ -366,6 +366,36 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
 	return Add(segment.origin,project);
 }
 
+// 線分ABと点Pの最短距離の二乗を計算する関数
+float DistanceSqPointToSegment(const Vector3& p, const Vector3& a, const Vector3& b) {
+    Vector3 ab = b - a;
+    Vector3 ap = p - a;
+
+    // 内積を計算
+    float d1 = ap.x * ab.x + ap.y * ab.y + ap.z * ab.z;
+    if (d1 <= 0.0f) {
+        // 点Pが点Aの外側にある場合、Aとの距離が最短
+        return ap.x * ap.x + ap.y * ap.y + ap.z * ap.z;
+    }
+
+    float d2 = ab.x * ab.x + ab.y * ab.y + ab.z * ab.z;
+    if (d2 <= d1) {
+        // 点Pが点Bの外側にある場合、Bとの距離が最短
+        Vector3 bp = p - b;
+        return bp.x * bp.x + bp.y * bp.y + bp.z * bp.z;
+    }
+
+    // 点Pが線分ABの間にある場合、垂線の長さを計算
+    float t = d1 / d2;
+    Vector3 closestPoint = {
+        a.x + t * ab.x,
+        a.y + t * ab.y,
+        a.z + t * ab.z
+    };
+    Vector3 diff = p - closestPoint;
+    return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+}
+
 // sphereとsphereの衝突判定
 bool IsCollision(const Sphere& s1, const Sphere& s2)
 {
@@ -451,9 +481,9 @@ bool isCollision(const Triangle triangle,const Segment& segment )
 
 	
 	 // 三角形の頂点
-    const Vector3& v0 = triangle.vertces[0];
-    const Vector3& v1 = triangle.vertces[1];
-    const Vector3& v2 = triangle.vertces[2];
+    const Vector3& v0 = triangle.vertices[0];
+    const Vector3& v1 = triangle.vertices[1];
+    const Vector3& v2 = triangle.vertices[2];
 	 
 //三角形の辺を求める
 	Vector3 v01 = Subtract(v1,v0);

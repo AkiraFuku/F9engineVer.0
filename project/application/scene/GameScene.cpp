@@ -1,13 +1,14 @@
-#include "TitleScene.h"
+#include "GameScene.h"
 #include "ModelManager.h"
 #include "Input.h"
 #include "imgui.h"
 #include "GameScene.h"
 #include "SceneManager.h"
 #include "ParticleManager.h"//フレームワークに移植
-#include "PSOMnager.h"
+#include "PSOManager.h"
+#include "LightManager.h"
 
-void TitleScene::Initialize() {
+void GameScene::Initialize() {
 
     camera = std::make_unique<Camera>();
     camera->SetRotate({ 0.0f,0.0f,0.0f });
@@ -15,13 +16,14 @@ void TitleScene::Initialize() {
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
     ParticleManager::GetInstance()->Setcamera(camera.get());
 
-    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
+     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_, true);
+    Audio::GetInstance()->PlayAudio(handle_,true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-
+    
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
+    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f },1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
@@ -29,28 +31,42 @@ void TitleScene::Initialize() {
     // sprite->Initialize(spritecommon,"resources/monsterBall.png");
     sprite->Initialize("resources/monsterBall.png");
 
-    sprite->SetPosition(Vector2{ 100.0f,100.0f });
+    sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });
     // sprite->SetSize(Vector2{ 100.0f,100.0f });
     //sprites.push_back(sprite);
    // sprite->SetBlendMode(BlendMode::Add);
-   // sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
+    sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
 
     //}
 
 
 
+    animation = std::make_unique<Animation>();
+
+    animation->Initialize("resources/AnimatedCube","AnimatedCube.gltf");
+    animation->SetCurrentTime(0.0f);
 
 
 
-    ModelManager::GetInstance()->LoadModel("plane.obj");
+
+    ModelManager::GetInstance()->LoadModel("resources/AnimatedCube","AnimatedCube.gltf");
+        object3d = std::make_unique<Object3d>();
+        object3d->Initialize();
+        object3d->SetModel("AnimatedCube.gltf");
+        object3d->SetCamera(camera.get());
+
+       object3d->SetAnimations(animation.get());
+        
+      
+
 
 
 }
-void TitleScene::Finalize() {
+void GameScene::Finalize() {
 
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
-void TitleScene::Update() {
+void GameScene::Update() {
 
 
     XINPUT_STATE state;
@@ -58,14 +74,14 @@ void TitleScene::Update() {
     // 現在のジョイスティックを取得
     if (Input::GetInstance()->TriggerMouseDown(0))
     {
-        if (Audio::GetInstance()->IsPlaying(handle_))
+      if (Audio::GetInstance()->IsPlaying(handle_))
         {
             Audio::GetInstance()->PauseAudio(handle_);
-        } else
-        {
-            Audio::GetInstance()->ResumeAudio(handle_);
-
-        }
+      } else
+      {
+          Audio::GetInstance()->ResumeAudio(handle_);
+       
+      }
     }
 
 
@@ -73,7 +89,7 @@ void TitleScene::Update() {
 
     // Aボタンを押していたら
 
-    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_A)) {
+    if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
 
 
 
@@ -81,19 +97,17 @@ void TitleScene::Update() {
 
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
-
+            
             Audio::GetInstance()->StopAudio(handle_);
         }
 
-        GetSceneManager()->ChangeScene("GameScene");
+      //  GetSceneManager()->ChangeScene("GameScene");
 
     }
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_B))
     {
 
     }
-
-    
 
     //マウスホイールの入力取得
 
@@ -119,18 +133,24 @@ void TitleScene::Update() {
     }
 
     camera->Update();
-
+    if (isDebugCamera_)
+    {
+        debugCamera_.Update(camera->GetTransform());
+        camera->SetViewMatrix(debugCamera_.GetViewMatrix());
+    } else
+    {
+        camera->UpdateView();
+    }
+    camera->UpdateViewProjection();
+    object3d->Update();
 
 #ifdef USE_IMGUI
-    ImVec2 fixedSize = ImVec2(400, 300);
-    ImGui::SetNextWindowSize(fixedSize, ImGuiCond_FirstUseEver); // 初回起動時にサイズを反映
-
-    ImGui::Begin("Debug",NULL, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Debug");
 
     ImGui::Text("Sprite");
     Vector2 Position =
         sprite->GetPosition();
-    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f,"%.1f");
+    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
     sprite->SetPosition(Position);
 
     ImGui::End();
@@ -139,9 +159,10 @@ void TitleScene::Update() {
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
     sprite->Update();
 }
-void TitleScene::Draw() {
+void GameScene::Draw() {
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
-    sprite->Draw();
+    //sprite->Draw();
+    object3d->Draw();
 }

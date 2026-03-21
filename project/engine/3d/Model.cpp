@@ -13,7 +13,7 @@
 void Model::Initialize(const std::string& directryPath, const std::string& filename)
 {
 
-
+    name_ = filename;
     modelData_ = LoadModelFile(directryPath, filename);
     if (modelData_.material.textureFilePath.empty()) {
         modelData_.material.textureFilePath = "resources/uvChecker.png"; // 確実に存在する画像を指定
@@ -37,31 +37,31 @@ void Model::Initialize(const std::string& directryPath, const std::string& filen
 void Model::Update()
 {
 #ifdef USE_IMGUI
-    ImGui::Begin("Settings");
-            int* pEnableLighting = reinterpret_cast<int*>(&materialData_->enableLighting);
-            ImGui::Checkbox("Enable Lighting", (bool*)pEnableLighting);
-            if (materialData_->enableLighting) {
-                // 拡散反射 (Diffuse) の設定
-                ImGui::Text("Diffuse (Base)");
-                const char* diffuseItems[] = { "Lambert", "Half-Lambert" };
-                ImGui::Combo("Diffuse Type", &materialData_->diffuseType, diffuseItems, IM_ARRAYSIZE(diffuseItems));
+    ImGui::Begin((std::string("Settings: ") + name_).c_str());
+    int* pEnableLighting = reinterpret_cast<int*>(&materialData_->enableLighting);
+    ImGui::Checkbox("Enable Lighting", (bool*)pEnableLighting);
+    if (materialData_->enableLighting) {
+        ImGui::Text("Diffuse (Base)");
+        const char* diffuseItems[] = { "Lambert", "Half-Lambert" };
+        ImGui::Combo("Diffuse Type", &materialData_->diffuseType, diffuseItems, IM_ARRAYSIZE(diffuseItems));
 
-                // 鏡面反射 (Specular) の設定
-                ImGui::Text("Specular (Shininess)");
-                const char* specularItems[] = { "None", "Phong", "Blinn-Phong" };
-                ImGui::Combo("Specular Type", &materialData_->specularType, specularItems, IM_ARRAYSIZE(specularItems));
+        ImGui::Text("Specular (Shininess)");
+        const char* specularItems[] = { "None", "Phong", "Blinn-Phong" };
+        ImGui::Combo("Specular Type", &materialData_->specularType, specularItems, IM_ARRAYSIZE(specularItems));
 
-                // 光沢度
-                ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 1.0f, 256.0f);
-            }
-          
+        ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 1.0f, 256.0f);
+    }
 
-            ImGui::End();
-
+    ImGui::End();
 
 #endif // USE_IMGUI
 
-
+    if (animation_)
+    {
+        animation_->Update();
+        
+        ApplyAnimation(modelData_.rootNode, animation_->GetCurrentTime_());
+    }
 }
 void Model::Draw() {
     //VBVの設定
@@ -103,12 +103,30 @@ void Model::CreateMaterialResource() {
         Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 
     materialData_->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
-    materialData_->enableLighting = true;
+    materialData_->enableLighting = false;
     materialData_->uvTransform = Makeidetity4x4();
     materialData_->shininess=50.0f;
     materialData_->specularType=BlinnPhong;
     materialData_->diffuseType=HarfLambert;
 
+}
+void Model::ApplyAnimation(Node& node, float time)
+{
+    const auto& nodeAnimations = animation_->GetAnimationData().nodeAnimations;
+
+    // このノードにアニメーションがあれば計算
+    if (nodeAnimations.find(node.name) != nodeAnimations.end()) {
+        const auto& anim = nodeAnimations.at(node.name);
+        Vector3 t = animation_->CalculateValue(anim.translate.keyFrames, time);
+        Quaternion r = animation_->CalculateValue(anim.rotate.keyFrames, time);
+        Vector3 s = animation_->CalculateValue(anim.scale.keyFrames, time);
+        node.localMatrix = MakeAfineMatrix(s, r, t);
+    }
+
+    // 子供のノードにも再帰的に適用
+    for (auto& child : node.children) {
+        ApplyAnimation(child, time);
+    }
 }
 Model::MaterialData  Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
     //1. 変数の宣言
@@ -191,10 +209,9 @@ aiProcess_PreTransformVertices
 
 }
 
-std::shared_ptr<Model> Model::CreateSphere(uint32_t subdivision)
+Model* Model::CreateSphere(uint32_t subdivision)
 {
-    std::shared_ptr<Model> model = 
-        std::make_unique<Model>();
+    Model* model = new Model();
 
     // 1. メモリ確保（頂点リソース作成など既存のInitializeの一部が必要だが、
     // ここではvertex生成に集中し、後でリソース生成関数を呼ぶ流れにします）
@@ -275,6 +292,47 @@ std::shared_ptr<Model> Model::CreateSphere(uint32_t subdivision)
 
     // 既存のメソッドを利用してGPUバッファを作成
     // ※Initialize関数の中身を分解するか、この関数内で CreateVertexBuffer() 等を呼べるようにアクセス権を調整してください
+    model->CreateVertexBuffer();
+    model->CreateMaterialResource();
+
+    return model;
+}
+
+Model* Model::CreatePlaneFromTex(const std::string& textureFilePath)
+{
+    Model* model = new Model();
+
+    // 1. テクスチャのロードとサイズ取得
+    TextureManager::GetInstance()->LoadTexture(textureFilePath);
+    const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureFilePath);
+
+    float w = (static_cast<float>(metadata.width) / 2.0f) / 4.0f;
+    float h = (static_cast<float>(metadata.height) / 2.0f) / 4.0f;
+
+    // 2. 頂点データの生成
+   // 4つの頂点を作成
+    Model::VertexData a = { {-w, -h, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }; // 左上
+    Model::VertexData b = { { w, -h, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }; // 右上
+    Model::VertexData c = { {-w,  h, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }; // 左下
+    Model::VertexData d = { { w,  h, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }; // 右下
+
+    // 頂点をpush_backして三角形2つ（計6頂点）を構築
+    // 三角形1: A -> B -> C
+    model->modelData_.vertices.push_back(a);
+    model->modelData_.vertices.push_back(b);
+    model->modelData_.vertices.push_back(c);
+
+    // 三角形2: C -> B -> D
+    model->modelData_.vertices.push_back(c);
+    model->modelData_.vertices.push_back(b);
+    model->modelData_.vertices.push_back(d);
+
+    // 3. マテリアル設定
+    model->modelData_.material.textureFilePath = textureFilePath;
+    model->modelData_.material.textureIndex =
+        TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+
+    // 4. バッファ等の初期化（既存メソッドを再利用）
     model->CreateVertexBuffer();
     model->CreateMaterialResource();
 

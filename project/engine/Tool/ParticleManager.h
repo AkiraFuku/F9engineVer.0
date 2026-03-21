@@ -9,7 +9,7 @@
 #include "d3d12.h"
 #include <cstdint>
 #include "Camera.h"
-
+#include "Transform.h"
 class ParticleManager
 {
 public:
@@ -31,7 +31,7 @@ public:
     };
     struct Particle
     {
-        Transform transfom;
+        EulerTransform transfom;
         Vector3 velocity;
         Vector4 color;
         float lifeTime;

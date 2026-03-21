@@ -7,21 +7,30 @@
 #include "ParicleEmitter.h"
 #include "Audio.h"
 #include "TextureManager.h"
+
 #include "Scene.h"
 #include <memory>
-class GameScene :public Scene
+
+#include "DebugCamera.h"
+
+#include "Animation.h"
+
+class TitleScene :public Scene
 {
 public:
-    void Initialize() override;
+    void Initialize()override;
     void Finalize()override;
     void Update()override;
     void Draw()override;
 private:
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Sprite> sprite;
-    std::unique_ptr<Object3d> object3d2;
     std::unique_ptr<Object3d> object3d;
-    std::unique_ptr<ParicleEmitter> emitter;
-  uint32_t handle_=0;
+    std::unique_ptr<Animation> animation;
+
+    DebugCamera debugCamera_;
+    bool isDebugCamera_ = false;
+
+     uint32_t handle_=0;
 };
 

@@ -50,5 +50,12 @@ public:
     D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureindex);
     //メタデータ
     const DirectX::TexMetadata& GetMetaData(const std::string& filePath);
+
+public: // 外部入出力
+
+    // ----- Getter -----
+    const DirectX::Image GetImage(const std::string& filePath) const;
+
+
 };
 

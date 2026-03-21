@@ -47,9 +47,8 @@ public:
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
     //クリエイトテクスチャ
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResourse(const DirectX::TexMetadata& metadata);
-    //アップロードテクスチャ（同期処理あり）
-    [[nodiscard]]
-    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> textur, const DirectX::ScratchImage& mipImages);
+    //アップロードテクスチャ
+    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const  Microsoft::WRL::ComPtr<ID3D12Resource> textur, const DirectX::ScratchImage& mipImages);
 
     Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heepType, UINT numDescriptors, bool shaderVisible);
 
@@ -77,8 +76,7 @@ private:
     //記録用時間
     std::chrono::steady_clock::time_point reference_;
 
-    // GPU同期用
-    void WaitForGPUCompletion();
+
 
 private:
     HRESULT hr_;
@@ -101,7 +99,7 @@ private:
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 
-   
+    /*WinApp* winApp_ = nullptr;*/
     //深度バッファ
     Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
     void CreateDepthStencilTextureResource();
@@ -126,7 +124,7 @@ private:
     //フェンス
     void CreateFence();
     Microsoft::WRL::ComPtr<ID3D12Fence> fence_ = nullptr;
-    HANDLE fenceEvent_ = nullptr;
+    //HANDLE fenceEvent_ = nullptr;
     //ビューポート矩形
     void CreateViewport();
     D3D12_VIEWPORT viewport_{};

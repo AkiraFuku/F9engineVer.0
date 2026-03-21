@@ -10,7 +10,12 @@
 
 #include "Scene.h"
 #include <memory>
-class TitleScene :public Scene
+
+#include "DebugCamera.h"
+
+#include "Animation.h"
+
+class GameScene :public Scene
 {
 public:
     void Initialize()override;
@@ -20,7 +25,11 @@ public:
 private:
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Sprite> sprite;
+    std::unique_ptr<Object3d> object3d;
+    std::unique_ptr<Animation> animation;
 
+    DebugCamera debugCamera_;
+    bool isDebugCamera_ = false;
 
      uint32_t handle_=0;
 };

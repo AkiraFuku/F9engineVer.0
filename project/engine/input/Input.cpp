@@ -11,20 +11,17 @@ std::unique_ptr<Input> Input::instance = nullptr;
 
 Input* Input::GetInstance() {
     if (instance == nullptr) {
-        // privateコンストラクタを呼び出せるヘルパー構造体
-        struct Helper : public Input {
-            Helper() : Input() {
-            }
-        };
-        instance = std::make_unique<Helper>();
+        // コンストラクタがprivateなので make_unique は使えない
+        // クラス内部からは new できるので reset でセットする
+        instance.reset(new Input());
     }
     return instance.get();
 }
 void Input::Finalize() {
-    instance.reset();
+   instance.reset();
 }
 void Input::Initialize() {
-
+    
     // DirectInputの初期化
     HRESULT hr;
     Microsoft::WRL::ComPtr<IDirectInput8> directInput = nullptr;
