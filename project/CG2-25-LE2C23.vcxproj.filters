@@ -359,6 +359,12 @@
     <ClInclude Include="engine\base\PSOManager.h">
       <Filter>engine\base</Filter>
     </ClInclude>
+    <ClInclude Include="engine\base\SingletonHelper.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\AbstractSceneFactory.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

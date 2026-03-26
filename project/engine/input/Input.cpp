@@ -10,10 +10,12 @@
 std::unique_ptr<Input> Input::instance = nullptr;
 
 Input* Input::GetInstance() {
-    if (instance == nullptr) {
-        // コンストラクタがprivateなので make_unique は使えない
-        // クラス内部からは new できるので reset でセットする
-        instance.reset(new Input());
+     if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public Input {
+            Helper() : Input() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }

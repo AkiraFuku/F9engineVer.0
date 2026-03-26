@@ -5,9 +5,12 @@ std::unique_ptr<SrvManager> SrvManager::instance = nullptr;
 const uint32_t SrvManager::kMaxSRVCount = 512;
 // インスタンス取得の実装
 SrvManager* SrvManager::GetInstance() {
-    if (instance == nullptr) {
-        // コンストラクタがprivateなのでmake_uniqueではなくnewしてresetする
-        instance.reset(new SrvManager());
+   if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public SrvManager {
+            Helper() : SrvManager() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }// 静的メンバ変数の初期化

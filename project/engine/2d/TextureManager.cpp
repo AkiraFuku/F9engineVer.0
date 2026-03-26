@@ -12,10 +12,12 @@ void TextureManager::Initialize() {
 }
 
 TextureManager* TextureManager::GetInstance() {
-    if (instance == nullptr)
-    {
-        // コンストラクタがprivateなので reset(new ...) を使用
-        instance.reset(new TextureManager());
+   if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public TextureManager {
+            Helper() : TextureManager() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 };

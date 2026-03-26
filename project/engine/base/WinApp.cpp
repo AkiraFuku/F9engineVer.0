@@ -11,9 +11,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 std::unique_ptr<WinApp> WinApp::instance = nullptr;
 
 WinApp* WinApp::GetInstance() {
-    if (instance == nullptr) {
-        // std::make_uniqueはプライベートコンストラクタにアクセスできないため、newを使用
-        instance.reset(new WinApp);
+      if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public WinApp {
+            Helper() : WinApp() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }

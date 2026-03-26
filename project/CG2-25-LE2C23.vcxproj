@@ -86,10 +86,12 @@
     <ClInclude Include="application\scene\GameScene.h" />
     <ClInclude Include="application\scene\TitleScene.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
+    <ClInclude Include="engine\base\SingletonHelper.h" />
     <ClInclude Include="engine\math\Mass.h" />
     <ClInclude Include="engine\math\Quanternion.h" />
     <ClInclude Include="engine\math\RotateFunction.h" />
     <ClInclude Include="engine\math\Transform.h" />
+    <ClInclude Include="engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="engine\Tool\AbstractSceneFactory.h" />
     <ClInclude Include="engine\math\DrawFunction.h" />
     <ClInclude Include="engine\Tool\Camera.h" />

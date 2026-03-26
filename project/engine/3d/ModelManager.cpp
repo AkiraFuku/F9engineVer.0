@@ -7,8 +7,12 @@ void ModelManager::Initialize() {
 
 }
 ModelManager* ModelManager::GetInstance() {
-    if (instance == nullptr) {
-        instance.reset(new ModelManager());
+       if (instance == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public ModelManager {
+            Helper() : ModelManager() {}
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 

@@ -9,13 +9,17 @@
 #include <thread>
 
 
-const float DXCommon::kDeltaTime=1.0f/60.0f;
-std::unique_ptr<DXCommon> DXCommon::instance=nullptr;
+const float DXCommon::kDeltaTime = 1.0f / 60.0f;
+std::unique_ptr<DXCommon> DXCommon::instance = nullptr;
 
 DXCommon* DXCommon::GetInstance() {
     if (instance == nullptr) {
-        // コンストラクタがprivateなのでmake_uniqueではなくnewしてresetする
-        instance.reset(new DXCommon());
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public DXCommon {
+            Helper() : DXCommon() {
+            }
+        };
+        instance = std::make_unique<Helper>();
     }
     return instance.get();
 }// 静的メンバ変数の初期化
@@ -33,12 +37,12 @@ void DXCommon::Initialize()
     CreateViewport();
     CreateScissorRect();
     CreateDXCompiler();
-    
+
 }
 
 void DXCommon::Finalize()
 {
-   instance.reset();
+    instance.reset();
 }
 
 void DXCommon::PreDraw()
@@ -300,20 +304,20 @@ void DXCommon::InitializeFixFPS()
 
 void DXCommon::UpdateFixFPS()
 {
-    const std::chrono::microseconds kMinTime(uint64_t(1000000.0f/60.0f));
-    const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f/65.0f));
+    const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+    const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
 
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     std::chrono::microseconds elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
-    if (elapsed<kMinCheckTime){
-        while (std::chrono::steady_clock::now()-reference_<kMinTime)
+    if (elapsed < kMinCheckTime) {
+        while (std::chrono::steady_clock::now() - reference_ < kMinTime)
         {
             std::this_thread::sleep_for(std::chrono::microseconds(1));
 
         }
 
     }
-      reference_ = std::chrono::steady_clock::now();
+    reference_ = std::chrono::steady_clock::now();
 }
 
 void DXCommon::CreateDevice()
@@ -500,23 +504,23 @@ void DXCommon::CreateDepthStencilTextureResource() {
 
 void DXCommon::CreateDescriptorHeaps()
 {
-   // descriptorSizeSRV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    // descriptorSizeSRV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
     //SRVヒープの作成
    // srvHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
     //RTVヒープの作成
-    rtvHeap_ = CreateDescriptorHeap( D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+    rtvHeap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
     //DSVヒープの作成
-    dsvHeap_ = CreateDescriptorHeap( D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+    dsvHeap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
 
 
 
 }
 
-Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> DXCommon::CreateDescriptorHeap( D3D12_DESCRIPTOR_HEAP_TYPE heepType, UINT numDescriptors, bool shaderVisible)
+Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> DXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heepType, UINT numDescriptors, bool shaderVisible)
 {
     //ディスクリプタヒープの設定
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
