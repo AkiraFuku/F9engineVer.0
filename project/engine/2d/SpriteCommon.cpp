@@ -25,8 +25,12 @@ void SpriteCommon::Initialize()
 {
 
     PsoConfig config{};
-    config.vsPath = L"resources/shaders/Sprite/Sprite.vs.hlsl";
-    config.psPath = L"resources/shaders/Sprite/Sprite.ps.hlsl";
+    PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Sprite/Sprite.vs.hlsl", "main", L"vs_6_0" };
+    PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Sprite/Sprite.ps.hlsl", "main", L"ps_6_0" };
+   /* config.vsPath = L"resources/shaders/Sprite/Sprite.vs.hlsl";
+    config.psPath = L"resources/shaders/Sprite/Sprite.ps.hlsl";*/
+    config.shaderPaths.push_back(vsPath);
+    config.shaderPaths.push_back(psPath);
 
 
     config.rootSignatureGenerator = []() {

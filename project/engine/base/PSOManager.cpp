@@ -53,12 +53,12 @@ D3D12_STATIC_SAMPLER_DESC PSOManager::StaticSamplers()
     return sampler;
 }
 
-const PsoSet& PSOManager::GetPso(const std::string& name, BlendMode blend, FillMode fill,Toporogy type) {
+const PsoSet& PSOManager::GetPso(const std::string& name, BlendMode blend, FillMode fill, Toporogy type) {
     CacheKey key{ name, blend, fill,type };
     if (psoCache_.contains(key)) {
         return psoCache_[key];
     }
-    CreatePso(name, blend, fill,type);
+    CreatePso(name, blend, fill, type);
     return psoCache_.at(key);
 }
 
@@ -67,34 +67,24 @@ const PsoSet& PSOManager::GetPso(const std::string& name, BlendMode blend, FillM
 // シェーダー管理（重複コンパイル防止）
 // -------------------------------------------------------------------------
 // 修正内容: contains()にはキー（name）を渡す必要がある
-void PSOManager::EnsureShaders(const std::string& name, Microsoft::WRL::ComPtr<IDxcBlob>& outVS, Microsoft::WRL::ComPtr<IDxcBlob>& outPS) {
-    // 既にキャッシュにあればそれを返す
+void PSOManager::EnsureShaders(const std::string& name, ShaderSet& outSet) {
     if (shaderCache_.contains(name)) {
-        outVS = shaderCache_[name].vs;
-        outPS = shaderCache_[name].ps;
+        outSet = shaderCache_[name];
         return;
     }
 
-    // 新規コンパイル
-    Microsoft::WRL::ComPtr<IDxcBlob> vs = nullptr;
-    Microsoft::WRL::ComPtr<IDxcBlob> ps = nullptr;
-
     auto dxCommon = DXCommon::GetInstance();
+    const auto& config = psoConfigs_[name];
+    ShaderSet newSet;
 
-    psoConfigs_[name];
+    for (const auto& shaderInfo : config.shaderPaths) {
+        auto blob = dxCommon->CompileShader(shaderInfo.path.c_str(), shaderInfo.profile.c_str());
+        assert(blob && "Shader Compilation Failed");
+        newSet.blobs[shaderInfo.type] = blob;
+    }
 
-    vs = dxCommon->CompileShader(psoConfigs_[name].vsPath, L"vs_6_0");
-    ps = dxCommon->CompileShader(psoConfigs_[name].psPath, L"ps_6_0");
-
-
-
-    assert(vs && ps);
-
-    // キャッシュに保存
-    shaderCache_[name] = { vs, ps };
-
-    outVS = vs;
-    outPS = ps;
+    shaderCache_[name] = newSet;
+    outSet = newSet;
 
 
 }
@@ -118,7 +108,7 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE PSOManager::GetPrimitiveTopologyType(Toporogy type
 // -------------------------------------------------------------------------
 // PSO 生成
 // -------------------------------------------------------------------------
- void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fill ,Toporogy type) {
+void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fill, Toporogy type) {
     auto device = DXCommon::GetInstance()->GetDevice();
     const auto& config = psoConfigs_.at(name);
 
@@ -136,8 +126,8 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE PSOManager::GetPrimitiveTopologyType(Toporogy type
     }
 
     // 3. Shader の取得
-    Microsoft::WRL::ComPtr<IDxcBlob> vsBlob, psBlob;
-    EnsureShaders(name, vsBlob, psBlob);
+    ShaderSet shaders;
+    EnsureShaders(name, shaders);
 
     // 4. PSO構築
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
@@ -146,9 +136,32 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE PSOManager::GetPrimitiveTopologyType(Toporogy type
     // InputLayout
     psoDesc.InputLayout = { inputElements.data(), static_cast<UINT>(inputElements.size()) };
 
-    // Shaders
-    psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
-    psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+    // Mapから各シェーダーを割り当て
+    if (shaders.blobs.count(ShaderType::VS)) {
+        auto& b = shaders.blobs[ShaderType::VS];
+        psoDesc.VS = { b->GetBufferPointer(), b->GetBufferSize() };
+    }
+    if (shaders.blobs.count(ShaderType::PS)) {
+        auto& b = shaders.blobs[ShaderType::PS];
+        psoDesc.PS = { b->GetBufferPointer(), b->GetBufferSize() };
+    }
+    if (shaders.blobs.count(ShaderType::GS)) {
+        auto& b = shaders.blobs[ShaderType::GS];
+        psoDesc.GS = { b->GetBufferPointer(), b->GetBufferSize() };
+    }
+    if (shaders.blobs.count(ShaderType::HS)) {
+        auto& b = shaders.blobs[ShaderType::HS];
+        psoDesc.HS = { b->GetBufferPointer(), b->GetBufferSize() };
+    }
+    if (shaders.blobs.count(ShaderType::DS)) {
+        auto& b = shaders.blobs[ShaderType::DS];
+        psoDesc.DS = { b->GetBufferPointer(), b->GetBufferSize() };
+    }
+    if (shaders.blobs.count(ShaderType::CS)) {
+        auto& b = shaders.blobs[ShaderType::CS];
+    }
+
+
 
     // Blend State
     psoDesc.BlendState = CreateBlendDesc(blend);
@@ -164,7 +177,7 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE PSOManager::GetPrimitiveTopologyType(Toporogy type
     psoDesc.DepthStencilState.DepthEnable = config.depthEnable;
     psoDesc.DepthStencilState.DepthWriteMask = config.depthWriteMask;
     // 深度比較関数が設定されていない場合のデフォルト
-    if(psoDesc.DepthStencilState.DepthFunc == 0) {
+    if (psoDesc.DepthStencilState.DepthFunc == 0) {
         psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     }
 
@@ -181,7 +194,7 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE PSOManager::GetPrimitiveTopologyType(Toporogy type
     HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&psoSet.pipelineState));
     assert(SUCCEEDED(hr) && "Failed to create Pipeline State");
 
-    psoCache_[{name, blend, fill,type}] = psoSet;
+    psoCache_[{name, blend, fill, type}] = psoSet;
 }
 
 D3D12_BLEND_DESC PSOManager::CreateBlendDesc(BlendMode mode) {

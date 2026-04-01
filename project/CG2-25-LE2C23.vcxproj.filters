@@ -180,9 +180,6 @@
     <ClCompile Include="engine\scene\SceneFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="LightManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="application\scene\GameScene.cpp">
       <Filter>App\Scene</Filter>
     </ClCompile>
@@ -208,6 +205,9 @@
       <Filter>engine\Tool</Filter>
     </ClCompile>
     <ClCompile Include="application\debugCamera\DebugCameraFunction.cpp">
+      <Filter>engine\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\LightManager.cpp">
       <Filter>engine\Tool</Filter>
     </ClCompile>
   </ItemGroup>
@@ -326,7 +326,7 @@
     <ClInclude Include="engine\scene\SceneFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="LightManager.h">
+    <ClInclude Include="engine\Tool\LightManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\debugCamera\DebugCamera.h">

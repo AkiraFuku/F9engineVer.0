@@ -91,9 +91,8 @@ private: // メンバ変数・内部定義
     ~LightManager() = default;
     LightManager(const LightManager&) = delete;
     LightManager& operator=(const LightManager&) = delete;
+    friend struct std::default_delete<LightManager>;
 
-    //// 定数バッファ作成関数
-    //void CreateConstBufferResource();
 
 
 
@@ -122,5 +121,4 @@ private: // メンバ変数・内部定義
     LightCounts* countData_ = nullptr;
     // シングルトンインスタンス
     static std::unique_ptr<LightManager> instance;
-    friend struct std::default_delete<LightManager>;
 };

@@ -10,14 +10,23 @@
 #include <dxcapi.h> // IDxcBlobのために推奨
 
 
+// 追加：シェーダーの種類を定義
+enum class ShaderType { VS, PS, GS, HS, DS, CS };
+
 struct ShaderSet {
-    Microsoft::WRL::ComPtr<IDxcBlob> vs;
-    Microsoft::WRL::ComPtr<IDxcBlob> ps;
+    // vectorで管理する場合。インデックス = ShaderType とすると扱いやすいです。
+    // もしくは、個別に保持せず map<ShaderType, ComPtr<IDxcBlob>> にするのも手です。
+    std::unordered_map<ShaderType, Microsoft::WRL::ComPtr<IDxcBlob>> blobs;
 };
 
 struct PsoConfig {
-    std::wstring vsPath;
-    std::wstring psPath;
+  struct ShaderPath {
+        ShaderType type;
+        std::wstring path;
+        std::string entryPoint = "main"; // 必要に応じて
+        std::wstring profile;           // L"vs_6_0" など
+    };
+    std::vector<ShaderPath> shaderPaths;
     
     using RootSignatureGenerator = std::function<Microsoft::WRL::ComPtr<ID3D12RootSignature>()>;
     RootSignatureGenerator rootSignatureGenerator;   
@@ -57,7 +66,7 @@ private:
 
     void CreatePso(const std::string& name, BlendMode blend, FillMode fill,Toporogy type);
     D3D12_BLEND_DESC CreateBlendDesc(BlendMode mode);
-    void EnsureShaders(const std::string& name, Microsoft::WRL::ComPtr<IDxcBlob>& outVS, Microsoft::WRL::ComPtr<IDxcBlob>& outPS);
+    void EnsureShaders(const std::string& name,ShaderSet& outSet);
     D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(Toporogy type);
 
     struct CacheKey {

@@ -21,9 +21,15 @@ void Object3dCommon::Finalize() {
 void Object3dCommon::Initialize()
 {
     PsoConfig config{};
-    config.vsPath = L"resources/shaders/Object3d/Object3d.vs.hlsl";
-    config.psPath = L"resources/shaders/Object3d/Object3d.ps.hlsl";
 
+    PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Object3d/Object3d.vs.hlsl", "main", L"vs_6_0" };
+    PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Object3d/Object3d.ps.hlsl", "main", L"ps_6_0" };
+
+   /* config.vsPath = L"resources/shaders/Object3d/Object3d.vs.hlsl";
+    config.psPath = L"resources/shaders/Object3d/Object3d.ps.hlsl";*/
+
+    config.shaderPaths.push_back(vsPath);
+    config.shaderPaths.push_back(psPath);
 
     config.rootSignatureGenerator = []() {
         std::vector<D3D12_ROOT_PARAMETER> rootParameters;
