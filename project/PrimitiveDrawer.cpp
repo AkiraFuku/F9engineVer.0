@@ -51,7 +51,7 @@ void PrimitiveDrawer::AddPSO()
 
         D3D12_ROOT_PARAMETER rootParameter[1]{};
         rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
         rootParameter[0].Descriptor.ShaderRegister = 0; // b0
 
         rootSignatureDesc.pParameters = rootParameter;
@@ -99,11 +99,11 @@ void PrimitiveDrawer::Initialize() {
     AddPSO();
 
     vertexResource_ = DXCommon::GetInstance()->CreateBufferResource(
-        sizeof(VertexData) * 2
+        sizeof(VertexData) * 3
     );
 
     vertexBufferView_.BufferLocation = vertexResource_.Get()->GetGPUVirtualAddress();
-    vertexBufferView_.SizeInBytes = sizeof(VertexData) * 2;  // 修正：4 → 3
+    vertexBufferView_.SizeInBytes = sizeof(VertexData) * 3;  // 修正：4 → 3
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
     vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
@@ -111,8 +111,8 @@ void PrimitiveDrawer::Initialize() {
     vertexData_[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     vertexData_[1].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f);
     vertexData_[1].color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-
-    // vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f);
+    vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f);
+    vertexData_[2].color = Vector4(1.0f, 0.0f, 1.0f, 1.0f);
     vertexResource_->Unmap(0, nullptr);  // 追加：Unmapを呼び出す
 
     //materialResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
@@ -124,7 +124,7 @@ void PrimitiveDrawer::Initialize() {
 
 void PrimitiveDrawer::Draw() {
     PsoSet psoSet =
-        PSOManager::GetInstance()->GetPso("Primitive", BlendMode::None, FillMode::kSolid, Toporogy::LineList);
+        PSOManager::GetInstance()->GetPso("Primitive", BlendMode::None, FillMode::kSolid, Toporogy::TriangleList);
     auto commandList = DXCommon::GetInstance()->GetCommandList();
 
     commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
@@ -135,9 +135,9 @@ void PrimitiveDrawer::Draw() {
     // 描画コマンドの発行
 
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-    commandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+    commandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 
-    commandList->DrawInstanced(2, 1, 0, 0); // 仮に3頂点を描画
+    commandList->DrawInstanced(3, 1, 0, 0); // 仮に3頂点を描画
 }
