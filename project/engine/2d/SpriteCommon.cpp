@@ -19,7 +19,6 @@ SpriteCommon* SpriteCommon::GetInstance() {
 
 void SpriteCommon::Finalize() {
 
-    instance.reset();
 }
 void SpriteCommon::Initialize()
 {

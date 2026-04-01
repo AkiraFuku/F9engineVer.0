@@ -112,6 +112,10 @@ void Framework::Finalize()
     SceneManager::GetInstance()->Finalize();
     DXCommon::GetInstance()->Finalize();
     PSOManager::GetInstance()->Finalize();
+    
+    // すべてのD3D12リソース破棄後に、DXGIDebugチェックを実行
+    LeakCheck.reset();  // この時点で全リソースが破棄済み
+    
     Audio::GetInstance()->Finalize();
     Input::GetInstance()->Finalize();
     Object3dCommon::GetInstance()->Finalize();
@@ -146,8 +150,12 @@ void Framework::Update()
 
 void Framework::Draw()
 {
+    #ifdef USE_IMGUI
+
     ImGuiManager::GetInstance()->End();
     ImGuiManager::GetInstance()->Draw();
+    #endif
+
     DXCommon::GetInstance()->PostDraw();
     TextureManager::GetInstance()->ReleaseIntermediateResources();
 

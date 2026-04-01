@@ -36,7 +36,7 @@ public:
 private:
     bool endReqest_ = false;
 
-    D3DResourceLeakChecker LeakCheck;
+    std::unique_ptr<D3DResourceLeakChecker> LeakCheck;  // スタック変数から動的割り当てに変更
     
     /*std::unique_ptr<DXCommon> dxCommon;*/
   

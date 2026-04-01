@@ -14,8 +14,12 @@ using namespace Microsoft::WRL;
 std::unique_ptr<PSOManager> PSOManager::instance_ = nullptr;
 
 PSOManager* PSOManager::GetInstance() {
-    if (!instance_) {
-        instance_.reset(new PSOManager());
+      if (instance_ == nullptr) {
+        // privateコンストラクタを呼び出せるヘルパー構造体
+        struct Helper : public PSOManager {
+            Helper() : PSOManager() {}
+        };
+        instance_ = std::make_unique<Helper>();
     }
     return instance_.get();
 }

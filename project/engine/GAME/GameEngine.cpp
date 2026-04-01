@@ -1,5 +1,5 @@
 #include "GameEngine.h"
-
+#include "PrimitiveDrawer.h"
 void GameEngine::Initialize() {
 
    Framework::Initialize();
@@ -14,7 +14,7 @@ void GameEngine::Initialize() {
    
    SceneManager::GetInstance()->ChangeScene("TitleScene");
   SceneManager::GetInstance()->ChangeScene("GameScene");
-
+    PrimitiveDrawer::GetInstance()->Initialize();
 };
 void GameEngine::Finalize() {  
     SceneManager::GetInstance()->Finalize();

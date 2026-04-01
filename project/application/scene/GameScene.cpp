@@ -2,7 +2,7 @@
 #include "ModelManager.h"
 #include "Input.h"
 #include "imgui.h"
-#include "GameScene.h"
+#include "PrimitiveDrawer.h"
 #include "SceneManager.h"
 #include "ParticleManager.h"//フレームワークに移植
 #include "PSOManager.h"
@@ -57,8 +57,9 @@ void GameScene::Initialize() {
 
        object3d->SetAnimations(animation.get());
         
+       PrimitiveDrawer::GetInstance()->Initialize();
       
-
+       
 
 
 }
@@ -161,8 +162,10 @@ void GameScene::Update() {
 }
 void GameScene::Draw() {
 
+    PrimitiveDrawer::GetInstance()->Draw();
+
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     //sprite->Draw();
-    object3d->Draw();
+   // object3d->Draw();
 }
