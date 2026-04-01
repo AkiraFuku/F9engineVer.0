@@ -1,11 +1,11 @@
 
 
-//struct Material
-//{
-//    float4 coler;
-//};
+struct Material
+{
+    float4 coler;
+};
 
-//ConstantBuffer<Material> gMaterial : register(b0);
+ConstantBuffer<Material> gMaterial : register(b0);
 
 struct PS_OUTPUT
 {
@@ -16,8 +16,7 @@ PS_OUTPUT main()
 {
     
     PS_OUTPUT output;
-    output.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    //gMaterial.coler;
+    output.color = gMaterial.coler;
     return output;
     
 }

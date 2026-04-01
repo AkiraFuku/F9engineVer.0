@@ -53,8 +53,8 @@ private:
     void AddPSO();
 
 
-    //Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-    //Material* materialData_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+    Material* materialData_ = nullptr;
 
 
 

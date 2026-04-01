@@ -36,9 +36,30 @@ void PrimitiveDrawer::AddPSO()
 
     config.rootSignatureGenerator = []() {
 
+
+
+
+
+
+
+
         D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
 
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+
+
+        D3D12_ROOT_PARAMETER rootParameter[1]{};
+        rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameter[0].Descriptor.ShaderRegister = 0; // b0
+
+        rootSignatureDesc.pParameters=rootParameter;
+        rootSignatureDesc.NumParameters = _countof(rootParameter);
+
+
+
+
         Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
         HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
@@ -89,6 +110,12 @@ void PrimitiveDrawer::Initialize() {
     vertexData_[1].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f);
     vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f);
     vertexResource_->Unmap(0, nullptr);  // 追加：Unmapを呼び出す
+
+    materialResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+    materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+    materialData_->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f); // 赤色
+    materialResource_->Unmap(0, nullptr);  // 追加：Unmapを呼び出す
+
 }
 
 void PrimitiveDrawer::Draw() {
@@ -105,5 +132,8 @@ void PrimitiveDrawer::Draw() {
 
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+
     commandList->DrawInstanced(3, 1, 0, 0); // 仮に3頂点を描画
 }
