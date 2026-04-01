@@ -53,12 +53,12 @@ D3D12_STATIC_SAMPLER_DESC PSOManager::StaticSamplers()
     return sampler;
 }
 
-const PsoSet& PSOManager::GetPso(const std::string& name, BlendMode blend, FillMode fill) {
-    CacheKey key{ name, blend, fill };
+const PsoSet& PSOManager::GetPso(const std::string& name, BlendMode blend, FillMode fill,Toporogy type) {
+    CacheKey key{ name, blend, fill,type };
     if (psoCache_.contains(key)) {
         return psoCache_[key];
     }
-    CreatePso(name, blend, fill);
+    CreatePso(name, blend, fill,type);
     return psoCache_.at(key);
 }
 
@@ -99,11 +99,26 @@ void PSOManager::EnsureShaders(const std::string& name, Microsoft::WRL::ComPtr<I
 
 }
 
+D3D12_PRIMITIVE_TOPOLOGY_TYPE PSOManager::GetPrimitiveTopologyType(Toporogy type)
+{
+    switch (type) {
+    case Toporogy::PointList:
+        return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+    case Toporogy::LineList:
+        return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+    case Toporogy::TriangleList:
+        return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    default:
+        assert(false && "Unknown topology type");
+        return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // デフォルトは三角形
+    }
+}
+
 
 // -------------------------------------------------------------------------
 // PSO 生成
 // -------------------------------------------------------------------------
- void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fill) {
+ void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fill ,Toporogy type) {
     auto device = DXCommon::GetInstance()->GetDevice();
     const auto& config = psoConfigs_.at(name);
 
@@ -157,7 +172,7 @@ void PSOManager::EnsureShaders(const std::string& name, Microsoft::WRL::ComPtr<I
     psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     psoDesc.NumRenderTargets = 1;
-    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.PrimitiveTopologyType = GetPrimitiveTopologyType(type);
     psoDesc.SampleDesc.Count = 1;
     psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
@@ -166,7 +181,7 @@ void PSOManager::EnsureShaders(const std::string& name, Microsoft::WRL::ComPtr<I
     HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&psoSet.pipelineState));
     assert(SUCCEEDED(hr) && "Failed to create Pipeline State");
 
-    psoCache_[{name, blend, fill}] = psoSet;
+    psoCache_[{name, blend, fill,type}] = psoSet;
 }
 
 D3D12_BLEND_DESC PSOManager::CreateBlendDesc(BlendMode mode) {

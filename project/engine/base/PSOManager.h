@@ -30,7 +30,7 @@ struct PsoConfig {
     bool depthEnable = true;
     D3D12_DEPTH_WRITE_MASK depthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 };
-
+enum class Toporogy{ PointList,LineList,TriangleList,};
 enum class BlendMode { None, Normal, Add, Subtract, Multiply, Screen };
 enum class FillMode { kSolid, kWireFrame };
 
@@ -47,7 +47,7 @@ public:
     void Finalize();
 
     void RegisterPsoGenerator(const std::string& name, const PsoConfig& psoConfig);
-    const PsoSet& GetPso(const std::string& name, BlendMode blendMode = BlendMode::None, FillMode fillMode = FillMode::kSolid);
+    const PsoSet& GetPso(const std::string& name, BlendMode blendMode = BlendMode::None, FillMode fillMode = FillMode::kSolid,Toporogy type=Toporogy::TriangleList);
 
     D3D12_STATIC_SAMPLER_DESC StaticSamplers();
 
@@ -55,16 +55,18 @@ private:
     PSOManager() = default;
     ~PSOManager() = default;
 
-    void CreatePso(const std::string& name, BlendMode blend, FillMode fill);
+    void CreatePso(const std::string& name, BlendMode blend, FillMode fill,Toporogy type);
     D3D12_BLEND_DESC CreateBlendDesc(BlendMode mode);
     void EnsureShaders(const std::string& name, Microsoft::WRL::ComPtr<IDxcBlob>& outVS, Microsoft::WRL::ComPtr<IDxcBlob>& outPS);
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(Toporogy type);
 
     struct CacheKey {
         std::string name;
         BlendMode blend;
         FillMode fill;
+        Toporogy type;
         bool operator==(const CacheKey& o) const {
-            return name == o.name && blend == o.blend && fill == o.fill;
+            return name == o.name && blend == o.blend && fill == o.fill&& type==o.type;
         }
     };
 
@@ -74,7 +76,8 @@ private:
             size_t h1 = std::hash<std::string>()(k.name);
             size_t h2 = std::hash<int>()((int)k.blend);
             size_t h3 = std::hash<int>()((int)k.fill);
-            return h1 ^ (h2 << 1) ^ (h3 << 2);
+            size_t h4 = std::hash<int>()((int)k.type);
+            return h1 ^ (h2 << 1) ^ (h3 << 2)^(h4<<3);
         }
     };
 
