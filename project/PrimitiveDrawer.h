@@ -13,13 +13,15 @@ class Camera;
 
 class PrimitiveDrawer {
 public:
+
     struct VertexData {
         Vector4 position;
-    };
-
-    struct Material {
         Vector4 color;
     };
+
+    /*struct Material {
+        
+    };*/
 
     struct TransformationMatrix {
         Matrix4x4 WVP;
@@ -53,8 +55,8 @@ private:
     void AddPSO();
 
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-    Material* materialData_ = nullptr;
+  /*  Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+    Material* materialData_ = nullptr;*/
 
 
 

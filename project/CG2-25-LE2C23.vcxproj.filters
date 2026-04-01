@@ -387,6 +387,7 @@
     <None Include="resources\shaders\Sprite\Sprite.hlsli">
       <Filter>シェーダー ファイル\sprite</Filter>
     </None>
+    <None Include="resources\shaders\Primitive\Primitive.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">

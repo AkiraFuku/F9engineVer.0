@@ -145,6 +145,7 @@
   <ItemGroup>
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
+    <None Include="resources\shaders\Primitive\Primitive.hlsli" />
     <None Include="resources\shaders\Sprite\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
