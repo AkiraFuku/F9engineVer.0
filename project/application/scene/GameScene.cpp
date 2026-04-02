@@ -154,6 +154,9 @@ void GameScene::Update() {
     ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
     sprite->SetPosition(Position);
 
+
+    ImGui::SliderFloat3("Start",&(position_.x), 0.1f, 1000.0f);
+
     ImGui::End();
 #endif // USE_IMGUI
 
@@ -162,6 +165,8 @@ void GameScene::Update() {
 }
 void GameScene::Draw() {
 
+    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }, { 1.0f,0.0f,0.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->Draw();
 
     ParticleManager::GetInstance()->Draw();

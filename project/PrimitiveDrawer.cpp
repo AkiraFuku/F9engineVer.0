@@ -98,46 +98,48 @@ void PrimitiveDrawer::AddPSO()
 void PrimitiveDrawer::Initialize() {
     AddPSO();
 
-    vertexResource_ = DXCommon::GetInstance()->CreateBufferResource(
-        sizeof(VertexData) * 3
-    );
+   vertexResource_ = DXCommon::GetInstance()->CreateBufferResource(
+    sizeof(VertexData) * kMaxVertices
+);
+vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+vertexBufferView_.SizeInBytes = sizeof(VertexData) * kMaxVertices;
+vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
-    vertexBufferView_.BufferLocation = vertexResource_.Get()->GetGPUVirtualAddress();
-    vertexBufferView_.SizeInBytes = sizeof(VertexData) * 3;  // 修正：4 → 3
-    vertexBufferView_.StrideInBytes = sizeof(VertexData);
-
-    vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-    vertexData_[0].position = Vector4(0.0f, 0.5f, 0.0f, 1.0f);
-    vertexData_[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    vertexData_[1].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f);
-    vertexData_[1].color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-    vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f);
-    vertexData_[2].color = Vector4(1.0f, 0.0f, 1.0f, 1.0f);
-    vertexResource_->Unmap(0, nullptr);  // 追加：Unmapを呼び出す
-
-    //materialResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
-    //materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-    //materialData_->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f); // 赤色
-    //materialResource_->Unmap(0, nullptr);  // 追加：Unmapを呼び出す
 
 }
 
 void PrimitiveDrawer::Draw() {
-    PsoSet psoSet =
-        PSOManager::GetInstance()->GetPso("Primitive", BlendMode::None, FillMode::kSolid, Toporogy::TriangleList);
+    if (vertices_.empty()) return;
+
+    // 1. GPU上のバッファへ現在の頂点リストをコピー
+    void* mappedPtr = nullptr;
+    vertexResource_->Map(0, nullptr, &mappedPtr);
+    std::memcpy(mappedPtr, vertices_.data(), sizeof(VertexData) * vertices_.size());
+    vertexResource_->Unmap(0, nullptr);
+
+    // 2. コマンドの発行
     auto commandList = DXCommon::GetInstance()->GetCommandList();
 
-    commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
+
+    PsoSet psoSet = PSOManager::GetInstance()->GetPso("Primitive", BlendMode::Normal, FillMode::kSolid, Toporogy::LineList);
+
     commandList->SetPipelineState(psoSet.pipelineState.Get());
-
-
-
-    // 描画コマンドの発行
-
+    commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-    commandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // ライン描画の場合
+    commandList->DrawInstanced(static_cast<UINT>(vertices_.size()), 1, 0, 0);
 
-    commandList->DrawInstanced(3, 1, 0, 0); // 仮に3頂点を描画
+    // 3. 次のフレームのためにリストをクリア
+    vertices_.clear();
+}
+void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
+    if (vertices_.size() + 2 > kMaxVertices) return; // 溢れ防止
+
+    // 始点
+    vertices_.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+    // 終点
+    vertices_.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+
+    //this->Draw();
 }

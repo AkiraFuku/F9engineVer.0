@@ -20,7 +20,7 @@ public:
     };
 
     /*struct Material {
-        
+
     };*/
 
     struct TransformationMatrix {
@@ -37,11 +37,9 @@ public:
     void Draw();
 
 
-    //void DrawLine(const Vector3& start, const Vector3& end, const Vector4& color);
+    void DrawLine(const Vector3& start, const Vector3& end, const Vector4& color);
 
-    //void DrawTriangle(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector4& color);
-
-    //void ExecuteDraw();
+  
 
 private:
     PrimitiveDrawer() = default;
@@ -55,9 +53,9 @@ private:
     void AddPSO();
 
 
-  /*  Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-    Material* materialData_ = nullptr;*/
-
+private:
+    std::vector<VertexData> vertices_; // 描画予約された頂点リスト
+    static const uint32_t kMaxVertices = 4096; // 最大頂点数（必要に応じて調整）
 
 
     Camera* camera_ = nullptr;
