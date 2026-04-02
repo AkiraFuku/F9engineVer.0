@@ -58,6 +58,7 @@
     <ClCompile Include="engine\GAME\Framework.cpp" />
     <ClCompile Include="engine\GAME\GameEngine.cpp" />
     <ClCompile Include="engine\Tool\LightManager.cpp" />
+    <ClCompile Include="LineDrawer.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -132,6 +133,7 @@
     <ClInclude Include="engine\scene\SceneManager.h" />
     <ClInclude Include="engine\scene\SceneFactory.h" />
     <ClInclude Include="engine\Tool\LightManager.h" />
+    <ClInclude Include="LineDrawer.h" />
     <ClInclude Include="PrimitiveDrawer.h" />
   </ItemGroup>
   <ItemGroup>
