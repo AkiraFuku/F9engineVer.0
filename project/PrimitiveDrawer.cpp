@@ -97,49 +97,82 @@ void PrimitiveDrawer::AddPSO()
 
 void PrimitiveDrawer::Initialize() {
     AddPSO();
+    auto CreateBatch = [&](TopologyType type, D3D_PRIMITIVE_TOPOLOGY d3dTop, Toporogy psoTop) {
+        PrimitiveBatch batch;
+        batch.d3dTopology = d3dTop;
+        batch.psoTopology = psoTop;
 
-   vertexResource_ = DXCommon::GetInstance()->CreateBufferResource(
-    sizeof(VertexData) * kMaxVertices
-);
-vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-vertexBufferView_.SizeInBytes = sizeof(VertexData) * kMaxVertices;
-vertexBufferView_.StrideInBytes = sizeof(VertexData);
+        // リソース作成
+        batch.resource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
 
+        // VBV設定
+        batch.vbv.BufferLocation = batch.resource->GetGPUVirtualAddress();
+        batch.vbv.SizeInBytes = sizeof(VertexData) * kMaxVertices;
+        batch.vbv.StrideInBytes = sizeof(VertexData);
+
+        //batch.vertices.reserve(kMaxVertices);
+
+        batch.fillMode = FillMode::kSolid;
+        batch.blendMode = BlendMode::Normal;
+        batches_[type] = std::move(batch);
+        };
+
+    CreateBatch(TopologyType::kLine, D3D_PRIMITIVE_TOPOLOGY_LINELIST, Toporogy::LineList);
+    CreateBatch(TopologyType::kTriangle, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
+    // 必要に応じて PointList 等を追加
 
 }
 
 void PrimitiveDrawer::Draw() {
-    if (vertices_.empty()) return;
-
-    // 1. GPU上のバッファへ現在の頂点リストをコピー
-    void* mappedPtr = nullptr;
-    vertexResource_->Map(0, nullptr, &mappedPtr);
-    std::memcpy(mappedPtr, vertices_.data(), sizeof(VertexData) * vertices_.size());
-    vertexResource_->Unmap(0, nullptr);
-
-    // 2. コマンドの発行
     auto commandList = DXCommon::GetInstance()->GetCommandList();
+    auto psoManager = PSOManager::GetInstance();
 
+    for (auto& [type, batch] : batches_) {
+        if (batch.vertices.empty()) continue;
 
-    PsoSet psoSet = PSOManager::GetInstance()->GetPso("Primitive", BlendMode::Normal, FillMode::kSolid, Toporogy::LineList);
+        // 1. このトポロジ専用のリソースにデータをコピー
+        void* mappedPtr = nullptr;
+        batch.resource->Map(0, nullptr, &mappedPtr);
+        std::memcpy(mappedPtr, batch.vertices.data(), sizeof(VertexData) * batch.vertices.size());
+        batch.resource->Unmap(0, nullptr);
 
-    commandList->SetPipelineState(psoSet.pipelineState.Get());
-    commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
-    commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+        // 2. PSOの取得と設定
+        // FillModeなどは必要に応じて引数化してください
+        PsoSet psoSet = psoManager->GetPso("Primitive", batch.blendMode, batch.fillMode, batch.psoTopology);
 
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // ライン描画の場合
-    commandList->DrawInstanced(static_cast<UINT>(vertices_.size()), 1, 0, 0);
+        commandList->SetPipelineState(psoSet.pipelineState.Get());
+        commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
 
-    // 3. 次のフレームのためにリストをクリア
-    vertices_.clear();
+        // 3. このトポロジ専用のVBVをセット
+        commandList->IASetVertexBuffers(0, 1, &batch.vbv);
+        commandList->IASetPrimitiveTopology(batch.d3dTopology);
+
+        // 4. 描画
+        commandList->DrawInstanced(static_cast<UINT>(batch.vertices.size()), 1, 0, 0);
+
+        // 5. 次のフレームのためにクリア
+        batch.vertices.clear();
+    }
 }
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
-    if (vertices_.size() + 2 > kMaxVertices) return; // 溢れ防止
+    auto& batch = batches_[TopologyType::kLine];
+    if (batch.vertices.size() + 2 > kMaxVertices) return;
 
-    // 始点
-    vertices_.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
-    // 終点
-    vertices_.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+    batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+    batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
 
-    //this->Draw();
+}
+
+void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode )
+{
+       auto& batch = batches_[TopologyType::kTriangle];
+    if (batch.vertices.size() + 3 > kMaxVertices) return;
+    batch.fillMode = fillMode;
+    batch.blendMode = blendMode;
+
+    batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+    batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+    batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
+
+
 }

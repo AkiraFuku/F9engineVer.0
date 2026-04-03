@@ -167,6 +167,7 @@ void GameScene::Draw() {
 
     PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });  
     PrimitiveDrawer::GetInstance()->Draw();
 
     ParticleManager::GetInstance()->Draw();

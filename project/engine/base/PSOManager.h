@@ -35,7 +35,7 @@ struct PsoConfig {
     InputLayoutGenerator inputLayoutGenerator;
 
     D3D12_DEPTH_STENCIL_DESC depth = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-    D3D12_CULL_MODE cullMode = D3D12_CULL_MODE_BACK;
+    D3D12_CULL_MODE cullMode = D3D12_CULL_MODE_NONE;
     bool depthEnable = true;
     D3D12_DEPTH_WRITE_MASK depthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 };
