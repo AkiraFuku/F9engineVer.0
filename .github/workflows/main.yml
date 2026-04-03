@@ -9,7 +9,7 @@ env:
   CONFIGURATION: Development
 jobs:
   build:
-    runs-on: windows-2025-vs2026
+    runs-on: windows-2026-vs2026
 
     steps:
       -  name: Checkout
