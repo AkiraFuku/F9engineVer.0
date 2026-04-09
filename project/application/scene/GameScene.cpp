@@ -157,9 +157,9 @@ void GameScene::Update() {
 
 
     ImGui::SliderFloat3("Start",&(position_.x), 0.1f, 1000.0f);
-    Vector3 Rotate = camera->GetRotate();
-      ImGui::SliderFloat3("Rotate",&(Rotate.x), 0.1f, 1000.0f);
-    camera->SetRotate(Rotate);
+   // Vector3 Rotate = camera->GetRotate();
+      ImGui::DragFloat4("Rotate",&(rotation_.x));
+   // camera->SetRotate(Rotate);
     
     ImGui::End();
 #endif // USE_IMGUI
@@ -175,6 +175,7 @@ void GameScene::Draw() {
     PrimitiveDrawer::GetInstance()->Draw();
 
     Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
+    sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
 
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
 

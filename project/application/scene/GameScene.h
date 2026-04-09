@@ -32,6 +32,7 @@ private:
     bool isDebugCamera_ = false;
 
     Vector3 position_ = { 2.0f,0.0f,0.0f };
+    Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };
 
      uint32_t handle_=0;
 };

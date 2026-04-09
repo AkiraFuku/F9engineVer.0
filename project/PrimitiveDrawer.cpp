@@ -6,6 +6,7 @@
 #include <cassert>
 #include "MathFunction.h"
 #include "Camera.h"
+#include "RotateFunction.h"
 
 std::unique_ptr<PrimitiveDrawer> PrimitiveDrawer::instance_ = nullptr;
 
@@ -184,9 +185,9 @@ void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vecto
 
 }
 
-void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode )
+void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
-       auto& batch = batches_[TopologyType::kTriangle];
+    auto& batch = batches_[TopologyType::kTriangle];
     if (batch.vertices.size() + 3 > kMaxVertices) return;
     batch.fillMode = fillMode;
     batch.blendMode = blendMode;
@@ -200,38 +201,49 @@ void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const V
 // PrimitiveDrawer.cpp に実装を追加
 
 void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
-    const uint32_t kSubdivision = 16; // 分割数（負荷に応じて調整）
+    const uint32_t kSubdivision = 16;
     const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
     const float kLatEvery = PI / static_cast<float>(kSubdivision);
-
+    // Quaternion normRotate = Normalize(sphere.rotate);
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
         float lat = -PI / 2.0f + kLatEvery * latIndex;
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
             float lon = lonIndex * kLonEvery;
 
-            // 現在の点 a, 次の緯度の点 b, 次の経度の点 c
-            Vector3 a = {
-                sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
-                sphere.center.y + sphere.radius * sinf(lat),
-                sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
+            // 1. ローカル座標（中心を0とした球状の点）を計算
+            Vector3 localA = {
+                sphere.radius * cosf(lat) * cosf(lon),
+                sphere.radius * sinf(lat),
+                sphere.radius * cosf(lat) * sinf(lon)
             };
-            Vector3 b = {
-                sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
-                sphere.center.y + sphere.radius * sinf(lat + kLatEvery),
-                sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
+            Vector3 localB = {
+                sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
+                sphere.radius * sinf(lat + kLatEvery),
+                sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
             };
-            Vector3 c = {
-                sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
-                sphere.center.y + sphere.radius * sinf(lat),
-                sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
+            Vector3 localC = {
+                sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
+                sphere.radius * sinf(lat),
+                sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
             };
 
-            DrawLine(a, b, color);
-            DrawLine(a, c, color);
+            Quaternion normRotate = Normalize(sphere.rotate);
+            // 2. クォータニオンで回転を適用
+            // RotateVector関数（Vector3をQuaternionで回転させる関数）があると便利です
+            Vector3 rotatedA = RotateVector(localA, normRotate);
+            Vector3 rotatedB = RotateVector(localB, normRotate);
+            Vector3 rotatedC = RotateVector(localC, normRotate);
+
+            // 3. 中心座標を足してワールド座標へ
+            Vector3 worldA = Add(rotatedA, sphere.center);
+            Vector3 worldB = Add(rotatedB, sphere.center);
+            Vector3 worldC = Add(rotatedC, sphere.center);
+
+            DrawLine(worldA, worldB, color);
+            DrawLine(worldA, worldC, color);
         }
     }
 }
-
 void PrimitiveDrawer::DrawGrid() {
     const float kGridHalfWidth = 2.0f;
     const uint32_t kSubdivision = 10;
@@ -239,12 +251,12 @@ void PrimitiveDrawer::DrawGrid() {
 
     for (uint32_t i = 0; i <= kSubdivision; ++i) {
         float pos = -kGridHalfWidth + static_cast<float>(i) * kGridEvery;
-        Vector4 color = (i == kSubdivision / 2) ? Vector4{0,0,0,1} : Vector4{0.7f, 0.7f, 0.7f, 1};
+        Vector4 color = (i == kSubdivision / 2) ? Vector4{ 0,0,0,1 } : Vector4{ 0.7f, 0.7f, 0.7f, 1 };
 
         // X方向の線
-        DrawLine({pos, 0, kGridHalfWidth}, {pos, 0, -kGridHalfWidth}, color);
+        DrawLine({ pos, 0, kGridHalfWidth }, { pos, 0, -kGridHalfWidth }, color);
         // Z方向の线
-        DrawLine({kGridHalfWidth, 0, pos}, {-kGridHalfWidth, 0, pos}, color);
+        DrawLine({ kGridHalfWidth, 0, pos }, { -kGridHalfWidth, 0, pos }, color);
     }
 }
 

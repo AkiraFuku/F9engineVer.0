@@ -177,3 +177,26 @@ Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t)
 
 	return result;
 }
+/*Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion)
+{
+    // 1. ベクトルをクォータニオン形式 (x, y, z, 0) に変換
+    Quaternion p;
+    p.x = vector.x;
+    p.y = vector.y;
+    p.z = vector.z;
+    p.w = 0.0f;
+
+    // 2. 共役クォータニオンを求める
+    Quaternion qInverse = Conjugate(quaternion);
+
+    // 3. q * p * q^-1 の計算を行う
+    Quaternion temp = Multiply(quaternion, p);
+    Quaternion resultQ = Multiply(temp, qInverse);
+
+    // 4. 結果の虚部 (x, y, z) を Vector3 として返す
+    Vector3 resultV;
+    resultV.x = resultQ.x;
+    resultV.y = resultQ.y;
+    resultV.z = resultQ.z;
+    return resultV;
+}*/

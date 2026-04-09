@@ -7,7 +7,7 @@
 struct Sphere{
 	Vector3 center;//中心
 	float radius;
-
+    Quaternion rotate; // 回転を追加
 };
 struct Line{
 	Vector3 origin;//起点
