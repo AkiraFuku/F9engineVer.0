@@ -4,6 +4,8 @@
 #include "PSOManager.h"
 #include "Logger.h"
 #include <cassert>
+#include "MathFunction.h"
+#include "Camera.h"
 
 std::unique_ptr<PrimitiveDrawer> PrimitiveDrawer::instance_ = nullptr;
 
@@ -51,7 +53,7 @@ void PrimitiveDrawer::AddPSO()
 
         D3D12_ROOT_PARAMETER rootParameter[1]{};
         rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
         rootParameter[0].Descriptor.ShaderRegister = 0; // b0
 
         rootSignatureDesc.pParameters = rootParameter;
@@ -95,6 +97,18 @@ void PrimitiveDrawer::AddPSO()
 
 }
 
+void PrimitiveDrawer::WVPResourceCreate()
+{
+
+    WVPResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(WVPMatrix));
+
+    WVPResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
+
+    wvpData_->WVP = Makeidetity4x4();
+
+
+}
+
 void PrimitiveDrawer::Initialize() {
     AddPSO();
     auto CreateBatch = [&](TopologyType type, D3D_PRIMITIVE_TOPOLOGY d3dTop, Toporogy psoTop) {
@@ -120,13 +134,17 @@ void PrimitiveDrawer::Initialize() {
     CreateBatch(TopologyType::kLine, D3D_PRIMITIVE_TOPOLOGY_LINELIST, Toporogy::LineList);
     CreateBatch(TopologyType::kTriangle, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
     // 必要に応じて PointList 等を追加
-
+    WVPResourceCreate();
 }
 
 void PrimitiveDrawer::Draw() {
     auto commandList = DXCommon::GetInstance()->GetCommandList();
     auto psoManager = PSOManager::GetInstance();
-
+    if (camera_) {
+        wvpData_->WVP = camera_->GetViewProtectionMatrix();
+    } else {
+        wvpData_->WVP = Makeidetity4x4();
+    }
     for (auto& [type, batch] : batches_) {
         if (batch.vertices.empty()) continue;
 
@@ -142,6 +160,9 @@ void PrimitiveDrawer::Draw() {
 
         commandList->SetPipelineState(psoSet.pipelineState.Get());
         commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
+
+        // ★追加: WVP行列の定数バッファ(CBV)をコマンドリストにセット (ルートパラメータインデックス0番)
+        commandList->SetGraphicsRootConstantBufferView(0, WVPResource_->GetGPUVirtualAddress());
 
         // 3. このトポロジ専用のVBVをセット
         commandList->IASetVertexBuffers(0, 1, &batch.vbv);

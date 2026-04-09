@@ -25,7 +25,7 @@ public:
 
     };*/
 
-    struct TransformationMatrix {
+    struct WVPMatrix {
         Matrix4x4 WVP;
     };
 
@@ -59,7 +59,9 @@ private:
 private:
   //  std::vector<VertexData> vertices_; // 描画予約された頂点リスト
     static const uint32_t kMaxVertices = 4096; // 最大頂点数（必要に応じて調整）
-
+    Microsoft::WRL::ComPtr<ID3D12Resource> WVPResource_;
+    WVPMatrix* wvpData_ = nullptr;
+    void WVPResourceCreate();   
 
     Camera* camera_ = nullptr;
 

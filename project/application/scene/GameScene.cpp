@@ -12,9 +12,10 @@ void GameScene::Initialize() {
 
     camera = std::make_unique<Camera>();
     camera->SetRotate({ 0.0f,0.0f,0.0f });
-    camera->SetTranslate({ 0.0f,0.0f,-5.0f });
+    camera->SetTranslate({ 5.0f,0.0f,0.0f });
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
     ParticleManager::GetInstance()->Setcamera(camera.get());
+    PrimitiveDrawer::GetInstance()->SetCamera(camera.get());
 
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
@@ -156,7 +157,10 @@ void GameScene::Update() {
 
 
     ImGui::SliderFloat3("Start",&(position_.x), 0.1f, 1000.0f);
-
+    Vector3 Rotate = camera->GetRotate();
+      ImGui::SliderFloat3("Rotate",&(Rotate.x), 0.1f, 1000.0f);
+    camera->SetRotate(Rotate);
+    
     ImGui::End();
 #endif // USE_IMGUI
 
@@ -165,7 +169,7 @@ void GameScene::Update() {
 }
 void GameScene::Draw() {
 
-    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }, { 1.0f,0.0f,0.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });  
     PrimitiveDrawer::GetInstance()->Draw();
