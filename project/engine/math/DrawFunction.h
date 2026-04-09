@@ -3,9 +3,11 @@
 #pragma once
 #include "MathFunction.h"
 #include "Vector4.h"
+#include "Quanternion.h"
 struct Sphere{
 	Vector3 center;//中心
 	float radius;
+
 };
 struct Line{
 	Vector3 origin;//起点

@@ -197,3 +197,76 @@ void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const V
 
 
 }
+// PrimitiveDrawer.cpp に実装を追加
+
+void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
+    const uint32_t kSubdivision = 16; // 分割数（負荷に応じて調整）
+    const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
+    const float kLatEvery = PI / static_cast<float>(kSubdivision);
+
+    for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+        float lat = -PI / 2.0f + kLatEvery * latIndex;
+        for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+            float lon = lonIndex * kLonEvery;
+
+            // 現在の点 a, 次の緯度の点 b, 次の経度の点 c
+            Vector3 a = {
+                sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
+                sphere.center.y + sphere.radius * sinf(lat),
+                sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
+            };
+            Vector3 b = {
+                sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
+                sphere.center.y + sphere.radius * sinf(lat + kLatEvery),
+                sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
+            };
+            Vector3 c = {
+                sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
+                sphere.center.y + sphere.radius * sinf(lat),
+                sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
+            };
+
+            DrawLine(a, b, color);
+            DrawLine(a, c, color);
+        }
+    }
+}
+
+void PrimitiveDrawer::DrawGrid() {
+    const float kGridHalfWidth = 2.0f;
+    const uint32_t kSubdivision = 10;
+    const float kGridEvery = (kGridHalfWidth * 2.0f) / static_cast<float>(kSubdivision);
+
+    for (uint32_t i = 0; i <= kSubdivision; ++i) {
+        float pos = -kGridHalfWidth + static_cast<float>(i) * kGridEvery;
+        Vector4 color = (i == kSubdivision / 2) ? Vector4{0,0,0,1} : Vector4{0.7f, 0.7f, 0.7f, 1};
+
+        // X方向の線
+        DrawLine({pos, 0, kGridHalfWidth}, {pos, 0, -kGridHalfWidth}, color);
+        // Z方向の线
+        DrawLine({kGridHalfWidth, 0, pos}, {-kGridHalfWidth, 0, pos}, color);
+    }
+}
+
+void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
+    Vector3 p[8] = {
+        {aabb.min.x, aabb.min.y, aabb.min.z}, {aabb.max.x, aabb.min.y, aabb.min.z},
+        {aabb.max.x, aabb.max.y, aabb.min.z}, {aabb.min.x, aabb.max.y, aabb.min.z},
+        {aabb.min.x, aabb.min.y, aabb.max.z}, {aabb.max.x, aabb.min.y, aabb.max.z},
+        {aabb.max.x, aabb.max.y, aabb.max.z}, {aabb.min.x, aabb.max.y, aabb.max.z}
+    };
+
+    // 底面
+    DrawLine(p[0], p[1], color); DrawLine(p[1], p[2], color);
+    DrawLine(p[2], p[3], color); DrawLine(p[3], p[0], color);
+    // 上面
+    DrawLine(p[4], p[5], color); DrawLine(p[5], p[6], color);
+    DrawLine(p[6], p[7], color); DrawLine(p[7], p[4], color);
+    // 柱
+    DrawLine(p[0], p[4], color); DrawLine(p[1], p[5], color);
+    DrawLine(p[2], p[6], color); DrawLine(p[3], p[7], color);
+}
+
+void PrimitiveDrawer::DrawSegment(const Segment& segment, const Vector4& color) {
+    DrawLine(segment.origin, Add(segment.origin, segment.diff), color);
+}

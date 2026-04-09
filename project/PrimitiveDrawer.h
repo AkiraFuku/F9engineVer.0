@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <string>
 #include <wrl/client.h>
 #include <d3d12.h>
 #include "Vector4.h"
@@ -11,6 +10,7 @@
 
 #include <map>
 
+#include"DrawFunction.h"
 class Camera;
 
 class PrimitiveDrawer {
@@ -42,7 +42,11 @@ public:
     void DrawLine(const Vector3& start, const Vector3& end, const Vector4& color);
     void DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode = FillMode::kSolid, BlendMode blendMode = BlendMode::Normal);
 
-
+    void DrawSphere(const Sphere& sphere, const Vector4& color);
+    void DrawGrid(); // 引数は内部のカメラ行列を使うため不要に
+    void DrawAABB(const AABB& aabb, const Vector4& color);
+    void DrawSegment(const Segment& segment, const Vector4& color);
+    void DrawPlane(const Plane& plane, const Vector4& color);
 
 private:
     PrimitiveDrawer() = default;
@@ -57,11 +61,11 @@ private:
 
 
 private:
-  //  std::vector<VertexData> vertices_; // 描画予約された頂点リスト
+    //  std::vector<VertexData> vertices_; // 描画予約された頂点リスト
     static const uint32_t kMaxVertices = 4096; // 最大頂点数（必要に応じて調整）
     Microsoft::WRL::ComPtr<ID3D12Resource> WVPResource_;
     WVPMatrix* wvpData_ = nullptr;
-    void WVPResourceCreate();   
+    void WVPResourceCreate();
 
     Camera* camera_ = nullptr;
 
@@ -83,7 +87,7 @@ private:
         FillMode fillMode = FillMode::kSolid; // 必要に応じて追加
         BlendMode blendMode = BlendMode::Normal; // 必要に応じて追加
     };
-
+    
     // トポロジごとのバッチ管理
     std::map<TopologyType, PrimitiveBatch> batches_;
 

@@ -12,7 +12,7 @@ void GameScene::Initialize() {
 
     camera = std::make_unique<Camera>();
     camera->SetRotate({ 0.0f,0.0f,0.0f });
-    camera->SetTranslate({ 5.0f,0.0f,0.0f });
+    camera->SetTranslate({ 0.0f,0.0f,-5.0f });
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
     ParticleManager::GetInstance()->Setcamera(camera.get());
     PrimitiveDrawer::GetInstance()->SetCamera(camera.get());
@@ -173,6 +173,12 @@ void GameScene::Draw() {
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });  
     PrimitiveDrawer::GetInstance()->Draw();
+
+    Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
+
+    PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
+
+
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
