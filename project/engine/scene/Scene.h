@@ -1,5 +1,6 @@
 #pragma once
 class SceneManager;
+class Camera;
 class Scene
 {
 public:
@@ -17,5 +18,9 @@ public:
     }
 private:
     SceneManager* sceneManager_ = nullptr;
+
+protected:
+    uint32_t BGMHandle_ = 0;
+  std::unique_ptr<Camera>curuntCamera = nullptr;
 };
 

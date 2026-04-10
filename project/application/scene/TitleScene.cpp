@@ -13,8 +13,12 @@ void TitleScene::Initialize() {
     camera = std::make_unique<Camera>();
     camera->SetRotate({ 0.0f,0.0f,0.0f });
     camera->SetTranslate({ 0.0f,0.0f,-5.0f });
-    Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
-    ParticleManager::GetInstance()->Setcamera(camera.get());
+
+    curuntCamera = std::make_unique<Camera>();
+
+
+    Object3dCommon::GetInstance()->SetDefaultCamera(curuntCamera.get());
+    ParticleManager::GetInstance()->Setcamera(curuntCamera.get());
 
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 

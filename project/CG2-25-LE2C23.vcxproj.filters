@@ -70,6 +70,24 @@
     <Filter Include="App\Scene">
       <UniqueIdentifier>{c759ee72-dd47-40d0-97a2-f45ec1bb6ed3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="シェーダー ファイル\Primitive">
+      <UniqueIdentifier>{1c9bb3c4-22a8-4435-b02a-19a03317d6ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Tool\Animation">
+      <UniqueIdentifier>{80895b12-5b53-49f2-a46d-0564e4274fc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Tool\Camera">
+      <UniqueIdentifier>{3aa22d39-4fd0-4914-bf2a-cb41e05970e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Tool\Primitive">
+      <UniqueIdentifier>{7c132298-891a-4de6-a5e2-e5fd5420a95f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Tool\IMGUI">
+      <UniqueIdentifier>{7b279b76-288e-441f-aaed-b667a0856a60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\Tool\Paeticle">
+      <UniqueIdentifier>{c6f64c50-d70f-4239-b1ec-2b7ef5e9f41f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -147,23 +165,11 @@
     <ClCompile Include="engine\3d\ModelManager.cpp">
       <Filter>engine\3d</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Tool\Camera.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
     <ClCompile Include="engine\base\SrvManager.cpp">
       <Filter>engine\base</Filter>
     </ClCompile>
     <ClCompile Include="engine\math\DrawFunction.cpp">
       <Filter>engine\math</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\Tool\ParicleEmitter.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\Tool\ParticleManager.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\Tool\ImGuiManager.cpp">
-      <Filter>engine\Tool</Filter>
     </ClCompile>
     <ClCompile Include="engine\GAME\Framework.cpp">
       <Filter>engine\GAME</Filter>
@@ -176,9 +182,6 @@
     </ClCompile>
     <ClCompile Include="engine\scene\SceneManager.cpp">
       <Filter>engine\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\scene\SceneFactory.cpp">
-      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\GameScene.cpp">
       <Filter>App\Scene</Filter>
@@ -198,23 +201,29 @@
     <ClCompile Include="engine\base\PSOManager.cpp">
       <Filter>engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="Animation.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="application\debugCamera\DebugCamera.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="application\debugCamera\DebugCameraFunction.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
     <ClCompile Include="engine\Tool\LightManager.cpp">
       <Filter>engine\Tool</Filter>
     </ClCompile>
-    <ClCompile Include="PrimitiveDrawer.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="engine\scene\SceneFactory.cpp">
+      <Filter>engine\scene</Filter>
     </ClCompile>
-    <ClCompile Include="engine\2d\Vector4.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Animation.cpp">
+      <Filter>engine\Tool\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\Camera.cpp">
+      <Filter>engine\Tool\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="PrimitiveDrawer.cpp">
+      <Filter>engine\Tool\Primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\ImGuiManager.cpp">
+      <Filter>engine\Tool\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\ParticleManager.cpp">
+      <Filter>engine\Tool\Paeticle</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\ParicleEmitter.cpp">
+      <Filter>engine\Tool\Paeticle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -296,23 +305,11 @@
     <ClInclude Include="engine\3d\ModelManager.h">
       <Filter>engine\3d</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Tool\Camera.h">
-      <Filter>engine\Tool</Filter>
-    </ClInclude>
     <ClInclude Include="engine\base\SrvManager.h">
       <Filter>engine\base</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\DrawFunction.h">
       <Filter>engine\math</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Tool\ParicleEmitter.h">
-      <Filter>engine\Tool</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Tool\ParticleManager.h">
-      <Filter>engine\Tool</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Tool\ImGuiManager.h">
-      <Filter>engine\Tool</Filter>
     </ClInclude>
     <ClInclude Include="engine\GAME\GameEngine.h">
       <Filter>engine\GAME</Filter>
@@ -326,29 +323,11 @@
     <ClInclude Include="engine\scene\SceneManager.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Tool\AbstractSceneFactory.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\scene\SceneFactory.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Tool\LightManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\debugCamera\DebugCamera.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\debugCamera\DebugCameraFunction.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="application\scene\GameScene.h">
       <Filter>App\Scene</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\TitleScene.h">
       <Filter>App\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\Mass.h">
       <Filter>engine\math</Filter>
@@ -365,14 +344,35 @@
     <ClInclude Include="engine\base\PSOManager.h">
       <Filter>engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="engine\base\SingletonHelper.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="engine\scene\AbstractSceneFactory.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\AbstractSceneFactory.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\SceneFactory.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>engine\Tool\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\Camera.h">
+      <Filter>engine\Tool\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\LightManager.h">
+      <Filter>engine\Tool</Filter>
     </ClInclude>
     <ClInclude Include="PrimitiveDrawer.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>engine\Tool\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\ImGuiManager.h">
+      <Filter>engine\Tool\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\ParticleManager.h">
+      <Filter>engine\Tool\Paeticle</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\ParicleEmitter.h">
+      <Filter>engine\Tool\Paeticle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -390,7 +390,9 @@
     <None Include="resources\shaders\Sprite\Sprite.hlsli">
       <Filter>シェーダー ファイル\sprite</Filter>
     </None>
-    <None Include="resources\shaders\Primitive\Primitive.hlsli" />
+    <None Include="resources\shaders\Primitive\Primitive.hlsli">
+      <Filter>シェーダー ファイル\Primitive</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -411,7 +413,11 @@
     <FxCompile Include="resources\shaders\Sprite\Sprite.VS.hlsl">
       <Filter>シェーダー ファイル\sprite</Filter>
     </FxCompile>
-    <FxCompile Include="resources\shaders\Primitive\Primitive.VS.hlsl" />
-    <FxCompile Include="resources\shaders\Primitive\Primitive.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Primitive\Primitive.PS.hlsl">
+      <Filter>シェーダー ファイル\Primitive</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Primitive\Primitive.VS.hlsl">
+      <Filter>シェーダー ファイル\Primitive</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
