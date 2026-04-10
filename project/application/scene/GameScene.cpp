@@ -34,6 +34,8 @@ void GameScene::Initialize() {
     ParticleManager::GetInstance()->Setcamera(activeCamera_);
     PrimitiveDrawer::GetInstance()->SetCamera(activeCamera_);*/
 
+
+
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
     Audio::GetInstance()->PlayAudio(handle_,true);
@@ -84,6 +86,12 @@ void GameScene::Initialize() {
        player->SetPosition({ 0.0f,0.0f,0.0f });
       
        
+       cameraController = std::make_unique<CameraController>();
+       cameraController->Initialize(activeCamera_);
+       cameraController->SetTarget(player.get());
+       
+
+
 
 
 }
@@ -156,6 +164,9 @@ void GameScene::Update() {
         camreaTranslate = Add(camreaTranslate, Vector3{ normalizedX / 60.0f,normalizedY / 60.0f,0.0f });
         activeCamera_->SetTranslate(camreaTranslate);
     }*/
+
+    cameraController->Update();
+
 
     activeCamera_->Update();
   

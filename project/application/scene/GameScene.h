@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Scene.h"
 #include <memory>
+#include "CameraController.h"
 
 
 #include "Animation.h"
@@ -21,6 +22,8 @@ private:
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
+
+    std::unique_ptr<CameraController> cameraController; 
 
     bool isDebugCamera_ = false;
 

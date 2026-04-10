@@ -54,6 +54,8 @@ void Player::HandleInput()
         float rawX = (float)state.Gamepad.sThumbLX / 32767.0f;
         float rawY = (float)state.Gamepad.sThumbLY / 32767.0f;
         float deadZone = 0.2f;
+
+        Input::GetInstance()->SetDeadZone(0, static_cast<int>(deadZone * 32767), static_cast<int>(deadZone * 32767));
         Vector3 moveInput = { rawX, rawY, 0.0f };
         float length = sqrtf(moveInput.x * moveInput.x + moveInput.y * moveInput.y);
 

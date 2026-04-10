@@ -31,6 +31,15 @@ public:
             object_->SetTranslate(transform.translate);
         }
     }
+    EulerTransform GetTransform() const {
+        if (object_) {
+            return { object_->GetScale(), object_->GetRotate(), object_->GetTranslate() };
+        }
+        return {};
+    }
+    Vector3 GetVelocity() const {
+        return velocity_;
+    }   
 
 
 private:

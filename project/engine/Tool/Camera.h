@@ -50,10 +50,10 @@ public:
     const Matrix4x4& GetProjectionMatrix()const{return projectionMatrix;};
     const Matrix4x4& GetViewProtectionMatrix()const{return viewProtectionMatrix;};
     float GetFarCrip() const { return farCrip; }
-
+ EulerTransform transform_;
 
 private:
-    EulerTransform transform_;
+   
     Matrix4x4 worldMatrix;
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
