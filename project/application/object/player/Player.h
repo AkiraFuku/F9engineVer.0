@@ -12,7 +12,9 @@ public:
     void Draw();
 
     void SetCamera(Camera* camera) {
+        camera_ = camera;
         if (object_) {
+
             object_->SetCamera(camera);
         }
     }
@@ -38,7 +40,12 @@ private:
      const float kMoveSpeed_ = 0.2f; // 好みの速度に調整
 
     void HandleInput();
+    Camera* camera_ = nullptr;
 
+    Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 現在の速度
+    const float kGravity = -0.015f;           // 重力加速度（毎フレーム引く値）
+    const float kJumpAcceleration = 0.3f;     // ジャンプした瞬間の上昇速度
+    bool isGrounded_ = true;
 
 
 };

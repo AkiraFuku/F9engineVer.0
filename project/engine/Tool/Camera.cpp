@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "MathFunction.h"
+#include "ImGuiManager.h"
 Camera::Camera()
     :transform_({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
     , fovY(0.45f)

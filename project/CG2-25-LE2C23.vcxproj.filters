@@ -94,6 +94,9 @@
     <Filter Include="App\Object\Player">
       <UniqueIdentifier>{43c80a23-7dd8-41b6-bf1d-f7a97c0dbd81}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Object\CameraContorol">
+      <UniqueIdentifier>{2a6b8a8d-3de6-4bd5-9a43-36ac04e3fc01}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -233,6 +236,9 @@
     </ClCompile>
     <ClCompile Include="application\object\player\Player.cpp">
       <Filter>App\Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="FollowCamera.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -385,6 +391,9 @@
     </ClInclude>
     <ClInclude Include="application\object\player\Player.h">
       <Filter>App\Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="FollowCamera.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -138,9 +138,9 @@ void GameScene::Update() {
 
     if (Input::GetInstance()->GetMouseMove().z)
     {
-        Vector3 camreaTranslate = activeCamera_->GetTranslate();
+        Vector3 camreaTranslate = cameraMap_["Main"]->GetTranslate();
         camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-        activeCamera_->SetTranslate(camreaTranslate);
+        cameraMap_["Main"]->SetTranslate(camreaTranslate);
 
     }
 /*    if (Input::GetInstance()->GetJoyStick(0, state))
