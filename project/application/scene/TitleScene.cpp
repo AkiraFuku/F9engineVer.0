@@ -10,16 +10,22 @@
 
 void TitleScene::Initialize() {
 
-    camera = std::make_unique<Camera>();
-    camera->SetRotate({ 0.0f,0.0f,0.0f });
-    camera->SetTranslate({ 0.0f,0.0f,-5.0f });
+ // 1. メインカメラの生成
+    auto mainCamera = std::make_unique<Camera>();
+    mainCamera->SetTranslate({ 0.0f, 0.0f, -5.0f });
+    cameraMap_["Main"] = std::move(mainCamera);
 
-    curuntCamera = std::make_unique<Camera>();
+    // 2. デバッグ用カメラの生成
+    auto debugCamera = std::make_unique<Camera>();
+    debugCamera->SetTranslate({ 0.0f, 10.0f, -20.0f });
+    cameraMap_["Debug"] = std::move(debugCamera);
+
+    // 3. 最初はメインカメラをセット
+    ChangeActiveCamera(cameraMap_["Main"].get());
 
 
-    Object3dCommon::GetInstance()->SetDefaultCamera(curuntCamera.get());
-    ParticleManager::GetInstance()->Setcamera(curuntCamera.get());
-
+    Object3dCommon::GetInstance()->SetDefaultCamera(activeCamera_);
+    ParticleManager::GetInstance()->Setcamera(activeCamera_);
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
     Audio::GetInstance()->PlayAudio(handle_,true);
@@ -57,7 +63,7 @@ void TitleScene::Initialize() {
         object3d = std::make_unique<Object3d>();
         object3d->Initialize();
         object3d->SetModel("AnimatedCube.gltf");
-        object3d->SetCamera(camera.get());
+        object3d->SetCamera(activeCamera_);
 
        object3d->SetAnimations(animation.get());
         
@@ -117,9 +123,9 @@ void TitleScene::Update() {
 
     if (Input::GetInstance()->GetMouseMove().z)
     {
-        Vector3 camreaTranslate = camera->GetTranslate();
+        Vector3 camreaTranslate = activeCamera_->GetTranslate();
         camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-        camera->SetTranslate(camreaTranslate);
+        activeCamera_->SetTranslate(camreaTranslate);
 
     }
     if (Input::GetInstance()->GetJoyStick(0, state))
@@ -131,21 +137,14 @@ void TitleScene::Update() {
         // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
         float normalizedX = x / 32767.0f;
         float normalizedY = y / 32767.0f;
-        Vector3 camreaTranslate = camera->GetTranslate();
+        Vector3 camreaTranslate = activeCamera_->GetTranslate();
         camreaTranslate = Add(camreaTranslate, Vector3{ normalizedX / 60.0f,normalizedY / 60.0f,0.0f });
-        camera->SetTranslate(camreaTranslate);
+        activeCamera_->SetTranslate(camreaTranslate);
     }
 
-    camera->Update();
-    if (isDebugCamera_)
-    {
-        debugCamera_.Update(camera->GetTransform());
-        camera->SetViewMatrix(debugCamera_.GetViewMatrix());
-    } else
-    {
-        camera->UpdateView();
-    }
-    camera->UpdateViewProjection();
+    activeCamera_->Update();
+ 
+    activeCamera_->UpdateViewProjection();
     object3d->Update();
 
 #ifdef USE_IMGUI

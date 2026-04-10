@@ -56,7 +56,13 @@ void Object3d::Update()
 void Object3d::Draw()
 {
     // カメラがセットされていない場合は描画できないので終了
-    if (!camera_) return;
+
+  /*  if (camera_)
+    {
+
+
+
+    }*/
 
 
     Object3dCommon::GetInstance()->Object3dCommonDraw();

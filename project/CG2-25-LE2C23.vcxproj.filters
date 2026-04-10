@@ -88,6 +88,12 @@
     <Filter Include="engine\Tool\Paeticle">
       <UniqueIdentifier>{c6f64c50-d70f-4239-b1ec-2b7ef5e9f41f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Object">
+      <UniqueIdentifier>{50055092-e458-4e49-99e7-0d3ae2192ff1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Object\Player">
+      <UniqueIdentifier>{43c80a23-7dd8-41b6-bf1d-f7a97c0dbd81}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -224,6 +230,9 @@
     </ClCompile>
     <ClCompile Include="engine\Tool\ParicleEmitter.cpp">
       <Filter>engine\Tool\Paeticle</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\player\Player.cpp">
+      <Filter>App\Object\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +382,9 @@
     </ClInclude>
     <ClInclude Include="engine\Tool\ParicleEmitter.h">
       <Filter>engine\Tool\Paeticle</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\player\Player.h">
+      <Filter>App\Object\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

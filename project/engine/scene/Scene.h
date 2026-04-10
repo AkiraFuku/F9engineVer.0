@@ -1,4 +1,8 @@
 #pragma once
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
 class SceneManager;
 class Camera;
 class Scene
@@ -16,11 +20,15 @@ public:
     SceneManager*  GetSceneManager() {
         return sceneManager_;
     }
+
+    void ChangeActiveCamera(Camera* targetCamera);
+
 private:
     SceneManager* sceneManager_ = nullptr;
 
 protected:
     uint32_t BGMHandle_ = 0;
-  std::unique_ptr<Camera>curuntCamera = nullptr;
+  Camera*activeCamera_ = nullptr;
+  std::map<std::string, std::unique_ptr<Camera>> cameraMap_;
 };
 

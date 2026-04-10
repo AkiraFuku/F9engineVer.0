@@ -14,7 +14,8 @@ Camera::Camera()
 void Camera::Update() {
 
     worldMatrix = MakeAfineMatrix(transform_.scale, transform_.rotate, transform_.translate);
-
+    UpdateView();
+    UpdateViewProjection();
 }
 
 void Camera::UpdateView()
