@@ -18,6 +18,10 @@ public:
     void Finalize()override;
     void Update()override;
     void Draw()override;
+    GameScene() ;
+    ~GameScene() override;
+
+
 private:
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<Object3d> object3d;

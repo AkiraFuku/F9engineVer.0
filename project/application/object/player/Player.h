@@ -10,6 +10,9 @@ class RailPath;
 class Player
 {
 public:
+    Player() ;
+    ~Player() ;
+
     void Initialize();
     void Uppdate();
     void Draw();

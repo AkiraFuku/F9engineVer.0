@@ -4,6 +4,9 @@
 #include "RailMover.h"
 #include "RailPath.h"
 #include "input.h"
+
+Player::Player() = default;
+Player::~Player() = default;
 void Player::Initialize()
 {
     input_ = input_->GetInstance();

@@ -14,12 +14,14 @@
 #include "Animation.h"
 #include"Audio.h"
 #include "TextureManager.h"
+#include "RailPath.h"
 
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
     auto mainCamera = std::make_unique<Camera>();
     mainCamera->SetTranslate({ 0.0f, 0.0f, -5.0f });
+
     cameraMap_["Main"] = std::move(mainCamera);
 
     // 2. デバッグ用カメラの生成
@@ -92,8 +94,8 @@ void GameScene::Initialize() {
 
     stageRail = std::make_unique<RailPath>();
     stageRail->AddPoint({ 0.0f,0.0f,0.0f });
-    stageRail->AddPoint({ 0, 0, 50 });
-    stageRail->AddPoint({ 50, 0, 100 });
+    stageRail->AddPoint({ 0.0f, 0.0f, 50.0f });
+    stageRail->AddPoint({ 50.0f, 5.0f, 0.0f });
     player->SetRail(stageRail.get());
 
 
@@ -220,3 +222,6 @@ void GameScene::Draw() {
     //sprite->Draw();
    // object3d->Draw();
 }
+GameScene::GameScene() = default;
+
+GameScene::~GameScene()= default;
