@@ -7,6 +7,7 @@
 #include <memory>
 #include "CameraController.h"
 
+class RailPath;
 
 #include "Animation.h"
 
@@ -22,6 +23,7 @@ private:
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
+    std::unique_ptr<RailPath> stageRail;
 
     std::unique_ptr<CameraController> cameraController; 
 

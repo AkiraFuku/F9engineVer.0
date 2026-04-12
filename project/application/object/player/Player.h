@@ -2,8 +2,11 @@
 #include <memory>
 #include "Transform.h"
 #include "Object3d.h"
+
 class Input;
 class Camera;
+class RailMover;
+class RailPath;
 class Player
 {
 public:
@@ -41,6 +44,7 @@ public:
         return velocity_;
     }   
 
+    void SetRail(RailPath* rail);
 
 private:
     Input* input_;
@@ -55,7 +59,7 @@ private:
     const float kGravity = -0.015f;           // 重力加速度（毎フレーム引く値）
     const float kJumpAcceleration = 0.3f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
-
+     std::unique_ptr<RailMover> railMover_;
 
 };
 

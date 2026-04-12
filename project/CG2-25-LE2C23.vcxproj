@@ -79,6 +79,8 @@
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="application\object\player\Player.cpp" />
     <ClCompile Include="PrimitiveDrawer.cpp" />
+    <ClCompile Include="RailMover.cpp" />
+    <ClCompile Include="RailPath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
@@ -132,6 +134,8 @@
     <ClInclude Include="engine\Tool\LightManager.h" />
     <ClInclude Include="application\object\player\Player.h" />
     <ClInclude Include="PrimitiveDrawer.h" />
+    <ClInclude Include="RailMover.h" />
+    <ClInclude Include="RailPath.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
