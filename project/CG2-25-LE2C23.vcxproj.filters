@@ -70,6 +70,9 @@
     <Filter Include="App\Scene">
       <UniqueIdentifier>{c759ee72-dd47-40d0-97a2-f45ec1bb6ed3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="シェーダー ファイル\Primitiv">
+      <UniqueIdentifier>{4ac7afbb-af60-4dc4-b460-b8b943055283}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -390,7 +393,9 @@
     <None Include="resources\shaders\Sprite\Sprite.hlsli">
       <Filter>シェーダー ファイル\sprite</Filter>
     </None>
-    <None Include="resources\shaders\Primitive\Primitive.hlsli" />
+    <None Include="resources\shaders\Primitive\Primitive.hlsli">
+      <Filter>シェーダー ファイル\Primitiv</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -411,7 +416,11 @@
     <FxCompile Include="resources\shaders\Sprite\Sprite.VS.hlsl">
       <Filter>シェーダー ファイル\sprite</Filter>
     </FxCompile>
-    <FxCompile Include="resources\shaders\Primitive\Primitive.VS.hlsl" />
-    <FxCompile Include="resources\shaders\Primitive\Primitive.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Primitive\Primitive.PS.hlsl">
+      <Filter>シェーダー ファイル\Primitiv</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Primitive\Primitive.VS.hlsl">
+      <Filter>シェーダー ファイル\Primitiv</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
