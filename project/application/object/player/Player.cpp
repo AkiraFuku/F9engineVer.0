@@ -4,14 +4,15 @@
 #include "RailMover.h"
 #include "RailPath.h"
 #include "input.h"
-
+#include "InputHandler.h"
 #include "imgui.h"
 
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
 {
-    input_ = input_->GetInstance();
+  //  input_ = input_->GetInstance();
+    inputHandler_ = std::make_unique<InputHandler>();
     object_ = std::make_unique<Object3d>();
     ModelManager::GetInstance()->CreateSphereModel("Sphere", 16);
     object_->Initialize();
@@ -73,11 +74,7 @@ void Player::Draw()
 }
 void Player::SetRail(RailPath* rail)
 {
-    /*    if (rail->GetMaxT() <= 0) { // 初期化を1回にする例
-            rail->AddPoint({ 0, 0, 0 });
-            rail->AddPoint({ 0, 0, 50 });
-            rail->AddPoint({ 50, 0, 100 });
-        }*/
+
 
     if (!rail||!railMover_)
     {
@@ -86,9 +83,20 @@ void Player::SetRail(RailPath* rail)
     railMover_->SetPath(rail);
 
 }
+void Player::Move(float ratio)
+{
+    railMover_->Advance(ratio * (kMoveSpeed_ / 60.0f));
+}
+void Player::Jump()
+{
+    if (isGrounded_) {
+        velocity_.y = kJumpAcceleration;
+        isGrounded_ = false;
+    }
+}
 void Player::HandleInput()
 {
-  XINPUT_STATE state;
+/*  XINPUT_STATE state;
     if (!Input::GetInstance()->GetJoyStick(0, state)) return;
 
     // スティック左右でレールの進捗を操作
@@ -101,5 +109,13 @@ void Player::HandleInput()
     if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_A) && isGrounded_) {
         velocity_.y = kJumpAcceleration;
         isGrounded_ = false;
+    }*/
+
+    // 1. 入力を受け取りコマンドを取得
+    auto commands = inputHandler_->HandleInput();
+    
+    // 2. 全てのコマンドを実行
+    for (auto& command : commands) {
+        command->Execute(*this);
     }
 }
