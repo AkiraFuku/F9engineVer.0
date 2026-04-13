@@ -3,7 +3,6 @@
 #include "ModelManager.h"
 #include "RailMover.h"
 #include "RailPath.h"
-#include "input.h"
 #include "InputHandler.h"
 #include "imgui.h"
 
@@ -11,7 +10,6 @@ Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
 {
-  //  input_ = input_->GetInstance();
     inputHandler_ = std::make_unique<InputHandler>();
     object_ = std::make_unique<Object3d>();
     ModelManager::GetInstance()->CreateSphereModel("Sphere", 16);
@@ -94,23 +92,10 @@ void Player::Jump()
         isGrounded_ = false;
     }
 }
+void Player::Attack(){
+}
 void Player::HandleInput()
 {
-/*  XINPUT_STATE state;
-    if (!Input::GetInstance()->GetJoyStick(0, state)) return;
-
-    // スティック左右でレールの進捗を操作
-    float rawX = (float)state.Gamepad.sThumbLX / 32767.0f;
-    if (abs(rawX) > 0.2f) {
-        railMover_->Advance(rawX * (kMoveSpeed_/60.0f));
-    }
-
-    // Aボタンでジャンプ (Y軸方向の速度のみいじる)
-    if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_A) && isGrounded_) {
-        velocity_.y = kJumpAcceleration;
-        isGrounded_ = false;
-    }*/
-
     // 1. 入力を受け取りコマンドを取得
     auto commands = inputHandler_->HandleInput();
     

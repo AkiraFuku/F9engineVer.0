@@ -9,3 +9,7 @@ void JumpCommand::Execute(Player& player)
 {
     player.Jump();
 }
+
+void AttackCommand::Execute(Player& player)
+{
+}

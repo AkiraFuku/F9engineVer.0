@@ -52,9 +52,9 @@ public:
 
     void Move(float ratio);
     void Jump();
+    void Attack();
 
 private:
-    //Input* input_;
     std::unique_ptr<InputHandler> inputHandler_; 
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整
