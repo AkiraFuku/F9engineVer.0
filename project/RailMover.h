@@ -41,19 +41,14 @@ public:
 
     // 現在の座標を取得
     Vector3 GetCurrentPosition() const {
-        return path_ ? path_->GetPosition(localProgress_) : Vector3{ 0,0,0 };
+        if (!path_) return {0,0,0};
+    return path_->GetPosition(GetProgress()); // localProgress_ ではなく GetProgress() を使う
     }
 
     // 現在の進行方向（向き）を取得
     Vector3 GetCurrentDirection() const {
-        return path_ ? path_->GetDirection(localProgress_) : Vector3{ 0,0,1 };
+        return path_ ? path_->GetDirection(GetProgress()) : Vector3{ 0,0,1 };
     }
-
-    /*    //   float GetProgress() const { return progress_; }
-        void SetProgress(float p) {
-            progress_ = p;
-        }*/
-
 private:
 
 

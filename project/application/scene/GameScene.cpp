@@ -30,7 +30,7 @@ void GameScene::Initialize() {
     cameraMap_["Debug"] = std::move(debugCamera);
 
     // 3. 最初はメインカメラをセット
-    ChangeActiveCamera(cameraMap_["Main"].get());
+    ChangeActiveCamera(cameraMap_["Debug"].get());
     /*   Object3dCommon::GetInstance()->SetDefaultCamera(activeCamera_);
      ParticleManager::GetInstance()->Setcamera(activeCamera_);
      PrimitiveDrawer::GetInstance()->SetCamera(activeCamera_);*/
@@ -93,9 +93,10 @@ void GameScene::Initialize() {
 
 
     stageRail = std::make_unique<RailPath>();
-    stageRail->AddPoint({ 0.0f,0.0f,0.0f },true);
-    stageRail->AddPoint({ 0.0f, 0.0f, 50.0f });
-    stageRail->AddPoint({ 50.0f, 5.0f, 0.0f });
+    stageRail->AddPointCR({ 0.0f,0.0f,0.0f });
+
+    stageRail->AddBezierPoint({ 0.0f, 0.0f, 50.0f }, { 25.0f,0.0f,25.0f } ,{ -25.0f,0.0f,-25.0f } );
+    stageRail->AddPoint({ 50.0f, 0.0f, 0.0f });
     player->SetRail(stageRail.get());
 
 
@@ -176,8 +177,12 @@ void GameScene::Update() {
 
     activeCamera_->Update();
 
+    stageRail->Update();
 
     player->Uppdate();
+
+
+
 
     //activeCamera_->UpdateViewProjection();
     object3d->Update();
@@ -197,6 +202,17 @@ void GameScene::Update() {
     ImGui::DragFloat4("Rotate", &(rotation_.x));
     // camera->SetRotate(Rotate);
 
+
+    Vector3 point1_ = stageRail->GetControlPointIn(1);
+    Vector3 point2_ = stageRail->GetControlPointOut(1);
+
+    ImGui::SliderFloat3("Point1", &(point1_.x), 0.1f, 1000.0f);
+    ImGui::SliderFloat3("Point2", &(point2_.x), 0.1f, 1000.0f);
+
+    stageRail->SetControlPointIn(1, point1_);
+    stageRail->SetControlPointOut(1, point2_);
+
+
     ImGui::End();
 #endif // USE_IMGUI
 
@@ -214,6 +230,7 @@ void GameScene::Draw() {
     sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
 
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });
     stageRail->DebugDraw();
     player->Draw();
 
@@ -224,4 +241,4 @@ void GameScene::Draw() {
 }
 GameScene::GameScene() = default;
 
-GameScene::~GameScene()= default;
+GameScene::~GameScene() = default;

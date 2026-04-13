@@ -4,7 +4,7 @@
 #define PI 3.14159265358979323846f
 #include "Vector4.h"
 #include "Quanternion.h"
-
+Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 static const int kColumnWidth = 60;
 static const int kRowHeight = 20;

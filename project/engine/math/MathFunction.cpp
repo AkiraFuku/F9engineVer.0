@@ -29,6 +29,20 @@ Matrix4x4 MakeBillboardMatrix(const Vector3& scale, const Vector3& rotate, Matri
 
     return result;
 }
+Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t) {
+    float u = 1.0f - t;
+    float tt = t * t;
+    float uu = u * u;
+    float uuu = uu * u;
+    float ttt = tt * t;
+
+    Vector3 result = uuu * p0;      // (1-t)^3 * P0
+    result += 3.0f * uu * t * p1;   // 3 * (1-t)^2 * t * P1
+    result += 3.0f * u * tt * p2;   // 3 * (1-t) * t^2 * P2
+    result += ttt * p3;             // t^3 * P3
+
+    return result;
+}
 Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t)
 {
     float t2 = t * t;

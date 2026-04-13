@@ -35,6 +35,8 @@ private:
 
     Vector3 position_ = { 2.0f,0.0f,0.0f };
     Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };
+    /*Vector3 point1_ = { 0.0f,0.0f,0.0f };
+    Vector3 point2_ = { 0.0f,0.0f,50.0f };*/
 
      uint32_t handle_=0;
 };
