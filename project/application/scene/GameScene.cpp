@@ -93,7 +93,7 @@ void GameScene::Initialize() {
 
 
     stageRail = std::make_unique<RailPath>();
-    stageRail->AddPoint({ 0.0f,0.0f,0.0f });
+    stageRail->AddPoint({ 0.0f,0.0f,0.0f },true);
     stageRail->AddPoint({ 0.0f, 0.0f, 50.0f });
     stageRail->AddPoint({ 50.0f, 5.0f, 0.0f });
     player->SetRail(stageRail.get());

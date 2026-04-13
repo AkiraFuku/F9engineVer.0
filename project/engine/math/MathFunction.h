@@ -2,11 +2,10 @@
 ///
 #define _USE_MATH_DEFINES
 #define PI 3.14159265358979323846f
-#include <cmath>
-#include "../../engine/2d/Vector4.h"
-#include <assert.h>
+#include "Vector4.h"
 #include "Quanternion.h"
-///using namespace std;
+
+Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 static const int kColumnWidth = 60;
 static const int kRowHeight = 20;
 Vector3 Cross(const Vector3& v1, const Vector3& v2);
@@ -16,6 +15,7 @@ Vector3 operator+(const Vector3& v1, const Vector3& v2);
 Vector3 operator+=(Vector3& v1, const Vector3& v2);
 Vector3 operator-(const Vector3& v1, const Vector3& v2);
 Vector3 operator-=(Vector3& v1, const Vector3& v2);
+Vector3 operator-(const Vector3& v);
 
 Vector3 operator*(float scalar, const Vector3& v);
 Vector3 operator*(const Vector3& v, float scalar);

@@ -39,6 +39,8 @@ public:
     void SetViewMatrix(const Matrix4x4& viewMatrix) {
         this->viewMatrix = viewMatrix;
     }
+    //描画範囲の設定
+    
 
 
     const Vector3& GetRotate()const{return transform_.rotate;}
