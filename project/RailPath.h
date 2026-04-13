@@ -5,8 +5,7 @@
 
 class RailPath {
 public:
-    RailPath() = default;
-    ~RailPath() = default;
+  
     void Initialize() {
         points_.clear();
     }

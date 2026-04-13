@@ -59,6 +59,7 @@ private:
     Camera* camera_ = nullptr;
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 現在の速度
+  float worldY_ = 0.0f;
     const float kGravity = -0.015f;           // 重力加速度（毎フレーム引く値）
     const float kJumpAcceleration = 0.3f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;

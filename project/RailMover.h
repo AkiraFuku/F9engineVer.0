@@ -1,10 +1,10 @@
 #pragma once
 #include "RailPath.h"
 #include "Vector3.h"
+#include <algorithm>
 class RailMover {
 public:
-     RailMover() = default;
-    ~RailMover() = default;
+
 
     void SetPath(const RailPath* path) {
         path_ = path;
@@ -16,10 +16,22 @@ public:
     }
 
     void Advance(float speed) {
+        // 1. 現在の進捗を取得して加算
+        float currentProgress = GetProgress();
+        currentProgress += speed;
+
+        // 2. 範囲を制限
+        float maxT = 1.0f;
+        if (path_) {
+            maxT = path_->GetMaxT();
+        }
+        currentProgress = std::clamp(currentProgress, 0.0f, maxT);
+
+        // 3. 【修正】クランプ済みの「最終的な値」を直接代入する
         if (pProgress_) {
-            *pProgress_ += speed; // 共有されている進捗が更新される
+            *pProgress_ = currentProgress; // += speed ではなく = currentProgress
         } else {
-            localProgress_ += speed; // 自分だけの進捗
+            localProgress_ = currentProgress; // += speed ではなく = currentProgress
         }
     }
 
@@ -43,7 +55,7 @@ public:
         }*/
 
 private:
-   
+
 
     const RailPath* path_ = nullptr;// 進捗の管理方法を柔軟にするため、ローカルと共有の両方を用意
     float localProgress_ = 0.0f;// 個別の進捗。これが共通でないなら、こっちを使う
