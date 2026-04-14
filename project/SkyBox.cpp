@@ -116,7 +116,7 @@ void SkyBox::Initialize()
     vertexData_[22].position = { -1.0f, -1.0f, -1.0f, 1.0f };
     vertexData_[23].position = { 1.0f, -1.0f, -1.0f, 1.0f };
 
-    vertexResourse_=
+    vertexResourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(VertexData) * 24);
     vertexBufferView_.BufferLocation = vertexResourse_.Get()->GetGPUVirtualAddress();
@@ -129,11 +129,11 @@ void SkyBox::Initialize()
     materialResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(Material));
-        materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+    materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 
-        materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-          //座標変換
+    //座標変換
     transformationMatrixResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(TransformationMatrix));
@@ -148,7 +148,7 @@ void SkyBox::Initialize()
     transform_.rotate = Vector3(0.0f, 0.0f, 0.0f);
     transform_.translate = Vector3(0.0f, 0.0f, 0.0f);
 
-        
+
 
 }
 
@@ -163,8 +163,8 @@ void SkyBox::Update()
     //ワールド行列とビュー行列とプロジェクション行列を掛け算
     if (camera_)
     {
-       // cameraData_->worldPosition = camera_->GetTranslate();
-        worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
+        // cameraData_->worldPosition = camera_->GetTranslate();
+        worldViewProjectionMatrix = Multiply(worldMatrix, camera_->GetViewProtectionMatrix());
         //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
     } else {
         worldViewProjectionMatrix = Multiply(worldMatrix, Makeidetity4x4());
@@ -181,6 +181,8 @@ void SkyBox::Draw()
     // PSOをセット
     DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
     //パイプラインステートとルートシグネチャの設定
+
+    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(psoSet.rootSignature.Get());
     DXCommon::GetInstance()->
         GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
     //インデックスバッファの設定
@@ -194,16 +196,16 @@ void SkyBox::Draw()
         SetGraphicsRootDescriptorTable(2,
             TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex_));
     //座標変換行列の設定
-     DXCommon::GetInstance()->
+    DXCommon::GetInstance()->
         GetCommandList()->
         SetGraphicsRootConstantBufferView(1, transformationMatrixResource_->GetGPUVirtualAddress());
 
-    
+
     DXCommon::GetInstance()->GetCommandList()->DrawInstanced(24, 1, 0, 0);
 }
 
 void SkyBox::SetTextureByFilePath(const std::string& textureFilePath)
 {
-        textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+    textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
 }
