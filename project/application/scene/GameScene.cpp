@@ -95,7 +95,7 @@ void GameScene::Initialize() {
     stageRail = std::make_unique<RailPath>();
     stageRail->AddPointCR({ 0.0f,0.0f,0.0f });
 
-    stageRail->AddBezierPoint({ 0.0f, 0.0f, 50.0f }, { 25.0f,0.0f,25.0f } ,{ -25.0f,0.0f,-25.0f } );
+    stageRail->AddPoint({ 0.0f, 0.0f, 50.0f });
     stageRail->AddPoint({ 50.0f, 0.0f, 0.0f });
     player->SetRail(stageRail.get());
 
@@ -228,9 +228,9 @@ void GameScene::Draw() {
 
     Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
     sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
-
+/*
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });*/
     stageRail->DebugDraw();
     player->Draw();
 
