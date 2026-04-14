@@ -10,8 +10,8 @@
 
 #include "Scene.h"
 #include <memory>
+#include "SkyBox.h"
 
-#include "DebugCamera.h"
 
 #include "Animation.h"
 
@@ -27,9 +27,9 @@ private:
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
+    std::unique_ptr<SkyBox> skyBox;
 
-    DebugCamera debugCamera_;
-    bool isDebugCamera_ = false;
+    
 
     Vector3 position_ = { 2.0f,0.0f,0.0f };
     Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };

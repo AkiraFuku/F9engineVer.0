@@ -73,6 +73,12 @@
     <Filter Include="シェーダー ファイル\Primitiv">
       <UniqueIdentifier>{4ac7afbb-af60-4dc4-b460-b8b943055283}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\SkyBox">
+      <UniqueIdentifier>{a48b6274-6363-4f01-a95a-ec7f05eb7ddf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="シェーダー ファイル\Skybox">
+      <UniqueIdentifier>{5fea5228-0f47-447d-b3b7-97a07886beea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -180,9 +186,6 @@
     <ClCompile Include="engine\scene\SceneManager.cpp">
       <Filter>engine\scene</Filter>
     </ClCompile>
-    <ClCompile Include="engine\scene\SceneFactory.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="application\scene\GameScene.cpp">
       <Filter>App\Scene</Filter>
     </ClCompile>
@@ -204,20 +207,20 @@
     <ClCompile Include="Animation.cpp">
       <Filter>engine\Tool</Filter>
     </ClCompile>
-    <ClCompile Include="application\debugCamera\DebugCamera.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="application\debugCamera\DebugCameraFunction.cpp">
-      <Filter>engine\Tool</Filter>
-    </ClCompile>
     <ClCompile Include="engine\Tool\LightManager.cpp">
       <Filter>engine\Tool</Filter>
     </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
+      <Filter>App\SkyBox</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\SceneFactory.cpp">
+      <Filter>engine\scene</Filter>
+    </ClCompile>
     <ClCompile Include="PrimitiveDrawer.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>engine\Tool</Filter>
     </ClCompile>
     <ClCompile Include="engine\2d\Vector4.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>engine\3d</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -329,29 +332,11 @@
     <ClInclude Include="engine\scene\SceneManager.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Tool\AbstractSceneFactory.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\scene\SceneFactory.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\Tool\LightManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\debugCamera\DebugCamera.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\debugCamera\DebugCameraFunction.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="application\scene\GameScene.h">
       <Filter>App\Scene</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\TitleScene.h">
       <Filter>App\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\Mass.h">
       <Filter>engine\math</Filter>
@@ -368,14 +353,23 @@
     <ClInclude Include="engine\base\PSOManager.h">
       <Filter>engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="engine\base\SingletonHelper.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="SkyBox.h">
+      <Filter>App\SkyBox</Filter>
     </ClInclude>
     <ClInclude Include="engine\scene\AbstractSceneFactory.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\SceneFactory.h">
+      <Filter>engine\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>engine\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\LightManager.h">
+      <Filter>engine\Tool</Filter>
     </ClInclude>
     <ClInclude Include="PrimitiveDrawer.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>engine\Tool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -395,6 +389,9 @@
     </None>
     <None Include="resources\shaders\Primitive\Primitive.hlsli">
       <Filter>シェーダー ファイル\Primitiv</Filter>
+    </None>
+    <None Include="resources\shaders\Skybox\Skybox.hlsli">
+      <Filter>シェーダー ファイル\Skybox</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -421,6 +418,12 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\Primitive\Primitive.VS.hlsl">
       <Filter>シェーダー ファイル\Primitiv</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Skybox\Skybox.PS.hlsl">
+      <Filter>シェーダー ファイル\Skybox</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Skybox\Skybox.VS.hlsl">
+      <Filter>シェーダー ファイル\Skybox</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

@@ -1,0 +1,91 @@
+#pragma once
+#include "Vector3.h"
+#include "Vector4.h"
+#include <d3d12.h>
+#include <wrl/client.h>
+#include "Transform.h"
+#include "Camera.h"
+class SkyBox
+{
+
+public:
+
+
+
+    struct VertexData
+    {
+        Vector4 position;
+        Vector3 texcord;
+
+
+    };
+
+    struct Material
+    {
+        Vector4  color;
+    };
+    struct TransformationMatrix {
+        Matrix4x4 WVP;
+        Matrix4x4 World;
+        Matrix4x4 WorldInverseTranspose;
+    };
+    void Initialize();
+    void Finalize();
+    void Update();
+    void Draw();
+
+
+    //トランスフォームセッター
+    void SetScale(const Vector3& scale) {
+        transform_.scale = scale;
+    }
+    void SetRotate(const Vector3& rotate) {
+        transform_.rotate = rotate;
+    }
+    void SetTranslate(const Vector3& translate) {
+        transform_.translate = translate;
+    }
+    void SetCamera(Camera* camera) {
+        camera_ = camera;
+    }
+
+
+    //トランスフォームゲッター
+    const Vector3& GetScale()const {
+        return transform_.scale;
+    }
+    const Vector3& GetRotate()const {
+        return transform_.rotate;
+    }
+    const Vector3& GetTranslate()const {
+        return transform_.translate;
+    }
+
+
+    void SetTextureByFilePath(const std::string& textureFilePath);
+
+    uint32_t GetTextureIndex() const {
+        return textureIndex_;
+    }
+private:
+    Camera* camera_ = nullptr;
+    //buffer
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourse_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+    VertexData* vertexData_ = nullptr;
+    uint32_t* indexData_ = nullptr;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView_;
+    //マテリアル
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+    Material* materialData_ = nullptr;
+
+    //WVP行列リソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
+    TransformationMatrix* wvpResource_ = nullptr;
+    EulerTransform transform_ = {};
+    uint32_t textureIndex_ = 0;
+    std::string textureFilePath_;
+
+};
+

@@ -17,14 +17,14 @@ void GameScene::Initialize() {
     ParticleManager::GetInstance()->Setcamera(camera.get());
     PrimitiveDrawer::GetInstance()->SetCamera(camera.get());
 
-     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
+    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_,true);
+    Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-    
+
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
-    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f },1.0f);
+    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
@@ -44,23 +44,28 @@ void GameScene::Initialize() {
 
     animation = std::make_unique<Animation>();
 
-    animation->Initialize("resources/AnimatedCube","AnimatedCube.gltf");
+    animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->SetCurrentTime(0.0f);
 
 
 
 
-    ModelManager::GetInstance()->LoadModel("resources/AnimatedCube","AnimatedCube.gltf");
-        object3d = std::make_unique<Object3d>();
-        object3d->Initialize();
-        object3d->SetModel("AnimatedCube.gltf");
-        object3d->SetCamera(camera.get());
+    ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
+    object3d = std::make_unique<Object3d>();
+    object3d->Initialize();
+    object3d->SetModel("AnimatedCube.gltf");
+    object3d->SetCamera(camera.get());
 
-       object3d->SetAnimations(animation.get());
-        
-       PrimitiveDrawer::GetInstance()->Initialize();
-      
-       
+    object3d->SetAnimations(animation.get());
+
+    PrimitiveDrawer::GetInstance()->Initialize();
+
+
+    skyBox = std::make_unique<SkyBox>();
+    skyBox->Initialize();
+     skyBox->SetCamera(camera.get());
+     skyBox->SetTextureByFilePath("resources/rostock_laage_airport_4k.dds");
+
 
 
 }
@@ -76,14 +81,14 @@ void GameScene::Update() {
     // 現在のジョイスティックを取得
     if (Input::GetInstance()->TriggerMouseDown(0))
     {
-      if (Audio::GetInstance()->IsPlaying(handle_))
+        if (Audio::GetInstance()->IsPlaying(handle_))
         {
             Audio::GetInstance()->PauseAudio(handle_);
-      } else
-      {
-          Audio::GetInstance()->ResumeAudio(handle_);
-       
-      }
+        } else
+        {
+            Audio::GetInstance()->ResumeAudio(handle_);
+
+        }
     }
 
 
@@ -99,11 +104,11 @@ void GameScene::Update() {
 
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
-            
+
             Audio::GetInstance()->StopAudio(handle_);
         }
 
-      //  GetSceneManager()->ChangeScene("GameScene");
+        //  GetSceneManager()->ChangeScene("GameScene");
 
     }
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_B))
@@ -135,14 +140,10 @@ void GameScene::Update() {
     }
 
     camera->Update();
-    if (isDebugCamera_)
-    {
-        debugCamera_.Update(camera->GetTransform());
-        camera->SetViewMatrix(debugCamera_.GetViewMatrix());
-    } else
-    {
-        camera->UpdateView();
-    }
+
+    camera->UpdateView();
+
+    skyBox->Update();
     camera->UpdateViewProjection();
     object3d->Update();
 
@@ -156,11 +157,11 @@ void GameScene::Update() {
     sprite->SetPosition(Position);
 
 
-    ImGui::SliderFloat3("Start",&(position_.x), 0.1f, 1000.0f);
-   // Vector3 Rotate = camera->GetRotate();
-      ImGui::DragFloat4("Rotate",&(rotation_.x));
-   // camera->SetRotate(Rotate);
-    
+    ImGui::SliderFloat3("Start", &(position_.x), 0.1f, 1000.0f);
+    // Vector3 Rotate = camera->GetRotate();
+    ImGui::DragFloat4("Rotate", &(rotation_.x));
+    // camera->SetRotate(Rotate);
+
     ImGui::End();
 #endif // USE_IMGUI
 
@@ -171,7 +172,7 @@ void GameScene::Draw() {
 
     PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });  
+    PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->Draw();
 
     Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
@@ -179,7 +180,7 @@ void GameScene::Draw() {
 
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
 
-
+    skyBox->Draw();
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画

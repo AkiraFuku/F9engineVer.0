@@ -3,6 +3,7 @@
 #include<d3d12.h>
 #include<cstdint>
 #include <memory>
+#include <DirectXTex.h>
 class SrvManager
 {
 public:
@@ -28,7 +29,9 @@ public:
     /// <returns></returns>
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
 
-    void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels);
+    void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata  metadata);
+
+
 
 
     void CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);

@@ -1,24 +1,27 @@
 #include "SrvManager.h"
 #include "DXCommon.h"
 
+#include "DirectXTex.h"
+
 std::unique_ptr<SrvManager> SrvManager::instance = nullptr;
 const uint32_t SrvManager::kMaxSRVCount = 512;
 // インスタンス取得の実装
 SrvManager* SrvManager::GetInstance() {
-   if (instance == nullptr) {
+    if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public SrvManager {
-            Helper() : SrvManager() {}
+            Helper() : SrvManager() {
+            }
         };
         instance = std::make_unique<Helper>();
     }
     return instance.get();
 }// 静的メンバ変数の初期化
 void SrvManager::Initialize() {
-    
-   
-    descriptorHeap_=DXCommon::GetInstance()->CreateDescriptorHeap( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
-    descriptorSize_=DXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+
+    descriptorHeap_ = DXCommon::GetInstance()->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+    descriptorSize_ = DXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 void SrvManager::Finalize() {
     // インスタンスを破棄（デストラクタが呼ばれ、ComPtrも解放される）
@@ -53,19 +56,37 @@ D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index) {
     handleGPU.ptr += (descriptorSize_ * index);
     return handleGPU;
 }
-void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels) {
+
+void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata  metadata) {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Format = Format;
+    srvDesc.Format = metadata.format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
-    srvDesc.Texture2D.MipLevels = UINT(MipLevels);//最初のミップマップ
-    // SRV
+
+
+    if (metadata.IsCubemap())
+    {
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;//キューブマップ
+        srvDesc.TextureCube.MostDetailedMip = 0;//最初のミップマップ
+        srvDesc.TextureCube.MipLevels = UINT(metadata.mipLevels);//最初のミップマップ
+        srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+        
+
+        // SRV
+
+    } else {
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
+        srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);//最初のミップマップ
+        // SRV
+
+    }
     DXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(
         pResource,
         &srvDesc,
         GetCPUDescriptorHandle(srvIndex)
     );
+
 }
+
 void SrvManager::CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride) {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = DXGI_FORMAT_UNKNOWN;

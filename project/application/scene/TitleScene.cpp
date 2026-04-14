@@ -16,14 +16,14 @@ void TitleScene::Initialize() {
     Object3dCommon::GetInstance()->SetDefaultCamera(camera.get());
     ParticleManager::GetInstance()->Setcamera(camera.get());
 
-     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
+    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_,true);
+    Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-    
+
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
-    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f },1.0f);
+    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
@@ -43,21 +43,21 @@ void TitleScene::Initialize() {
 
     animation = std::make_unique<Animation>();
 
-    animation->Initialize("resources/AnimatedCube","AnimatedCube.gltf");
+    animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->SetCurrentTime(0.0f);
 
 
 
 
-    ModelManager::GetInstance()->LoadModel("resources/AnimatedCube","AnimatedCube.gltf");
-        object3d = std::make_unique<Object3d>();
-        object3d->Initialize();
-        object3d->SetModel("AnimatedCube.gltf");
-        object3d->SetCamera(camera.get());
+    ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
+    object3d = std::make_unique<Object3d>();
+    object3d->Initialize();
+    object3d->SetModel("AnimatedCube.gltf");
+    object3d->SetCamera(camera.get());
 
-       object3d->SetAnimations(animation.get());
-        
-      
+    object3d->SetAnimations(animation.get());
+
+
 
 
 
@@ -74,14 +74,14 @@ void TitleScene::Update() {
     // 現在のジョイスティックを取得
     if (Input::GetInstance()->TriggerMouseDown(0))
     {
-      if (Audio::GetInstance()->IsPlaying(handle_))
+        if (Audio::GetInstance()->IsPlaying(handle_))
         {
             Audio::GetInstance()->PauseAudio(handle_);
-      } else
-      {
-          Audio::GetInstance()->ResumeAudio(handle_);
-       
-      }
+        } else
+        {
+            Audio::GetInstance()->ResumeAudio(handle_);
+
+        }
     }
 
 
@@ -97,7 +97,7 @@ void TitleScene::Update() {
 
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
-            
+
             Audio::GetInstance()->StopAudio(handle_);
         }
 
@@ -133,14 +133,9 @@ void TitleScene::Update() {
     }
 
     camera->Update();
-    if (isDebugCamera_)
-    {
-        debugCamera_.Update(camera->GetTransform());
-        camera->SetViewMatrix(debugCamera_.GetViewMatrix());
-    } else
-    {
-        camera->UpdateView();
-    }
+
+    camera->UpdateView();
+
     camera->UpdateViewProjection();
     object3d->Update();
 

@@ -25,8 +25,7 @@ void Object3dCommon::Initialize()
     PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Object3d/Object3d.vs.hlsl", "main", L"vs_6_0" };
     PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Object3d/Object3d.ps.hlsl", "main", L"ps_6_0" };
 
-   /* config.vsPath = L"resources/shaders/Object3d/Object3d.vs.hlsl";
-    config.psPath = L"resources/shaders/Object3d/Object3d.ps.hlsl";*/
+   
 
     config.shaderPaths.push_back(vsPath);
     config.shaderPaths.push_back(psPath);
