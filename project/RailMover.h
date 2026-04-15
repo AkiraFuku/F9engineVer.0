@@ -4,8 +4,10 @@
 #include <algorithm>
 class RailMover {
 public:
-
-
+     
+    bool isRailSet() const {
+        return path_ != nullptr;
+    }
     void SetPath(const RailPath* path) {
         path_ = path;
     }

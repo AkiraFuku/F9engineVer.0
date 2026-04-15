@@ -1,12 +1,15 @@
 #pragma once
 #include "Vector2.h"
 #include "Vector3.h"
+#include <memory>
 struct Move {
 	Vector2 max;
 	Vector2 min;
 };
 class Camera;
 class Player;
+class RailMover;
+class RailPath;
 class CameraController {
 public:
 	struct Rect {
@@ -15,6 +18,9 @@ public:
 		float bottom = 0.0f; // 下端
 		float top = 1.0f;    // 上端
 	};
+
+    CameraController() ;
+    ~CameraController();
 	/// <summary>
 	/// 初期化
 	/// </summary>
@@ -28,6 +34,10 @@ public:
 	void SetTarget(Player* target) { target_ = target; }
 	void SetMoveArea(const Rect area) { moveArea_ = area; }
 
+    void SetRailPath(const RailPath* path) ;
+    void SetRailProgress(float progress);
+    
+
 	void Reset();
 	void RequestShake(float duration, float power);
 	void SetClearOffset() { 
@@ -39,6 +49,7 @@ private:
 	// カメラ
 	Camera* camera_ = nullptr;
 	Player* target_ = nullptr;
+    std::unique_ptr<RailMover> railMover_;
 	Rect moveArea_ = {0.0f, 100.0f, 0.0f, 100.0f};
 	Vector3 targetOffset_ = {0.0f, 0.0f, -15.0f};
 	Vector3 targetOffsetGoal_ = {0.0f, 0.0f, -15.0f};
@@ -53,6 +64,7 @@ private:
 	float shakePower_ = 0.0f;
 
     void RotateCamera();
+    void RailCamera();
 };
 
 
