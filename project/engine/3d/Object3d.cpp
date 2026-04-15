@@ -22,6 +22,15 @@ void Object3d::Initialize()
 }
 void Object3d::Update()
 {
+
+
+    if (Object3dCommon::GetInstance() ->GetDefaultCamera()!=camera_)
+    {
+        camera_=Object3dCommon::GetInstance() ->GetDefaultCamera();
+
+
+    }
+
     model_->Update();
     //  WVP行列の作成
     Matrix4x4 worldMatrix = MakeAfineMatrix(transform_.scale, transform_.rotate, transform_.translate);
