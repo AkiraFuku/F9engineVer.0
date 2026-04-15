@@ -83,8 +83,16 @@ void SkyBox::Initialize()
     PSO.depthEnable = true;
     PSO.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     PSOManager::GetInstance()->RegisterPsoGenerator("SkyBox", PSO);
+    vertexResourse_ =
+        DXCommon::GetInstance()->
+        CreateBufferResource(sizeof(VertexData) * 24);
+    vertexBufferView_.BufferLocation = vertexResourse_.Get()->GetGPUVirtualAddress();
+    vertexBufferView_.SizeInBytes = sizeof(VertexData) * 24;
+    vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
-    vertexData_ = new VertexData[24];
+
+    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+
     //右 描画インデックス[0,1,2],[2,1,3]
     vertexData_[0].position = { 1.0f, 1.0f, 1.0f, 1.0f };
     vertexData_[1].position = { 1.0f, 1.0f, -1.0f, 1.0f };
@@ -115,37 +123,30 @@ void SkyBox::Initialize()
     vertexData_[21].position = { 1.0f, -1.0f, 1.0f, 1.0f };
     vertexData_[22].position = { -1.0f, -1.0f, -1.0f, 1.0f };
     vertexData_[23].position = { 1.0f, -1.0f, -1.0f, 1.0f };
-
-    indexData_ = new uint32_t[36]{
-        0,1,2,2,1,3,
-        4,5,6,6,5,7,
-        8,9,10,10,9,11,
-        12,13,14,14,13,15,
-        16,17,18,18,17,19,
-        20,21,22,22,21,23
-    };
-
-    vertexResourse_ =
-        DXCommon::GetInstance()->
-        CreateBufferResource(sizeof(VertexData) * 24);
-    vertexBufferView_.BufferLocation = vertexResourse_.Get()->GetGPUVirtualAddress();
-    vertexBufferView_.SizeInBytes = sizeof(VertexData) * 24;
-    vertexBufferView_.StrideInBytes = sizeof(VertexData);
-
-    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-    indexResource_=
+    indexResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(uint32_t) * 36);
     indexBufferView_.BufferLocation = indexResource_.Get()->GetGPUVirtualAddress();
-        indexBufferView_.SizeInBytes = sizeof(uint32_t) * 36;
-                indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-                indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
+    indexBufferView_.SizeInBytes = sizeof(uint32_t) * 36;
+    indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+    indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
+    uint32_t indices[] = {
+    0,1,2,2,1,3,
+    4,5,6,6,5,7,
+    8,9,10,10,9,11,
+    12,13,14,14,13,15,
+    16,17,18,18,17,19,
+    20,21,22,22,21,23
+    };
+    std::memcpy(indexData_, indices, sizeof(indices));
 
 
 
 
 
-    materialData_ = new Material;
+
+
+
     materialResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(Material));
@@ -169,7 +170,9 @@ void SkyBox::Initialize()
     transform_.translate = Vector3(0.0f, 0.0f, 0.0f);
 
 
-
+    for (int i = 0; i < 24; ++i) {
+        vertexData_[i].texcord = { vertexData_[i].position.x, vertexData_[i].position.y, vertexData_[i].position.z };
+    }
 }
 
 void SkyBox::Finalize()
@@ -206,7 +209,7 @@ void SkyBox::Draw()
     DXCommon::GetInstance()->
         GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
     // ★ 2. プリミティブトポロジをセット（これが抜けているはずです）
-        DXCommon::GetInstance()->
+    DXCommon::GetInstance()->
         GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //インデックスバッファの設定
     //マテリアルの設定
@@ -224,12 +227,12 @@ void SkyBox::Draw()
         SetGraphicsRootConstantBufferView(1, transformationMatrixResource_->GetGPUVirtualAddress());
 
 
- //  DXCommon::GetInstance()->GetCommandList()->DrawInstanced(24, 1, 0, 0);
+    //  DXCommon::GetInstance()->GetCommandList()->DrawInstanced(24, 1, 0, 0);
 
-      DXCommon::GetInstance()->
+    DXCommon::GetInstance()->
         GetCommandList()->IASetIndexBuffer(&indexBufferView_); // 追加
-  DXCommon::GetInstance()->
-      GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0); // インデックスドローに変更
+    DXCommon::GetInstance()->
+        GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0); // インデックスドローに変更
 }
 
 void SkyBox::SetTextureByFilePath(const std::string& textureFilePath)

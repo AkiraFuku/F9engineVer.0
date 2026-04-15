@@ -134,17 +134,24 @@ void GameScene::Update() {
         // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
         float normalizedX = x / 32767.0f;
         float normalizedY = y / 32767.0f;
-        Vector3 camreaTranslate = camera->GetTranslate();
-        camreaTranslate = Add(camreaTranslate, Vector3{ normalizedX / 60.0f,normalizedY / 60.0f,0.0f });
-        camera->SetTranslate(camreaTranslate);
+        Vector3 camreaTranslate = camera->GetRotate();
+        camreaTranslate = Add(camreaTranslate, Vector3{ normalizedY / 60.0f,normalizedX / 60.0f,0.0f });
+        camera->SetRotate(camreaTranslate);
     }
 
+    
     camera->Update();
 
     camera->UpdateView();
+   
+    //skyBox_->Update();
 
-    skyBox->Update();
+
+
     camera->UpdateViewProjection();
+    skyBox->SetTranslate(camera->GetTranslate()); 
+    skyBox->Update();
+
     object3d->Update();
 
 #ifdef USE_IMGUI

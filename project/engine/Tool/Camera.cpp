@@ -1,5 +1,7 @@
 #include "Camera.h"
 #include "MathFunction.h"
+#include "ImGuI.h"
+#include "ImGuiManager.h"
 Camera::Camera()
     :transform_({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
     , fovY(0.45f)
@@ -14,6 +16,18 @@ Camera::Camera()
 void Camera::Update() {
 
     worldMatrix = MakeAfineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+
+#ifdef USE_IMGUI
+    ImGui::Begin("camera");
+
+    ImGui::DragFloat3("Rotate", &(transform_.rotate.x));
+    ImGui::DragFloat3("scale", &(transform_.scale.x));
+    ImGui::DragFloat3("translate", &(transform_.translate.x));
+    ImGui::End();
+
+#endif // USE_IMGUI
+
+
 
 }
 
