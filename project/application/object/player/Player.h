@@ -24,17 +24,7 @@ public:
             object_->SetCamera(camera);
         }
     }
-    void SetRailPosition(const Vector2& position) {
-        if (railMover_) {
-            // レール上の位置を直接設定するための関数
-            // 例えば、レールの全長に対して0.0f～1.0fの範囲で位置を指定する場合など
-            // ここでは仮にposition.xを進捗として使用する例を示します
-            float progress = position.x; // 進捗をx成分から取得（例）
-            railMover_->BindProgress(&progress); // 進捗をRailMoverにバインド 
-            object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z }); // Yは現在のまま、XZはレール上の位置に設定
-
-        }
-    }
+    void SetRailPosition(const Vector2& position);
 
     void SetPosition(const Vector3& position) {
         if (object_) {
@@ -76,7 +66,7 @@ private:
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 現在の速度
     float worldY_ = 0.0f;
     const float kGravity = -0.015f;           // 重力加速度（毎フレーム引く値）
-    const float kJumpAcceleration = 0.3f;     // ジャンプした瞬間の上昇速度
+    const float kJumpAcceleration = 0.4f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
     std::unique_ptr<RailMover> railMover_;
 

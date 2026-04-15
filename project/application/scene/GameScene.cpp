@@ -15,6 +15,7 @@
 #include"Audio.h"
 #include "TextureManager.h"
 #include "RailPath.h"
+#include "Enemy.h"
 
 void GameScene::Initialize() {
 
@@ -99,6 +100,11 @@ void GameScene::Initialize() {
     stageRail->AddPoint({ 50.0f, 0.0f, 0.0f });
     player->SetRail(stageRail.get());
 
+    enemy= std::make_unique<Enemy>();
+    enemy->Initialize();
+    enemy->SetPosition({ 0.0f, 0.0f, 0.0f });
+    enemy->SetRail(stageRail.get());
+
 
 
 }
@@ -181,7 +187,7 @@ void GameScene::Update() {
 
     player->Uppdate();
 
-
+    enemy->Update();
 
 
     //activeCamera_->UpdateViewProjection();
@@ -233,6 +239,7 @@ void GameScene::Draw() {
     PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });*/
     stageRail->DebugDraw();
     player->Draw();
+    enemy->Draw();
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画

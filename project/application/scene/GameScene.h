@@ -8,7 +8,7 @@
 #include "CameraController.h"
 
 class RailPath;
-
+class Enemy;
 #include "Animation.h"
 
 class GameScene :public Scene
@@ -30,6 +30,7 @@ private:
     std::unique_ptr<RailPath> stageRail;
 
     std::unique_ptr<CameraController> cameraController; 
+    std::unique_ptr<Enemy> enemy; 
 
     bool isDebugCamera_ = false;
 

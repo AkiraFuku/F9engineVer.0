@@ -15,7 +15,6 @@ void Player::Initialize()
     ModelManager::GetInstance()->CreateSphereModel("Sphere", 16);
     object_->Initialize();
     object_->SetModel("Sphere");
-    // object_->SetCamera(activeCamera_);
     railMover_ = std::make_unique<RailMover>();
 }
 
@@ -70,6 +69,18 @@ void Player::Draw()
     ImGui::End();
 #endif // USE_IMGUI
 }
+void Player::SetRailPosition(const Vector2& position)
+ {
+        if (railMover_) {
+            // レール上の位置を直接設定するための関数
+            // 例えば、レールの全長に対して0.0f～1.0fの範囲で位置を指定する場合など
+            // ここでは仮にposition.xを進捗として使用する例を示します
+            float progress = position.x; // 進捗をx成分から取得（例）
+            railMover_->BindProgress(&progress); // 進捗をRailMoverにバインド 
+            object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z }); // Yは現在のまま、XZはレール上の位置に設定
+
+        }
+    }
 void Player::SetRail(RailPath* rail)
 {
 
