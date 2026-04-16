@@ -111,8 +111,11 @@ void GameScene::Update() {
         //  GetSceneManager()->ChangeScene("GameScene");
 
     }
-    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_B))
+    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
     {
+         Vector3 camreaTranslate = camera->GetRotate();
+        camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
+        camera->SetRotate(camreaTranslate);
 
     }
 

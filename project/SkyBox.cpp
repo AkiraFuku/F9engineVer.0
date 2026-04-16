@@ -82,6 +82,7 @@ void SkyBox::Initialize()
     PSO.cullMode = D3D12_CULL_MODE_NONE;
     PSO.depthEnable = true;
     PSO.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    PSO.depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     PSOManager::GetInstance()->RegisterPsoGenerator("SkyBox", PSO);
     vertexResourse_ =
         DXCommon::GetInstance()->

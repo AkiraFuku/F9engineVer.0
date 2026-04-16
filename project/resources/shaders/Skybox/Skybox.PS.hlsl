@@ -5,15 +5,15 @@ struct Material
    
 };
 
-struct Camera
-{
-    float3 worldPosition;
-    float farClip;
-    float3 cameraForward; // ★追加
-    float padding;
-};
+//struct Camera
+//{
+//    float3 worldPosition;
+//    float farClip;
+//    float3 cameraForward; // ★追加
+//    float padding;
+//};
 
-ConstantBuffer<Camera> gCamera : register(b2);
+//ConstantBuffer<Camera> gCamera : register(b2);
 
 ConstantBuffer<Material> gMaterial : register(b0);
 
@@ -34,5 +34,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     float4 texColor = gTexture.Sample(gSampler, input.texCoord.xyz);
     output.color = texColor * gMaterial.Color; // テクスチャカラーとマテリアルカラーを掛け合わせる
  
+   
+    
     return output;
 }
