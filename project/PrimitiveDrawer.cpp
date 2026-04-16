@@ -137,9 +137,6 @@ void PrimitiveDrawer::Initialize() {
         batch.vbv.StrideInBytes = sizeof(VertexData);
 
         //batch.vertices.reserve(kMaxVertices);
-
-        batch.fillMode = FillMode::kSolid;
-        batch.blendMode = BlendMode::Normal;
         batches_[type] = std::move(batch);
         };
 
@@ -157,40 +154,39 @@ void PrimitiveDrawer::Initialize() {
 void PrimitiveDrawer::Draw() {
     auto commandList = DXCommon::GetInstance()->GetCommandList();
     auto psoManager = PSOManager::GetInstance();
+
+    // WVP設定などは共通
     if (camera_) {
         wvpData_->WVP = camera_->GetViewProtectionMatrix();
-    } else {
-        wvpData_->WVP = Makeidetity4x4();
     }
-    for (auto& [type, batch] : batches_) {
-        if (batch.vertices.empty()) continue;
 
-        // 1. このトポロジ専用のリソースにデータをコピー
+    // 複製されたコマンドを一つずつ実行
+    for (auto& cmd : drawCommands_) {
+        auto& batch = batches_[cmd.type];
+        if (cmd.vertices.empty()) continue;
+
+        // 1. 複製されたデータをGPUへ転送
         void* mappedPtr = nullptr;
         batch.vertexResource->Map(0, nullptr, &mappedPtr);
-        std::memcpy(mappedPtr, batch.vertices.data(), sizeof(VertexData) * batch.vertices.size());
+        std::memcpy(mappedPtr, cmd.vertices.data(), sizeof(VertexData) * cmd.vertices.size());
         batch.vertexResource->Unmap(0, nullptr);
 
-        // 2. PSOの取得と設定
-        // FillModeなどは必要に応じて引数化してください
-        PsoSet psoSet = psoManager->GetPso("Primitive", batch.blendMode, batch.fillMode, batch.psoTopology);
+        // 2. コマンド個別の設定でPSO取得
+        PsoSet psoSet = psoManager->GetPso("Primitive", cmd.blendMode, cmd.fillMode, batch.psoTopology);
 
         commandList->SetPipelineState(psoSet.pipelineState.Get());
         commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
-
-        // ★追加: WVP行列の定数バッファ(CBV)をコマンドリストにセット (ルートパラメータインデックス0番)
         commandList->SetGraphicsRootConstantBufferView(0, WVPResource_->GetGPUVirtualAddress());
 
-        // 3. このトポロジ専用のVBVをセット
         commandList->IASetVertexBuffers(0, 1, &batch.vbv);
         commandList->IASetPrimitiveTopology(batch.d3dTopology);
 
-        // 4. 描画
-        commandList->DrawInstanced(static_cast<UINT>(batch.vertices.size()), 1, 0, 0);
-
-        // 5. 次のフレームのためにクリア
-        batch.vertices.clear();
+        // 3. 描画
+        commandList->DrawInstanced(static_cast<UINT>(cmd.vertices.size()), 1, 0, 0);
     }
+
+    // 全ての描画が終わったらコマンドリストをクリア
+    drawCommands_.clear();
 }
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
     auto& batch = batches_[PrimithiveType::kLine];
@@ -199,25 +195,40 @@ void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vecto
     batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
     batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
 
+    DrawCommand cmd;
+    cmd.type = PrimithiveType::kLine;
+    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
+
+    drawCommands_.push_back(std::move(cmd));
+    batch.vertices.clear();
+
 }
 
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
     auto& batch = batches_[PrimithiveType::kTriangle];
     if (batch.vertices.size() + 3 > kMaxVertices) return;
-    batch.fillMode = fillMode;
-    batch.blendMode = blendMode;
+
 
     batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
     batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
     batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
 
-
+    DrawCommand cmd;
+    cmd.type = PrimithiveType::kTriangle;
+    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
+    cmd.fillMode = fillMode;
+    cmd.blendMode = blendMode;
+    drawCommands_.push_back(std::move(cmd));
+    batch.vertices.clear();
 }
 // PrimitiveDrawer.cpp に実装を追加
 
-void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
+void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color, FillMode fillMode, BlendMode blendMode) {
     auto& batch = batches_[PrimithiveType::kSphere];
+
+
+
     const uint32_t kSubdivision = 16;
     const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
     const float kLatEvery = PI / static_cast<float>(kSubdivision);
@@ -229,27 +240,42 @@ void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
             float lon = lonIndex * kLonEvery;
 
-            // ローカル座標計算
-            Vector3 points[3] = {
-                { sphere.radius * cosf(lat) * cosf(lon), sphere.radius * sinf(lat), sphere.radius * cosf(lat) * sinf(lon) },
-                { sphere.radius * cosf(lat + kLatEvery) * cosf(lon), sphere.radius * sinf(lat + kLatEvery), sphere.radius * cosf(lat + kLatEvery) * sinf(lon) },
-                { sphere.radius * cosf(lat) * cosf(lon + kLonEvery), sphere.radius * sinf(lat), sphere.radius * cosf(lat) * sinf(lon + kLonEvery) }
-            };
+            // --- 4つの頂点を計算 ---
+            auto GetPos = [&](float phi, float theta) {
+                Vector3 p = {
+                    sphere.radius * cosf(phi) * cosf(theta),
+                    sphere.radius * sinf(phi),
+                    sphere.radius * cosf(phi) * sinf(theta)
+                };
+                return Add(RotateVector(p, normRotate), sphere.center);
+                };
 
-            for (int i = 0; i < 3; ++i) {
-                if (batch.vertices.size() >= kMaxVertices) break;
+            Vector3 p1 = GetPos(lat, lon);                      // 左下
+            Vector3 p2 = GetPos(lat + kLatEvery, lon);          // 左上
+            Vector3 p3 = GetPos(lat, lon + kLonEvery);          // 右下
+            Vector3 p4 = GetPos(lat + kLatEvery, lon + kLonEvery); // 右上
 
-                // 回転と平行移動を適用
-                Vector3 rotated = RotateVector(points[i], normRotate);
-                Vector3 worldPos = Add(rotated, sphere.center);
+            if (batch.vertices.size() + 6 > kMaxVertices) return;
 
-                // 直接バッチの頂点データに代入
-                batch.vertices.push_back({ {worldPos.x, worldPos.y, worldPos.z, 1.0f}, color });
-            }
+            // --- 三角形1 (左下、左上、右下) ---
+            batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+            batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+            batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
+
+            // --- 三角形2 (左上、右上、右下) ---
+            batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+            batch.vertices.push_back({ {p4.x, p4.y, p4.z, 1.0f}, color });
+            batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
         }
     }
+    DrawCommand cmd;
+    cmd.type = PrimithiveType::kSphere;
+    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
+    cmd.fillMode = fillMode;
+    cmd.blendMode = blendMode;
+    drawCommands_.push_back(std::move(cmd));
+    batch.vertices.clear();
 }
-
 // --- DrawGrid の修正（グリッド専用バッチに直接代入） ---
 void PrimitiveDrawer::DrawGrid() {
     auto& batch = batches_[PrimithiveType::kGrid];
@@ -270,6 +296,12 @@ void PrimitiveDrawer::DrawGrid() {
         batch.vertices.push_back({ {kGridHalfWidth, 0, pos, 1.0f}, color });
         batch.vertices.push_back({ {-kGridHalfWidth, 0, pos, 1.0f}, color });
     }
+
+    DrawCommand cmd;
+    cmd.type = PrimithiveType::kGrid;
+    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
+    drawCommands_.push_back(std::move(cmd));
+    batch.vertices.clear();
 }
 
 // --- DrawAABB の修正（AABB専用バッチに直接代入） ---
@@ -293,6 +325,12 @@ void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
     AddLine(0, 1); AddLine(1, 2); AddLine(2, 3); AddLine(3, 0); // 底面
     AddLine(4, 5); AddLine(5, 6); AddLine(6, 7); AddLine(7, 4); // 上面
     AddLine(0, 4); AddLine(1, 5); AddLine(2, 6); AddLine(3, 7); // 柱
+
+    DrawCommand cmd;
+    cmd.type = PrimithiveType::kAABB;
+    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピ-
+    drawCommands_.push_back(std::move(cmd));
+    batch.vertices.clear();
 }
 
 void PrimitiveDrawer::DrawSegment(const Segment& segment, const Vector4& color) {
