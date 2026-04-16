@@ -44,7 +44,7 @@ public:
         }
         return {};
     }
-
+    void SetRailPosition(const Vector2& position);
      
 
     void SetRail(RailPath* rail);
