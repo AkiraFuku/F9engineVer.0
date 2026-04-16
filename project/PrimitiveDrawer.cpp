@@ -112,13 +112,13 @@ void PrimitiveDrawer::WVPResourceCreate()
 
 void PrimitiveDrawer::Initialize() {
     AddPSO();
-    auto CreateBatch = [&](Primithive type) {
+    auto CreateBatch = [&](PrimithiveType type) {
         PrimitiveBatch batch;
 
         switch (type)
         {
-        case Primithive::kLine:
-        case Primithive::kGrid:
+        case PrimithiveType::kLine:
+        case PrimithiveType::kGrid:
 
             batch.d3dTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
             batch.psoTopology = Toporogy::LineList;
@@ -129,10 +129,10 @@ void PrimitiveDrawer::Initialize() {
             break;
         }
         // リソース作成
-        batch.resource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
+        batch.vertexResource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
 
         // VBV設定
-        batch.vbv.BufferLocation = batch.resource->GetGPUVirtualAddress();
+        batch.vbv.BufferLocation = batch.vertexResource->GetGPUVirtualAddress();
         batch.vbv.SizeInBytes = sizeof(VertexData) * kMaxVertices;
         batch.vbv.StrideInBytes = sizeof(VertexData);
 
@@ -143,13 +143,13 @@ void PrimitiveDrawer::Initialize() {
         batches_[type] = std::move(batch);
         };
 
-    CreateBatch(Primithive::kLine);
-    CreateBatch(Primithive::kTriangle);
-    CreateBatch(Primithive::kSphere);
-    CreateBatch(Primithive::kAABB);
-    CreateBatch(Primithive::kGrid);
-    CreateBatch(Primithive::kPlane);
-   
+    CreateBatch(PrimithiveType::kLine);
+    CreateBatch(PrimithiveType::kTriangle);
+    CreateBatch(PrimithiveType::kSphere);
+    CreateBatch(PrimithiveType::kAABB);
+    CreateBatch(PrimithiveType::kGrid);
+    CreateBatch(PrimithiveType::kPlane);
+
     // 必要に応じて PointList 等を追加
     WVPResourceCreate();
 }
@@ -167,9 +167,9 @@ void PrimitiveDrawer::Draw() {
 
         // 1. このトポロジ専用のリソースにデータをコピー
         void* mappedPtr = nullptr;
-        batch.resource->Map(0, nullptr, &mappedPtr);
+        batch.vertexResource->Map(0, nullptr, &mappedPtr);
         std::memcpy(mappedPtr, batch.vertices.data(), sizeof(VertexData) * batch.vertices.size());
-        batch.resource->Unmap(0, nullptr);
+        batch.vertexResource->Unmap(0, nullptr);
 
         // 2. PSOの取得と設定
         // FillModeなどは必要に応じて引数化してください
@@ -193,7 +193,7 @@ void PrimitiveDrawer::Draw() {
     }
 }
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
-    auto& batch = batches_[Primithive::kLine];
+    auto& batch = batches_[PrimithiveType::kLine];
     if (batch.vertices.size() + 2 > kMaxVertices) return;
 
     batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
@@ -203,7 +203,7 @@ void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vecto
 
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
-    auto& batch = batches_[Primithive::kTriangle];
+    auto& batch = batches_[PrimithiveType::kTriangle];
     if (batch.vertices.size() + 3 > kMaxVertices) return;
     batch.fillMode = fillMode;
     batch.blendMode = blendMode;
@@ -217,50 +217,42 @@ void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const V
 // PrimitiveDrawer.cpp に実装を追加
 
 void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
+    auto& batch = batches_[PrimithiveType::kSphere];
     const uint32_t kSubdivision = 16;
     const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
     const float kLatEvery = PI / static_cast<float>(kSubdivision);
-    // Quaternion normRotate = Normalize(sphere.rotate);
+
+    Quaternion normRotate = Normalize(sphere.rotate);
+
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
         float lat = -PI / 2.0f + kLatEvery * latIndex;
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
             float lon = lonIndex * kLonEvery;
 
-            // 1. ローカル座標（中心を0とした球状の点）を計算
-            Vector3 localA = {
-                sphere.radius * cosf(lat) * cosf(lon),
-                sphere.radius * sinf(lat),
-                sphere.radius * cosf(lat) * sinf(lon)
-            };
-            Vector3 localB = {
-                sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
-                sphere.radius * sinf(lat + kLatEvery),
-                sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
-            };
-            Vector3 localC = {
-                sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
-                sphere.radius * sinf(lat),
-                sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
+            // ローカル座標計算
+            Vector3 points[3] = {
+                { sphere.radius * cosf(lat) * cosf(lon), sphere.radius * sinf(lat), sphere.radius * cosf(lat) * sinf(lon) },
+                { sphere.radius * cosf(lat + kLatEvery) * cosf(lon), sphere.radius * sinf(lat + kLatEvery), sphere.radius * cosf(lat + kLatEvery) * sinf(lon) },
+                { sphere.radius * cosf(lat) * cosf(lon + kLonEvery), sphere.radius * sinf(lat), sphere.radius * cosf(lat) * sinf(lon + kLonEvery) }
             };
 
-            Quaternion normRotate = Normalize(sphere.rotate);
-            // 2. クォータニオンで回転を適用
-            // RotateVector関数（Vector3をQuaternionで回転させる関数）があると便利です
-            Vector3 rotatedA = RotateVector(localA, normRotate);
-            Vector3 rotatedB = RotateVector(localB, normRotate);
-            Vector3 rotatedC = RotateVector(localC, normRotate);
+            for (int i = 0; i < 3; ++i) {
+                if (batch.vertices.size() >= kMaxVertices) break;
 
-            // 3. 中心座標を足してワールド座標へ
-            Vector3 worldA = Add(rotatedA, sphere.center);
-            Vector3 worldB = Add(rotatedB, sphere.center);
-            Vector3 worldC = Add(rotatedC, sphere.center);
+                // 回転と平行移動を適用
+                Vector3 rotated = RotateVector(points[i], normRotate);
+                Vector3 worldPos = Add(rotated, sphere.center);
 
-            DrawLine(worldA, worldB, color);
-            DrawLine(worldA, worldC, color);
+                // 直接バッチの頂点データに代入
+                batch.vertices.push_back({ {worldPos.x, worldPos.y, worldPos.z, 1.0f}, color });
+            }
         }
     }
 }
+
+// --- DrawGrid の修正（グリッド専用バッチに直接代入） ---
 void PrimitiveDrawer::DrawGrid() {
+    auto& batch = batches_[PrimithiveType::kGrid];
     const float kGridHalfWidth = 2.0f;
     const uint32_t kSubdivision = 10;
     const float kGridEvery = (kGridHalfWidth * 2.0f) / static_cast<float>(kSubdivision);
@@ -269,14 +261,22 @@ void PrimitiveDrawer::DrawGrid() {
         float pos = -kGridHalfWidth + static_cast<float>(i) * kGridEvery;
         Vector4 color = (i == kSubdivision / 2) ? Vector4{ 0,0,0,1 } : Vector4{ 0.7f, 0.7f, 0.7f, 1 };
 
+        if (batch.vertices.size() + 4 > kMaxVertices) break;
+
         // X方向の線
-        DrawLine({ pos, 0, kGridHalfWidth }, { pos, 0, -kGridHalfWidth }, color);
-        // Z方向の线
-        DrawLine({ kGridHalfWidth, 0, pos }, { -kGridHalfWidth, 0, pos }, color);
+        batch.vertices.push_back({ {pos, 0, kGridHalfWidth, 1.0f}, color });
+        batch.vertices.push_back({ {pos, 0, -kGridHalfWidth, 1.0f}, color });
+        // Z方向の線
+        batch.vertices.push_back({ {kGridHalfWidth, 0, pos, 1.0f}, color });
+        batch.vertices.push_back({ {-kGridHalfWidth, 0, pos, 1.0f}, color });
     }
 }
 
+// --- DrawAABB の修正（AABB専用バッチに直接代入） ---
 void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
+    auto& batch = batches_[PrimithiveType::kAABB];
+    if (batch.vertices.size() + 24 > kMaxVertices) return; // 線12本 = 24頂点
+
     Vector3 p[8] = {
         {aabb.min.x, aabb.min.y, aabb.min.z}, {aabb.max.x, aabb.min.y, aabb.min.z},
         {aabb.max.x, aabb.max.y, aabb.min.z}, {aabb.min.x, aabb.max.y, aabb.min.z},
@@ -284,15 +284,15 @@ void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
         {aabb.max.x, aabb.max.y, aabb.max.z}, {aabb.min.x, aabb.max.y, aabb.max.z}
     };
 
-    // 底面
-    DrawLine(p[0], p[1], color); DrawLine(p[1], p[2], color);
-    DrawLine(p[2], p[3], color); DrawLine(p[3], p[0], color);
-    // 上面
-    DrawLine(p[4], p[5], color); DrawLine(p[5], p[6], color);
-    DrawLine(p[6], p[7], color); DrawLine(p[7], p[4], color);
-    // 柱
-    DrawLine(p[0], p[4], color); DrawLine(p[1], p[5], color);
-    DrawLine(p[2], p[6], color); DrawLine(p[3], p[7], color);
+    // インデックス順に頂点を流し込む（LineList想定）
+    auto AddLine = [&](int i1, int i2) {
+        batch.vertices.push_back({ {p[i1].x, p[i1].y, p[i1].z, 1.0f}, color });
+        batch.vertices.push_back({ {p[i2].x, p[i2].y, p[i2].z, 1.0f}, color });
+        };
+
+    AddLine(0, 1); AddLine(1, 2); AddLine(2, 3); AddLine(3, 0); // 底面
+    AddLine(4, 5); AddLine(5, 6); AddLine(6, 7); AddLine(7, 4); // 上面
+    AddLine(0, 4); AddLine(1, 5); AddLine(2, 6); AddLine(3, 7); // 柱
 }
 
 void PrimitiveDrawer::DrawSegment(const Segment& segment, const Vector4& color) {

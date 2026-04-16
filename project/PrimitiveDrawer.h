@@ -70,29 +70,23 @@ private:
     Camera* camera_ = nullptr;
 
     // トポロジの種類
-    enum class TopologyType {
+    enum class PrimithiveType {
         kLine,
         kTriangle,
         kPoint,
-        kCount // 種類の総数
-    };
-    enum class Primithive
-    {
-        kLine,
-        kTriangle,
-        kGrid,
+         kGrid,
         kPlane,
         kSphere,
-        kAABB
-        
-
+        kAABB,
+        kCount // 種類の総数
     };
 
     // トポロジごとに必要なリソース一式
     struct PrimitiveBatch {
-        Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+        Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
         D3D12_VERTEX_BUFFER_VIEW vbv;
         std::vector<VertexData> vertices;
+
         D3D_PRIMITIVE_TOPOLOGY d3dTopology;
         Toporogy psoTopology; // PSOManager用
         FillMode fillMode = FillMode::kSolid; // 必要に応じて追加
@@ -100,6 +94,6 @@ private:
     };
     
     // トポロジごとのバッチ管理
-    std::map<Primithive, PrimitiveBatch> batches_;
+    std::map<PrimithiveType, PrimitiveBatch> batches_;
 
 };
