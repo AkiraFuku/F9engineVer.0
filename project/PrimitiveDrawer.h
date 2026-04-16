@@ -62,7 +62,12 @@ private:
 
 private:
     //  std::vector<VertexData> vertices_; // 描画予約された頂点リスト
-    static const uint32_t kMaxVertices = 8192; // 最大頂点数（必要に応じて調整）
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+    D3D12_VERTEX_BUFFER_VIEW vbv;
+    VertexData* sharedMappedPtr_ = nullptr; // マップ済みポインタ
+    int32_t currentVertexOffset_ = 0;
+    //std::vector<VertexData> vertices;
+    static const uint32_t kMaxVertices = 128 * 1024; // 最大頂点数（必要に応じて調整）
     Microsoft::WRL::ComPtr<ID3D12Resource> WVPResource_;
     WVPMatrix* wvpData_ = nullptr;
     void WVPResourceCreate();
@@ -83,9 +88,7 @@ private:
 
     // トポロジごとに必要なリソース一式
     struct PrimitiveBatch {
-        Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-        D3D12_VERTEX_BUFFER_VIEW vbv;
-        std::vector<VertexData> vertices;
+
 
         D3D_PRIMITIVE_TOPOLOGY d3dTopology;
         Toporogy psoTopology; // PSOManager用
@@ -95,8 +98,9 @@ private:
     std::map<PrimithiveType, PrimitiveBatch> batches_;
     struct DrawCommand {
         PrimithiveType type;
-        std::vector<VertexData> vertices; // この瞬間の頂点データを複製
-        FillMode fillMode= FillMode::kSolid;
+        uint32_t vertexCount;
+        uint32_t startIndex; // 全体バッファ内の開始位置
+        FillMode fillMode=FillMode::kSolid;
         BlendMode blendMode=BlendMode::Normal;
     };
 

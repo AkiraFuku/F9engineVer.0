@@ -7,6 +7,7 @@
 #include "MathFunction.h"
 #include "Camera.h"
 #include "RotateFunction.h"
+#include <cstdint>
 
 std::unique_ptr<PrimitiveDrawer> PrimitiveDrawer::instance_ = nullptr;
 
@@ -112,40 +113,39 @@ void PrimitiveDrawer::WVPResourceCreate()
 
 void PrimitiveDrawer::Initialize() {
     AddPSO();
-    auto CreateBatch = [&](PrimithiveType type) {
-        PrimitiveBatch batch;
+    // 例: 最大頂点数を 100,000 程度に大きく確保
+
+    vertexResource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
+    vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&sharedMappedPtr_));
+
+    // 各タイプの設定（Topologyの定義のみ）
+    auto SetBatch = [&](PrimithiveType type) {
 
         switch (type)
         {
-        case PrimithiveType::kLine:
-        case PrimithiveType::kGrid:
+        case PrimitiveDrawer::PrimithiveType::kLine:
+        case PrimitiveDrawer::PrimithiveType::kGrid:
+            batches_[type].d3dTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+            batches_[type].psoTopology = Toporogy::LineList;
+            break;
+        case PrimitiveDrawer::PrimithiveType::kTriangle:
+        case PrimitiveDrawer::PrimithiveType::kPlane:
+        case PrimitiveDrawer::PrimithiveType::kSphere:
+        case PrimitiveDrawer::PrimithiveType::kAABB:
+            batches_[type].d3dTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+            batches_[type].psoTopology = Toporogy::TriangleList;
+            break;
 
-            batch.d3dTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-            batch.psoTopology = Toporogy::LineList;
-            break;
-        default:
-            batch.d3dTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-            batch.psoTopology = Toporogy::TriangleList;
-            break;
         }
-        // リソース作成
-        batch.vertexResource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
 
-        // VBV設定
-        batch.vbv.BufferLocation = batch.vertexResource->GetGPUVirtualAddress();
-        batch.vbv.SizeInBytes = sizeof(VertexData) * kMaxVertices;
-        batch.vbv.StrideInBytes = sizeof(VertexData);
-
-        //batch.vertices.reserve(kMaxVertices);
-        batches_[type] = std::move(batch);
         };
 
-    CreateBatch(PrimithiveType::kLine);
-    CreateBatch(PrimithiveType::kTriangle);
-    CreateBatch(PrimithiveType::kSphere);
-    CreateBatch(PrimithiveType::kAABB);
-    CreateBatch(PrimithiveType::kGrid);
-    CreateBatch(PrimithiveType::kPlane);
+    SetBatch(PrimithiveType::kLine);
+    SetBatch(PrimithiveType::kTriangle);
+    SetBatch(PrimithiveType::kSphere);
+    SetBatch(PrimithiveType::kAABB);
+    SetBatch(PrimithiveType::kGrid);
+    SetBatch(PrimithiveType::kPlane);
 
     // 必要に応じて PointList 等を追加
     WVPResourceCreate();
@@ -163,13 +163,14 @@ void PrimitiveDrawer::Draw() {
     // 複製されたコマンドを一つずつ実行
     for (auto& cmd : drawCommands_) {
         auto& batch = batches_[cmd.type];
-        if (cmd.vertices.empty()) continue;
+        if (cmd.vertexCount <= 0) continue;
 
         // 1. 複製されたデータをGPUへ転送
-        void* mappedPtr = nullptr;
-        batch.vertexResource->Map(0, nullptr, &mappedPtr);
-        std::memcpy(mappedPtr, cmd.vertices.data(), sizeof(VertexData) * cmd.vertices.size());
-        batch.vertexResource->Unmap(0, nullptr);
+      // --- オフセットを考慮したVBVを作成 ---
+        D3D12_VERTEX_BUFFER_VIEW vbv{};
+        vbv.BufferLocation = vertexResource->GetGPUVirtualAddress() + (cmd.startIndex * sizeof(VertexData));
+        vbv.SizeInBytes = cmd.vertexCount * sizeof(VertexData);
+        vbv.StrideInBytes = sizeof(VertexData);
 
         // 2. コマンド個別の設定でPSO取得
         PsoSet psoSet = psoManager->GetPso("Primitive", cmd.blendMode, cmd.fillMode, batch.psoTopology);
@@ -178,49 +179,46 @@ void PrimitiveDrawer::Draw() {
         commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
         commandList->SetGraphicsRootConstantBufferView(0, WVPResource_->GetGPUVirtualAddress());
 
-        commandList->IASetVertexBuffers(0, 1, &batch.vbv);
+        commandList->IASetVertexBuffers(0, 1, &vbv);
         commandList->IASetPrimitiveTopology(batch.d3dTopology);
 
         // 3. 描画
-        commandList->DrawInstanced(static_cast<UINT>(cmd.vertices.size()), 1, 0, 0);
+        commandList->DrawInstanced(static_cast<UINT>(cmd.vertexCount), 1, 0, 0);
     }
 
     // 全ての描画が終わったらコマンドリストをクリア
     drawCommands_.clear();
+    currentVertexOffset_ = 0;
 }
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
     auto& batch = batches_[PrimithiveType::kLine];
-    if (batch.vertices.size() + 2 > kMaxVertices) return;
-
-    batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
-    batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
-
-    DrawCommand cmd;
-    cmd.type = PrimithiveType::kLine;
-    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
-
-    drawCommands_.push_back(std::move(cmd));
-    batch.vertices.clear();
-
+    uint32_t numVertices = 2;
+    if (currentVertexOffset_ + numVertices > kMaxVertices) return;
+    uint32_t startIndex = currentVertexOffset_;
+    sharedMappedPtr_[currentVertexOffset_] = { {p1.x,p1.y,p1.z,1.0f,}, color };
+    currentVertexOffset_++;
+    sharedMappedPtr_[currentVertexOffset_] = { {p2.x,p2.y,p2.z,1.0f,}, color };
+    currentVertexOffset_++;
+    drawCommands_.push_back({ PrimithiveType::kLine, numVertices, startIndex });
 }
 
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
     auto& batch = batches_[PrimithiveType::kTriangle];
-    if (batch.vertices.size() + 3 > kMaxVertices) return;
+    uint32_t numVertices = 3;
+    if (currentVertexOffset_ + numVertices > kMaxVertices) return;
+    uint32_t startIndex = currentVertexOffset_;
 
 
-    batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
-    batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
-    batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
+    sharedMappedPtr_[currentVertexOffset_] = { {p1.x,p1.y,p1.z,1.0f,}, color };
+    currentVertexOffset_++;
+    sharedMappedPtr_[currentVertexOffset_] = { {p2.x,p2.y,p2.z,1.0f,}, color };
+    currentVertexOffset_++;
+    sharedMappedPtr_[currentVertexOffset_] = { {p3.x,p3.y,p3.z,1.0f,}, color };
+    currentVertexOffset_++;
 
-    DrawCommand cmd;
-    cmd.type = PrimithiveType::kTriangle;
-    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
-    cmd.fillMode = fillMode;
-    cmd.blendMode = blendMode;
-    drawCommands_.push_back(std::move(cmd));
-    batch.vertices.clear();
+    drawCommands_.push_back({ PrimithiveType::kTriangle, numVertices, startIndex,fillMode,blendMode });
+
 }
 // PrimitiveDrawer.cpp に実装を追加
 
@@ -230,6 +228,12 @@ void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color, Fil
 
 
     const uint32_t kSubdivision = 16;
+
+    uint32_t numVertices = kSubdivision * kSubdivision * 6;
+
+    // バッファ溢れチェック
+    if (currentVertexOffset_ + numVertices > kMaxVertices) return;
+    uint32_t startIndex = currentVertexOffset_;
     const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
     const float kLatEvery = PI / static_cast<float>(kSubdivision);
 
@@ -255,30 +259,46 @@ void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color, Fil
             Vector3 p3 = GetPos(lat, lon + kLonEvery);          // 右下
             Vector3 p4 = GetPos(lat + kLatEvery, lon + kLonEvery); // 右上
 
-            if (batch.vertices.size() + 6 > kMaxVertices) return;
+            //if (batch.vertices.size() + 6 > kMaxVertices) return;
 
-            // --- 三角形1 (左下、左上、右下) ---
-            batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
-            batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
-            batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
 
-            // --- 三角形2 (左上、右上、右下) ---
-            batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
-            batch.vertices.push_back({ {p4.x, p4.y, p4.z, 1.0f}, color });
-            batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
+            sharedMappedPtr_[currentVertexOffset_] = { {p1.x, p1.y, p1.z, 1.0f}, color };
+            currentVertexOffset_++;
+            sharedMappedPtr_[currentVertexOffset_] = { {p2.x, p2.y, p2.z, 1.0f}, color };
+            currentVertexOffset_++;
+            sharedMappedPtr_[currentVertexOffset_] = { {p3.x, p3.y, p3.z, 1.0f}, color };
+            currentVertexOffset_++;
+
+            sharedMappedPtr_[currentVertexOffset_] = { {p2.x, p2.y, p2.z, 1.0f}, color };
+            currentVertexOffset_++;
+            sharedMappedPtr_[currentVertexOffset_] = { {p4.x, p4.y, p4.z, 1.0f}, color };
+            currentVertexOffset_++;
+            sharedMappedPtr_[currentVertexOffset_] = { {p3.x, p3.y, p3.z, 1.0f}, color };
+            currentVertexOffset_++;
+
+            //// --- 三角形1 (左下、左上、右下) ---
+            //batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+            //batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+            //batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
+
+            //// --- 三角形2 (左上、右上、右下) ---
+            //batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+            //batch.vertices.push_back({ {p4.x, p4.y, p4.z, 1.0f}, color });
+            //batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
         }
     }
-    DrawCommand cmd;
-    cmd.type = PrimithiveType::kSphere;
-    cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
-    cmd.fillMode = fillMode;
-    cmd.blendMode = blendMode;
-    drawCommands_.push_back(std::move(cmd));
-    batch.vertices.clear();
+    //DrawCommand cmd;
+    //cmd.type = PrimithiveType::kSphere;
+    //cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
+    //cmd.fillMode = fillMode;
+    //cmd.blendMode = blendMode;
+    //drawCommands_.push_back(std::move(cmd));
+    //batch.vertices.clear();
+	drawCommands_.push_back({ PrimithiveType::kSphere, numVertices, startIndex, fillMode, blendMode });
 }
 // --- DrawGrid の修正（グリッド専用バッチに直接代入） ---
 void PrimitiveDrawer::DrawGrid() {
-    auto& batch = batches_[PrimithiveType::kGrid];
+/*    auto& batch = batches_[PrimithiveType::kGrid];
     const float kGridHalfWidth = 2.0f;
     const uint32_t kSubdivision = 10;
     const float kGridEvery = (kGridHalfWidth * 2.0f) / static_cast<float>(kSubdivision);
@@ -301,12 +321,12 @@ void PrimitiveDrawer::DrawGrid() {
     cmd.type = PrimithiveType::kGrid;
     cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピー
     drawCommands_.push_back(std::move(cmd));
-    batch.vertices.clear();
+    batch.vertices.clear();*/
 }
 
 // --- DrawAABB の修正（AABB専用バッチに直接代入） ---
 void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
-    auto& batch = batches_[PrimithiveType::kAABB];
+/*    auto& batch = batches_[PrimithiveType::kAABB];
     if (batch.vertices.size() + 24 > kMaxVertices) return; // 線12本 = 24頂点
 
     Vector3 p[8] = {
@@ -330,7 +350,7 @@ void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
     cmd.type = PrimithiveType::kAABB;
     cmd.vertices = batch.vertices; // 頂点ベクタをまるごとコピ-
     drawCommands_.push_back(std::move(cmd));
-    batch.vertices.clear();
+    batch.vertices.clear();*/
 }
 
 void PrimitiveDrawer::DrawSegment(const Segment& segment, const Vector4& color) {
