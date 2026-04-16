@@ -64,7 +64,7 @@ void GameScene::Initialize() {
     skyBox = std::make_unique<SkyBox>();
     skyBox->Initialize();
      skyBox->SetCamera(camera.get());
-     skyBox->SetTextureByFilePath("resources/rostock_laage_airport_4k.dds");
+     skyBox->SetTextureByFilePath("resources/output_skybox.dds");
 
 
 
