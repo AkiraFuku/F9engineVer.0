@@ -76,6 +76,17 @@ private:
         kPoint,
         kCount // 種類の総数
     };
+    enum class Primithive
+    {
+        kLine,
+        kTriangle,
+        kGrid,
+        kPlane,
+        kSphere,
+        kAABB
+        
+
+    };
 
     // トポロジごとに必要なリソース一式
     struct PrimitiveBatch {
@@ -89,6 +100,6 @@ private:
     };
     
     // トポロジごとのバッチ管理
-    std::map<TopologyType, PrimitiveBatch> batches_;
+    std::map<Primithive, PrimitiveBatch> batches_;
 
 };

@@ -112,11 +112,22 @@ void PrimitiveDrawer::WVPResourceCreate()
 
 void PrimitiveDrawer::Initialize() {
     AddPSO();
-    auto CreateBatch = [&](TopologyType type, D3D_PRIMITIVE_TOPOLOGY d3dTop, Toporogy psoTop) {
+    auto CreateBatch = [&](Primithive type) {
         PrimitiveBatch batch;
-        batch.d3dTopology = d3dTop;
-        batch.psoTopology = psoTop;
 
+        switch (type)
+        {
+        case Primithive::kLine:
+        case Primithive::kGrid:
+
+            batch.d3dTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+            batch.psoTopology = Toporogy::LineList;
+            break;
+        default:
+            batch.d3dTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+            batch.psoTopology = Toporogy::TriangleList;
+            break;
+        }
         // リソース作成
         batch.resource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
 
@@ -132,8 +143,13 @@ void PrimitiveDrawer::Initialize() {
         batches_[type] = std::move(batch);
         };
 
-    CreateBatch(TopologyType::kLine, D3D_PRIMITIVE_TOPOLOGY_LINELIST, Toporogy::LineList);
-    CreateBatch(TopologyType::kTriangle, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
+    CreateBatch(Primithive::kLine);
+    CreateBatch(Primithive::kTriangle);
+    CreateBatch(Primithive::kSphere);
+    CreateBatch(Primithive::kAABB);
+    CreateBatch(Primithive::kGrid);
+    CreateBatch(Primithive::kPlane);
+   
     // 必要に応じて PointList 等を追加
     WVPResourceCreate();
 }
@@ -177,7 +193,7 @@ void PrimitiveDrawer::Draw() {
     }
 }
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
-    auto& batch = batches_[TopologyType::kLine];
+    auto& batch = batches_[Primithive::kLine];
     if (batch.vertices.size() + 2 > kMaxVertices) return;
 
     batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
@@ -187,7 +203,7 @@ void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vecto
 
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
-    auto& batch = batches_[TopologyType::kTriangle];
+    auto& batch = batches_[Primithive::kTriangle];
     if (batch.vertices.size() + 3 > kMaxVertices) return;
     batch.fillMode = fillMode;
     batch.blendMode = blendMode;
