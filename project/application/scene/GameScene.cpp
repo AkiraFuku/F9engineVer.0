@@ -24,7 +24,7 @@ void GameScene::Initialize() {
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
-    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
+    LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
