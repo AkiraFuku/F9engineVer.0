@@ -51,12 +51,13 @@ void GameScene::Initialize() {
 
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
+    ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("AnimatedCube.gltf");
+    object3d->SetModel("sphere");
     object3d->SetCamera(camera.get());
 
-    object3d->SetAnimations(animation.get());
+  //  object3d->SetAnimations(animation.get());
 
     PrimitiveDrawer::GetInstance()->Initialize();
 
@@ -176,6 +177,7 @@ void GameScene::Update() {
 #endif // USE_IMGUI
 
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
+   // LightManager::GetInstance()->Update();
     sprite->Update();
 }
 void GameScene::Draw() {
@@ -195,5 +197,5 @@ void GameScene::Draw() {
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     //sprite->Draw();
-   // object3d->Draw();
+    object3d->Draw();
 }
