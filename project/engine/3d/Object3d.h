@@ -10,6 +10,7 @@
 #include "Object3dCommon.h"
 #include "PSOManager.h"
 #include "MathFunction.h"
+#include "SkyBox.h"
 class Animation;
 class Object3d
 {
@@ -99,10 +100,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
     CameraForGPU* cameraData_ = nullptr;
     void  CreateCameraResource();
+  
     //トランスフォーム
     EulerTransform transform_ = {};
     //カメラ　
     Camera* camera_ = nullptr;
+    //スカイボックス
+    SkyBox* box_=nullptr;
 
     FillMode fillMode_ = FillMode::kSolid;
     BlendMode blendMode_ = BlendMode::None;

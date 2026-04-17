@@ -83,6 +83,7 @@
     <ClCompile Include="PrimitiveDrawer.cpp" />
     <ClCompile Include="RailMover.cpp" />
     <ClCompile Include="RailPath.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
@@ -140,6 +141,7 @@
     <ClInclude Include="PrimitiveDrawer.h" />
     <ClInclude Include="RailMover.h" />
     <ClInclude Include="RailPath.h" />
+    <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

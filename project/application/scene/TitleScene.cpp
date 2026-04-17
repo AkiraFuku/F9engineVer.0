@@ -28,12 +28,12 @@ void TitleScene::Initialize() {
     ParticleManager::GetInstance()->Setcamera(activeCamera_);
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_,true);
+    Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-    
+
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
-    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f },1.0f);
+    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
@@ -53,7 +53,7 @@ void TitleScene::Initialize() {
 
     animation = std::make_unique<Animation>();
 
-    animation->Initialize("resources/AnimatedCube","AnimatedCube.gltf");
+    animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->SetCurrentTime(0.0f);
 
 
@@ -65,9 +65,9 @@ void TitleScene::Initialize() {
         object3d->SetModel("AnimatedCube.gltf");
         object3d->SetCamera(activeCamera_);
 
-       object3d->SetAnimations(animation.get());
-        
-      
+    object3d->SetAnimations(animation.get());
+
+
 
 
 
@@ -84,14 +84,14 @@ void TitleScene::Update() {
     // 現在のジョイスティックを取得
     if (Input::GetInstance()->TriggerMouseDown(0))
     {
-      if (Audio::GetInstance()->IsPlaying(handle_))
+        if (Audio::GetInstance()->IsPlaying(handle_))
         {
             Audio::GetInstance()->PauseAudio(handle_);
-      } else
-      {
-          Audio::GetInstance()->ResumeAudio(handle_);
-       
-      }
+        } else
+        {
+            Audio::GetInstance()->ResumeAudio(handle_);
+
+        }
     }
 
 
@@ -107,7 +107,7 @@ void TitleScene::Update() {
 
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
-            
+
             Audio::GetInstance()->StopAudio(handle_);
         }
 
