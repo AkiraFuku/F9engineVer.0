@@ -29,7 +29,7 @@ public:
     /// <returns></returns>
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
 
-    void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata  metadata);
+    void CreateSRVForTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata  metadata);
 
 
 

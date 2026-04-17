@@ -57,14 +57,14 @@ D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index) {
     return handleGPU;
 }
 
-void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata  metadata) {
+void SrvManager::CreateSRVForTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DirectX::TexMetadata  metadata) {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = metadata.format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 
-    if (metadata.IsCubemap())
-    {
+    if (metadata.IsCubemap()) {
+        //キューブマップの変換
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;//キューブマップ
         srvDesc.TextureCube.MostDetailedMip = 0;//最初のミップマップ
         srvDesc.TextureCube.MipLevels = UINT(metadata.mipLevels);//最初のミップマップ

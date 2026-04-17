@@ -38,19 +38,18 @@ void TextureManager::LoadTexture(const std::string& filePath) {
     //テクスチャの読み込み
     DirectX::ScratchImage image{};
     std::wstring filePathW = StringUtility::ConvertString(filePath);
-    //キューブマップの読み込み
+   
     HRESULT hr;
     if (filePathW.ends_with(L".dds"))
     {
+        //キューブマップの読み込み
         hr = DirectX::LoadFromDDSFile(
             filePathW.c_str(),
             DirectX::DDS_FLAGS_NONE,
             nullptr,
             image
         );
-        //      assert(SUCCEEDED(hr));
-    } else
-    {
+    } else {
         hr = DirectX::LoadFromWICFile(
             filePathW.c_str(),
             DirectX::WIC_FLAGS_FORCE_SRGB,
@@ -66,6 +65,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
     if (DirectX::IsCompressed(image.GetMetadata().format))
     {
+        //キューブマップ
         mipImages = std::move(image);
     } else {
         hr = DirectX::GenerateMipMaps(
@@ -88,7 +88,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
     textureData.srvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(textureData.srvIndex);
     textureData.srvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(textureData.srvIndex);
 
-    SrvManager::GetInstance()->CreateSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metadata);
+    SrvManager::GetInstance()->CreateSRVForTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metadata);
     textureData.intermediateResource = DXCommon::GetInstance()->UploadTextureData(textureData.resource, mipImages);
 
 }
