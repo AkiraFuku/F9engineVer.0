@@ -114,7 +114,7 @@ float3 CalculateLight(float3 N, float3 L, float3 V, float3 lightColor, float int
 }
 float4 Environment(float3 V, float3 N)
 {
-    float3 reflectVector = reflect(V, N);
+    float3 reflectVector = reflect(-V, N);
     float4 EnvironmentColor = gEnviromentTexture.Sample(gSampler, reflectVector);
     float3 reflectedColor = EnvironmentColor.rgb * gMaterial.environmentCoefficient;
     return float4(reflectedColor, EnvironmentColor.a); // 最後の 1.0f は不透明度
@@ -198,77 +198,21 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float4 textureColor = gTexture.Sample(gSampler, input.texCoord); // UV変換はVSで行っている前提、または必要ならここで計算
 
-    // ライティングが無効ならそのまま返す
-    if (gMaterial.enableLighting == 0)
-    {
-      
-        output.color = gMaterial.Color * textureColor;
-            // アルファテスト
-        if (output.color.a < 0.01f)
-        {
-            discard;
-        }
-        return output;
-    }
+   
 
     float3 N = normalize(input.normal);
     float3 V = normalize(gCamera.worldPosition - input.worldPosition);
     
-    float3 finalLighting = Lighting(V, N,input);
+    output.color = gMaterial.Color * textureColor;
     
-
+ // ライティングが無効ならそのまま返す
+    if (gMaterial.enableLighting)
+    {
     
- //   // Directional Light
- //   for (int i = 0; i < gLightCounts.numDirectionalLights; ++i)
- //   {
- //       // gDirectionalLights[i] でアクセス
- //       float3 L_dir = normalize(-gDirectionalLights[i].direction);
- //       finalLighting += CalculateLight(N, L_dir, V, gDirectionalLights[i].color.rgb, gDirectionalLights[i].intensity);
- //   }
-    
- //   //ポイントライト
- //   for (int j = 0; j < gLightCounts.numPointLights; ++j)
- //   {
- //       // 強度が0以下のライトは計算スキップ
- //       if (gPointLights[j].intensity <= 0.0f)
- //           continue;
+        float3 finalLighting = Lighting(V, N, input);
+        output.color.rgb = finalLighting * textureColor.rgb;
 
- //       float3 directionToPointLight = gPointLights[j].position - input.worldPosition;
- //   // 距離による減衰は計算せず、正規化して方向だけ使う
- //       float3 L_point = normalize(directionToPointLight);
- //       float distance = length(directionToPointLight);
- //       float factor = pow(saturate(-distance / gPointLights[j].radius + 1.0f), gPointLights[j].decay);
- //       finalLighting += CalculateLight(N, L_point, V, gPointLights[j].color.rgb, gPointLights[j].intensity * factor);
- //   }
- //   //スポットライト
- //   for (int k = 0; k < gLightCounts.numSpotLights; ++k)
- //   {
- //       // 強度が0以下のライトは計算スキップ
- //       if (gSpotLights[k].intensity <= 0.0f)
- //           continue;
- //// 1. 光源への方向ベクトルと距離を計算
- //       float3 directionToSpotLight = gSpotLights[k].position - input.worldPosition;
- //       float distanceSpot = length(directionToSpotLight);
- //       float3 L_spot = normalize(directionToSpotLight); // 光源方向 (単位ベクトル)
-
- //   // 2. 距離による減衰 (Falloff)
- //   // PointLightと同じく、指定距離(distance)で強度が0になるよう計算
- //       float distFactor = pow(saturate(-distanceSpot / gSpotLights[k].distance + 1.0f), gSpotLights[k].decay);
-
- //   // 3. 角度による減衰 (Cone Falloff)
- //       float cosAngle = dot(L_spot, gSpotLights[k].direction);
-
- //       float cosDiff = gSpotLights[k].cosFalloffStart - gSpotLights[k].cosAngle;
-
- //       float range = max(cosDiff, 0.0001f);
- //       float angleFactor = saturate((cosAngle - gSpotLights[k].cosAngle) / range);
-    
- //       finalLighting += CalculateLight(N, L_spot, V, gSpotLights[k].color.rgb, gSpotLights[k].intensity * distFactor * angleFactor);
- //   }
-   
-    output.color.rgb = finalLighting * textureColor.rgb;
-        output.color.a = gMaterial.Color.a * textureColor.a;
-
+    }
     if (gMaterial.environment)
     {
         float4 refrectColor = Environment(V, N);
