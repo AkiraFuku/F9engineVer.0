@@ -26,6 +26,8 @@ void GameEngine::Update() {
    
     SceneManager::GetInstance()->Update();
     ParticleManager::GetInstance()->Update();
+   
+
  
 };
 void GameEngine::Draw() {

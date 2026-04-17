@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Scene.h"
 #include <memory>
+#include "SkyBox.h"
 #include "CameraController.h"
 
 class RailPath;
@@ -31,6 +32,7 @@ private:
 
     std::unique_ptr<CameraController> cameraController; 
     std::unique_ptr<Enemy> enemy; 
+    std::unique_ptr<SkyBox> skyBox;
 
     bool isDebugCamera_ = false;
 

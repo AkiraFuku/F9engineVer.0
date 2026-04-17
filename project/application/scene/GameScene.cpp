@@ -45,7 +45,7 @@ void GameScene::Initialize() {
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
-    LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
+    LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
@@ -68,16 +68,22 @@ void GameScene::Initialize() {
     animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->SetCurrentTime(0.0f);
 
+   skyBox = std::make_unique<SkyBox>();
+    skyBox->Initialize();
+     skyBox->SetCamera(activeCamera_);
+     skyBox->SetTextureByFilePath("resources/output_skybox.dds");
 
+     Object3dCommon::GetInstance()->SetDefaultSkyBox(skyBox.get());
 
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
+    ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("AnimatedCube.gltf");
+    object3d->SetModel("sphere");
     object3d->SetCamera(activeCamera_);
 
-    object3d->SetAnimations(animation.get());
+ 
 
 
 
@@ -114,7 +120,6 @@ void GameScene::Finalize() {
 }
 void GameScene::Update() {
 
-
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -150,8 +155,11 @@ void GameScene::Update() {
         //  GetSceneManager()->ChangeScene("GameScene");
 
     }
-    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_B))
+    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
     {
+         Vector3 camreaTranslate = activeCamera_->GetRotate();
+        camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
+        activeCamera_->SetRotate(camreaTranslate);
 
     }
 
@@ -164,19 +172,19 @@ void GameScene::Update() {
         cameraMap_["Main"]->SetTranslate(camreaTranslate);
 
     }
-    /*    if (Input::GetInstance()->GetJoyStick(0, state))
+        if (Input::GetInstance()->GetJoyStick(0, state))
         {
             // 左スティックの値を取得
             float x = (float)state.Gamepad.sThumbLX;
             float y = (float)state.Gamepad.sThumbLY;
 
-            // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
-            float normalizedX = x / 32767.0f;
-            float normalizedY = y / 32767.0f;
-            Vector3 camreaTranslate = activeCamera_->GetTranslate();
-            camreaTranslate = Add(camreaTranslate, Vector3{ normalizedX / 60.0f,normalizedY / 60.0f,0.0f });
-            activeCamera_->SetTranslate(camreaTranslate);
-        }*/
+        // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
+        float normalizedX = x / 32767.0f;
+        float normalizedY = y / 32767.0f;
+        Vector3 cameraTranslate = activeCamera_->GetRotate();
+        cameraTranslate = Add(cameraTranslate, Vector3{ normalizedY / 60.0f,normalizedX / 60.0f,0.0f });
+        activeCamera_->SetRotate(cameraTranslate);
+    }
 
     cameraController->Update();
 
@@ -189,6 +197,8 @@ void GameScene::Update() {
 
     enemy->Update();
 
+     skyBox->SetTranslate(activeCamera_->GetTranslate()); 
+    skyBox->Update();
 
     //activeCamera_->UpdateViewProjection();
     object3d->Update();
@@ -224,9 +234,12 @@ void GameScene::Update() {
 
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
     sprite->Update();
+ LightManager::GetInstance()->Update();
+
 }
 void GameScene::Draw() {
 
+ skyBox->Draw();
     PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });

@@ -14,69 +14,9 @@ void ParticleManager::Initialize() {
     randomEngine_.seed(seedGen_());
     //パイプラインステート生成
 
-   /* PsoConfig psoConfig{};*/
         PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Particle/Particle.vs.hlsl", "main", L"vs_6_0" };
         PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Particle/Particle.ps.hlsl", "main", L"ps_6_0" };
-  //      psoConfig.shaderPaths.push_back(vsPath);
-  //      psoConfig.shaderPaths.push_back(psPath);
-  ///*  psoConfig.vsPath = L"resources/shaders/Particle/Particle.vs.hlsl";
-  //  psoConfig.psPath = L"resources/shaders/Particle/Particle.ps.hlsl";*/
-  //  psoConfig.rootSignatureGenerator = []() -> Microsoft::WRL::ComPtr<ID3D12RootSignature> {
-  //      // ルートシグネチャの生成
-  //      D3D12_DESCRIPTOR_RANGE descriptorRange[1]{};
-  //      descriptorRange[0].BaseShaderRegister = 0;//シェーダーのレジスタ番号0
-  //      descriptorRange[0].NumDescriptors = 1;//ディスクリプタの数1つ
-  //      descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
-  //      descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;//テーブルの先頭からオフセットなし
-  //      // RootSignatureの作成
-  //      D3D12_ROOT_SIGNATURE_DESC descriptionRootSignatur{};
-  //      descriptionRootSignatur.Flags =
-  //          D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-  //      //ルートパラメータの設定
-  //      D3D12_ROOT_PARAMETER rootParameters[4]{};
-  //      rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-  //      rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//ピクセルシェーダーで使う
-  //      rootParameters[0].Descriptor.ShaderRegister = 0;//シェーダーのレジスタ番号0とバインド
-  //      rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-  //      rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//ヴァーテックスシェーダーで使う
-  //      rootParameters[1].Descriptor.ShaderRegister = 0;//シェーダーのレジスタ番号0とバインド
-  //      rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//ディスクリプタテーブルを使う
-  //      rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-  //      rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-  //      rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
 
-  //      descriptionRootSignatur.NumParameters = _countof(rootParameters);
-  //      descriptionRootSignatur.pParameters = rootParameters;
-  //      // 静的サンプラーの設定（必要に応じて追加）
-  //      descriptionRootSignatur.NumStaticSamplers = 0;
-  //      descriptionRootSignatur.pStaticSamplers = nullptr;
-
-  //      Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-  //      Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
-  //      Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-  //      HRESULT hr = D3D12SerializeRootSignature(
-  //          &descriptionRootSignatur,
-  //          D3D_ROOT_SIGNATURE_VERSION_1,
-  //          &signatureBlob,
-  //          &errorBlob
-  //      );
-  //      if (FAILED(hr)) {
-  //          // エラー処理（ログ出力など）
-  //          return nullptr;
-  //      }
-  //      ID3D12Device* device = DXCommon::GetInstance()->GetDevice().Get();
-  //      hr = device->CreateRootSignature(
-  //          0,
-  //          signatureBlob->GetBufferPointer(),
-  //          signatureBlob->GetBufferSize(),
-  //          IID_PPV_ARGS(&rootSignature)
-  //      );
-  //      if (FAILED(hr)) {
-  //          // エラー処理（ログ出力など）
-  //          return nullptr;
-  //      }
-  //      return rootSignature;
-  //      };
 
 
 
@@ -86,8 +26,7 @@ void ParticleManager::Initialize() {
     config.shaderPaths.push_back(vsPath);
     config.shaderPaths.push_back(psPath);
 
-   /* config.vsPath = L"resources/shaders/Particle/Particle.vs.hlsl";
-    config.psPath = L"resources/shaders/Particle/Particle.ps.hlsl";*/
+  
 
 
 

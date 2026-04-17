@@ -132,18 +132,6 @@ void DXCommon::PostDraw()
     assert(SUCCEEDED(hr_));
 
 }
-
-
-//D3D12_CPU_DESCRIPTOR_HANDLE DXCommon::GetSRVCPUDescriptorHandle(uint32_t index)
-//{
-//    return GetCPUDescriptorHandle(srvHeap_, descriptorSizeSRV_, index);
-//}
-//
-//D3D12_GPU_DESCRIPTOR_HANDLE DXCommon::GetSRVGPUDescriptorHandle(uint32_t index)
-//{
-//    return GetGPUDescriptorHandle(srvHeap_, descriptorSizeSRV_, index);
-//}
-
 Microsoft::WRL::ComPtr<IDxcBlob> DXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile)
 {
     //hlslファイルの読み込み

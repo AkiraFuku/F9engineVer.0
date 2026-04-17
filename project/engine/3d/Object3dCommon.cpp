@@ -5,10 +5,11 @@
 // 静的メンバ変数の初期化
 std::unique_ptr<Object3dCommon> Object3dCommon::instance = nullptr;
 Object3dCommon* Object3dCommon::GetInstance() {
-      if (instance == nullptr) {
+    if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public Object3dCommon {
-            Helper() : Object3dCommon() {}
+            Helper() : Object3dCommon() {
+            }
         };
         instance = std::make_unique<Helper>();
     }
@@ -25,8 +26,7 @@ void Object3dCommon::Initialize()
     PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Object3d/Object3d.vs.hlsl", "main", L"vs_6_0" };
     PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Object3d/Object3d.ps.hlsl", "main", L"ps_6_0" };
 
-   /* config.vsPath = L"resources/shaders/Object3d/Object3d.vs.hlsl";
-    config.psPath = L"resources/shaders/Object3d/Object3d.ps.hlsl";*/
+
 
     config.shaderPaths.push_back(vsPath);
     config.shaderPaths.push_back(psPath);
@@ -44,15 +44,20 @@ void Object3dCommon::Initialize()
         descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+        D3D12_DESCRIPTOR_RANGE descRangeEnv[1]{};
+        descRangeEnv[0].BaseShaderRegister = 4; // t1 (通常のテクスチャがt0の場合)
+        descRangeEnv[0].NumDescriptors = 1;
+        descRangeEnv[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeEnv[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
-        rootParameters.resize(8);
+        rootParameters.resize(9);
 
 
 
         // Enum定義 (可読性のため)
         enum {
-            kMaterial, kTransform, kTexture, DirLight, PointLight, SpotLight, Count, kCamera
+            kMaterial, kTransform, kTexture, DirLight, PointLight, SpotLight, Count, kCamera, kEnviroment
         };
 
         // 0. Material (CBV b0, Pixel)
@@ -90,11 +95,17 @@ void Object3dCommon::Initialize()
         rootParameters[Count].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
         rootParameters[Count].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
         rootParameters[Count].Descriptor.ShaderRegister = 3; // b3 (b0,b1,b2は使用済みと仮定、あるいは空いている番号)
-        //カメラ
+        //7カメラ
         rootParameters[kCamera].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // 定数バッファビュー
         rootParameters[kCamera].Descriptor.ShaderRegister = 2; // レジスタ番号 2 (b2)
         rootParameters[kCamera].Descriptor.RegisterSpace = 0;
         rootParameters[kCamera].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダーのみ見える
+
+        // 8. kEnviromentTexture (Table t0, Pixel)
+        rootParameters[kEnviroment].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[kEnviroment].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[kEnviroment].DescriptorTable.pDescriptorRanges = descRangeEnv;
+        rootParameters[kEnviroment].DescriptorTable.NumDescriptorRanges = 1;
 
         // シリアライズ
         D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
