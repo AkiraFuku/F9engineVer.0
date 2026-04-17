@@ -24,12 +24,14 @@ public:
     };
     struct Material {
         Vector4 color;
-        int32_t enableLighting;
+        int32_t enableLighting=1;
+        int32_t environment=1;
         int32_t diffuseType;  // 0:Lambert, 1:Half-Lambert
         int32_t specularType; // 0:None, 1:Phong, 2:BlinnPhong
-        float padding[1];
         Matrix4x4 uvTransform; // UV変換行列
         float  shininess;
+        float  environmentCoefficient;//反射率
+        
     };
     struct MaterialData {
         std::string textureFilePath;

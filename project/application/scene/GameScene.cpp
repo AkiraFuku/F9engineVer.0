@@ -47,7 +47,12 @@ void GameScene::Initialize() {
     animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->SetCurrentTime(0.0f);
 
+   skyBox = std::make_unique<SkyBox>();
+    skyBox->Initialize();
+     skyBox->SetCamera(camera.get());
+     skyBox->SetTextureByFilePath("resources/output_skybox.dds");
 
+     Object3dCommon::GetInstance()->SetDefaultSkyBox(skyBox.get());
 
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
@@ -62,11 +67,7 @@ void GameScene::Initialize() {
     PrimitiveDrawer::GetInstance()->Initialize();
 
 
-    skyBox = std::make_unique<SkyBox>();
-    skyBox->Initialize();
-     skyBox->SetCamera(camera.get());
-     skyBox->SetTextureByFilePath("resources/output_skybox.dds");
-
+ 
 
 
 }
@@ -75,7 +76,6 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
-
 
     XINPUT_STATE state;
 
@@ -177,10 +177,12 @@ void GameScene::Update() {
 #endif // USE_IMGUI
 
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
-   // LightManager::GetInstance()->Update();
     sprite->Update();
+ LightManager::GetInstance()->Update();
+
 }
 void GameScene::Draw() {
+
  skyBox->Draw();
     PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });

@@ -3,18 +3,18 @@ struct Material
 {
     float4 Color;
     int enableLighting;
+    int environment;
     int diffuseType; // 0:Lambert, 1:Half-Lambert
     int specularType; // 0:None, 1:Phong, 2:BlinnPhong
     float4x4 uvTransform; // UV変換行列
     float shininess;
+    float environmentCoefficient;
 };
 struct DirectionalLight
 {
     float4 color; //ライトの色
     float3 direction; //ライトの向き
     float intensity; // 明るさ
-
-
 };
 struct PointLight
 {
@@ -68,6 +68,8 @@ struct PixelShaderOutput
     float4 color : SV_TARGET0;
 };
 Texture2D<float4> gTexture : register(t0);
+TextureCube<float4> gEnviromentTexture : register(t4);
+
 SamplerState gSampler : register(s0);
 
 
@@ -110,41 +112,16 @@ float3 CalculateLight(float3 N, float3 L, float3 V, float3 lightColor, float int
 
     return diffuse + specular;
 }
-
-PixelShaderOutput main(VertexShaderOutput input)
+float4 Environment(float3 V, float3 N)
 {
-    PixelShaderOutput output;
-    
-  // ★視錐台(平面)カリング処理 --------------------------
-    
-    // 1. カメラからピクセルへのベクトル
-    float3 toPixel = input.worldPosition - gCamera.worldPosition;
-
-    // 2. カメラの前方ベクトルとの内積を取る
-    //    これで「カメラの向いている方向の距離(Z深度)」だけが計算されます
-    float zDepth = dot(toPixel, gCamera.cameraForward);
-
-    // 3. 深度が FarClip より奥なら描画しない (平面でスパッと切れる)
-    //    ※ zDepth < 0 (カメラより後ろ) の場合も消したいなら条件に追加
-    if (zDepth > gCamera.farClip || zDepth < 0.0f)
-    {
-        discard;
-    }
-    // --------------------------------------------------------
-    
-    float4 textureColor = gTexture.Sample(gSampler, input.texCoord); // UV変換はVSで行っている前提、または必要ならここで計算
-
-    // ライティングが無効ならそのまま返す
-    if (gMaterial.enableLighting == 0)
-    {
-        output.color = gMaterial.Color * textureColor;
-        return output;
-    }
-
-    float3 N = normalize(input.normal);
-    float3 V = normalize(gCamera.worldPosition - input.worldPosition);
-    
-    float3 finalLighting = float3(0.0f, 0.0f, 0.0f);    
+    float3 reflectVector = reflect(V, N);
+    float4 EnvironmentColor = gEnviromentTexture.Sample(gSampler, reflectVector);
+    float3 reflectedColor = EnvironmentColor.rgb * gMaterial.environmentCoefficient;
+    return float4(reflectedColor, EnvironmentColor.a); // 最後の 1.0f は不透明度
+}
+float3 Lighting(float3 V, float3 N, VertexShaderOutput input)
+{
+    float3 finalLighting = float3(0.0f, 0.0f, 0.0f);
 
     
     // Directional Light
@@ -159,7 +136,8 @@ PixelShaderOutput main(VertexShaderOutput input)
     for (int j = 0; j < gLightCounts.numPointLights; ++j)
     {
         // 強度が0以下のライトは計算スキップ
-        if (gPointLights[j].intensity <= 0.0f)continue;
+        if (gPointLights[j].intensity <= 0.0f)
+            continue;
 
         float3 directionToPointLight = gPointLights[j].position - input.worldPosition;
     // 距離による減衰は計算せず、正規化して方向だけ使う
@@ -193,9 +171,110 @@ PixelShaderOutput main(VertexShaderOutput input)
     
         finalLighting += CalculateLight(N, L_spot, V, gSpotLights[k].color.rgb, gSpotLights[k].intensity * distFactor * angleFactor);
     }
+    return finalLighting;
+
+}
+
+PixelShaderOutput main(VertexShaderOutput input)
+{
+    PixelShaderOutput output;
     
+  // ★視錐台(平面)カリング処理 --------------------------
+    
+    // 1. カメラからピクセルへのベクトル
+    float3 toPixel = input.worldPosition - gCamera.worldPosition;
+
+    // 2. カメラの前方ベクトルとの内積を取る
+    //    これで「カメラの向いている方向の距離(Z深度)」だけが計算されます
+    float zDepth = dot(toPixel, gCamera.cameraForward);
+
+    // 3. 深度が FarClip より奥なら描画しない (平面でスパッと切れる)
+    //    ※ zDepth < 0 (カメラより後ろ) の場合も消したいなら条件に追加
+    if (zDepth > gCamera.farClip || zDepth < 0.0f)
+    {
+        discard;
+    }
+    // --------------------------------------------------------
+    
+    float4 textureColor = gTexture.Sample(gSampler, input.texCoord); // UV変換はVSで行っている前提、または必要ならここで計算
+
+    // ライティングが無効ならそのまま返す
+    if (gMaterial.enableLighting == 0)
+    {
+      
+        output.color = gMaterial.Color * textureColor;
+            // アルファテスト
+        if (output.color.a < 0.01f)
+        {
+            discard;
+        }
+        return output;
+    }
+
+    float3 N = normalize(input.normal);
+    float3 V = normalize(gCamera.worldPosition - input.worldPosition);
+    
+    float3 finalLighting = Lighting(V, N,input);
+    
+
+    
+ //   // Directional Light
+ //   for (int i = 0; i < gLightCounts.numDirectionalLights; ++i)
+ //   {
+ //       // gDirectionalLights[i] でアクセス
+ //       float3 L_dir = normalize(-gDirectionalLights[i].direction);
+ //       finalLighting += CalculateLight(N, L_dir, V, gDirectionalLights[i].color.rgb, gDirectionalLights[i].intensity);
+ //   }
+    
+ //   //ポイントライト
+ //   for (int j = 0; j < gLightCounts.numPointLights; ++j)
+ //   {
+ //       // 強度が0以下のライトは計算スキップ
+ //       if (gPointLights[j].intensity <= 0.0f)
+ //           continue;
+
+ //       float3 directionToPointLight = gPointLights[j].position - input.worldPosition;
+ //   // 距離による減衰は計算せず、正規化して方向だけ使う
+ //       float3 L_point = normalize(directionToPointLight);
+ //       float distance = length(directionToPointLight);
+ //       float factor = pow(saturate(-distance / gPointLights[j].radius + 1.0f), gPointLights[j].decay);
+ //       finalLighting += CalculateLight(N, L_point, V, gPointLights[j].color.rgb, gPointLights[j].intensity * factor);
+ //   }
+ //   //スポットライト
+ //   for (int k = 0; k < gLightCounts.numSpotLights; ++k)
+ //   {
+ //       // 強度が0以下のライトは計算スキップ
+ //       if (gSpotLights[k].intensity <= 0.0f)
+ //           continue;
+ //// 1. 光源への方向ベクトルと距離を計算
+ //       float3 directionToSpotLight = gSpotLights[k].position - input.worldPosition;
+ //       float distanceSpot = length(directionToSpotLight);
+ //       float3 L_spot = normalize(directionToSpotLight); // 光源方向 (単位ベクトル)
+
+ //   // 2. 距離による減衰 (Falloff)
+ //   // PointLightと同じく、指定距離(distance)で強度が0になるよう計算
+ //       float distFactor = pow(saturate(-distanceSpot / gSpotLights[k].distance + 1.0f), gSpotLights[k].decay);
+
+ //   // 3. 角度による減衰 (Cone Falloff)
+ //       float cosAngle = dot(L_spot, gSpotLights[k].direction);
+
+ //       float cosDiff = gSpotLights[k].cosFalloffStart - gSpotLights[k].cosAngle;
+
+ //       float range = max(cosDiff, 0.0001f);
+ //       float angleFactor = saturate((cosAngle - gSpotLights[k].cosAngle) / range);
+    
+ //       finalLighting += CalculateLight(N, L_spot, V, gSpotLights[k].color.rgb, gSpotLights[k].intensity * distFactor * angleFactor);
+ //   }
+   
     output.color.rgb = finalLighting * textureColor.rgb;
-    output.color.a = gMaterial.Color.a * textureColor.a;
+        output.color.a = gMaterial.Color.a * textureColor.a;
+
+    if (gMaterial.environment)
+    {
+        float4 refrectColor = Environment(V, N);
+        output.color.rgb += refrectColor.rgb;
+        
+    }
     
     // アルファテスト
     if (output.color.a < 0.01f)
@@ -204,3 +283,4 @@ PixelShaderOutput main(VertexShaderOutput input)
     }
     return output;
 }
+    

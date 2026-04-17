@@ -39,7 +39,9 @@ void Model::Update()
 #ifdef USE_IMGUI
     ImGui::Begin((std::string("Settings: ") + name_).c_str());
     int* pEnableLighting = reinterpret_cast<int*>(&materialData_->enableLighting);
+    int* pEnvironment = reinterpret_cast<int*>(&materialData_->environment);
     ImGui::Checkbox("Enable Lighting", (bool*)pEnableLighting);
+    ImGui::Checkbox("Environment", (bool*)pEnvironment);
     if (materialData_->enableLighting) {
         ImGui::Text("Diffuse (Base)");
         const char* diffuseItems[] = { "Lambert", "Half-Lambert" };
@@ -50,6 +52,7 @@ void Model::Update()
         ImGui::Combo("Specular Type", &materialData_->specularType, specularItems, IM_ARRAYSIZE(specularItems));
 
         ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 1.0f, 256.0f);
+        ImGui::DragFloat("EnvironmentCoefficient", &materialData_->environmentCoefficient, 0.1f, 1.0f, 256.0f);
     }
 
     ImGui::End();

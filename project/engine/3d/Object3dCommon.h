@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "DXCommon.h"
 #include "Camera.h"
+#include "SkyBox.h"
 class Object3dCommon
 {
 public:
@@ -18,8 +19,14 @@ public:
     void SetDefaultCamera(Camera* camera) {
         defaultCamera_ = camera;
     }
+    void SetDefaultSkyBox(SkyBox* box) {
+       defaultBox_=box;
+    }
     Camera* GetDefaultCamera()const {
         return defaultCamera_;
+    }
+    SkyBox* GetDefaultSkyBox()const {
+        return defaultBox_;
     }
     static std::unique_ptr<Object3dCommon> instance;
      friend struct std::default_delete<Object3dCommon>;
@@ -32,7 +39,7 @@ private:
     Object3dCommon& operator=(const Object3dCommon&) = delete;
 
     HRESULT hr_;
-
+    SkyBox* defaultBox_=nullptr;
    
 
     //ルートシグネチャ

@@ -18,6 +18,7 @@ void Object3d::Initialize()
    // CreateDirectionalLightResource();
     transform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
     camera_ = Object3dCommon::GetInstance()->GetDefaultCamera();
+    box_=Object3dCommon::GetInstance()->GetDefaultSkyBox();
     CreateCameraResource();
 }
 void Object3d::Update()
@@ -69,10 +70,22 @@ void Object3d::Draw()
     // PSOをセット
    // DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
     //WVP行列リソースの設定
-    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());
-    //light
+    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());LightManager::GetInstance()->Draw(3);
     LightManager::GetInstance()->Draw(3);
+
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(7, cameraResource_->GetGPUVirtualAddress());
+
+    if (box_) {
+
+        // SkyBoxクラスにテクスチャのGPUハンドルを取得するメソッドがあると仮定
+        // 例: targetBox->GetSrvHandle()
+        commandList->SetGraphicsRootDescriptorTable(8,TextureManager::GetInstance()->GetSrvHandleGPU(box_->GetTextureIndex())); 
+    }
+
+    //light
+    
+
+   
     if (model_) {
         model_->Draw();
     }
@@ -130,3 +143,5 @@ void Object3d::CreateCameraResource()
     }
 
 }
+
+

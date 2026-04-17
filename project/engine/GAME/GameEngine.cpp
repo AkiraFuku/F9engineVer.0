@@ -1,6 +1,5 @@
 #include "GameEngine.h"
 #include "PrimitiveDrawer.h"
-#include "LightManager.h"
 void GameEngine::Initialize() {
 
    Framework::Initialize();
@@ -27,7 +26,7 @@ void GameEngine::Update() {
    
     SceneManager::GetInstance()->Update();
     ParticleManager::GetInstance()->Update();
-    LightManager::GetInstance()->Update();
+   
 
  
 };

@@ -61,7 +61,13 @@ public:
         return transform_.translate;
     }
 
+    // マテリアル
+    const  Material* GetMaterial()const {
+        return materialData_;
+    }
 
+
+  
     void SetTextureByFilePath(const std::string& textureFilePath);
 
     uint32_t GetTextureIndex() const {
