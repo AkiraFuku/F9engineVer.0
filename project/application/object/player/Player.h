@@ -54,6 +54,8 @@ public:
     void Jump();
     void Attack();
 
+    float GetRailProgress() const;
+
 private:
     std::unique_ptr<InputHandler> inputHandler_; 
     std::unique_ptr<Object3d> object_;

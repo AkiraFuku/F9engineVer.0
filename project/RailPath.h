@@ -32,6 +32,13 @@ public:
         points_.push_back({ pos,  InterpolationType::CatmullRom, {0,0,0}, {0,0,0} });
     }
 
+
+    Vector3 GetPointPos(size_t index) const {
+
+        if (index >= points_.size()) return { 0,0,0 };
+        return points_[index].position;
+    }
+
     Vector3 GetControlPointOut(size_t index) const {
         if (index >= points_.size()) return { 0,0,0 };
         return points_[index].controlOut;
@@ -39,6 +46,13 @@ public:
     Vector3 GetControlPointIn(size_t index) const {
         if (index >= points_.size()) return { 0,0,0 };
         return points_[index].controlIn;
+    }
+
+    void SetPointPos(size_t index, const Vector3& pos)
+    {
+        if (index < points_.size()) {
+            points_[index].position = pos;
+        }
     }
 
     void SetControlPointOut(size_t index, const Vector3& control) {

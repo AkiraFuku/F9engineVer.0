@@ -94,6 +94,12 @@ void Player::Jump()
 }
 void Player::Attack(){
 }
+float Player::GetRailProgress() const
+{
+
+    return railMover_->GetProgress();
+
+}
 void Player::HandleInput()
 {
     // 1. 入力を受け取りコマンドを取得
