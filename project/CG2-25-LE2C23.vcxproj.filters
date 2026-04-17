@@ -103,6 +103,9 @@
     <Filter Include="App\System\Rail">
       <UniqueIdentifier>{192c7b33-34f6-412e-8640-b3f307b24e00}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Object\Enemy">
+      <UniqueIdentifier>{d960e865-a613-4017-b079-5c8cc7598983}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -246,19 +249,22 @@
     <ClCompile Include="CameraController.cpp">
       <Filter>App\Object\CameraContorol</Filter>
     </ClCompile>
-    <ClCompile Include="RailPath.cpp">
-      <Filter>App\System\Rail</Filter>
-    </ClCompile>
-    <ClCompile Include="RailMover.cpp">
-      <Filter>App\System\Rail</Filter>
-    </ClCompile>
-    <ClCompile Include="InputHandler.cpp">
-      <Filter>App\Object\Player</Filter>
-    </ClCompile>
     <ClCompile Include="Command.cpp">
       <Filter>App\Object\Player</Filter>
     </ClCompile>
     <ClCompile Include="SkyBox.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>App\Object\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\player\InputHandler.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Rail\RailMover.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Rail\RailPath.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -416,19 +422,22 @@
     <ClInclude Include="CameraController.h">
       <Filter>App\Object\CameraContorol</Filter>
     </ClInclude>
-    <ClInclude Include="RailPath.h">
-      <Filter>App\System\Rail</Filter>
-    </ClInclude>
-    <ClInclude Include="RailMover.h">
-      <Filter>App\System\Rail</Filter>
-    </ClInclude>
-    <ClInclude Include="InputHandler.h">
-      <Filter>App\Object\Player</Filter>
-    </ClInclude>
     <ClInclude Include="Command.h">
       <Filter>App\Object\Player</Filter>
     </ClInclude>
     <ClInclude Include="SkyBox.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>App\Object\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\player\InputHandler.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Rail\RailMover.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Rail\RailPath.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
