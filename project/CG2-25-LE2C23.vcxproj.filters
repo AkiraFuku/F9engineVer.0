@@ -252,13 +252,22 @@
     <ClCompile Include="RailMover.cpp">
       <Filter>App\System\Rail</Filter>
     </ClCompile>
-    <ClCompile Include="InputHandler.cpp">
+    <ClCompile Include="application\object\player\InputHandler.cpp">
       <Filter>App\Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="Command.cpp">
+    <ClCompile Include="application\object\player\Command.cpp">
       <Filter>App\Object\Player</Filter>
     </ClCompile>
     <ClCompile Include="SkyBox.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\player\Behavia\PlayerState.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Robot.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -422,13 +431,22 @@
     <ClInclude Include="RailMover.h">
       <Filter>App\System\Rail</Filter>
     </ClInclude>
-    <ClInclude Include="InputHandler.h">
+    <ClInclude Include="application\object\player\InputHandler.h">
       <Filter>App\Object\Player</Filter>
     </ClInclude>
-    <ClInclude Include="Command.h">
+    <ClInclude Include="application\object\player\Command.h">
       <Filter>App\Object\Player</Filter>
     </ClInclude>
     <ClInclude Include="SkyBox.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\player\Behavia\PlayerState.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Robot.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\player\Behavia\PlayerAction.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

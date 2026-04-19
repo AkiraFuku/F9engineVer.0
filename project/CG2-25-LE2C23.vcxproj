@@ -57,8 +57,8 @@
     <ClCompile Include="engine\GAME\Framework.cpp" />
     <ClCompile Include="engine\GAME\GameEngine.cpp" />
     <ClCompile Include="engine\Tool\LightManager.cpp" />
-    <ClCompile Include="Command.cpp" />
-    <ClCompile Include="InputHandler.cpp" />
+    <ClCompile Include="application\object\player\Command.cpp" />
+    <ClCompile Include="application\object\player\InputHandler.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -80,9 +80,12 @@
     <ClCompile Include="engine\scene\SceneManager.cpp" />
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="application\object\player\Player.cpp" />
+    <ClCompile Include="application\object\player\Behavia\PlayerState.cpp" />
+    <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp" />
     <ClCompile Include="PrimitiveDrawer.cpp" />
     <ClCompile Include="RailMover.cpp" />
     <ClCompile Include="RailPath.cpp" />
+    <ClCompile Include="Robot.cpp" />
     <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -136,11 +139,14 @@
     <ClInclude Include="engine\scene\SceneFactory.h" />
     <ClInclude Include="engine\Tool\LightManager.h" />
     <ClInclude Include="application\object\player\Player.h" />
-    <ClInclude Include="Command.h" />
-    <ClInclude Include="InputHandler.h" />
+    <ClInclude Include="application\object\player\Command.h" />
+    <ClInclude Include="application\object\player\InputHandler.h" />
+    <ClInclude Include="application\object\player\Behavia\PlayerState.h" />
+    <ClInclude Include="application\object\player\Behavia\PlayerAction.h" />
     <ClInclude Include="PrimitiveDrawer.h" />
     <ClInclude Include="RailMover.h" />
     <ClInclude Include="RailPath.h" />
+    <ClInclude Include="Robot.h" />
     <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
@@ -280,7 +286,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -308,7 +314,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -339,7 +345,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
