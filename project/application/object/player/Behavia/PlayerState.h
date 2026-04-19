@@ -30,30 +30,33 @@ public:
     const char* GetName() const override { return "Normal"; } // StateNormalの場合
 
 private:
-    std::unique_ptr<IPlayerAction> moveAction_;
-    std::unique_ptr<IPlayerAction> attackAction_;
-    std::unique_ptr<IPlayerAction> jumpAction_;
+    std::unique_ptr<IPlayerAction> moveAction_=nullptr;
+    std::unique_ptr<IPlayerAction> attackAction_=nullptr;
+    std::unique_ptr<IPlayerAction> jumpAction_=nullptr;
 };
 
 //搭乗状態
-class StateRideOn : public IPlayerState {
+class IStateRideOn : public IPlayerState {
 public:
-   
-    ~StateRideOn();
+    // コンストラクタでアクションを注入できるようにする
+    IStateRideOn(std::unique_ptr<IPlayerAction> move, 
+                    std::unique_ptr<IPlayerAction> attack);
+      
 
-   
-    // ロボットの種類ごとにアクションを注入する
-    StateRideOn(std::unique_ptr<IPlayerAction> moveAction,
-        std::unique_ptr<IPlayerAction> attackAction);
-       
-    void Initialize(Player* player) override;
-    void Update(Player* player) override;
-    void Finalize(Player* player) override;
+    virtual ~IStateRideOn() = default;
+
+    // 共通の入力処理：基本的には現在の Behavior に任せる
     void HandleInput(Player* player, ICommand* command) override;
-    const char* GetName() const override { return "RideOn"; } // StateNormalの場合
-private:
-    std::unique_ptr<IPlayerAction> moveAction_;
-    std::unique_ptr<IPlayerAction> attackAction_;
-    std::unique_ptr<IPlayerAction> jumpAction_;
+
+    // ここで共通のアクション実行メソッドを持っておくと便利
+    void DoMove(Player* player);
+    //ロボットを射出して通常状態に戻る
+    void DoShoot(Player* player);
+
+protected:
+    std::unique_ptr<IPlayerAction> moveAction_=nullptr;
+    std::unique_ptr<IPlayerAction> attackAction_=nullptr;
+    std::unique_ptr<IPlayerAction> jumpAction_=nullptr;
+    std::unique_ptr<IPlayerAction> shootAction_=nullptr;
 
 };
