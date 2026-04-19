@@ -7,6 +7,9 @@ class Input;
 class Camera;
 class RailMover;
 class RailPath;
+class IPlayerState;
+class Robot;
+
 class Player
 {
 public:
@@ -14,7 +17,7 @@ public:
     ~Player();
 
     void Initialize();
-    void Uppdate();
+    void Update();
     void Draw();
 
     void SetCamera(Camera* camera) {
@@ -48,13 +51,15 @@ public:
     }
 
     void SetRail(RailPath* rail);
-
+    // 状態を切り替えるメソッド
+    void ChangeState(std::unique_ptr<IPlayerState> newState);
 
     void Move(float ratio);
     void Jump();
     void Attack();
 
 private:
+    std::unique_ptr<IPlayerState> rideOnState_; // 現在の状態
     std::unique_ptr<InputHandler> inputHandler_; 
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整

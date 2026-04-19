@@ -5,6 +5,7 @@
 #include "RailPath.h"
 #include "InputHandler.h"
 #include "imgui.h"
+#include "PlayerState.h"
 
 Player::Player() = default;
 Player::~Player() = default;
@@ -17,11 +18,12 @@ void Player::Initialize()
     object_->SetModel("Sphere");
     // object_->SetCamera(activeCamera_);
     railMover_ = std::make_unique<RailMover>();
+    ChangeState(std::make_unique<StateNormal>());
 }
 
-void Player::Uppdate()
+void Player::Update()
 {
-   HandleInput();
+    HandleInput();
 
     // 1. 重力の計算 (Y軸のみ独立して計算)
     if (!isGrounded_) {
@@ -57,14 +59,14 @@ void Player::Draw()
 {
     object_->Draw();
 
-    
+
 #ifdef USE_IMGUI
     ImGui::Begin("Debug/Player");
     // ここにプレイヤーのデバッグ情報を表示
     //レールの進捗を表示
-        ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
-        Vector3 pos = object_->GetTranslate();
-        ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
+    Vector3 pos = object_->GetTranslate();
+    ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 
 
     ImGui::End();
@@ -74,7 +76,7 @@ void Player::SetRail(RailPath* rail)
 {
 
 
-    if (!rail||!railMover_)
+    if (!rail || !railMover_)
     {
         return;
     }
@@ -92,15 +94,22 @@ void Player::Jump()
         isGrounded_ = false;
     }
 }
-void Player::Attack(){
+void Player::Attack() {
 }
 void Player::HandleInput()
 {
     // 1. 入力を受け取りコマンドを取得
     auto commands = inputHandler_->HandleInput();
-    
-    // 2. 全てのコマンドを実行
+
     for (auto& command : commands) {
-        command->Execute(*this);
+        if (rideOnState_) {
+            // 現在の状態にコマンドを渡す
+            rideOnState_->HandleInput(this, command.get());
+        }
     }
+}
+void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
+    if (rideOnState_) rideOnState_->Finalize(this);
+    rideOnState_ = std::move(newState);
+    rideOnState_->Initialize(this);
 }

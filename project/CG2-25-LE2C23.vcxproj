@@ -18,6 +18,7 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="application\scene\GameScene.cpp" />
     <ClCompile Include="application\scene\TitleScene.cpp" />
+    <ClCompile Include="BehaviaState.cpp" />
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
@@ -92,6 +93,7 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="application\scene\GameScene.h" />
     <ClInclude Include="application\scene\TitleScene.h" />
+    <ClInclude Include="BehaviaState.h" />
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
