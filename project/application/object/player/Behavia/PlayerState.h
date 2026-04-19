@@ -16,6 +16,7 @@ public:
     virtual void Update(Player* player) = 0;
     virtual void Finalize(Player* player) = 0;
     virtual void HandleInput(Player* player, ICommand* command) = 0;
+    virtual const char* GetName() const = 0; // 追加
 };
 //通常状態
 class StateNormal : public IPlayerState {
@@ -26,7 +27,7 @@ public:
     void Update(Player* player) override;
     void Finalize(Player* player) override;
     void HandleInput(Player* player, ICommand* command) override;
-
+    const char* GetName() const override { return "Normal"; } // StateNormalの場合
 
 private:
     std::unique_ptr<IPlayerAction> moveAction_;
@@ -49,7 +50,7 @@ public:
     void Update(Player* player) override;
     void Finalize(Player* player) override;
     void HandleInput(Player* player, ICommand* command) override;
-
+    const char* GetName() const override { return "RideOn"; } // StateNormalの場合
 private:
     std::unique_ptr<IPlayerAction> moveAction_;
     std::unique_ptr<IPlayerAction> attackAction_;

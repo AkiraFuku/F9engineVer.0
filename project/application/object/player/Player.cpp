@@ -6,7 +6,7 @@
 #include "InputHandler.h"
 #include "imgui.h"
 #include "PlayerState.h"
-
+#include "BehaviaState.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -19,12 +19,14 @@ void Player::Initialize()
     // object_->SetCamera(activeCamera_);
     railMover_ = std::make_unique<RailMover>();
     ChangeState(std::make_unique<StateNormal>());
+    ChangeBehavior(std::make_unique<BehaviorRoot>());
 }
 
 void Player::Update()
 {
     HandleInput();
-
+    if (baseState_) baseState_->Update(this);
+    if (behavior_) behavior_->Update(this);
     // 1. 重力の計算 (Y軸のみ独立して計算)
     if (!isGrounded_) {
         velocity_.y += kGravity;
@@ -68,6 +70,23 @@ void Player::Draw()
     Vector3 pos = object_->GetTranslate();
     ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 
+    ImGui::Separator(); // 区切り線
+    ImGui::Text("--- Player States ---");
+
+    // 搭乗ステートの表示
+    if (baseState_) {
+        ImGui::Text("Base State: %s", baseState_->GetName());
+    } else {
+        ImGui::Text("Base State: None");
+    }
+
+    // ビヘイビア（アクション）ステートの表示
+    if (behavior_) {
+        ImGui::Text("Behavior: %s", behavior_->GetName());
+    } else {
+        ImGui::Text("Behavior: None");
+    }
+
 
     ImGui::End();
 #endif // USE_IMGUI
@@ -98,18 +117,20 @@ void Player::Attack() {
 }
 void Player::HandleInput()
 {
-    // 1. 入力を受け取りコマンドを取得
     auto commands = inputHandler_->HandleInput();
-
     for (auto& command : commands) {
-        if (rideOnState_) {
-            // 現在の状態にコマンドを渡す
-            rideOnState_->HandleInput(this, command.get());
+        // 第一段階：搭乗ステートへ
+        if (baseState_) {
+            baseState_->HandleInput(this, command.get());
         }
     }
 }
 void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
-    if (rideOnState_) rideOnState_->Finalize(this);
-    rideOnState_ = std::move(newState);
-    rideOnState_->Initialize(this);
+    if (baseState_) baseState_->Finalize(this);
+    baseState_ = std::move(newState);
+    baseState_->Initialize(this);
+}
+void Player::ChangeBehavior(std::unique_ptr<IBehaviorState> newBehavior) {
+    behavior_ = std::move(newBehavior);
+    behavior_->Initialize(this);
 }
