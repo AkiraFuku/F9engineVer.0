@@ -1,0 +1,62 @@
+#pragma once
+#include <memory>
+#include <vector>
+class Player;
+class ICommand;
+// --- 行動ビヘイビア (Action) ---
+// 物理計算や移動ロジックを担当
+class IPlayerAction;
+
+// --- 状態ビヘイビア (State) ---
+// どの行動を組み合わせて使うか、どの状態へ遷移するかを担当
+class IPlayerState {
+public:
+    virtual ~IPlayerState() = default;
+    virtual void Initialize(Player* player) = 0;
+    virtual void Update(Player* player) = 0;
+    virtual void Finalize(Player* player) = 0;
+    virtual void HandleInput(Player* player, ICommand* command) = 0;
+    virtual const char* GetName() const = 0; // 追加
+};
+//通常状態
+class StateNormal : public IPlayerState {
+public:
+    StateNormal();
+    ~StateNormal();
+    void Initialize(Player* player) override;
+    void Update(Player* player) override;
+    void Finalize(Player* player) override;
+    void HandleInput(Player* player, ICommand* command) override;
+    const char* GetName() const override { return "Normal"; } // StateNormalの場合
+
+private:
+    std::unique_ptr<IPlayerAction> moveAction_=nullptr;
+    std::unique_ptr<IPlayerAction> attackAction_=nullptr;
+    std::unique_ptr<IPlayerAction> jumpAction_=nullptr;
+};
+
+//搭乗状態
+class IStateRideOn : public IPlayerState {
+public:
+    // コンストラクタでアクションを注入できるようにする
+    IStateRideOn(std::unique_ptr<IPlayerAction> move, 
+                    std::unique_ptr<IPlayerAction> attack);
+      
+
+    virtual ~IStateRideOn() = default;
+
+    // 共通の入力処理：基本的には現在の Behavior に任せる
+    void HandleInput(Player* player, ICommand* command) override;
+
+    // ここで共通のアクション実行メソッドを持っておくと便利
+    void DoMove(Player* player);
+    //ロボットを射出して通常状態に戻る
+    void DoShoot(Player* player);
+
+protected:
+    std::unique_ptr<IPlayerAction> moveAction_=nullptr;
+    std::unique_ptr<IPlayerAction> attackAction_=nullptr;
+    std::unique_ptr<IPlayerAction> jumpAction_=nullptr;
+    std::unique_ptr<IPlayerAction> shootAction_=nullptr;
+
+};

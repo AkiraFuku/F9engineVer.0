@@ -5,7 +5,8 @@
 #include "RailPath.h"
 #include "InputHandler.h"
 #include "imgui.h"
-
+#include "PlayerState.h"
+#include "BehaviaState.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -17,12 +18,15 @@ void Player::Initialize()
     object_->SetModel("Sphere");
     // object_->SetCamera(activeCamera_);
     railMover_ = std::make_unique<RailMover>();
+    ChangeState(std::make_unique<StateNormal>());
+    ChangeBehavior(std::make_unique<BehaviorRoot>());
 }
 
-void Player::Uppdate()
+void Player::Update()
 {
-   HandleInput();
-
+    HandleInput();
+    if (baseState_) baseState_->Update(this);
+    if (behavior_) behavior_->Update(this);
     // 1. 重力の計算 (Y軸のみ独立して計算)
     if (!isGrounded_) {
         velocity_.y += kGravity;
@@ -57,14 +61,31 @@ void Player::Draw()
 {
     object_->Draw();
 
-    
+
 #ifdef USE_IMGUI
     ImGui::Begin("Debug/Player");
     // ここにプレイヤーのデバッグ情報を表示
     //レールの進捗を表示
-        ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
-        Vector3 pos = object_->GetTranslate();
-        ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
+    Vector3 pos = object_->GetTranslate();
+    ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+
+    ImGui::Separator(); // 区切り線
+    ImGui::Text("--- Player States ---");
+
+    // 搭乗ステートの表示
+    if (baseState_) {
+        ImGui::Text("Base State: %s", baseState_->GetName());
+    } else {
+        ImGui::Text("Base State: None");
+    }
+
+    // ビヘイビア（アクション）ステートの表示
+    if (behavior_) {
+        ImGui::Text("Behavior: %s", behavior_->GetName());
+    } else {
+        ImGui::Text("Behavior: None");
+    }
 
 
     ImGui::End();
@@ -74,7 +95,7 @@ void Player::SetRail(RailPath* rail)
 {
 
 
-    if (!rail||!railMover_)
+    if (!rail || !railMover_)
     {
         return;
     }
@@ -92,7 +113,7 @@ void Player::Jump()
         isGrounded_ = false;
     }
 }
-void Player::Attack(){
+void Player::Attack() {
 }
 float Player::GetRailProgress() const
 {
@@ -102,11 +123,20 @@ float Player::GetRailProgress() const
 }
 void Player::HandleInput()
 {
-    // 1. 入力を受け取りコマンドを取得
     auto commands = inputHandler_->HandleInput();
-    
-    // 2. 全てのコマンドを実行
     for (auto& command : commands) {
-        command->Execute(*this);
+        // 第一段階：搭乗ステートへ
+        if (baseState_) {
+            baseState_->HandleInput(this, command.get());
+        }
     }
+}
+void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
+    if (baseState_) baseState_->Finalize(this);
+    baseState_ = std::move(newState);
+    baseState_->Initialize(this);
+}
+void Player::ChangeBehavior(std::unique_ptr<IBehaviorState> newBehavior) {
+    behavior_ = std::move(newBehavior);
+    behavior_->Initialize(this);
 }

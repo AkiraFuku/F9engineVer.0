@@ -197,7 +197,7 @@ void GameScene::Update() {
 
     stageRail->Update();
 
-    player->Uppdate();
+    player->Update();
 
 
      skyBox->SetTranslate(activeCamera_->GetTranslate()); 
