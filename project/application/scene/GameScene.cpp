@@ -32,10 +32,6 @@ void GameScene::Initialize() {
 
     // 3. 最初はメインカメラをセット
     ChangeActiveCamera(cameraMap_["Debug"].get());
-    /*   Object3dCommon::GetInstance()->SetDefaultCamera(activeCamera_);
-     ParticleManager::GetInstance()->Setcamera(activeCamera_);
-     PrimitiveDrawer::GetInstance()->SetCamera(activeCamera_);*/
-
 
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
@@ -95,14 +91,25 @@ void GameScene::Initialize() {
 
 
     cameraController = std::make_unique<CameraController>();
-    cameraController->Initialize(activeCamera_);
+    cameraController->Initialize(cameraMap_["Main"].get());
     cameraController->SetTarget(player.get());
+    cameraRail = std::make_unique<RailPath>();
+
+    cameraRail->AddPoint({ 0.0f, 0.0f, -5.0f });
+    cameraRail->AddPoint({ 25.0f, 5.0f, -5.0f });
+    cameraRail->AddPoint({ 50.0f, 0.0f, -5.0f });
+
+    cameraController->SetRailPath(cameraRail.get());
+
+    debugCameraC = std::make_unique<CameraController>();
+    debugCameraC->Initialize(cameraMap_["Debug"].get());
+    debugCameraC->SetTarget(player.get());
 
 
     stageRail = std::make_unique<RailPath>();
     stageRail->AddPointCR({ 0.0f,0.0f,0.0f });
 
-    stageRail->AddPoint({ 0.0f, 0.0f, 50.0f });
+    stageRail->AddPoint({ 25.0f, 0.0f, 2.5f });
     stageRail->AddPoint({ 50.0f, 0.0f, 0.0f });
     player->SetRail(stageRail.get());
 
@@ -110,6 +117,8 @@ void GameScene::Initialize() {
     enemy->Initialize();
     enemy->SetPosition({ 0.0f, 0.0f, 0.0f });
     enemy->SetRail(stageRail.get());
+
+
 
 
 
@@ -187,13 +196,13 @@ void GameScene::Update() {
     }
 
     cameraController->Update();
-
+    debugCameraC->Update();
 
     activeCamera_->Update();
 
     stageRail->Update();
 
-    player->Uppdate();
+    player->Update();
 
     enemy->Update();
 
@@ -219,14 +228,26 @@ void GameScene::Update() {
     // camera->SetRotate(Rotate);
 
 
-    Vector3 point1_ = stageRail->GetControlPointIn(1);
-    Vector3 point2_ = stageRail->GetControlPointOut(1);
+    Vector3 point1_ = stageRail->GetPointPos(1);
+    Vector3 point2_ = stageRail->GetPointPos(2);
 
-    ImGui::SliderFloat3("Point1", &(point1_.x), 0.1f, 1000.0f);
-    ImGui::SliderFloat3("Point2", &(point2_.x), 0.1f, 1000.0f);
+    ImGui::SliderFloat3("Point1", &(point1_.x), -10.0f, 10.0f);
+    ImGui::SliderFloat3("Point2", &(point2_.x),-10.0f, 1000.0f);
 
-    stageRail->SetControlPointIn(1, point1_);
-    stageRail->SetControlPointOut(1, point2_);
+    stageRail->SetPointPos(1, point1_);
+    stageRail->SetPointPos(2, point2_);
+
+    //カメラを切り替えるボタン
+    if (ImGui::Button("Switch Camera")) {
+        isDebugCamera_ = !isDebugCamera_;
+        if (isDebugCamera_) {
+            ChangeActiveCamera(cameraMap_["Debug"].get());
+            PrimitiveDrawer::GetInstance()->SetCamera(cameraMap_["Debug"].get());
+        } else {
+            ChangeActiveCamera(cameraMap_["Main"].get());
+        }
+    }
+
 
 
     ImGui::End();
@@ -245,12 +266,14 @@ void GameScene::Draw() {
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->Draw();
 
-    Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
+    Sphere sphere = { cameraMap_["Main"].get()->GetTranslate(),1.0f };
     sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
-/*
-    PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });*/
+    
+
+      //  PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
+    //    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });*/
     stageRail->DebugDraw();
+    cameraRail->DebugDraw();
     player->Draw();
     enemy->Draw();
 

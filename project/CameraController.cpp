@@ -6,92 +6,48 @@
 #include "Camera.h"
 #include "transform.h"
 #include <iostream>
-
+#include "RailMover.h"
+#include "RailPath.h"
 using namespace std;
+CameraController::CameraController() = default;
+CameraController::~CameraController() = default;
 void CameraController::Initialize(Camera* camera) {
     camera_ = camera;
+    railMover_ = std::make_unique<RailMover>();
+
 }
 
 void CameraController::Update() {
     const EulerTransform& targetWorldTransform = target_->GetTransform();
 
-/*    if (isClearPhase_) {
-        // --- クリアフェーズ：プレイヤーを中央に捉えてズーム ---
 
-        // 1. 目標地点は「プレイヤーの座標 + クリア用オフセット」
-        // 先読み（velocity）は入れないことで中央に固定する
-        desetination_ = targetWorldTransform.translate + clearOffset_;
-
-        // 2. 線形補間(Lerp)で滑らかに移動させる
-        // 0.1f は追従速度。お好みで調整してください
-
-
-        camera_->SetTranslate(Lerp(camera_->GetTranslate(), desetination_, 0.1f));
-    } else {
+    // カメラをターゲット進行度に合わせて移動
+    // 
+    //camera_->SetTranslate(targetWorldTransform.translate + targetOffset_);
 
 
 
-        desetination_ = targetWorldTransform.translate + targetOffset_ + target_->GetVelocity() * kVelocityBias;
-        camera_->SetTranslate(Lerp(camera_->GetTranslate(), desetination_, 0.1f)); // 緩やかに追従するように補間
-        if (shakeTimer_ > 0.0f) {
-            // 【変更点】乱数(rand)ではなく、sin波を使ってゆっくり揺らす
-            // 係数(20.0fなど)を小さくすると、もっとゆっくりになります
-            float frequency = 5.5f; // 揺れの速さ（周波数）
-
-            // 時間経過で滑らかに変化する値を作成
-            float offsetX = std::sin(shakeTimer_ * frequency) * shakePower_;
-            float offsetY = std::cos(shakeTimer_ * frequency) * shakePower_;
-
-            // カメラ座標に加算
-            camera_->SetTranslate(camera_->GetTranslate() + Vector3(offsetX, offsetY, 0.0f));
-
-
-            // タイマーを減らす
-            shakeTimer_ -= 1.0f / 60.0f; // 120.0fだと減りが遅いので、60fps基準なら60.0fが自然です
-        }
-
-        //Move move={{desetination_.x+targetMargin_.left,desetination_.y+targetMargin_.bottom},{desetination_.x+targetMargin_.right,desetination_.y+targetMargin_.top}};
-
-        camera_->SetTranslate(Vector3(
-            max(camera_->GetTranslate().x, desetination_.x + targetMargin_.left),
-            max(camera_->GetTranslate().y, desetination_.y + targetMargin_.bottom),
-            camera_->GetTranslate().z
-        ));
-        camera_->SetTranslate(Vector3(
-            min(camera_->GetTranslate().x, desetination_.x + targetMargin_.right),
-            min(camera_->GetTranslate().y, desetination_.y + targetMargin_.top),
-            camera_->GetTranslate().z
-        ));
-        camera_->SetTranslate(Vector3(
-            camera_->GetTranslate().x,
-            min(camera_->GetTranslate().y, desetination_.y + targetMargin_.top),
-            camera_->GetTranslate().z
-        ));
-
-        //	camera_->translation_.x =clamp(camera_->translation_.x,moveArea_.right, moveArea_.left);
-        //	camera_->translation_.y =clamp(camera_->translation_.y,moveArea_.bottom, moveArea_.top);
-            // 修正: std::max と std::min を使用するために std:: を明示的に指定  
-        camera_->SetTranslate(Vector3(
-            max(camera_->GetTranslate().x, moveArea_.left),
-            max(camera_->GetTranslate().y, moveArea_.top),
-            camera_->GetTranslate().z
-        )); 
-        camera_->SetTranslate(Vector3(
-            min(camera_->GetTranslate().x, moveArea_.right),
-            min(camera_->GetTranslate().y, moveArea_.bottom),
-            camera_->GetTranslate().z
-        ));
-        camera_->SetTranslate(Vector3(
-            camera_->GetTranslate().x,
-            max(camera_->GetTranslate().y, moveArea_.top),
-            camera_->GetTranslate().z
-        ));
-    }*/
-
+    RailCamera();
 
     RotateCamera();
 
     camera_->Update();
+}
+
+void CameraController::SetRailPath(const RailPath* path)
+{
+    if (railMover_) {
+        railMover_->SetPath(path);
+    }
+}
+
+void CameraController::SetRailProgress(float progress)
+{
+    if (railMover_)
+    {
+        railMover_->BindProgress(&progress);
+
+    }
 }
 
 void CameraController::Reset() {
@@ -108,9 +64,10 @@ void CameraController::RequestShake(float duration, float power) {
 }
 
 void CameraController::RotateCamera() {
-  Vector3 targetPos = target_->GetTransform().translate;
+    if (!target_)return;
+    Vector3 targetPos = target_->GetTransform().translate;
     Vector3 cameraPos = camera_->GetTranslate();
-    
+
     // 方向ベクトル (Vector3 の引き算)
     Vector3 direction = {
         targetPos.x - cameraPos.x,
@@ -128,4 +85,16 @@ void CameraController::RotateCamera() {
 
     // 3. カメラに回転を適用
     camera_->SetRotate({ angleX, angleY, 0.0f });
+}
+
+void CameraController::RailCamera()
+{
+    if (railMover_->isRailSet() && target_)
+    {
+        float progress = target_->GetRailProgress();    
+        railMover_->Advance(progress - railMover_->GetProgress());
+        Vector3 railPos = railMover_->GetCurrentPosition();
+        Vector3 desiredPos = Add(railPos, targetOffset_);
+        camera_->SetTranslate(desiredPos);
+    }
 }

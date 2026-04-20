@@ -29,10 +29,12 @@ private:
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
     std::unique_ptr<RailPath> stageRail;
+    std::unique_ptr<RailPath> cameraRail;
 
     std::unique_ptr<CameraController> cameraController; 
     std::unique_ptr<Enemy> enemy; 
     std::unique_ptr<SkyBox> skyBox;
+    std::unique_ptr<CameraController> debugCameraC; 
 
     bool isDebugCamera_ = false;
 
