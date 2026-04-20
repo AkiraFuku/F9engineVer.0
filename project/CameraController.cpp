@@ -87,13 +87,19 @@ void CameraController::RotateCamera() {
     camera_->SetRotate({ angleX, angleY, 0.0f });
 }
 
+// CameraController.cpp の RailCamera メソッド内
 void CameraController::RailCamera()
 {
     if (railMover_->isRailSet() && target_)
     {
         float progress = target_->GetRailProgress();    
+        // プレイヤーの進捗に合わせる
         railMover_->Advance(progress - railMover_->GetProgress());
+        
+        // ここで取得される railPos は RailPath に設定された Vector3(x, y, z) です
         Vector3 railPos = railMover_->GetCurrentPosition();
+        
+        // カメラはレールのY座標も保持したまま、オフセットを加算して配置される
         Vector3 desiredPos = Add(railPos, targetOffset_);
         camera_->SetTranslate(desiredPos);
     }

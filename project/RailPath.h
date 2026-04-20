@@ -23,13 +23,16 @@ public:
 
     void Initialize() {
         points_.clear();
+
     }
     void AddPoint(const Vector3& pos) {
         points_.push_back({ pos,  InterpolationType::Linear, {0,0,0}, {0,0,0} });
+        CalculatePathLength();
     }
     void AddPointCR(const Vector3& pos) {
         // control点は使わないのでゼロ初期化
         points_.push_back({ pos,  InterpolationType::CatmullRom, {0,0,0}, {0,0,0} });
+        CalculatePathLength();
     }
 
 
@@ -107,7 +110,16 @@ public:
     }
 
     void DebugDraw();
+    Vector3 GetPositionByDistance(float distance);
+
+    struct PathData {
+        float distance;      // 始点からの累積距離
+        float segmentLength; // このセグメント自体の長さ
+    };
 
 private:
+    void CalculatePathLength();
+    std::vector<PathData> pathData_;
+    float totalLength_ = 0.0f;
     std::vector<RailPoint> points_;
 };

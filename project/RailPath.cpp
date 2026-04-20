@@ -177,3 +177,23 @@ void RailPath::DebugDraw()
 
 
 }
+
+Vector3 RailPath::GetPositionByDistance(float distance)
+{
+   // 1. どのセグメントにいるか探す (二分探索などが効率的)
+    // 2. そのセグメント内での進捗率 (0.0~1.0) を再計算する
+    // float localT = (distance - 前の累積距離) / セグメントの長さ;
+    // 3. その localT を使って Catmull-Rom 等で座標計算
+}
+
+void RailPath::CalculatePathLength() {
+    totalLength_ = 0.0f;
+    pathData_.clear();
+    
+    for (size_t i = 0; i < points_.size() - 1; ++i) {
+        // 本来は曲線を細分化して長さを合計するのが理想
+        float len = Length(Subtract(points_[i+1].position, points_[i].position));
+        totalLength_ += len;
+        pathData_.push_back({totalLength_, len});
+    }
+}

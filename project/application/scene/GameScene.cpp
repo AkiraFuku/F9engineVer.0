@@ -30,7 +30,7 @@ void GameScene::Initialize() {
     cameraMap_["Debug"] = std::move(debugCamera);
 
     // 3. 最初はメインカメラをセット
-    ChangeActiveCamera(cameraMap_["Debug"].get());
+    ChangeActiveCamera(cameraMap_["Main"].get());
 
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
@@ -95,7 +95,7 @@ void GameScene::Initialize() {
     cameraRail = std::make_unique<RailPath>();
 
     cameraRail->AddPoint({ 0.0f, 0.0f, -5.0f });
-    cameraRail->AddPoint({ 25.0f, 5.0f, -5.0f });
+    cameraRail->AddPoint({ 25.0f, 7.5f, -5.0f });
     cameraRail->AddPoint({ 50.0f, 0.0f, -5.0f });
 
     cameraController->SetRailPath(cameraRail.get());
@@ -111,11 +111,6 @@ void GameScene::Initialize() {
     stageRail->AddPoint({ 25.0f, 0.0f, 2.5f });
     stageRail->AddPoint({ 50.0f, 0.0f, 0.0f });
     player->SetRail(stageRail.get());
-
-
-
-
-
 
 }
 void GameScene::Finalize() {
