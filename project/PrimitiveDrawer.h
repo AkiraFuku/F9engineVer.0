@@ -70,10 +70,11 @@ private:
     Camera* camera_ = nullptr;
 
     // トポロジの種類
-    enum class TopologyType {
+    enum class PrimtiveType {
         kLine,
         kTriangle,
         kPoint,
+        kSpher,
         kCount // 種類の総数
     };
 
@@ -89,6 +90,6 @@ private:
     };
     
     // トポロジごとのバッチ管理
-    std::map<TopologyType, PrimitiveBatch> batches_;
+    std::map<PrimtiveType, PrimitiveBatch> batches_;
 
 };

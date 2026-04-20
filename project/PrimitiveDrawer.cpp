@@ -112,7 +112,7 @@ void PrimitiveDrawer::WVPResourceCreate()
 
 void PrimitiveDrawer::Initialize() {
     AddPSO();
-    auto CreateBatch = [&](TopologyType type, D3D_PRIMITIVE_TOPOLOGY d3dTop, Toporogy psoTop) {
+    auto CreateBatch = [&](PrimtiveType type, D3D_PRIMITIVE_TOPOLOGY d3dTop, Toporogy psoTop) {
         PrimitiveBatch batch;
         batch.d3dTopology = d3dTop;
         batch.psoTopology = psoTop;
@@ -127,13 +127,14 @@ void PrimitiveDrawer::Initialize() {
 
         //batch.vertices.reserve(kMaxVertices);
 
-        batch.fillMode = FillMode::kSolid;
+        batch.fillMode = FillMode::kWireFrame;
         batch.blendMode = BlendMode::Normal;
         batches_[type] = std::move(batch);
         };
 
-    CreateBatch(TopologyType::kLine, D3D_PRIMITIVE_TOPOLOGY_LINELIST, Toporogy::LineList);
-    CreateBatch(TopologyType::kTriangle, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
+    CreateBatch(PrimtiveType::kLine, D3D_PRIMITIVE_TOPOLOGY_LINELIST, Toporogy::LineList);
+    CreateBatch(PrimtiveType::kTriangle, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
+    CreateBatch(PrimtiveType::kSpher, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
     // 必要に応じて PointList 等を追加
     WVPResourceCreate();
 }
@@ -177,7 +178,7 @@ void PrimitiveDrawer::Draw() {
     }
 }
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
-    auto& batch = batches_[TopologyType::kLine];
+    auto& batch = batches_[PrimtiveType::kLine];
     if (batch.vertices.size() + 2 > kMaxVertices) return;
 
     batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
@@ -187,7 +188,7 @@ void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vecto
 
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
-    auto& batch = batches_[TopologyType::kTriangle];
+    auto& batch = batches_[PrimtiveType::kTriangle];
     if (batch.vertices.size() + 3 > kMaxVertices) return;
     batch.fillMode = fillMode;
     batch.blendMode = blendMode;
@@ -201,46 +202,54 @@ void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const V
 // PrimitiveDrawer.cpp に実装を追加
 
 void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
+    auto& batch = batches_[PrimtiveType::kSpher];
+
+    // 分割数（精度）の設定
     const uint32_t kSubdivision = 16;
+    // 1つの球に必要な頂点数：分割数 * 分割数 * 6 (2トライアングル)
+    if (batch.vertices.size() + (kSubdivision * kSubdivision * 6) > kMaxVertices) return;
+
     const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
     const float kLatEvery = PI / static_cast<float>(kSubdivision);
-    // Quaternion normRotate = Normalize(sphere.rotate);
+
+    Quaternion normRotate = Normalize(sphere.rotate);
+
     for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-        float lat = -PI / 2.0f + kLatEvery * latIndex;
+        // 現在の緯度と次の緯度 (-PI/2 ～ PI/2)
+        float lat0 = -PI / 2.0f + kLatEvery * latIndex;
+        float lat1 = -PI / 2.0f + kLatEvery * (latIndex + 1);
+
         for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-            float lon = lonIndex * kLonEvery;
+            // 現在の経度と次の経度 (0 ～ 2PI)
+            float lon0 = lonIndex * kLonEvery;
+            float lon1 = (lonIndex + 1) * kLonEvery;
 
-            // 1. ローカル座標（中心を0とした球状の点）を計算
-            Vector3 localA = {
-                sphere.radius * cosf(lat) * cosf(lon),
-                sphere.radius * sinf(lat),
-                sphere.radius * cosf(lat) * sinf(lon)
-            };
-            Vector3 localB = {
-                sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
-                sphere.radius * sinf(lat + kLatEvery),
-                sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
-            };
-            Vector3 localC = {
-                sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
-                sphere.radius * sinf(lat),
-                sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
-            };
+            // 四角形の4頂点を計算 (A, B, C, D)
+            auto GetPos = [&](float lat, float lon) {
+                Vector3 local = {
+                    sphere.radius * cosf(lat) * cosf(lon),
+                    sphere.radius * sinf(lat),
+                    sphere.radius * cosf(lat) * sinf(lon)
+                };
+                // 回転と平行移動
+                Vector3 rotated = RotateVector(local, normRotate);
+                return Add(rotated, sphere.center);
+                };
 
-            Quaternion normRotate = Normalize(sphere.rotate);
-            // 2. クォータニオンで回転を適用
-            // RotateVector関数（Vector3をQuaternionで回転させる関数）があると便利です
-            Vector3 rotatedA = RotateVector(localA, normRotate);
-            Vector3 rotatedB = RotateVector(localB, normRotate);
-            Vector3 rotatedC = RotateVector(localC, normRotate);
+            Vector3 v0 = GetPos(lat0, lon0); // 左下
+            Vector3 v1 = GetPos(lat1, lon0); // 左上
+            Vector3 v2 = GetPos(lat0, lon1); // 右下
+            Vector3 v3 = GetPos(lat1, lon1); // 右上
 
-            // 3. 中心座標を足してワールド座標へ
-            Vector3 worldA = Add(rotatedA, sphere.center);
-            Vector3 worldB = Add(rotatedB, sphere.center);
-            Vector3 worldC = Add(rotatedC, sphere.center);
+            // 三角形1 (左下、左上、右下)
+            batch.vertices.push_back({ {v0.x, v0.y, v0.z, 1.0f}, color });
+            batch.vertices.push_back({ {v1.x, v1.y, v1.z, 1.0f}, color });
+            batch.vertices.push_back({ {v2.x, v2.y, v2.z, 1.0f}, color });
 
-            DrawLine(worldA, worldB, color);
-            DrawLine(worldA, worldC, color);
+            // 三角形2 (左上、右上、右下)
+            batch.vertices.push_back({ {v1.x, v1.y, v1.z, 1.0f}, color });
+            batch.vertices.push_back({ {v3.x, v3.y, v3.z, 1.0f}, color });
+            batch.vertices.push_back({ {v2.x, v2.y, v2.z, 1.0f}, color });
         }
     }
 }
