@@ -255,19 +255,19 @@ void GameScene::Update() {
 void GameScene::Draw() {
 
     skyBox->Draw();
-    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
+/*    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->Draw();
+    PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });*/
+   // PrimitiveDrawer::GetInstance()->Draw();
 
     Sphere sphere = { 0.0f,0.0f,0.0f,1.0f };
     sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
 
 
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},1.0f }, { 1.0f,0.0f,0.0f,1.0f });
-    stageRail->DebugDraw();
-    cameraRail->DebugDraw();
+    PrimitiveDrawer::GetInstance()->DrawSphere({ {2.0f,0.0f,0.0f},1.0f ,rotation_}, { 1.0f,0.0f,0.0f,1.0f });
+/*    stageRail->DebugDraw();
+    cameraRail->DebugDraw();*/
     player->Draw();
 
     ParticleManager::GetInstance()->Draw();

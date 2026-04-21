@@ -2,6 +2,7 @@
 #include <cassert>
 #include <memory>
 #include "LightManager.h"
+#include "PrimitiveDrawer.h"
 
 // 静的メンバ変数の実体
 std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
@@ -52,7 +53,7 @@ void SceneManager::Update() {
 void SceneManager::Draw() {
     if (scene_) {
         scene_->Draw();
-        // PrimitiveDrawer::GetInstance()->ExecuteDraw(); // シーンの描画後にプリミティブ描画を実行   
+         PrimitiveDrawer::GetInstance()->Draw(); // シーンの描画後にプリミティブ描画を実行   
     }
 }
 
