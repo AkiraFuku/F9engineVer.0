@@ -116,27 +116,27 @@ Vector3 operator/=(Vector3& v, float scalar)
 }
 	
 
-	Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farCrip){
+	Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip){
 		float cot = 1.0f / std::tan(fovY / 2.0f);
 		return Matrix4x4(
 			{
 				{{cot / aspectRatio,0.0f,0.0f,0.0f},
 				{0.0f,cot,0.0f,0.0f},
-				{0.0f,0.0f,farCrip  / (farCrip- nearClip),1.0f},
-				{0.0f,0.0f,( -nearClip*farCrip) / (farCrip- nearClip), 0.0f}}
+				{0.0f,0.0f,farClip  / (farClip- nearClip),1.0f},
+				{0.0f,0.0f,( -nearClip*farClip) / (farClip- nearClip), 0.0f}}
 			
 			}
 		
 		);
 	}
 
-	Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farCrip){
+	Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip){
 		return Matrix4x4(
 			{
 				{2.0f / (right - left), 0.0f, 0.0f, 0.0f},
 				{0.0f, 2.0f / (top - bottom), 0.0f, 0.0f},
-				{0.0f, 0.0f, 1.0f / (farCrip - nearClip), 0.0f},
-				{(right + left) / (left-right), (top + bottom) / ( bottom-top),  nearClip / ( nearClip-farCrip), 1.0f}
+				{0.0f, 0.0f, 1.0f / (farClip - nearClip), 0.0f},
+				{(right + left) / (left-right), (top + bottom) / ( bottom-top),  nearClip / ( nearClip-farClip), 1.0f}
 			
 			}
 		
@@ -158,23 +158,23 @@ Vector3 operator/=(Vector3& v, float scalar)
 		);
 	}
 
-	Matrix4x4 MakeAfineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& traslate)
+	Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
 	{
 		Matrix4x4 scaleMatrix=MakeScaleMatrix(scale);
 		Matrix4x4 rotateMatrix=Multiply(MakeRotateXMatrix( rotate.x),Multiply(MakeRotateYMatrix( rotate.y),MakeRotateZMatrix( rotate.z)));
-		Matrix4x4 traslateMatrix=MakeTranslateMatrix(traslate);
+		Matrix4x4 translateMatrix=MakeTranslateMatrix(translate);
 
-	    Matrix4x4 result=Multiply(Multiply(scaleMatrix,rotateMatrix),traslateMatrix);
+	    Matrix4x4 result=Multiply(Multiply(scaleMatrix,rotateMatrix),translateMatrix);
 		return result ;
 	}
 
-    Matrix4x4 MakeAfineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& traslate)
+    Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate)
     {
        Matrix4x4 scaleMatrix=MakeScaleMatrix(scale);
        Matrix4x4 rotateMatrix = MakeRotateMatrix(rotate);
-		Matrix4x4 traslateMatrix=MakeTranslateMatrix(traslate);
+		Matrix4x4 translateMatrix=MakeTranslateMatrix(translate);
 
-	    Matrix4x4 result=Multiply(Multiply(scaleMatrix,rotateMatrix),traslateMatrix);
+	    Matrix4x4 result=Multiply(Multiply(scaleMatrix,rotateMatrix),translateMatrix);
 		return result ;
     }
 
@@ -184,16 +184,16 @@ Vector3 operator/=(Vector3& v, float scalar)
 	/// <summary>
 /// 
 /// </summary>
-/// <param name="traslate"></param>
+/// <param name="translate"></param>
 /// <returns></returns>
-Matrix4x4 MakeTranslateMatrix(const Vector3& traslate){
+Matrix4x4 MakeTranslateMatrix(const Vector3& translate){
 	return Matrix4x4(
 		{
 			{
 				{1.0f,0.0f,0.0f,0.0f},
 				{0.0f,1.0f,0.0f,0.0f},
 				{0.0f,0.0f,1.0f,0.0f},
-				{traslate.x,traslate.y,traslate.z,1.0f}
+				{translate.x,translate.y,translate.z,1.0f}
 			}
 		}
 	);
@@ -470,7 +470,7 @@ Matrix4x4 MakeRotateZMatrix(float radian)
 		}
 		);
 	}
-	Matrix4x4 Makeidetity4x4(){
+	Matrix4x4 Makeidentity4x4(){
 		return Matrix4x4(
 			{
 				{1,0,0,0},
@@ -542,7 +542,7 @@ Matrix4x4 MakeRotateZMatrix(float radian)
 
     Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m)
     {
-        Vector3 ret{
+        Vector3 ret={
            ret.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0],
            ret.y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1],
            ret.z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]

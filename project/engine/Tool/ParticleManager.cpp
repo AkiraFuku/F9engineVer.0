@@ -263,7 +263,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     );
     newParticle.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newParticle.instancingData));
     for (uint32_t i = 0; i < newParticle.kNumInstance; ++i) {
-        newParticle.instancingData[i].WVP = Makeidetity4x4(); // 単位行列などで埋める
+        newParticle.instancingData[i].WVP = Makeidentity4x4(); // 単位行列などで埋める
         newParticle.instancingData[i].color = { 1.0f, 1.0f, 1.0f, 0.0f };
     }
 }
@@ -356,5 +356,5 @@ void ParticleManager::CreateMaterialBuffer()
         Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
     materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData_->enableLighting = false;
-    materialData_->uvTransform = Makeidetity4x4();
+    materialData_->uvTransform = Makeidentity4x4();
 }

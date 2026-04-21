@@ -36,15 +36,15 @@ void Sprite::Initialize(std::string textureFilePath) {
     //データの設定
     materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData_->enableLighting = false;
-    materialData_->uvTransform = Makeidetity4x4();
+    materialData_->uvTransform = Makeidentity4x4();
     //座標変換
     transformationMatrixResourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(TransformationMatrix));
     transformationMatrixResourse_.Get()->
         Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
-    transformationMatrixData_->WVP = Makeidetity4x4();
-    transformationMatrixData_->World = Makeidetity4x4();
+    transformationMatrixData_->WVP = Makeidentity4x4();
+    transformationMatrixData_->World = Makeidentity4x4();
 
     textureFilePath_ = textureFilePath;
     //テクスチャの読み込み
@@ -106,8 +106,8 @@ void Sprite::Update() {
 
     EulerTransform transform{ {size_.x,size_.y,1.0f},{0.0f,0.0f,rotation_},{position_.x,position_.y,0.0f} };
 
-    Matrix4x4 worldMatrix = MakeAfineMatrix(transform.scale, transform.rotate, transform.translate);
-    Matrix4x4 viewMatrix = Makeidetity4x4();
+    Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+    Matrix4x4 viewMatrix = Makeidentity4x4();
     Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(WinApp::kClientWidth), static_cast<float>(WinApp::kClientHeight), 0.0f, 100.0f);
     //スプライトのワールド行列とビュー行列とプロジェクション行列を掛け算
     Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));

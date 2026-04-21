@@ -110,7 +110,7 @@ void Model::CreateMaterialResource() {
 
     materialData_->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
     materialData_->enableLighting = false;
-    materialData_->uvTransform = Makeidetity4x4();
+    materialData_->uvTransform = Makeidentity4x4();
     materialData_->shininess = 50.0f;
     materialData_->specularType = BlinnPhong;
     materialData_->diffuseType = HarfLambert;
@@ -126,7 +126,7 @@ void Model::ApplyAnimation(Node& node, float time)
         Vector3 t = animation_->CalculateValue(anim.translate.keyFrames, time);
         Quaternion r = animation_->CalculateValue(anim.rotate.keyFrames, time);
         Vector3 s = animation_->CalculateValue(anim.scale.keyFrames, time);
-        node.localMatrix = MakeAfineMatrix(s, r, t);
+        node.localMatrix = MakeAffineMatrix(s, r, t);
     }
 
     // 子供のノードにも再帰的に適用

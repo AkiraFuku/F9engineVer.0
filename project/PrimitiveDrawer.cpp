@@ -105,7 +105,7 @@ void PrimitiveDrawer::WVPResourceCreate()
 
     WVPResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 
-    wvpData_->WVP = Makeidetity4x4();
+    wvpData_->WVP = Makeidentity4x4();
 
 
 }
@@ -144,7 +144,7 @@ void PrimitiveDrawer::Draw() {
     if (camera_) {
         wvpData_->WVP = camera_->GetViewProtectionMatrix();
     } else {
-        wvpData_->WVP = Makeidetity4x4();
+        wvpData_->WVP = Makeidentity4x4();
     }
     for (auto& [type, batch] : batches_) {
         if (batch.vertices.empty()) continue;
