@@ -105,9 +105,18 @@ public:
     float GetMaxT() const {
         return points_.empty() ? 0.0f : static_cast<float>(points_.size() - 1);
     }
-
+    float GetTFromDistance(float distance) const;
+    float GetTotalLength() const { return totalLength_; }
+    void BuildDistanceTable();
+    float GetDistanceFromT(float t) const;
     void DebugDraw();
-
 private:
+    // RailPath.h に追加
+struct DistanceMap {
+    float distance; // 始点からの累積距離
+    float t;        // その時の globalT
+};
+std::vector<DistanceMap> distanceTable_;
+float totalLength_ = 0.0f;
     std::vector<RailPoint> points_;
 };

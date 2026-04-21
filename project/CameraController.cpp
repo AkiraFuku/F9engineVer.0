@@ -90,9 +90,12 @@ void CameraController::RotateCamera() {
 void CameraController::RailCamera()
 {
     if (railMover_->isRailSet() && target_)
-    {
-        float progress = target_->GetRailProgress();    
-        railMover_->Advance(progress - railMover_->GetProgress());
+    {// プレイヤーの現在の進捗を直接取得して、カメラのMoverに同期させる
+        float playerProgress = target_->GetRailProgress();
+
+        // カメラ自身の進捗を更新（BindProgressを使わず、直接代入が安全です）
+        // RailMoverに SetProgress 関数を作っておくと良いです
+        railMover_->SetProgress(playerProgress);
         Vector3 railPos = railMover_->GetCurrentPosition();
         Vector3 desiredPos = Add(railPos, targetOffset_);
         camera_->SetTranslate(desiredPos);
