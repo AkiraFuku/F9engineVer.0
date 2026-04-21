@@ -28,6 +28,7 @@ private:
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
     std::unique_ptr<SkyBox> skyBox;
+    std::unique_ptr<ParticleEmitter>emitter_;
 
     
 

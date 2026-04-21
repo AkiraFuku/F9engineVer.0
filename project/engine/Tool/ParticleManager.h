@@ -56,6 +56,7 @@ public:
         Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
         ParticleForGPU* instancingData = nullptr;
         uint32_t kNumInstance;
+        std::string name;
     };
 
 
@@ -74,7 +75,7 @@ public:
     friend struct std::default_delete<ParticleManager>;
   static std::unique_ptr<ParticleManager> instance;
 private:
-
+    Particle MakeParticle( std::mt19937& randomEngine,const Vector3& translate );
     ParticleManager() = default;
     ~ParticleManager() = default;
     ParticleManager(ParticleManager&) = delete;
@@ -101,7 +102,7 @@ private:
     Material* materialData_ = nullptr;
     void CreateVertexBuffer();
     void CreateMaterialBuffer();
-    void CreatePSO();
+  //  void CreatePSO();
 
 
 

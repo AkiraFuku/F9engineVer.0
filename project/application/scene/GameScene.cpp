@@ -5,6 +5,7 @@
 #include "PrimitiveDrawer.h"
 #include "SceneManager.h"
 #include "ParticleManager.h"//フレームワークに移植
+#include "ParicleEmitter.h"
 #include "PSOManager.h"
 #include "LightManager.h"
 
@@ -23,7 +24,9 @@ void GameScene::Initialize() {
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
+       EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+   emitter_ = std::make_unique<ParticleEmitter>("Test", M, 10, 5.0f, 0.0f);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
@@ -76,7 +79,7 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
-
+     emitter_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -184,20 +187,20 @@ void GameScene::Update() {
 void GameScene::Draw() {
 
  skyBox->Draw();
-    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
+/*    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->Draw();
 
     Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
-    sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
+    sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）*/
 
-    PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
+ //   PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
 
    
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     //sprite->Draw();
-    object3d->Draw();
+ //   object3d->Draw();
 }

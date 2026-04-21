@@ -14,8 +14,8 @@ void ParticleManager::Initialize() {
     randomEngine_.seed(seedGen_());
     //パイプラインステート生成
 
-        PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Particle/Particle.vs.hlsl", "main", L"vs_6_0" };
-        PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Particle/Particle.ps.hlsl", "main", L"ps_6_0" };
+    PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Particle/Particle.vs.hlsl", "main", L"vs_6_0" };
+    PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Particle/Particle.ps.hlsl", "main", L"ps_6_0" };
 
 
 
@@ -26,7 +26,7 @@ void ParticleManager::Initialize() {
     config.shaderPaths.push_back(vsPath);
     config.shaderPaths.push_back(psPath);
 
-  
+
 
 
 
@@ -117,7 +117,7 @@ void ParticleManager::Initialize() {
 
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Particle", config);
-    auto psoSet = PSOManager::GetInstance()->GetPso("Particle");
+    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Add);
     graphicsPipelineState_ = psoSet.pipelineState;
     rootSignature_ = psoSet.rootSignature;
 
@@ -130,10 +130,11 @@ void ParticleManager::Initialize() {
     CreateMaterialBuffer();
 }
 ParticleManager* ParticleManager::GetInstance() {
-       if (instance == nullptr) {
+    if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public ParticleManager {
-            Helper() : ParticleManager() {}
+            Helper() : ParticleManager() {
+            }
         };
         instance = std::make_unique<Helper>();
     }
@@ -150,6 +151,8 @@ void ParticleManager::ReleaseParticleGroup(const std::string name)
 {
     particleGroups.erase(name);
 }
+
+
 
 void ParticleManager::Update() {
     Matrix4x4 backFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
@@ -191,7 +194,10 @@ void ParticleManager::Update() {
                 Matrix4x4 worldMatrix = {};
                 /*  if (isBillboard)
                   {*/
+                if (particleGroup.name!="Test")
+                {
                 (*particleIterator).transfom.rotate.z += 1.0f / 60.0f;
+                }
 
 
                 worldMatrix = MakeBillboardMatrix((*particleIterator).transfom.scale, (*particleIterator).transfom.rotate, billboardMatrix, (*particleIterator).transfom.translate);
@@ -240,6 +246,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     assert(!particleGroups.contains(name));
     //
     ParticleGroup& newParticle = particleGroups[name];
+    newParticle.name=name;
     newParticle.materialData.textureFilePath = textureFilepath;
     newParticle.kNumInstance = kMaxNumInstance;
     newParticle.materialData.textureIndex = newParticle.materialData.textureIndex =
@@ -261,7 +268,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     }
 }
 
-void ParticleManager::Emit(const std::string name, const Vector3& postion, uint32_t count)
+void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
 {
     assert(particleGroups.contains(name));
 
@@ -271,21 +278,41 @@ void ParticleManager::Emit(const std::string name, const Vector3& postion, uint3
     for (uint32_t i = 0; i < count; ++i)
     {
         Particle particle;
-        particle.transfom.scale = { 1.0f,1.0f,1.0f };
+        /*particle.transfom.scale = { 1.0f,1.0f,1.0f };
         particle.transfom.rotate = { 0.0f,0.0f,0.0f };
-        Vector3 randamTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
-        particle.transfom.translate = postion + randamTranslate;
+        particle.transfom.C = postion + randamTranslate;
         particle.velocity = { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_) };
 
         particle.color = { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_),1.0f };
 
         particle.lifeTime = distTime(randomEngine_);
-        particle.currentTime = 0.0f;
+        particle.currentTime = 0.0f;*/
+        Vector3 randomTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
+
+        Vector3 pPostion = position  ;
+        particle=MakeParticle(randomEngine_,pPostion);
+
         particleGroups[name].particles.push_back(particle);
     }
 
 }
+ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngine, const Vector3& translate)
+{
+       std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>,std::numbers::pi_v<float>); 
+       std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+    Particle particle;
+    particle.transfom.scale = { 0.05f,distScale(randomEngine),1.0f };
+    particle.transfom.rotate = { 0.0f,0.0f,distRotate(randomEngine)};
+    particle.transfom.translate = translate;
+    particle.velocity = { 0.0f,0.0f,0.0f };
 
+    particle.color = { 1.0f,1.0f,1.0f,1.0f };
+
+    particle.lifeTime = 1.0f;
+    particle.currentTime = 0.0f;
+
+    return particle;
+}
 void ParticleManager::CreateRootSignature()
 {
     ///* PsoProperty pso = { PipelineType::Particle,BlendMode::Add };
