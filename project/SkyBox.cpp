@@ -84,15 +84,15 @@ void SkyBox::Initialize()
     PSO.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     PSO.depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     PSOManager::GetInstance()->RegisterPsoGenerator("SkyBox", PSO);
-    vertexResourse_ =
+    vertexRecourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(VertexData) * 24);
-    vertexBufferView_.BufferLocation = vertexResourse_.Get()->GetGPUVirtualAddress();
+    vertexBufferView_.BufferLocation = vertexRecourse_.Get()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes = sizeof(VertexData) * 24;
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 
-    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+    vertexRecourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
     //右 描画インデックス[0,1,2],[2,1,3]
     vertexData_[0].position = { 1.0f, 1.0f, 1.0f, 1.0f };

@@ -8,14 +8,14 @@ void Sprite::Initialize(std::string textureFilePath) {
 
 
 
-    vertexResourse_ =
+    vertexRecourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(VertexData) * 4);
     indexResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(uint32_t) * 6);
     vertexBufferView_.BufferLocation =
-        vertexResourse_.Get()->GetGPUVirtualAddress();
+        vertexRecourse_.Get()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
@@ -24,7 +24,7 @@ void Sprite::Initialize(std::string textureFilePath) {
     indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;//32ビット整数
 
-    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+    vertexRecourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
     indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
 
     //

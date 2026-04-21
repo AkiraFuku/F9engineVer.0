@@ -19,7 +19,7 @@ public:
     };
     struct VertexData {
         Vector4 position; // 4D position vector
-        Vector2 texcoord; // 2D texture coordinate vector
+        Vector2 record; // 2D texture coordinate vector
         Vector3 normal;
     };
     struct Material
@@ -31,7 +31,7 @@ public:
     };
     struct Particle
     {
-        EulerTransform transfom;
+        EulerTransform transform;
         Vector3 velocity;
         Vector4 color;
         float lifeTime;
@@ -67,7 +67,7 @@ public:
     static ParticleManager* GetInstance();
     void Emit(const std::string name, const Vector3& postion, uint32_t count);
     void Finalize();
-    void Setcamera(Camera* camera) {
+    void SetCamera(Camera* camera) {
         camera_ = camera;
     }
     void ReleaseParticleGroup(const std::string name);
@@ -94,7 +94,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
 
     //頂点リソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourse_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexRecourse_;
     VertexData* vertexData_ = nullptr;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
     //マテリアル

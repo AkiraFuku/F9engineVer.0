@@ -1,8 +1,8 @@
 #include "ParicleEmitter.h"
 #include "DXCommon.h"
 
-ParticleEmitter::ParticleEmitter(const  std::string name, EulerTransform transfom, uint32_t count, float frequency, float frequencyTime) {
-    transform_ = transfom;
+ParticleEmitter::ParticleEmitter(const  std::string name, EulerTransform transform, uint32_t count, float frequency, float frequencyTime) {
+    transform_ = transform;
     count_ = count;
     frequency_ = frequency;
     frequencyTime_ = frequencyTime;

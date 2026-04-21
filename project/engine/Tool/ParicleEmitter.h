@@ -5,7 +5,7 @@
 class ParticleEmitter
 {
 public:
-    ParticleEmitter(const  std::string name, EulerTransform transfom, uint32_t count, float frequency, float frequencyTime);
+    ParticleEmitter(const  std::string name, EulerTransform transform, uint32_t count, float frequency, float frequencyTime);
     void Update();
     void Emit();
 private:

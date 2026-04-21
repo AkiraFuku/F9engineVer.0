@@ -184,7 +184,7 @@ void ParticleManager::Update() {
             }
 
             float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
-            (*particleIterator).transfom.translate += (*particleIterator).velocity * DXCommon::kDeltaTime;
+            (*particleIterator).transform.translate += (*particleIterator).velocity * DXCommon::kDeltaTime;
             (*particleIterator).currentTime += DXCommon::kDeltaTime;
 
             if (numInstance < kMaxNumInstance)
@@ -196,11 +196,11 @@ void ParticleManager::Update() {
                   {*/
                 if (particleGroup.name!="Test")
                 {
-                (*particleIterator).transfom.rotate.z += 1.0f / 60.0f;
+                (*particleIterator).transform.rotate.z += 1.0f / 60.0f;
                 }
 
 
-                worldMatrix = MakeBillboardMatrix((*particleIterator).transfom.scale, (*particleIterator).transfom.rotate, billboardMatrix, (*particleIterator).transfom.translate);
+                worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
 
                 particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
                 particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
@@ -278,19 +278,10 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
     for (uint32_t i = 0; i < count; ++i)
     {
         Particle particle;
-        /*particle.transfom.scale = { 1.0f,1.0f,1.0f };
-        particle.transfom.rotate = { 0.0f,0.0f,0.0f };
-        particle.transfom.C = postion + randamTranslate;
-        particle.velocity = { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_) };
-
-        particle.color = { distribution(randomEngine_),distribution(randomEngine_),distribution(randomEngine_),1.0f };
-
-        particle.lifeTime = distTime(randomEngine_);
-        particle.currentTime = 0.0f;*/
         Vector3 randomTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
 
-        Vector3 pPostion = position  ;
-        particle=MakeParticle(randomEngine_,pPostion);
+        Vector3 pPosition = position  ;
+        particle=MakeParticle(randomEngine_,pPosition);
 
         particleGroups[name].particles.push_back(particle);
     }
@@ -301,9 +292,9 @@ ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngi
        std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>,std::numbers::pi_v<float>); 
        std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
     Particle particle;
-    particle.transfom.scale = { 0.05f,distScale(randomEngine),1.0f };
-    particle.transfom.rotate = { 0.0f,0.0f,distRotate(randomEngine)};
-    particle.transfom.translate = translate;
+    particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };
+    particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine)};
+    particle.transform.translate = translate;
     particle.velocity = { 0.0f,0.0f,0.0f };
 
     particle.color = { 1.0f,1.0f,1.0f,1.0f };
@@ -315,10 +306,7 @@ ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngi
 }
 void ParticleManager::CreateRootSignature()
 {
-    ///* PsoProperty pso = { PipelineType::Particle,BlendMode::Add };
-    // PsoSet psoset = PSOManager::GetInstance()->GetPsoSet(pso);*/
-    // graphicsPipelineState_ = psoset.pipelineState;
-    // rootSignature_ = psoset.rootSignature;
+   
 }
 void ParticleManager::CreateVertexBuffer() {
     VertexData vertices[] = {
@@ -330,15 +318,15 @@ void ParticleManager::CreateVertexBuffer() {
     };
     size_t sizeIB = sizeof(vertices);
     //頂点リソースの作成
-    vertexResourse_ =
+    vertexRecourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeIB);
     //頂点バッファビューの設定
     vertexBufferView_.BufferLocation =
-        vertexResourse_.Get()->GetGPUVirtualAddress();
+        vertexRecourse_.Get()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes = UINT(sizeIB);
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
-    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+    vertexRecourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
     //頂点データの転送
     memcpy(vertexData_, vertices, sizeIB);
