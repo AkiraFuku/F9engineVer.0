@@ -64,7 +64,8 @@ public:
     void Attack();
 
     float GetRailProgress() const;
-
+    float GetCurrentDistance() const;
+    const RailPath* GetRailPath()const; 
 private:
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態
     std::unique_ptr<IBehaviorState> behavior_;   // 「通常・攻撃・ジャンプ」

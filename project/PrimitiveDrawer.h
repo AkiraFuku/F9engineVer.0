@@ -77,7 +77,7 @@ private:
     std::vector<VertexData> vertices_;
     std::vector<DrawCommand> commands_;
 
-    static const uint32_t kMaxVertices = 100000; // 十分なサイズを確保
+    static const uint32_t kMaxVertices = 1000000; // 十分なサイズを確保
 
     void AddPSO();
 

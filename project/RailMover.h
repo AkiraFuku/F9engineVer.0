@@ -38,8 +38,14 @@ public:
         if (pProgress_) *pProgress_ = t;
         else localProgress_ = t;
     }
+
+     const RailPath*  GetRailPath(){
+     
+         return path_;
+     }
+     float GetCurrentDistance() const;
+
 private:
-    float GetCurrentDistance() const;
 
 
     const RailPath* path_ = nullptr;// 進捗の管理方法を柔軟にするため、ローカルと共有の両方を用意
