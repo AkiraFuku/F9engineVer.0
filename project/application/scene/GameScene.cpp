@@ -107,17 +107,6 @@ void GameScene::Initialize() {
     cameraRail->AddBezierPoint({ -cameraRadius, cameraHeight, 0 }, { 0, 0,  h_cam }, { 0, 0, -h_cam });
     cameraRail->AddBezierPoint({ 0, cameraHeight, -cameraRadius }, { -h_cam, 0, 0 }, { h_cam, 0, 0 });
     cameraRail->AddBezierPoint({ cameraRadius, cameraHeight, 0 }, { 0, 0, -h_cam }, { 0, 0,  h_cam });
-/* 
-stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
-
-// 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
-stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
-
-// 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
-stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
-
-// 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
-stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });*/
     cameraRail->Update();
 
     cameraController->SetRailPath(cameraRail.get());
@@ -131,7 +120,7 @@ stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });*/
 
     // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
-    stageRail->SetLoop(true); // ループを有効化
+ //   stageRail->SetLoop(true); // ループを有効化
 
     float radius = 20.0f;       // 円の半径
     float h = radius * 0.5522f; // ハンドルの長さ
@@ -148,6 +137,7 @@ stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
 
 // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
 stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+stageRail->AddPoint({ 0, 0, 0 });
     // 最後に必ず更新して距離テーブルを作成
     stageRail->Update();
 
