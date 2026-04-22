@@ -246,10 +246,10 @@
     <ClCompile Include="CameraController.cpp">
       <Filter>App\Object\CameraContorol</Filter>
     </ClCompile>
-    <ClCompile Include="RailPath.cpp">
+    <ClCompile Include="application\Rail\RailPath.cpp">
       <Filter>App\System\Rail</Filter>
     </ClCompile>
-    <ClCompile Include="RailMover.cpp">
+    <ClCompile Include="application\Rail\RailMover.cpp">
       <Filter>App\System\Rail</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\InputHandler.cpp">
@@ -264,7 +264,7 @@
     <ClCompile Include="application\object\player\Behavia\PlayerState.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Robot.cpp">
+    <ClCompile Include="application\object\Robot\Robot.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp">
@@ -428,10 +428,10 @@
     <ClInclude Include="CameraController.h">
       <Filter>App\Object\CameraContorol</Filter>
     </ClInclude>
-    <ClInclude Include="RailPath.h">
+    <ClInclude Include="application\Rail\RailPath.h">
       <Filter>App\System\Rail</Filter>
     </ClInclude>
-    <ClInclude Include="RailMover.h">
+    <ClInclude Include="application\Rail\RailMover.h">
       <Filter>App\System\Rail</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\InputHandler.h">
@@ -446,7 +446,7 @@
     <ClInclude Include="application\object\player\Behavia\PlayerState.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Robot.h">
+    <ClInclude Include="application\object\Robot\Robot.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Behavia\PlayerAction.h">
