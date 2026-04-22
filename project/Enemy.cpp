@@ -76,6 +76,6 @@ void Enemy::Move(float ratio)
 {
     if (railMover_) {
         // 毎フレームの移動量を計算して進める
-        railMover_->Advance(ratio * (kMoveSpeed_ / 60.0f));
+        railMover_->Advance(ratio * (kMoveSpeed_ ));
     }
 }
