@@ -134,6 +134,7 @@ public:
     void SetLoop(bool loop) {
         isLoop_ = loop;
     }
+    bool IsLoop()const{return isLoop_;}
 private:
     bool isLoop_ = false; // ループフラグ
     // RailPath.h に追加
