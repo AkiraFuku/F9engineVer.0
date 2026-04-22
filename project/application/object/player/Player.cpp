@@ -132,6 +132,14 @@ float Player::GetRailProgress() const
     return railMover_->GetProgress();
 
 }
+float Player::GetCurrentDistance() const {
+    // RailMoverが持っている現在の走行距離（メートル）を返す
+    return railMover_->GetCurrentDistance(); 
+}
+const RailPath* Player::GetRailPath() const
+{
+    return railMover_->GetRailPath();
+}
 void Player::HandleInput()
 {
     auto commands = inputHandler_->HandleInput();

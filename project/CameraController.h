@@ -2,6 +2,7 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include <memory>
+class Object3d;
 struct Move {
 	Vector2 max;
 	Vector2 min;
@@ -49,6 +50,7 @@ private:
 	// カメラ
 	Camera* camera_ = nullptr;
 	Player* target_ = nullptr;
+    Object3d* target=nullptr;
     std::unique_ptr<RailMover> railMover_;
 	Rect moveArea_ = {0.0f, 100.0f, 0.0f, 100.0f};
 	Vector3 targetOffset_ = {0.0f, 0.0f, -15.0f};

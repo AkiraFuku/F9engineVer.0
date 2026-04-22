@@ -93,25 +93,57 @@ void GameScene::Initialize() {
     cameraController = std::make_unique<CameraController>();
     cameraController->Initialize(cameraMap_["Main"].get());
     cameraController->SetTarget(player.get());
-    cameraRail = std::make_unique<RailPath>();
 
-    cameraRail->AddPoint({ 0.0f, 0.0f, -5.0f });
-    cameraRail->AddPoint({ 25.0f, 5.0f, -5.0f });
-    cameraRail->AddPoint({ 50.0f, 0.0f, -5.0f });
+    // --- 円形レールの設定例 ---
+    cameraRail = std::make_unique<RailPath>();
+    // Initialize内
+    float playerRadius = 25.0f;
+    float cameraRadius = 40.0f; // プレイヤーより遠くに配置
+    float cameraHeight = 8.0f;  // 少し高い位置から見下ろす
+    float h_cam = cameraRadius * 0.5522f;
+
+    // カメラレール (cameraRail) の構築
+    cameraRail->SetLoop(true);
+    cameraRail->AddBezierPoint({ 0, cameraHeight,  cameraRadius }, { h_cam, 0, 0 }, { -h_cam, 0, 0 });
+    cameraRail->AddBezierPoint({ -cameraRadius, cameraHeight, 0 }, { 0, 0,  h_cam }, { 0, 0, -h_cam });
+    cameraRail->AddBezierPoint({ 0, cameraHeight, -cameraRadius }, { -h_cam, 0, 0 }, { h_cam, 0, 0 });
+    cameraRail->AddBezierPoint({ cameraRadius, cameraHeight, 0 }, { 0, 0, -h_cam }, { 0, 0,  h_cam });
+    cameraRail->Update();
 
     cameraController->SetRailPath(cameraRail.get());
+
+
 
     debugCameraC = std::make_unique<CameraController>();
     debugCameraC->Initialize(cameraMap_["Debug"].get());
     debugCameraC->SetTarget(player.get());
 
 
+    // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
-    stageRail->AddPointCR({ 0.0f,0.0f,0.0f });
+ //   stageRail->SetLoop(true); // ループを有効化
 
-    stageRail->AddPoint({ 25.0f, 0.0f, 2.5f });
-    stageRail->AddPoint({ 50.0f, 0.0f, 0.0f });
+    float radius = 20.0f;       // 円の半径
+    float h = radius * 0.5522f; // ハンドルの長さ
+
+ // 【修正版】反時計回りの順序に変更
+// 点0: 前方 (Z+) -> 次は左(X-)へ向かうので、Outは左(-X)方向
+stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
+
+// 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
+stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
+
+// 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
+stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
+
+// 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
+stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+stageRail->AddPoint({ 0, 0, 0 });
+    // 最後に必ず更新して距離テーブルを作成
+    stageRail->Update();
+
     player->SetRail(stageRail.get());
+    // player->SetRail(stageRail.get());
 
     enemy= std::make_unique<Enemy>();
     enemy->Initialize();
@@ -251,6 +283,22 @@ void GameScene::Update() {
 
 
     ImGui::End();
+
+    ImGui::Begin("Rail Debug");
+    static float r = 20.0f;
+    static float hScale = 0.5522f;
+
+    if (ImGui::SliderFloat("Radius", &r, 5.0f, 50.0f) || ImGui::SliderFloat("Handle Scale", &hScale, 0.1f, 1.0f)) {
+        // 値が変わったらレールを再構築
+        stageRail->Initialize(); // points_をクリア
+        float h = r * hScale;
+        stageRail->AddBezierPoint({ 0, 0,  r }, { -h, 0, 0 }, { h, 0, 0 });
+        stageRail->AddBezierPoint({ r, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
+        stageRail->AddBezierPoint({ 0, 0, -r }, { h, 0, 0 }, { -h, 0, 0 });
+        stageRail->AddBezierPoint({ -r, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+        stageRail->Update();
+    }
+    ImGui::End();
 #endif // USE_IMGUI
 
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
@@ -264,14 +312,14 @@ void GameScene::Draw() {
     PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });
-   // PrimitiveDrawer::GetInstance()->Draw();
+    // PrimitiveDrawer::GetInstance()->Draw();
 
     Sphere sphere = { 0.0f,0.0f,0.0f,1.0f };
     sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
 
 
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawSphere({ {2.0f,0.0f,0.0f},1.0f ,rotation_}, { 1.0f,0.0f,0.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawSphere({ {2.0f,0.0f,0.0f},1.0f ,rotation_ }, { 1.0f,0.0f,0.0f,1.0f });
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();
