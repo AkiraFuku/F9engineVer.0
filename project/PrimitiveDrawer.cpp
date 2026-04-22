@@ -7,7 +7,7 @@
 #include "MathFunction.h"
 #include "Camera.h"
 #include "RotateFunction.h"
-
+#include <numbers>
 std::unique_ptr<PrimitiveDrawer> PrimitiveDrawer::instance_ = nullptr;
 
 
@@ -112,137 +112,178 @@ void PrimitiveDrawer::WVPResourceCreate()
 
 void PrimitiveDrawer::Initialize() {
     AddPSO();
-    auto CreateBatch = [&](TopologyType type, D3D_PRIMITIVE_TOPOLOGY d3dTop, Toporogy psoTop) {
-        PrimitiveBatch batch;
-        batch.d3dTopology = d3dTop;
-        batch.psoTopology = psoTop;
-
-        // リソース作成
-        batch.resource = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
-
-        // VBV設定
-        batch.vbv.BufferLocation = batch.resource->GetGPUVirtualAddress();
-        batch.vbv.SizeInBytes = sizeof(VertexData) * kMaxVertices;
-        batch.vbv.StrideInBytes = sizeof(VertexData);
-
-        //batch.vertices.reserve(kMaxVertices);
-
-        batch.fillMode = FillMode::kSolid;
-        batch.blendMode = BlendMode::Normal;
-        batches_[type] = std::move(batch);
-        };
-
-    CreateBatch(TopologyType::kLine, D3D_PRIMITIVE_TOPOLOGY_LINELIST, Toporogy::LineList);
-    CreateBatch(TopologyType::kTriangle, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, Toporogy::TriangleList);
     // 必要に応じて PointList 等を追加
     WVPResourceCreate();
+    // 巨大な頂点バッファを1つ作成
+    vertexResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * kMaxVertices);
+    vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataPtr_));
+
+    vbv_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+    vbv_.SizeInBytes = sizeof(VertexData) * kMaxVertices;
+    vbv_.StrideInBytes = sizeof(VertexData);
+
+    vertices_.reserve(kMaxVertices);
 }
 
+
 void PrimitiveDrawer::Draw() {
+    if (commands_.empty()) return;
+
     auto commandList = DXCommon::GetInstance()->GetCommandList();
     auto psoManager = PSOManager::GetInstance();
+
+    // 1. WVP更新
     if (camera_) {
         wvpData_->WVP = camera_->GetViewProtectionMatrix();
     } else {
         wvpData_->WVP = Makeidetity4x4();
     }
-    for (auto& [type, batch] : batches_) {
-        if (batch.vertices.empty()) continue;
 
-        // 1. このトポロジ専用のリソースにデータをコピー
-        void* mappedPtr = nullptr;
-        batch.resource->Map(0, nullptr, &mappedPtr);
-        std::memcpy(mappedPtr, batch.vertices.data(), sizeof(VertexData) * batch.vertices.size());
-        batch.resource->Unmap(0, nullptr);
+    // 2. 頂点データをGPUバッファへコピー
+    std::memcpy(vertexDataPtr_, vertices_.data(), sizeof(VertexData) * vertices_.size());
 
-        // 2. PSOの取得と設定
-        // FillModeなどは必要に応じて引数化してください
-        PsoSet psoSet = psoManager->GetPso("Primitive", batch.blendMode, batch.fillMode, batch.psoTopology);
+    // --- ここから共通設定 ---
 
+    // 最初の一回だけルートシグネチャを設定（これでバインドが有効になる）
+    // ループ内の psoSet から取得しても良いですが、全コマンド共通のはずなので最初の一件から取得
+    PsoSet firstPso = psoManager->GetPso("Primitive", commands_[0].blendMode, commands_[0].fillMode, commands_[0].psoTopology);
+    commandList->SetGraphicsRootSignature(firstPso.rootSignature.Get());
+
+    // ルートシグネチャ設定「後」にCBVをセットする
+    commandList->SetGraphicsRootConstantBufferView(0, WVPResource_->GetGPUVirtualAddress());
+    commandList->IASetVertexBuffers(0, 1, &vbv_);
+
+    // 3. コマンドを順次実行
+    for (const auto& cmd : commands_) {
+        PsoSet psoSet = psoManager->GetPso("Primitive", cmd.blendMode, cmd.fillMode, cmd.psoTopology);
+
+        // PSOの切り替え（PSOが同じならスキップする最適化も可能）
         commandList->SetPipelineState(psoSet.pipelineState.Get());
-        commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
 
-        // ★追加: WVP行列の定数バッファ(CBV)をコマンドリストにセット (ルートパラメータインデックス0番)
-        commandList->SetGraphicsRootConstantBufferView(0, WVPResource_->GetGPUVirtualAddress());
+        // 【重要】SetGraphicsRootSignature は基本同じなので、変更がある場合のみ呼ぶ。
+        // もし違うルートシグネチャになる可能性があるなら、その後に再度 SetGraphicsRootConstantBufferView が必要。
+        // 現状はすべて "Primitive" なので、ループ内での SetGraphicsRootSignature は削除してOK。
 
-        // 3. このトポロジ専用のVBVをセット
-        commandList->IASetVertexBuffers(0, 1, &batch.vbv);
-        commandList->IASetPrimitiveTopology(batch.d3dTopology);
-
-        // 4. 描画
-        commandList->DrawInstanced(static_cast<UINT>(batch.vertices.size()), 1, 0, 0);
-
-        // 5. 次のフレームのためにクリア
-        batch.vertices.clear();
+        commandList->IASetPrimitiveTopology(cmd.topology);
+        commandList->DrawInstanced(cmd.vertexCount, 1, cmd.vertexStart, 0);
     }
+
+    // 4. 次フレームのためにクリア
+    vertices_.clear();
+    commands_.clear();
 }
+
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
-    auto& batch = batches_[TopologyType::kLine];
-    if (batch.vertices.size() + 2 > kMaxVertices) return;
+    if (vertices_.size() + 2 > kMaxVertices) return;
 
-    batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
-    batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+    DrawCommand cmd;
+    cmd.vertexStart = static_cast<uint32_t>(vertices_.size());
+    cmd.vertexCount = 2;
+    cmd.topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+    cmd.psoTopology = Toporogy::LineList;
+    cmd.fillMode = FillMode::kWireFrame; // 線は常にワイヤー
+    cmd.blendMode = BlendMode::Normal;
+
+    vertices_.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+    vertices_.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+
+    commands_.push_back(cmd);
 
 }
-
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
-    auto& batch = batches_[TopologyType::kTriangle];
-    if (batch.vertices.size() + 3 > kMaxVertices) return;
-    batch.fillMode = fillMode;
-    batch.blendMode = blendMode;
+    // 1. バッファの空き容量チェック (3頂点分)
+    if (vertices_.size() + 3 > kMaxVertices) {
+        // ロガーなどがあれば警告を出すとデバッグしやすいです
+        return;
+    }
 
-    batch.vertices.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
-    batch.vertices.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
-    batch.vertices.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
+    // 2. 描画コマンド（予約）を作成
+    DrawCommand cmd;
+    cmd.vertexStart = static_cast<uint32_t>(vertices_.size()); // 現在の末尾を開始位置に
+    cmd.vertexCount = 3;                                       // 三角形なので3
+    cmd.topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;        // D3D上のトポロジ
+    cmd.psoTopology = Toporogy::TriangleList;                  // PSO管理用のトポロジ
+    cmd.fillMode = fillMode;                                   // 引数から設定 (Solid / Wireframe)
+    cmd.blendMode = blendMode;                                 // 引数から設定 (Normal / Add / etc...)
 
+    // 3. 頂点データを共通バッファに追加
+    // VertexData { Vector4 position, Vector4 color }
+    vertices_.push_back({ {p1.x, p1.y, p1.z, 1.0f}, color });
+    vertices_.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
+    vertices_.push_back({ {p3.x, p3.y, p3.z, 1.0f}, color });
 
+    // 4. コマンドリストに予約登録
+    commands_.push_back(cmd);
 }
 // PrimitiveDrawer.cpp に実装を追加
 
 void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
-    const uint32_t kSubdivision = 16;
-    const float kLonEvery = 2.0f * PI / static_cast<float>(kSubdivision);
-    const float kLatEvery = PI / static_cast<float>(kSubdivision);
-    // Quaternion normRotate = Normalize(sphere.rotate);
-    for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-        float lat = -PI / 2.0f + kLatEvery * latIndex;
-        for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-            float lon = lonIndex * kLonEvery;
+    const uint32_t kSubdivision = 16; // 分割数（高くすると滑らかになる）
+    const uint32_t kNumVertices = (kSubdivision + 1) * (kSubdivision + 1);
+    const uint32_t kNumIndices = kSubdivision * kSubdivision * 6;
 
-            // 1. ローカル座標（中心を0とした球状の点）を計算
-            Vector3 localA = {
-                sphere.radius * cosf(lat) * cosf(lon),
-                sphere.radius * sinf(lat),
-                sphere.radius * cosf(lat) * sinf(lon)
+    // バッファ溢れチェック
+    if (vertices_.size() + kNumIndices > kMaxVertices) return;
+
+    // この描画の開始地点を記録
+    DrawCommand cmd;
+    cmd.vertexStart = static_cast<uint32_t>(vertices_.size());
+    cmd.vertexCount = 0; // 後で集計
+    cmd.topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    cmd.psoTopology = Toporogy::TriangleList;
+    cmd.fillMode = FillMode::kWireFrame; // 通常、デバッグプリミティブはワイヤー
+    cmd.blendMode = BlendMode::Normal;
+
+    // 1. 頂点の一時配列を作成
+    std::vector<VertexData> gridVertices;
+    gridVertices.reserve(kNumVertices);
+
+    for (uint32_t lat = 0; lat <= kSubdivision; ++lat) {
+        float phi = -std::numbers::pi_v<float> / 2.0f +
+            std::numbers::pi_v<float> *static_cast<float>(lat) / kSubdivision;
+
+        for (uint32_t lon = 0; lon <= kSubdivision; ++lon) {
+            float theta = 2.0f * std::numbers::pi_v<float> *static_cast<float>(lon) / kSubdivision;
+
+            // ローカル座標での頂点位置
+            Vector3 point = {
+                sphere.radius * std::cos(phi) * std::cos(theta),
+                sphere.radius * std::sin(phi),
+                sphere.radius * std::cos(phi) * std::sin(theta)
             };
-            Vector3 localB = {
-                sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
-                sphere.radius * sinf(lat + kLatEvery),
-                sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
-            };
-            Vector3 localC = {
-                sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
-                sphere.radius * sinf(lat),
-                sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
-            };
 
-            Quaternion normRotate = Normalize(sphere.rotate);
-            // 2. クォータニオンで回転を適用
-            // RotateVector関数（Vector3をQuaternionで回転させる関数）があると便利です
-            Vector3 rotatedA = RotateVector(localA, normRotate);
-            Vector3 rotatedB = RotateVector(localB, normRotate);
-            Vector3 rotatedC = RotateVector(localC, normRotate);
+            // Quaternionによる回転適用 (RotateVectorは自作の回転関数と想定)
+            point = RotateVector(point, sphere.rotate);
 
-            // 3. 中心座標を足してワールド座標へ
-            Vector3 worldA = Add(rotatedA, sphere.center);
-            Vector3 worldB = Add(rotatedB, sphere.center);
-            Vector3 worldC = Add(rotatedC, sphere.center);
+            // ワールド座標へ変換
+            point = Add(point, sphere.center);
 
-            DrawLine(worldA, worldB, color);
-            DrawLine(worldA, worldC, color);
+            gridVertices.push_back({ {point.x, point.y, point.z, 1.0f}, color });
         }
     }
+
+    // 2. 頂点配列から三角形（インデックス）を構成して vertices_ に追加
+    for (uint32_t lat = 0; lat < kSubdivision; ++lat) {
+        for (uint32_t lon = 0; lon < kSubdivision; ++lon) {
+            uint32_t start = lat * (kSubdivision + 1) + lon;
+
+            // 2つの三角形（1つの四角形ポリゴン）を構成
+            // 三角形1
+            vertices_.push_back(gridVertices[start]);
+            vertices_.push_back(gridVertices[start + 1]);
+            vertices_.push_back(gridVertices[start + (kSubdivision + 1)]);
+
+            // 三角形2
+            vertices_.push_back(gridVertices[start + 1]);
+            vertices_.push_back(gridVertices[start + (kSubdivision + 1) + 1]);
+            vertices_.push_back(gridVertices[start + (kSubdivision + 1)]);
+
+            cmd.vertexCount += 6;
+        }
+    }
+
+    commands_.push_back(cmd);
 }
 void PrimitiveDrawer::DrawGrid() {
     const float kGridHalfWidth = 2.0f;
@@ -253,10 +294,7 @@ void PrimitiveDrawer::DrawGrid() {
         float pos = -kGridHalfWidth + static_cast<float>(i) * kGridEvery;
         Vector4 color = (i == kSubdivision / 2) ? Vector4{ 0,0,0,1 } : Vector4{ 0.7f, 0.7f, 0.7f, 1 };
 
-        // X方向の線
-        DrawLine({ pos, 0, kGridHalfWidth }, { pos, 0, -kGridHalfWidth }, color);
-        // Z方向の线
-        DrawLine({ kGridHalfWidth, 0, pos }, { -kGridHalfWidth, 0, pos }, color);
+
     }
 }
 
@@ -268,15 +306,6 @@ void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
         {aabb.max.x, aabb.max.y, aabb.max.z}, {aabb.min.x, aabb.max.y, aabb.max.z}
     };
 
-    // 底面
-    DrawLine(p[0], p[1], color); DrawLine(p[1], p[2], color);
-    DrawLine(p[2], p[3], color); DrawLine(p[3], p[0], color);
-    // 上面
-    DrawLine(p[4], p[5], color); DrawLine(p[5], p[6], color);
-    DrawLine(p[6], p[7], color); DrawLine(p[7], p[4], color);
-    // 柱
-    DrawLine(p[0], p[4], color); DrawLine(p[1], p[5], color);
-    DrawLine(p[2], p[6], color); DrawLine(p[3], p[7], color);
 }
 
 void PrimitiveDrawer::DrawSegment(const Segment& segment, const Vector4& color) {

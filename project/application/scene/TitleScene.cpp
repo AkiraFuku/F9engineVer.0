@@ -7,6 +7,7 @@
 #include "ParticleManager.h"//フレームワークに移植
 #include "PSOManager.h"
 #include "LightManager.h"
+#include "PrimitiveDrawer.h"
 
 void TitleScene::Initialize() {
 
@@ -132,6 +133,7 @@ void TitleScene::Update() {
     {
         // 左スティックの値を取得
         float x = (float)state.Gamepad.sThumbLX;
+        
         float y = (float)state.Gamepad.sThumbLY;
 
         // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
@@ -163,9 +165,14 @@ void TitleScene::Update() {
     sprite->Update();
 }
 void TitleScene::Draw() {
+    Sphere sphere1={{0.0f,0.0f,0.0f},1.0f};
+    Sphere sphere2={{1.0f,0.0f,0.0f},1.0f};
+
+    PrimitiveDrawer::GetInstance()->DrawSphere(sphere1,{1.0f,1.0f,1.0f,1.0f});
+    PrimitiveDrawer::GetInstance()->DrawSphere(sphere2,{1.0f,1.0f,1.0f,1.0f});
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     //sprite->Draw();
-    object3d->Draw();
+  //  object3d->Draw();
 }

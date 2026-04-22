@@ -20,13 +20,28 @@ public:
         Vector4 position;
         Vector4 color;
     };
-
-    /*struct Material {
-
-    };*/
-
+    // プリミティブの種類
+    enum class PrimtiveType {
+        kLine,
+        kTriangle,
+        kPoint,
+        kSpher,
+        kGrid,
+        kAABB,
+        kSegment,
+        Plane,
+        kCount // 種類の総数
+    };
     struct WVPMatrix {
         Matrix4x4 WVP;
+    };
+    struct DrawCommand {
+        uint32_t vertexStart; // 全体バッファ内の開始インデックス
+        uint32_t vertexCount; // 描画する頂点数
+        D3D_PRIMITIVE_TOPOLOGY topology;
+        Toporogy psoTopology; // PSOManager用のトポロジ指定
+        FillMode fillMode;
+        BlendMode blendMode;
     };
 
     static PrimitiveDrawer* GetInstance();
@@ -53,42 +68,29 @@ private:
     ~PrimitiveDrawer() = default;
     static std::unique_ptr<PrimitiveDrawer> instance_;
 
-    /*  Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
-      D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
-      VertexData* vertexData_ = nullptr;*/
+   // 単一の大きな頂点バッファ
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
+    D3D12_VERTEX_BUFFER_VIEW vbv_;
+    VertexData* vertexDataPtr_ = nullptr;
+    
+    // CPU側の頂点一時保存と描画コマンド
+    std::vector<VertexData> vertices_;
+    std::vector<DrawCommand> commands_;
+
+    static const uint32_t kMaxVertices = 100000; // 十分なサイズを確保
 
     void AddPSO();
 
 
 private:
-    //  std::vector<VertexData> vertices_; // 描画予約された頂点リスト
-    static const uint32_t kMaxVertices = 32768; // 最大頂点数（必要に応じて調整）
+  
     Microsoft::WRL::ComPtr<ID3D12Resource> WVPResource_;
     WVPMatrix* wvpData_ = nullptr;
     void WVPResourceCreate();
 
     Camera* camera_ = nullptr;
 
-    // トポロジの種類
-    enum class TopologyType {
-        kLine,
-        kTriangle,
-        kPoint,
-        kCount // 種類の総数
-    };
 
-    // トポロジごとに必要なリソース一式
-    struct PrimitiveBatch {
-        Microsoft::WRL::ComPtr<ID3D12Resource> resource;
-        D3D12_VERTEX_BUFFER_VIEW vbv;
-        std::vector<VertexData> vertices;
-        D3D_PRIMITIVE_TOPOLOGY d3dTopology;
-        Toporogy psoTopology; // PSOManager用
-        FillMode fillMode = FillMode::kSolid; // 必要に応じて追加
-        BlendMode blendMode = BlendMode::Normal; // 必要に応じて追加
-    };
-    
-    // トポロジごとのバッチ管理
-    std::map<TopologyType, PrimitiveBatch> batches_;
+
 
 };

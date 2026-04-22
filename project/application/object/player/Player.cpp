@@ -115,7 +115,7 @@ void Player::SetRail(RailPath* rail)
 }
 void Player::Move(float ratio)
 {
-    railMover_->Advance(ratio * (kMoveSpeed_ / 60.0f));
+    railMover_->Advance(ratio * (kMoveSpeed_ ));
 }
 void Player::Jump()
 {

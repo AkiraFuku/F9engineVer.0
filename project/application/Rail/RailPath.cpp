@@ -2,7 +2,7 @@
 #include "PrimitiveDrawer.h"
 void RailPath::Update()
 {
-
+    BuildDistanceTable();
 /*    // ベジェの制御点は、点の位置からのオフセットで指定されることが多いので、ここで絶対座標に変換しておく
     for (size_t i = 0; i < points_.size(); i++) {
         if (points_[i].type == InterpolationType::Bezier) {
@@ -124,6 +124,41 @@ Vector3 RailPath::GetDirection(float globalT) const {
     return Normalize(p2 - p1);
 }
 
+float RailPath::GetTFromDistance(float distance) const
+{
+    if (distance <= 0) return 0.0f;
+    if (distance >= totalLength_) return GetMaxT();
+
+    // 二分探索などで、指定された距離に対応する t を探す
+    for (size_t i = 0; i < distanceTable_.size() - 1; ++i) {
+        if (distance <= distanceTable_[i+1].distance) {
+            float d1 = distanceTable_[i].distance;
+            float d2 = distanceTable_[i+1].distance;
+            float t1 = distanceTable_[i].t;
+            float t2 = distanceTable_[i+1].t;
+            // 距離に基づいて線形補間
+            float factor = (distance - d1) / (d2 - d1);
+            return t1 + (t2 - t1) * factor;
+        }
+    }
+    return GetMaxT();
+}
+void RailPath::BuildDistanceTable(){
+    distanceTable_.clear();
+    totalLength_ = 0.0f;
+    float maxT = GetMaxT();
+    float step = 0.05f; // 細かさは精度と相談
+
+    Vector3 prevPos = GetPosition(0.0f);
+    distanceTable_.push_back({ 0.0f, 0.0f });
+
+    for (float t = step; t <= maxT; t += step) {
+        Vector3 currentPos = GetPosition(t);
+        totalLength_ += Length(currentPos - prevPos); // 2点間の距離を加算
+        distanceTable_.push_back({ totalLength_, t });
+        prevPos = currentPos;
+    }
+}
 void RailPath::DebugDraw()
 {
 
@@ -176,4 +211,24 @@ void RailPath::DebugDraw()
 
 
 
+}
+float RailPath::GetDistanceFromT(float t) const {
+    if (distanceTable_.empty()) return 0.0f;
+    if (t <= 0) return 0.0f;
+    if (t >= GetMaxT()) return totalLength_;
+
+    // t に対応する区間をテーブルから探す
+    for (size_t i = 0; i < distanceTable_.size() - 1; ++i) {
+        if (t <= distanceTable_[i + 1].t) {
+            float t1 = distanceTable_[i].t;
+            float t2 = distanceTable_[i + 1].t;
+            float d1 = distanceTable_[i].distance;
+            float d2 = distanceTable_[i + 1].distance;
+
+            // t に基づいて距離を線形補間
+            float factor = (t - t1) / (t2 - t1);
+            return d1 + (d2 - d1) * factor;
+        }
+    }
+    return totalLength_;
 }

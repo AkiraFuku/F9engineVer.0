@@ -31,7 +31,7 @@ void GameScene::Initialize() {
     cameraMap_["Debug"] = std::move(debugCamera);
 
     // 3. 最初はメインカメラをセット
-    ChangeActiveCamera(cameraMap_["Debug"].get());
+    ChangeActiveCamera(cameraMap_["Main"].get());
 
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
@@ -64,12 +64,12 @@ void GameScene::Initialize() {
     animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->SetCurrentTime(0.0f);
 
-   skyBox = std::make_unique<SkyBox>();
+    skyBox = std::make_unique<SkyBox>();
     skyBox->Initialize();
-     skyBox->SetCamera(activeCamera_);
-     skyBox->SetTextureByFilePath("resources/output_skybox.dds");
+    skyBox->SetCamera(activeCamera_);
+    skyBox->SetTextureByFilePath("resources/output_skybox.dds");
 
-     Object3dCommon::GetInstance()->SetDefaultSkyBox(skyBox.get());
+    Object3dCommon::GetInstance()->SetDefaultSkyBox(skyBox.get());
 
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
@@ -79,7 +79,7 @@ void GameScene::Initialize() {
     object3d->SetModel("sphere");
     object3d->SetCamera(activeCamera_);
 
- 
+
 
 
 
@@ -166,7 +166,7 @@ void GameScene::Update() {
     }
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
     {
-         Vector3 camreaTranslate = activeCamera_->GetRotate();
+        Vector3 camreaTranslate = activeCamera_->GetRotate();
         camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
         activeCamera_->SetRotate(camreaTranslate);
 
@@ -181,11 +181,11 @@ void GameScene::Update() {
         cameraMap_["Main"]->SetTranslate(camreaTranslate);
 
     }
-        if (Input::GetInstance()->GetJoyStick(0, state))
-        {
-            // 左スティックの値を取得
-            float x = (float)state.Gamepad.sThumbLX;
-            float y = (float)state.Gamepad.sThumbLY;
+    if (Input::GetInstance()->GetJoyStick(0, state))
+    {
+        // 左スティックの値を取得
+        float x = (float)state.Gamepad.sThumbLX;
+        float y = (float)state.Gamepad.sThumbLY;
 
         // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
         float normalizedX = x / 32767.0f;
@@ -206,7 +206,7 @@ void GameScene::Update() {
 
     enemy->Update();
 
-     skyBox->SetTranslate(activeCamera_->GetTranslate()); 
+    skyBox->SetTranslate(activeCamera_->GetTranslate());
     skyBox->Update();
 
     //activeCamera_->UpdateViewProjection();
@@ -232,7 +232,7 @@ void GameScene::Update() {
     Vector3 point2_ = stageRail->GetPointPos(2);
 
     ImGui::SliderFloat3("Point1", &(point1_.x), -10.0f, 10.0f);
-    ImGui::SliderFloat3("Point2", &(point2_.x),-10.0f, 1000.0f);
+    ImGui::SliderFloat3("Point2", &(point2_.x), -10.0f, 1000.0f);
 
     stageRail->SetPointPos(1, point1_);
     stageRail->SetPointPos(2, point2_);
@@ -255,23 +255,23 @@ void GameScene::Update() {
 
     //sprite->SetRotation(sprite->GetRotation() + 0.1f);
     sprite->Update();
- LightManager::GetInstance()->Update();
+    LightManager::GetInstance()->Update();
 
 }
 void GameScene::Draw() {
 
- skyBox->Draw();
+    skyBox->Draw();
     PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->Draw();
+   // PrimitiveDrawer::GetInstance()->Draw();
 
-    Sphere sphere = { cameraMap_["Main"].get()->GetTranslate(),1.0f };
+    Sphere sphere = { 0.0f,0.0f,0.0f,1.0f };
     sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
-    
 
-      //  PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
-    //    PrimitiveDrawer::GetInstance()->DrawSphere({ {0.0f,0.0f,0.0f},0.5f }, { 1.0f,0.0f,0.0f,1.0f });*/
+
+    PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
+    PrimitiveDrawer::GetInstance()->DrawSphere({ {2.0f,0.0f,0.0f},1.0f ,rotation_}, { 1.0f,0.0f,0.0f,1.0f });
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();
