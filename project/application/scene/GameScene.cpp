@@ -150,6 +150,7 @@ stageRail->AddPoint({ 0, 0, 0 });
     enemy->Initialize();
     enemy->SetPosition({ 0.0f, 0.0f, 0.0f });
     enemy->SetRail(stageRail.get());
+    enemy->SetRailPosition({1.0f,0.0f});
 
 
 
