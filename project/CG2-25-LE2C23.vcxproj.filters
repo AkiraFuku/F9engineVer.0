@@ -103,6 +103,15 @@
     <Filter Include="App\System\Rail">
       <UniqueIdentifier>{192c7b33-34f6-412e-8640-b3f307b24e00}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Object\Player\Behavia">
+      <UniqueIdentifier>{f24a9e4e-7eda-4acf-9ef9-9613c2e2c073}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Object\Enemy">
+      <UniqueIdentifier>{ac8678b3-1465-4190-bdc8-04ee24595f5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Object\Robot">
+      <UniqueIdentifier>{46231f9b-a4c7-492c-a7e5-cd6be40fb652}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -262,19 +271,19 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Behavia\PlayerState.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\Robot\Robot.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
     <ClCompile Include="BehaviaState.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
     <ClCompile Include="Enemy.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Object\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Robot\Robot.cpp">
+      <Filter>App\Object\Robot</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -447,19 +456,19 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Behavia\PlayerState.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\Robot\Robot.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Behavia\PlayerAction.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
     <ClInclude Include="BehaviaState.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
     <ClInclude Include="Enemy.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Object\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Robot\Robot.h">
+      <Filter>App\Object\Robot</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
