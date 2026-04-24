@@ -137,7 +137,8 @@ stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
 stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
 
 // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
-stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+//stageRail->AddPointCR({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+stageRail->AddPointCR({ radius, 0, 0 });
 stageRail->AddPoint({ 0, 0, 0 });
     // 最後に必ず更新して距離テーブルを作成
     stageRail->Update();
