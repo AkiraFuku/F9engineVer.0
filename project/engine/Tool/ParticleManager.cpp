@@ -287,6 +287,16 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
     }
 
 }
+std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexPlane()
+{
+
+   return {
+        {{-1.0f,  1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{ 1.0f,  1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+        {{ 1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+    };
+}
 ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
        std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>,std::numbers::pi_v<float>); 
@@ -309,14 +319,9 @@ void ParticleManager::CreateRootSignature()
    
 }
 void ParticleManager::CreateVertexBuffer() {
-    VertexData vertices[] = {
-        // Position(x,y,z,w)             TexCoord(u,v)   Normal(x,y,z)
-        {{-1.0f,  1.0f, 0.0f, 1.0f},     {0.0f, 0.0f},   {0.0f, 0.0f, 1.0f}}, // 左上
-        {{ 1.0f,  1.0f, 0.0f, 1.0f},     {1.0f, 0.0f},   {0.0f, 0.0f, 1.0f}}, // 右上
-        {{-1.0f, -1.0f, 0.0f, 1.0f},     {0.0f, 1.0f},   {0.0f, 0.0f, 1.0f}}, // 左下
-        {{ 1.0f, -1.0f, 0.0f, 1.0f},     {1.0f, 1.0f},   {0.0f, 0.0f, 1.0f}}, // 右下
-    };
-    size_t sizeIB = sizeof(vertices);
+  auto vertices = PrimitiveVertexPlane(); 
+    // vectorのサイズからバイト数を計算
+    size_t sizeIB = sizeof(VertexData) * vertices.size();
     //頂点リソースの作成
     vertexRecourse_ =
         DXCommon::GetInstance()->
@@ -329,7 +334,7 @@ void ParticleManager::CreateVertexBuffer() {
     vertexRecourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
     //頂点データの転送
-    memcpy(vertexData_, vertices, sizeIB);
+    memcpy(vertexData_, vertices.data(), sizeIB);
 
 }
 

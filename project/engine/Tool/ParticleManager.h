@@ -74,6 +74,9 @@ public:
     std::unordered_map<std::string, ParticleGroup> particleGroups;
     friend struct std::default_delete<ParticleManager>;
   static std::unique_ptr<ParticleManager> instance;
+
+  std::vector<ParticleManager::VertexData> PrimitiveVertexPlane();
+
 private:
     Particle MakeParticle( std::mt19937& randomEngine,const Vector3& translate );
     ParticleManager() = default;
