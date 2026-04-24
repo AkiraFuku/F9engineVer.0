@@ -24,7 +24,8 @@ void GameScene::Initialize() {
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
+    //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
        EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
    emitter_ = std::make_unique<ParticleEmitter>("Test", M, 10, 5.0f, 0.0f);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);

@@ -119,7 +119,7 @@ void ParticleManager::Initialize() {
 
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Particle", config);
-    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Add);
+    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
     graphicsPipelineState_ = psoSet.pipelineState;
     rootSignature_ = psoSet.rootSignature;
 
@@ -221,7 +221,7 @@ void ParticleManager::Draw() {
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
     //PSOの設定
     DXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
-    DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //VBVの設定
     DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
@@ -238,7 +238,8 @@ void ParticleManager::Draw() {
             DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.materialData.textureIndex));
             // DrawCall
             // 後述するトポロジーの修正に合わせて頂点数を変更 (6 -> 4)
-            DXCommon::GetInstance()->GetCommandList()->DrawInstanced(4, particleGroup.kNumInstance, 0, 0);
+            uint32_t vertexCount = static_cast<uint32_t>(PrimitiveVertexRing().size());
+            DXCommon::GetInstance()->GetCommandList()->DrawInstanced(vertexCount, particleGroup.kNumInstance, 0, 0);
         }
     }
 }
@@ -314,15 +315,15 @@ std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexRing()
         float c = std::cos(i * radianPerDivide);
         float sNext = std::sin((i + 1) * radianPerDivide);
         float cNext = std::cos((i + 1) * radianPerDivide);
-        float u = float(i) / float(radianPerDivide);
-        float uNext = float(i + 1) / float(radianPerDivide);
+        float u = float(i) / float(kRingDivide);
+        float uNext = float(i + 1) / float(kRingDivide);
 
         // 4つの角の頂点座標を計算
         // p1: 内側(現在), p2: 外側(現在), p3: 内側(次), p4: 外側(次)
-        VertexData p1 = { {c * kInnerRadius, s * kInnerRadius, 0.0f}, {u, 1.0f} }; // 内
-        VertexData p2 = { {c * kOuterRadius, s * kOuterRadius, 0.0f}, {u, 0.0f} }; // 外
-        VertexData p3 = { {cNext * kInnerRadius, sNext * kInnerRadius, 0.0f}, {uNext, 1.0f} }; // 内(次)
-        VertexData p4 = { {cNext * kOuterRadius, sNext * kOuterRadius, 0.0f}, {uNext, 0.0f} }; // 外(次)
+        VertexData p1 = { {c * kInnerRadius, s * kInnerRadius, 0.0f,1.0f}, {u, 1.0f} }; // 内
+        VertexData p2 = { {c * kOuterRadius, s * kOuterRadius, 0.0f,1.0f}, {u, 0.0f} }; // 外
+        VertexData p3 = { {cNext * kInnerRadius, sNext * kInnerRadius, 0.0f,1.0f}, {uNext, 1.0f} }; // 内(次)
+        VertexData p4 = { {cNext * kOuterRadius, sNext * kOuterRadius, 0.0f,1.0f}, {uNext, 0.0f} }; // 外(次)
 
         // 三角形1: p1 -> p2 -> p3
         vertices.push_back(p1);
@@ -336,7 +337,7 @@ std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexRing()
     }
 
 
-  return vertices;
+    return vertices;
 }
 ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
