@@ -4,10 +4,11 @@ class Player;
 class ICommand;
 // アクション（行動）の基底クラス
 
-class IPlayerBehavior: public IBehavior{
+class IPlayerBehavior : public IBehavior {
 public:
     virtual void Initialize(Player* player) = 0;
     virtual void Update(Player* player) = 0;
+    virtual void Finalize(Player* player) = 0;
     // その状態で特定のコマンドを受け付けるかどうかを判定し、実行する
     virtual void HandleInput(Player* player, ICommand* command) = 0;
 };
@@ -22,8 +23,11 @@ class BehaviorRoot : public IPlayerBehavior {
 public:
     void Initialize(Player* player) override;
     void Update(Player* player) override;
+    void Finalize(Player* player)override;
     void HandleInput(Player* player, ICommand* command) override;
-    const char* GetName() const override { return "Root"; } // BehaviorRootの場合
+    const char* GetName() const override {
+        return "Root";
+    } // BehaviorRootの場合
 };
 
 // 攻撃中（移動やジャンプを制限する）
@@ -31,8 +35,11 @@ class BehaviorAttack : public IPlayerBehavior {
 public:
     void Initialize(Player* player) override;
     void Update(Player* player) override;
+    void Finalize(Player* player)override;
     void HandleInput(Player* player, ICommand* command) override;
-    const char* GetName() const override { return "Attack"; } // BehaviorRootの場合
+    const char* GetName() const override {
+        return "Attack";
+    } // BehaviorRootの場合
 private:
     int timer_ = 0;
     const int kAttackDuration = 30; // 攻撃の持続時間
@@ -43,6 +50,9 @@ class BehaviorJump : public IPlayerBehavior {
 public:
     void Initialize(Player* player) override;
     void Update(Player* player) override;
+    void Finalize(Player* player)override;
     void HandleInput(Player* player, ICommand* command) override;
-    const char* GetName() const override { return "Jump"; } // BehaviorRootの場合
+    const char* GetName() const override {
+        return "Jump";
+    } // BehaviorRootの場合
 };

@@ -11,14 +11,23 @@ StateNormal::~StateNormal() = default;
 //通常状態
 void StateNormal::Initialize(Player* player)
 {
+    if (player->GetBehavior()) {
+        player->GetBehavior()->Initialize(player);
+    }
 }
 
 void StateNormal::Update(Player* player)
 {
+    if (player->GetBehavior()) {
+        player->GetBehavior()->Update(player);
+    }
 }
 
 void StateNormal::Finalize(Player* player)
 {
+    if (player->GetBehavior()) {
+        player->GetBehavior()->Finalize(player);
+    }
 }
 
 void StateNormal::HandleInput(Player* player, ICommand* command)

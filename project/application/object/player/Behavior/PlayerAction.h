@@ -2,9 +2,9 @@
 class Player;
 enum ActionType
 {
-    Jump,
-    move,
-    Attack
+    kJump,
+    kMove,
+    kAttack
 
 
 };
@@ -15,7 +15,7 @@ public:
     virtual ~IPlayerAction() = default;
     virtual void Execute(Player* player) = 0;
 private:
-   // ActionType Type;
+  
 };
 class NormalMoveAction : public IPlayerAction {
 public:
@@ -23,10 +23,13 @@ public:
     void Execute(Player* player) override ;
 private:
     float speed_;
+      ActionType Type=kMove;
 };
 
 // ジャンプアクション
 class NormalJumpAction : public IPlayerAction {
 public:
     void Execute(Player* player) override;
+public:
+    ActionType Type=kJump;
 };

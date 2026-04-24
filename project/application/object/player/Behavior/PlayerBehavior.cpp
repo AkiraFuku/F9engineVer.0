@@ -13,6 +13,10 @@ void BehaviorRoot::Update(Player* player) {
     // 毎フレームの処理（特に何もなければ空でもOK）
 }
 
+void BehaviorRoot::Finalize(Player* player)
+{
+}
+
 void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
     if (auto move = dynamic_cast<MoveCommand*>(command)) {
         move->Execute(*player);
@@ -35,6 +39,10 @@ void BehaviorAttack::Update(Player* player) {
     }
 }
 
+void BehaviorAttack::Finalize(Player* player)
+{
+}
+
 void BehaviorAttack::HandleInput(Player* player, ICommand* command) {
     // 攻撃中は他の入力を受け付けないので空にする
 }
@@ -54,6 +62,10 @@ void BehaviorJump::Update(Player* player) {
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
 
     }
+}
+
+void BehaviorJump::Finalize(Player* player)
+{
 }
 
 void BehaviorJump::HandleInput(Player* player, ICommand* command) {
