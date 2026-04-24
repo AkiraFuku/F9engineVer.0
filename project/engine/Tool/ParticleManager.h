@@ -76,6 +76,7 @@ public:
   static std::unique_ptr<ParticleManager> instance;
 
   std::vector<ParticleManager::VertexData> PrimitiveVertexPlane();
+  std::vector<ParticleManager::VertexData> PrimitiveVertexRing();
 
 private:
     Particle MakeParticle( std::mt19937& randomEngine,const Vector3& translate );

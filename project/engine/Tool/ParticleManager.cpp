@@ -37,6 +37,8 @@ void ParticleManager::Initialize() {
         D3D12_STATIC_SAMPLER_DESC sampler{};
         sampler = PSOManager::GetInstance()->StaticSamplers();
 
+        sampler.AddressV=D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+
         staticSamplers.push_back(sampler);
         D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
         descRangeTexture[0].BaseShaderRegister = 0; // t0
@@ -194,9 +196,9 @@ void ParticleManager::Update() {
                 Matrix4x4 worldMatrix = {};
                 /*  if (isBillboard)
                   {*/
-                if (particleGroup.name!="Test")
+                if (particleGroup.name != "Test")
                 {
-                (*particleIterator).transform.rotate.z += 1.0f / 60.0f;
+                    (*particleIterator).transform.rotate.z += 1.0f / 60.0f;
                 }
 
 
@@ -246,7 +248,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
     assert(!particleGroups.contains(name));
     //
     ParticleGroup& newParticle = particleGroups[name];
-    newParticle.name=name;
+    newParticle.name = name;
     newParticle.materialData.textureFilePath = textureFilepath;
     newParticle.kNumInstance = kMaxNumInstance;
     newParticle.materialData.textureIndex = newParticle.materialData.textureIndex =
@@ -280,8 +282,8 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
         Particle particle;
         Vector3 randomTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
 
-        Vector3 pPosition = position  ;
-        particle=MakeParticle(randomEngine_,pPosition);
+        Vector3 pPosition = position;
+        particle = MakeParticle(randomEngine_, pPosition);
 
         particleGroups[name].particles.push_back(particle);
     }
@@ -290,20 +292,59 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
 std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexPlane()
 {
 
-   return {
-        {{-1.0f,  1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-        {{ 1.0f,  1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-        {{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-        {{ 1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+    return {
+         {{-1.0f,  1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+         {{ 1.0f,  1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+         {{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+         {{ 1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
     };
+}
+std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexRing()
+{
+    const uint32_t kRingDivide = 32;
+    const float kOuterRadius = 1.0f;
+    const float kInnerRadius = 0.2f;
+    const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
+    std::vector<ParticleManager::VertexData> vertices;
+    // 1セグメントにつき2つの三角形（3頂点×2）を作るため、あらかじめ予約
+    vertices.reserve(kRingDivide * 6);
+    for (uint32_t i = 0; i < kRingDivide; ++i)
+    {
+        float s = std::sin(i * radianPerDivide);
+        float c = std::cos(i * radianPerDivide);
+        float sNext = std::sin((i + 1) * radianPerDivide);
+        float cNext = std::cos((i + 1) * radianPerDivide);
+        float u = float(i) / float(radianPerDivide);
+        float uNext = float(i + 1) / float(radianPerDivide);
+
+        // 4つの角の頂点座標を計算
+        // p1: 内側(現在), p2: 外側(現在), p3: 内側(次), p4: 外側(次)
+        VertexData p1 = { {c * kInnerRadius, s * kInnerRadius, 0.0f}, {u, 1.0f} }; // 内
+        VertexData p2 = { {c * kOuterRadius, s * kOuterRadius, 0.0f}, {u, 0.0f} }; // 外
+        VertexData p3 = { {cNext * kInnerRadius, sNext * kInnerRadius, 0.0f}, {uNext, 1.0f} }; // 内(次)
+        VertexData p4 = { {cNext * kOuterRadius, sNext * kOuterRadius, 0.0f}, {uNext, 0.0f} }; // 外(次)
+
+        // 三角形1: p1 -> p2 -> p3
+        vertices.push_back(p1);
+        vertices.push_back(p2);
+        vertices.push_back(p3);
+
+        // 三角形2: p2 -> p4 -> p3
+        vertices.push_back(p2);
+        vertices.push_back(p4);
+        vertices.push_back(p3);
+    }
+
+
+  return vertices;
 }
 ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
-       std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>,std::numbers::pi_v<float>); 
-       std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+    std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
+    std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
     Particle particle;
     particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };
-    particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine)};
+    particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine) };
     particle.transform.translate = translate;
     particle.velocity = { 0.0f,0.0f,0.0f };
 
@@ -316,10 +357,10 @@ ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngi
 }
 void ParticleManager::CreateRootSignature()
 {
-   
+
 }
 void ParticleManager::CreateVertexBuffer() {
-  auto vertices = PrimitiveVertexPlane(); 
+    auto vertices = PrimitiveVertexRing();
     // vectorのサイズからバイト数を計算
     size_t sizeIB = sizeof(VertexData) * vertices.size();
     //頂点リソースの作成

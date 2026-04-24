@@ -101,15 +101,15 @@ void GameScene::Update() {
 
     if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
 
-
+        emitter_->Emit();
 
         // Aボタンを押したときの処理
-
+/*
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
 
             Audio::GetInstance()->StopAudio(handle_);
-        }
+        }*/
 
         //  GetSceneManager()->ChangeScene("GameScene");
 
