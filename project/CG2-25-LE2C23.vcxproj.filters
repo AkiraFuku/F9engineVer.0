@@ -276,10 +276,10 @@
     <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="BehaviaState.cpp">
+    <ClCompile Include="application\object\player\Behavia\BehaviaState.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="Enemy.cpp">
+    <ClCompile Include="application\object\Enemy\Enemy.cpp">
       <Filter>App\Object\Enemy</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Robot\Robot.cpp">
@@ -461,10 +461,10 @@
     <ClInclude Include="application\object\player\Behavia\PlayerAction.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="BehaviaState.h">
+    <ClInclude Include="application\object\player\Behavia\BehaviaState.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="Enemy.h">
+    <ClInclude Include="application\object\Enemy\Enemy.h">
       <Filter>App\Object\Enemy</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Robot\Robot.h">
