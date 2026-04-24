@@ -26,34 +26,9 @@ void Player::Update()
     HandleInput();
     if (baseState_) baseState_->Update(this);
     if (behavior_) behavior_->Update(this);
-    // 1. 重力の計算 (Y軸のみ独立して計算)
-    if (!isGrounded_) {
-        velocity_.y += kGravity;
-    }
-    worldY_ += velocity_.y;
 
-    // 地面判定 (Y=0を地面とする場合)
-    if (worldY_ <= 0.0f) {
-        worldY_ = 0.0f;
-        velocity_.y = 0.0f;
-        isGrounded_ = true;
-    }
-
-    // 2. レール上の座標を取得 (XZの土台)
-    Vector3 railPos = railMover_->GetCurrentPosition();
-
-    // 3. 【重要】レールのXZと、自分のYを合成する
-    Vector3 finalPos = { railPos.x, worldY_, railPos.z };
-
-    // 座標と回転の反映
-    object_->SetTranslate(finalPos);
-
-    // 進行方向を向く処理
-    Vector3 dir = railMover_->GetCurrentDirection();
-    float angle = atan2f(dir.x, dir.z);
-    object_->SetRotate({ 0.0f, angle, 0.0f });
-
-    object_->Update();
+    UpdateRailPath();
+    
 }
 
 void Player::Draw()
@@ -139,6 +114,37 @@ float Player::GetCurrentDistance() const {
 const RailPath* Player::GetRailPath() const
 {
     return railMover_->GetRailPath();
+}
+void Player::UpdateRailPath()
+{
+    // 1. 重力の計算 (Y軸のみ独立して計算)
+    if (!isGrounded_) {
+        velocity_.y += kGravity;
+    }
+    worldY_ += velocity_.y;
+
+    // 地面判定 (Y=0を地面とする場合)
+    if (worldY_ <= 0.0f) {
+        worldY_ = 0.0f;
+        velocity_.y = 0.0f;
+        isGrounded_ = true;
+    }
+
+    // 2. レール上の座標を取得 (XZの土台)
+    Vector3 railPos = railMover_->GetCurrentPosition();
+
+    // 3. 【重要】レールのXZと、自分のYを合成する
+    Vector3 finalPos = { railPos.x, worldY_, railPos.z };
+
+    // 座標と回転の反映
+    object_->SetTranslate(finalPos);
+
+    // 進行方向を向く処理
+    Vector3 dir = railMover_->GetCurrentDirection();
+    float angle = atan2f(dir.x, dir.z);
+    object_->SetRotate({ 0.0f, angle, 0.0f });
+
+    object_->Update();
 }
 void Player::HandleInput()
 {

@@ -20,9 +20,11 @@ void BehaviorRoot::Finalize(Player* player)
 void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
     if (auto move = dynamic_cast<MoveCommand*>(command)) {
         move->Execute(*player);
-    } else if (dynamic_cast<JumpCommand*>(command)) {
+    } 
+    if (dynamic_cast<JumpCommand*>(command)) {
         player->ChangeBehavior(std::make_unique<BehaviorJump>());
-    } else if (dynamic_cast<AttackCommand*>(command)) {
+    } 
+    if (dynamic_cast<AttackCommand*>(command)) {
         player->ChangeBehavior(std::make_unique<BehaviorAttack>());
     }
 }

@@ -70,12 +70,13 @@ public:
     bool IsGround()const{ return isGrounded_;}
 
 private:
+
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態
     std::unique_ptr<IPlayerBehavior> behavior_;   // 「通常・攻撃・ジャンプ」
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整
-
+    void UpdateRailPath();
     void HandleInput();
     Camera* camera_ = nullptr;
 
