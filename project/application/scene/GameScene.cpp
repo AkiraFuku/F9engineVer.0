@@ -15,6 +15,7 @@
 #include"Audio.h"
 #include "TextureManager.h"
 #include "RailPath.h"
+#include "Enemy.h"
 
 void GameScene::Initialize() {
 
@@ -144,6 +145,10 @@ stageRail->AddPoint({ 0, 0, 0 });
     player->SetRail(stageRail.get());
     // player->SetRail(stageRail.get());
 
+    enemy= std::make_unique<Enemy>();
+    enemy->Initialize();
+    enemy->SetPosition({ 0.0f, 0.0f, 0.0f });
+    enemy->SetRail(stageRail.get());
 
 
 
@@ -231,6 +236,7 @@ void GameScene::Update() {
 
     player->Update();
 
+    enemy->Update();
 
     skyBox->SetTranslate(activeCamera_->GetTranslate());
     skyBox->Update();
@@ -317,6 +323,7 @@ void GameScene::Draw() {
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();
+    enemy->Draw();
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画

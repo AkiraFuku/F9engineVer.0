@@ -9,7 +9,7 @@
 #include "CameraController.h"
 
 class RailPath;
-
+class Enemy;
 #include "Animation.h"
 
 class GameScene :public Scene
@@ -32,6 +32,7 @@ private:
     std::unique_ptr<RailPath> cameraRail;
 
     std::unique_ptr<CameraController> cameraController; 
+    std::unique_ptr<Enemy> enemy; 
     std::unique_ptr<SkyBox> skyBox;
     std::unique_ptr<CameraController> debugCameraC; 
 

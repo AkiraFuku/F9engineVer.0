@@ -20,6 +20,7 @@
     <ClCompile Include="application\scene\TitleScene.cpp" />
     <ClCompile Include="BehaviaState.cpp" />
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
     <ClCompile Include="engine\math\Mass.cpp" />
@@ -95,6 +96,7 @@
     <ClInclude Include="application\scene\TitleScene.h" />
     <ClInclude Include="BehaviaState.h" />
     <ClInclude Include="CameraController.h" />
+    <ClInclude Include="Enemy.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
     <ClInclude Include="engine\math\Quanternion.h" />
