@@ -1,4 +1,4 @@
-#include "PlayerBehavia.h"
+#include "PlayerBehavior.h"
 #include "Player.h"
 #include "Command.h"
 #include "PlayerAction.h"

@@ -6,7 +6,7 @@
 #include "InputHandler.h"
 #include "imgui.h"
 #include "PlayerState.h"
-#include "PlayerBehavia.h"
+#include "PlayerBehavior.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()

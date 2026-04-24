@@ -270,13 +270,13 @@
     <ClCompile Include="SkyBox.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="application\object\player\Behavia\PlayerState.cpp">
+    <ClCompile Include="application\object\player\Behavior\PlayerState.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp">
+    <ClCompile Include="application\object\player\Behavior\PlayerAction.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="application\Behavia\BehaviaState.cpp">
+    <ClCompile Include="application\Behavior\BehaviorState.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Enemy\Enemy.cpp">
@@ -285,7 +285,10 @@
     <ClCompile Include="application\object\Robot\Robot.cpp">
       <Filter>App\Object\Robot</Filter>
     </ClCompile>
-    <ClCompile Include="application\object\player\Behavia\PlayerBehavia.cpp">
+    <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -458,13 +461,13 @@
     <ClInclude Include="SkyBox.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\object\player\Behavia\PlayerState.h">
+    <ClInclude Include="application\object\player\Behavior\PlayerState.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="application\object\player\Behavia\PlayerAction.h">
+    <ClInclude Include="application\object\player\Behavior\PlayerAction.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="application\Behavia\BehaviaState.h">
+    <ClInclude Include="application\Behavior\BehaviorState.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Enemy\Enemy.h">
@@ -473,7 +476,10 @@
     <ClInclude Include="application\object\Robot\Robot.h">
       <Filter>App\Object\Robot</Filter>
     </ClInclude>
-    <ClInclude Include="application\object\player\Behavia\PlayerBehavia.h">
+    <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -18,9 +18,10 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="application\scene\GameScene.cpp" />
     <ClCompile Include="application\scene\TitleScene.cpp" />
-    <ClCompile Include="application\Behavia\BehaviaState.cpp" />
+    <ClCompile Include="application\Behavior\BehaviorState.cpp" />
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="application\object\Enemy\Enemy.cpp" />
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp" />
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
     <ClCompile Include="engine\math\Mass.cpp" />
@@ -82,9 +83,9 @@
     <ClCompile Include="engine\scene\SceneManager.cpp" />
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="application\object\player\Player.cpp" />
-    <ClCompile Include="application\object\player\Behavia\PlayerState.cpp" />
-    <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp" />
-    <ClCompile Include="application\object\player\Behavia\PlayerBehavia.cpp" />
+    <ClCompile Include="application\object\player\Behavior\PlayerState.cpp" />
+    <ClCompile Include="application\object\player\Behavior\PlayerAction.cpp" />
+    <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp" />
     <ClCompile Include="PrimitiveDrawer.cpp" />
     <ClCompile Include="application\Rail\RailMover.cpp" />
     <ClCompile Include="application\Rail\RailPath.cpp" />
@@ -95,9 +96,10 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="application\scene\GameScene.h" />
     <ClInclude Include="application\scene\TitleScene.h" />
-    <ClInclude Include="application\Behavia\BehaviaState.h" />
+    <ClInclude Include="application\Behavior\BehaviorState.h" />
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="application\object\Enemy\Enemy.h" />
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
     <ClInclude Include="engine\math\Quanternion.h" />
@@ -146,9 +148,9 @@
     <ClInclude Include="application\object\player\Player.h" />
     <ClInclude Include="application\object\player\Command.h" />
     <ClInclude Include="application\object\player\InputHandler.h" />
-    <ClInclude Include="application\object\player\Behavia\PlayerState.h" />
-    <ClInclude Include="application\object\player\Behavia\PlayerAction.h" />
-    <ClInclude Include="application\object\player\Behavia\PlayerBehavia.h" />
+    <ClInclude Include="application\object\player\Behavior\PlayerState.h" />
+    <ClInclude Include="application\object\player\Behavior\PlayerAction.h" />
+    <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h" />
     <ClInclude Include="PrimitiveDrawer.h" />
     <ClInclude Include="application\Rail\RailMover.h" />
     <ClInclude Include="application\Rail\RailPath.h" />
@@ -292,7 +294,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\object\Behavia</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -320,7 +322,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\object\Behavia</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -351,7 +353,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\object\Behavia</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

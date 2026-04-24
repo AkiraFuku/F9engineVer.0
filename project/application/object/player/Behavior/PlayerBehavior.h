@@ -1,5 +1,5 @@
 #pragma once
-#include "BehaviaState.h"
+#include "BehaviorState.h"
 class Player;
 class ICommand;
 // アクション（行動）の基底クラス
