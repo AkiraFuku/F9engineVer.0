@@ -3,7 +3,7 @@
 #include "Command.h"
 #include <memory>
 #include "Player.h"
-#include "BehaviaState.h"
+#include "PlayerBehavia.h"
 
 StateNormal::StateNormal() = default;
 StateNormal::~StateNormal() = default;

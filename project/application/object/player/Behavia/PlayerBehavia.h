@@ -1,25 +1,24 @@
 #pragma once
-#pragma once
-#include <memory>
-
+#include "BehaviaState.h"
 class Player;
 class ICommand;
-
 // アクション（行動）の基底クラス
-class IBehaviorState {
+
+class IPlayerBehavior: public IBehavior{
 public:
-    virtual ~IBehaviorState() = default;
     virtual void Initialize(Player* player) = 0;
     virtual void Update(Player* player) = 0;
     // その状態で特定のコマンドを受け付けるかどうかを判定し、実行する
     virtual void HandleInput(Player* player, ICommand* command) = 0;
-    virtual const char* GetName() const = 0; // 追加
 };
+
+
+
 
 // --- 具体的な行動状態 ---
 
 // 通常時（移動・ジャンプ・攻撃への遷移が可能）
-class BehaviorRoot : public IBehaviorState {
+class BehaviorRoot : public IPlayerBehavior {
 public:
     void Initialize(Player* player) override;
     void Update(Player* player) override;
@@ -28,7 +27,7 @@ public:
 };
 
 // 攻撃中（移動やジャンプを制限する）
-class BehaviorAttack : public IBehaviorState {
+class BehaviorAttack : public IPlayerBehavior {
 public:
     void Initialize(Player* player) override;
     void Update(Player* player) override;
@@ -40,7 +39,7 @@ private:
 };
 
 // ジャンプ中（左右移動はできるが、再度ジャンプはできない等）
-class BehaviorJump : public IBehaviorState {
+class BehaviorJump : public IPlayerBehavior {
 public:
     void Initialize(Player* player) override;
     void Update(Player* player) override;

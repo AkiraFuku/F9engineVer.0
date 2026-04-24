@@ -1,4 +1,4 @@
-#include "BehaviaState.h"
+#include "PlayerBehavia.h"
 #include "Player.h"
 #include "Command.h"
 #include "PlayerAction.h"
@@ -49,6 +49,11 @@ void BehaviorJump::Initialize(Player* player) {
 void BehaviorJump::Update(Player* player) {
     // 地面に着いたら Root に戻るなどの判定
     // ※Playerクラスに IsGrounded() などの関数があると便利です
+    if (player->IsGround())
+    {
+        player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+
+    }
 }
 
 void BehaviorJump::HandleInput(Player* player, ICommand* command) {

@@ -6,7 +6,7 @@
 #include "InputHandler.h"
 #include "imgui.h"
 #include "PlayerState.h"
-#include "BehaviaState.h"
+#include "PlayerBehavia.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -155,7 +155,7 @@ void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
     baseState_ = std::move(newState);
     baseState_->Initialize(this);
 }
-void Player::ChangeBehavior(std::unique_ptr<IBehaviorState> newBehavior) {
+void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
     behavior_ = std::move(newBehavior);
     behavior_->Initialize(this);
 }

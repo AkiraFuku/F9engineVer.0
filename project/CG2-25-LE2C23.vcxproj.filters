@@ -276,7 +276,7 @@
     <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="application\object\player\Behavia\BehaviaState.cpp">
+    <ClCompile Include="application\Behavia\BehaviaState.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Enemy\Enemy.cpp">
@@ -284,6 +284,9 @@
     </ClCompile>
     <ClCompile Include="application\object\Robot\Robot.cpp">
       <Filter>App\Object\Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\player\Behavia\PlayerBehavia.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -461,7 +464,7 @@
     <ClInclude Include="application\object\player\Behavia\PlayerAction.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="application\object\player\Behavia\BehaviaState.h">
+    <ClInclude Include="application\Behavia\BehaviaState.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Enemy\Enemy.h">
@@ -469,6 +472,9 @@
     </ClInclude>
     <ClInclude Include="application\object\Robot\Robot.h">
       <Filter>App\Object\Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\player\Behavia\PlayerBehavia.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

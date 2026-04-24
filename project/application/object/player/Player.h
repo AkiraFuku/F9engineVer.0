@@ -8,7 +8,7 @@ class Camera;
 class RailMover;
 class RailPath;
 class IPlayerState;
-class IBehaviorState;
+class IPlayerBehavior;
 class Robot;
 
 class Player
@@ -51,14 +51,14 @@ public:
     Vector3 GetVelocity() const {
         return velocity_;
     }
-    IBehaviorState* GetBehavior() {
+    IPlayerBehavior* GetBehavior() {
         return behavior_.get();
     };
 
     void SetRail(RailPath* rail);
     // 状態を切り替えるメソッド
     void ChangeState(std::unique_ptr<IPlayerState> newState);
-    void ChangeBehavior(std::unique_ptr<IBehaviorState> newBehavior);
+    void ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior);
 
     void Move(float ratio);
     void Jump();
@@ -67,9 +67,11 @@ public:
     float GetRailProgress() const;
     float GetCurrentDistance() const;
     const RailPath* GetRailPath()const; 
+    bool IsGround()const{ return isGrounded_;}
+
 private:
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態
-    std::unique_ptr<IBehaviorState> behavior_;   // 「通常・攻撃・ジャンプ」
+    std::unique_ptr<IPlayerBehavior> behavior_;   // 「通常・攻撃・ジャンプ」
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整
