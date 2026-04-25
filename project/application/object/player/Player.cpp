@@ -29,6 +29,12 @@ void Player::Update()
     if (behavior_) behavior_->Update(this);
 
     UpdateRailPath();
+    // --- タイマーの更新 ---
+    if (hitVisualTimer_ > 0) {
+        hitVisualTimer_--;
+    } else {
+        isHit_ = false;
+    }
     
 }
 
@@ -61,6 +67,17 @@ void Player::Draw()
     } else {
         ImGui::Text("Behavior: None");
     }
+    ImGui::Separator(); // 区切り線
+    // --- 被弾状態の表示 ---
+    if (isHit_) {
+        // 赤文字で大きく表示
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "STATUS: COLLIDING / DAMAGED!");
+    } else {
+        ImGui::Text("STATUS: Normal");
+    }
+
+    // タイマーの残りも出しておくと便利
+    ImGui::ProgressBar((float)hitVisualTimer_ / kHitVisualDuration, ImVec2(0, 0), "Hit Timer");
 
 
     ImGui::End();
@@ -167,7 +184,9 @@ void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
     behavior_->Initialize(this);
 }
 void Player::OnCollision([[maybe_unused]] Enemy* other) {
-    // 敵に当たった時の処理
-    // 例：ダメージを受ける、少し弾き飛ばされる、など
-    // velocity_.y = 0.2f; // 跳ね返る例
+  // 衝突したらフラグとタイマーをセット
+    isHit_ = true;
+    hitVisualTimer_ = kHitVisualDuration;
+
+    // (必要であれば) ノックバックなどの物理挙動をここに書く
 }

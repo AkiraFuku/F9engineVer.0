@@ -248,9 +248,12 @@ void GameScene::Update() {
     colManager->SetPlayer(player.get());
     for (auto& enemy : enemies_) {
         if (enemy) { // 安全確認
-        enemy->Update();
+            enemy->Update();
+            colManager->AddEnemy(enemy.get());
+
+        }
     }
-    }
+
     colManager->CheckAllCollisions();
 
     skyBox->SetTranslate(activeCamera_->GetTranslate());

@@ -29,21 +29,18 @@ void CollisionManager::CheckAllCollisions() {
 }
 
 void CollisionManager::CheckPlayerEnemyCollision(Player* p, Enemy* e) {
-    // 座標取得 (GetTransform().translate など)
     Vector3 posP = p->GetTransform().translate;
     Vector3 posE = e->GetTransform().translate;
 
-    // 距離の計算（球判定）
     float dx = posP.x - posE.x;
     float dy = posP.y - posE.y;
     float dz = posP.z - posE.z;
     float distanceSq = dx * dx + dy * dy + dz * dz;
 
-    // 半径（仮に 1.0f とする。本来はクラスから取得すべき）
-    float radiusSum = 1.0f + 1.0f; 
-
+    // 半径を仮に 1.0f ずつとして、距離の2乗で判定 (1.0 + 1.0)^2 = 4.0
+    float radiusSum = 2.0f; 
     if (distanceSq <= radiusSum * radiusSum) {
-        // 衝突！
+        // --- ここでプレイヤーとエネミーに通知する ---
         p->OnCollision(e);
         e->OnCollision(p);
     }

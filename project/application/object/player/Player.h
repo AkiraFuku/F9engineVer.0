@@ -90,5 +90,12 @@ private:
     bool isGrounded_ = true;
     std::unique_ptr<RailMover> railMover_;
 
+    // --- 被弾表示用 ---
+
+    float Radius=1.0f;
+    bool isHit_ = false;       // 今当たっているか
+    int hitVisualTimer_ = 0;   // 当たった後の表示持続タイマー
+    const int kHitVisualDuration = 10; // 何フレーム表示するか
+
 };
 
