@@ -25,7 +25,7 @@ void Player::Update()
 {
     HandleInput();
     if (baseState_) baseState_->Update(this);
-    if (behavior_) behavior_->Update(this);
+  //  if (behavior_) behavior_->Update(this);
 
     UpdateRailPath();
     

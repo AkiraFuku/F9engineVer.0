@@ -43,6 +43,13 @@ IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<
     : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
 }
 
+void IStateRideOn::Update(Player* player)
+{
+    if (player->GetBehavior()) {
+        player->GetBehavior()->Update(player);
+    }
+}
+
 void IStateRideOn::HandleInput(Player* player, ICommand* command)
 {
     if (player->GetBehavior()) {

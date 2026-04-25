@@ -23,6 +23,7 @@
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="application\object\Enemy\Enemy.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp" />
+    <ClCompile Include="EnemyState.cpp" />
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
     <ClCompile Include="engine\math\Mass.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="application\object\Enemy\Enemy.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h" />
+    <ClInclude Include="EnemyState.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
     <ClInclude Include="engine\math\Quanternion.h" />

@@ -45,6 +45,11 @@ public:
 
     virtual ~IStateRideOn() = default;
 
+     virtual void Initialize(Player* player)override = 0;
+    virtual void Finalize(Player* player)override = 0;
+
+     virtual void Update(Player* player) override;
+
     // 共通の入力処理：基本的には現在の Behavior に任せる
     void HandleInput(Player* player, ICommand* command) override;
 
