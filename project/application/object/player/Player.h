@@ -94,8 +94,8 @@ private:
 
     float Radius=1.0f;
     bool isHit_ = false;       // 今当たっているか
-    int hitVisualTimer_ = 0;   // 当たった後の表示持続タイマー
-    const int kHitVisualDuration = 10; // 何フレーム表示するか
+    float hitVisualTimer_ = 0.0f;   // 当たった後の表示持続タイマー
+    const float kHitVisualDuration = 10.0f; // 何フレーム表示するか
 
 };
 
