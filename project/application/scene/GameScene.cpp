@@ -16,6 +16,7 @@
 #include "TextureManager.h"
 #include "RailPath.h"
 #include "Enemy.h"
+#include "CollisionManager.h"
 
 void GameScene::Initialize() {
 
@@ -121,37 +122,35 @@ void GameScene::Initialize() {
 
     // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
- //   stageRail->SetLoop(true); // ループを有効化
+    //   stageRail->SetLoop(true); // ループを有効化
 
     float radius = 20.0f;       // 円の半径
     float h = radius * 0.5522f; // ハンドルの長さ
 
- // 【修正版】反時計回りの順序に変更
-// 点0: 前方 (Z+) -> 次は左(X-)へ向かうので、Outは左(-X)方向
-stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
+    // 【修正版】反時計回りの順序に変更
+   // 点0: 前方 (Z+) -> 次は左(X-)へ向かうので、Outは左(-X)方向
+    stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
 
-// 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
-stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
+    // 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
+    stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
 
-// 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
-stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
+    // 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
+    stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
 
-// 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
-//stageRail->AddPointCR({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-stageRail->AddPointCR({ radius, 0, 0 });
-stageRail->AddPoint({ 0, 0, 0 });
+    // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
+    //stageRail->AddPointCR({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+    stageRail->AddPointCR({ radius, 0, 0 });
+    stageRail->AddPoint({ 0, 0, 0 });
     // 最後に必ず更新して距離テーブルを作成
     stageRail->Update();
 
     player->SetRail(stageRail.get());
     // player->SetRail(stageRail.get());
 
-    enemy= std::make_unique<Enemy>();
-    enemy->Initialize();
-    enemy->SetPosition({ 0.0f, 0.0f, 0.0f });
-    enemy->SetRail(stageRail.get());
-    enemy->SetRailPosition({1.0f,0.0f});
 
+    // テスト用に敵を生成する場合
+    AddEnemy({ 0.1f, 0.0f });
+    AddEnemy({ 0.2f, 0.0f });
 
 
 
@@ -238,7 +237,21 @@ void GameScene::Update() {
 
     player->Update();
 
-    enemy->Update();
+    // 全ての敵を更新
+    for (auto& enemy : enemies_) {
+        enemy->Update();
+    }
+
+    // --- 衝突判定の実行 ---
+    CollisionManager* colManager = CollisionManager::GetInstance();
+    colManager->Clear();
+    colManager->SetPlayer(player.get());
+    for (auto& enemy : enemies_) {
+        if (enemy) { // 安全確認
+        enemy->Update();
+    }
+    }
+    colManager->CheckAllCollisions();
 
     skyBox->SetTranslate(activeCamera_->GetTranslate());
     skyBox->Update();
@@ -325,7 +338,10 @@ void GameScene::Draw() {
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();
-    enemy->Draw();
+    // 全ての敵を描画
+    for (auto& enemy : enemies_) {
+        enemy->Draw();
+    }
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
@@ -335,3 +351,21 @@ void GameScene::Draw() {
 GameScene::GameScene() = default;
 
 GameScene::~GameScene() = default;
+
+void GameScene::AddEnemy(Vector2 pos)
+{
+    if (stageRail)
+    {// 新しい敵を生成
+        std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
+        newEnemy->Initialize();
+
+        // 共通の設定
+        newEnemy->SetCamera(cameraMap_["Main"].get());
+        newEnemy->SetRail(stageRail.get());
+        newEnemy->SetRailPosition(pos);
+
+        // ベクターに追加
+        enemies_.push_back(std::move(newEnemy));
+    }
+
+}

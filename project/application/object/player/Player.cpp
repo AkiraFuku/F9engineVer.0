@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "PlayerState.h"
 #include "PlayerBehavior.h"
+#include "Enemy.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -25,7 +26,7 @@ void Player::Update()
 {
     HandleInput();
     if (baseState_) baseState_->Update(this);
-  //  if (behavior_) behavior_->Update(this);
+    if (behavior_) behavior_->Update(this);
 
     UpdateRailPath();
     
@@ -164,4 +165,9 @@ void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
 void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
     behavior_ = std::move(newBehavior);
     behavior_->Initialize(this);
+}
+void Player::OnCollision([[maybe_unused]] Enemy* other) {
+    // 敵に当たった時の処理
+    // 例：ダメージを受ける、少し弾き飛ばされる、など
+    // velocity_.y = 0.2f; // 跳ね返る例
 }

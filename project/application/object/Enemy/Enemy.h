@@ -7,7 +7,7 @@ class Camera;
 class RailMover;
 class RailPath;
 class IEnemyBehavior; // 前方宣言
-
+class Player; // Enemy.h の場合
 class Enemy
 {
 public:
@@ -56,6 +56,8 @@ public:
 
     // プレイヤーと同様に、IsGround() などの判定があると Behavior 側で便利です
     bool IsGround() const { return isGrounded_; }
+
+    void OnCollision(Player* other); // Enemy側
 
 private:
     std::unique_ptr<Object3d> object_;

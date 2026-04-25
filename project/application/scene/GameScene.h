@@ -7,6 +7,7 @@
 #include <memory>
 #include "SkyBox.h"
 #include "CameraController.h"
+#include "Vector2.h"
 
 class RailPath;
 class Enemy;
@@ -22,6 +23,8 @@ public:
     GameScene() ;
     ~GameScene() override;
 
+    void AddEnemy(Vector2 pos);
+
 
 private:
     std::unique_ptr<Sprite> sprite;
@@ -32,7 +35,8 @@ private:
     std::unique_ptr<RailPath> cameraRail;
 
     std::unique_ptr<CameraController> cameraController; 
-    std::unique_ptr<Enemy> enemy; 
+    std::vector<std::unique_ptr<Enemy>> enemies_;
+   // std::unique_ptr<Enemy> enemy; 
     std::unique_ptr<SkyBox> skyBox;
     std::unique_ptr<CameraController> debugCameraC; 
 

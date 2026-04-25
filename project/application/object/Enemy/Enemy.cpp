@@ -98,3 +98,8 @@ void Enemy::UpdatePhysics() {
 
     object_->Update();
 }
+// Enemy.cpp
+void Enemy::OnCollision([[maybe_unused]] Player* other) {
+    // プレイヤーに当たった時の処理
+    // 例：HPを減らす、消滅する、など
+}

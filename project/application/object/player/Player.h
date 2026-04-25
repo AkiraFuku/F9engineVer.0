@@ -10,6 +10,7 @@ class RailPath;
 class IPlayerState;
 class IPlayerBehavior;
 class Robot;
+class Enemy; // Player.h の場合
 
 class Player
 {
@@ -68,6 +69,8 @@ public:
     float GetCurrentDistance() const;
     const RailPath* GetRailPath()const; 
     bool IsGround()const{ return isGrounded_;}
+
+    void OnCollision(Enemy* other); // Player側
 
 private:
 

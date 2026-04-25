@@ -18,9 +18,9 @@ void StateNormal::Initialize(Player* player)
 
 void StateNormal::Update(Player* player)
 {
-    if (player->GetBehavior()) {
+   /* if (player->GetBehavior()) {
         player->GetBehavior()->Update(player);
-    }
+    }*/
 }
 
 void StateNormal::Finalize(Player* player)
@@ -45,9 +45,9 @@ IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<
 
 void IStateRideOn::Update(Player* player)
 {
-    if (player->GetBehavior()) {
+    /*if (player->GetBehavior()) {
         player->GetBehavior()->Update(player);
-    }
+    }*/
 }
 
 void IStateRideOn::HandleInput(Player* player, ICommand* command)
