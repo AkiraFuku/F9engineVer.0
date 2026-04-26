@@ -17,6 +17,9 @@ public:
     virtual void Finalize(Player* player) = 0;
     virtual void HandleInput(Player* player, ICommand* command) = 0;
     virtual const char* GetName() const = 0; // 追加
+    virtual IPlayerAction* GetMoveAction() = 0;
+    virtual IPlayerAction* GetJumpAction() = 0;
+    virtual IPlayerAction* GetAttackAction_() = 0;
 };
 //通常状態
 class StateNormal : public IPlayerState {
@@ -27,28 +30,40 @@ public:
     void Update(Player* player) override;
     void Finalize(Player* player) override;
     void HandleInput(Player* player, ICommand* command) override;
-    const char* GetName() const override { return "Normal"; } // StateNormalの場合
+    const char* GetName() const override {
+        return "Normal";
+    } // StateNormalの場合
+
+    IPlayerAction* GetMoveAction()override {
+        return moveAction_.get();
+    }
+    IPlayerAction* GetJumpAction()override {
+        return jumpAction_.get();
+    }
+    IPlayerAction* GetAttackAction_()override {
+        return attackAction_.get();
+    }
 
 private:
-    std::unique_ptr<IPlayerAction> moveAction_=nullptr;
-    std::unique_ptr<IPlayerAction> attackAction_=nullptr;
-    std::unique_ptr<IPlayerAction> jumpAction_=nullptr;
+    std::unique_ptr<IPlayerAction> moveAction_ = nullptr;
+    std::unique_ptr<IPlayerAction> attackAction_ = nullptr;
+    std::unique_ptr<IPlayerAction> jumpAction_ = nullptr;
 };
 
 //搭乗状態
 class IStateRideOn : public IPlayerState {
 public:
     // コンストラクタでアクションを注入できるようにする
-    IStateRideOn(std::unique_ptr<IPlayerAction> move, 
-                    std::unique_ptr<IPlayerAction> attack);
-      
+    IStateRideOn(std::unique_ptr<IPlayerAction> move,
+        std::unique_ptr<IPlayerAction> attack);
+
 
     virtual ~IStateRideOn() = default;
 
-     virtual void Initialize(Player* player)override = 0;
+    virtual void Initialize(Player* player)override = 0;
     virtual void Finalize(Player* player)override = 0;
 
-     virtual void Update(Player* player) override;
+    virtual void Update(Player* player) override;
 
     // 共通の入力処理：基本的には現在の Behavior に任せる
     void HandleInput(Player* player, ICommand* command) override;
@@ -59,9 +74,9 @@ public:
     void DoShoot(Player* player);
 
 protected:
-    std::unique_ptr<IPlayerAction> moveAction_=nullptr;
-    std::unique_ptr<IPlayerAction> attackAction_=nullptr;
-    std::unique_ptr<IPlayerAction> jumpAction_=nullptr;
-    std::unique_ptr<IPlayerAction> shootAction_=nullptr;
+    std::unique_ptr<IPlayerAction> moveAction_ = nullptr;
+    std::unique_ptr<IPlayerAction> attackAction_ = nullptr;
+    std::unique_ptr<IPlayerAction> jumpAction_ = nullptr;
+    std::unique_ptr<IPlayerAction> shootAction_ = nullptr;
 
 };

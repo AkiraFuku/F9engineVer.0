@@ -21,6 +21,7 @@ class NormalMoveAction : public IPlayerAction {
 public:
     NormalMoveAction(float speed) : speed_(speed) {}
     void Execute(Player* player) override ;
+    void SetSpeed(float speed){speed_=speed;}
 private:
     float speed_;
       ActionType Type=kMove;

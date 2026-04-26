@@ -2,7 +2,7 @@
 #include "Player.h"
 #include "Command.h"
 #include "PlayerAction.h"
-
+#include "PlayerState.h"
 
 // --- BehaviorRoot (通常状態) ---
 void BehaviorRoot::Initialize(Player* player) {
@@ -18,18 +18,22 @@ void BehaviorRoot::Finalize(Player* player)
 }
 
 void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
-    // 移動コマンドの処理
+   auto moveAction = player->GetState()->GetMoveAction();
+
     if (auto moveCmd = dynamic_cast<MoveCommand*>(command)) {
-        // 直接 player->Move を呼ばず、Actionを生成して実行
-        auto moveAction = std::make_unique<NormalMoveAction>(moveCmd->GetSpeed());
-        moveAction->Execute(player);
+        if (moveAction) {
+            // コマンドから速度を抽出し、アクションにセットして実行
+            // ※Action側にパラメータセット用メソッド(SetSpeed等)が必要
+            static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());
+            moveAction->Execute(player);
+        }
     } 
-    // ジャンプコマンドの処理
-    else if (dynamic_cast<JumpCommand*>(command)) {
-        // ジャンプ状態へ遷移（遷移後の Initialize で JumpAction が呼ばれる設計を維持）
+    
+    if (dynamic_cast<JumpCommand*>(command)) {
+        // ジャンプ状態へ遷移
         player->ChangeBehavior(std::make_unique<BehaviorJump>());
-    } 
-    else if (dynamic_cast<AttackCommand*>(command)) {
+    }
+     if (dynamic_cast<AttackCommand*>(command)) {
         player->ChangeBehavior(std::make_unique<BehaviorAttack>());
     }
 }
@@ -56,8 +60,10 @@ void BehaviorAttack::HandleInput(Player* player, ICommand* command) {
 
 // --- BehaviorJump (ジャンプ状態) ---
 void BehaviorJump::Initialize(Player* player) {
-    auto action = std::make_unique<NormalJumpAction>();
-    action->Execute(player);
+  auto jumpAction = player->GetState()->GetJumpAction();
+    if (jumpAction) {
+        jumpAction->Execute(player);
+    }
 
 }
 
@@ -77,9 +83,19 @@ void BehaviorJump::Finalize(Player* player)
 
 // --- BehaviorJump (空中状態) ---
 void BehaviorJump::HandleInput(Player* player, ICommand* command) {
-    // 空中移動の処理もAction経由に統一
+  auto moveAction = player->GetState()->GetMoveAction();
+
     if (auto moveCmd = dynamic_cast<MoveCommand*>(command)) {
-        auto moveAction = std::make_unique<NormalMoveAction>(moveCmd->GetSpeed());
-        moveAction->Execute(player);
-    }
+        if (moveAction) {
+            // コマンドから速度を抽出し、アクションにセットして実行
+            // ※Action側にパラメータセット用メソッド(SetSpeed等)が必要
+            static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());
+            moveAction->Execute(player);
+        }
+    } 
+    
+/*    if (dynamic_cast<JumpCommand*>(command)) {
+        // ジャンプ状態へ遷移
+        player->ChangeBehavior(std::make_unique<BehaviorJump>());
+    }*/
 }

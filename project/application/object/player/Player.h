@@ -55,6 +55,9 @@ public:
     IPlayerBehavior* GetBehavior() {
         return behavior_.get();
     };
+    IPlayerState* GetState(){
+        return baseState_.get();
+    }
 
     void SetRail(RailPath* rail);
     // 状態を切り替えるメソッド

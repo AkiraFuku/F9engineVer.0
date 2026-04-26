@@ -14,13 +14,15 @@ void StateNormal::Initialize(Player* player)
     if (player->GetBehavior()) {
         player->GetBehavior()->Initialize(player);
     }
+    moveAction_ = std::make_unique<NormalMoveAction>(1.0f); // デフォルト速度
+    jumpAction_ = std::make_unique<NormalJumpAction>();
 }
 
 void StateNormal::Update(Player* player)
 {
-   /* if (player->GetBehavior()) {
-        player->GetBehavior()->Update(player);
-    }*/
+    /* if (player->GetBehavior()) {
+         player->GetBehavior()->Update(player);
+     }*/
 }
 
 void StateNormal::Finalize(Player* player)
@@ -58,7 +60,11 @@ void IStateRideOn::HandleInput(Player* player, ICommand* command)
 }
 
 void IStateRideOn::DoMove(Player* player)
- { if(moveAction_) moveAction_->Execute(player); }
+{
+    if (moveAction_) moveAction_->Execute(player);
+}
 
-void IStateRideOn::DoShoot(Player * player)
-{if(shootAction_)shootAction_->Execute(player);}
+void IStateRideOn::DoShoot(Player* player)
+{
+    if (shootAction_)shootAction_->Execute(player);
+}
