@@ -282,7 +282,7 @@
     <ClCompile Include="application\object\Enemy\Enemy.cpp">
       <Filter>App\Object\Enemy</Filter>
     </ClCompile>
-    <ClCompile Include="application\object\Robot\Robot.cpp">
+    <ClCompile Include="application\object\Robot\Base\Robot.cpp">
       <Filter>App\Object\Robot</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp">
@@ -298,6 +298,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="CollisionManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Dammy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -482,7 +485,7 @@
     <ClInclude Include="application\object\Enemy\Enemy.h">
       <Filter>App\Object\Enemy</Filter>
     </ClInclude>
-    <ClInclude Include="application\object\Robot\Robot.h">
+    <ClInclude Include="application\object\Robot\Base\Robot.h">
       <Filter>App\Object\Robot</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h">
@@ -498,6 +501,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="CollisionManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Dammy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
