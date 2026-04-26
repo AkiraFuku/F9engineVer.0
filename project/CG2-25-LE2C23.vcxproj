@@ -25,7 +25,11 @@
     <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyState.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
-    <ClCompile Include="Dammy.cpp" />
+    <ClCompile Include="Dammy.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
     <ClCompile Include="engine\math\Mass.cpp" />
@@ -107,7 +111,11 @@
     <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyState.h" />
     <ClInclude Include="CollisionManager.h" />
-    <ClInclude Include="Dammy.h" />
+    <ClInclude Include="Dammy.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
     <ClInclude Include="engine\math\Quanternion.h" />
