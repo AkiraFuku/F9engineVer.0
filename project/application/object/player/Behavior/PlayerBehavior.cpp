@@ -11,6 +11,7 @@ void BehaviorRoot::Initialize(Player* player) {
 
 void BehaviorRoot::Update(Player* player) {
     // 毎フレームの処理（特に何もなければ空でもOK）
+    player->UpdateGravity();
 }
 
 void BehaviorRoot::Finalize(Player* player)
@@ -41,11 +42,23 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
 // --- BehaviorAttack (攻撃状態) ---
 void BehaviorAttack::Initialize(Player* player) {
     timer_ = 0; // 攻撃タイマーをリセット
+    timer_ = 0;
+    // Stateから攻撃アクションを取得して実行
+    auto attackAction = player->GetState()->GetAttackAction_();
+    if (attackAction) {
+        attackAction->Execute(player);
+    }
 }
 
 void BehaviorAttack::Update(Player* player) {
+   auto attackAction = player->GetState()->GetAttackAction_();
+    if (attackAction) {
+        attackAction->Execute(player);
+    }
+
     timer_++;
     if (timer_ >= kAttackDuration) {
+        // 一定時間（kAttackDuration）経ったら通常状態に戻る
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
     }
 }
@@ -65,6 +78,7 @@ void BehaviorJump::Initialize(Player* player) {
         jumpAction->Execute(player);
     }
 
+
 }
 
 void BehaviorJump::Update(Player* player) {
@@ -75,6 +89,7 @@ void BehaviorJump::Update(Player* player) {
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
 
     }
+       player->UpdateGravity();
 }
 
 void BehaviorJump::Finalize(Player* player)
@@ -93,6 +108,10 @@ void BehaviorJump::HandleInput(Player* player, ICommand* command) {
             moveAction->Execute(player);
         }
     } 
+    if (dynamic_cast<AttackCommand*>(command)) {
+        // 攻撃状態へ遷移
+        player->ChangeBehavior(std::make_unique<BehaviorAttack>());
+    }
     
 /*    if (dynamic_cast<JumpCommand*>(command)) {
         // ジャンプ状態へ遷移

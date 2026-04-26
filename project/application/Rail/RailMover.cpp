@@ -2,7 +2,8 @@
 
 void RailMover::Advance(float speed) {
     if (!path_) return;
-
+    if (speed > 0) currentDir_ = MoveDirection::Forward;
+    else if (speed < 0) currentDir_ = MoveDirection::Backward;
     float currentDistance = GetCurrentDistance();
     currentDistance += speed;
 

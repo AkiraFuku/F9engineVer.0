@@ -40,7 +40,9 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
         }
     }
 
-
+    if (input->TriggerMouseDown(0)) { // 例としてスペース
+        commands.push_back(std::make_unique<AttackCommand>());
+    }
 
     return commands;
 }

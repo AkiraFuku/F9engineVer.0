@@ -83,6 +83,10 @@ void Player::Draw()
     // タイマーの残りも出しておくと便利
     ImGui::ProgressBar((float)hitVisualTimer_ / kHitVisualDuration, ImVec2(0, 0), "Hit Timer");
 
+    Vector3 dir= railMover_->GetCurrentDirection();
+    //進行方向
+    ImGui::Text("DIR: (%.2f, %.2f, %.2f)",dir.x, dir.y, dir.z);
+
 
     ImGui::End();
 #endif // USE_IMGUI
@@ -139,18 +143,7 @@ const RailPath* Player::GetRailPath() const
 }
 void Player::UpdateRailPath()
 {
-    // 1. 重力の計算 (Y軸のみ独立して計算)
-    if (!isGrounded_) {
-        velocity_.y += kGravity;
-    }
-    worldY_ += velocity_.y;
-
-    // 地面判定 (Y=0を地面とする場合)
-    if (worldY_ <= 0.0f) {
-        worldY_ = 0.0f;
-        velocity_.y = 0.0f;
-        isGrounded_ = true;
-    }
+   
 
     // 2. レール上の座標を取得 (XZの土台)
     Vector3 railPos = railMover_->GetCurrentPosition();
@@ -162,11 +155,28 @@ void Player::UpdateRailPath()
     object_->SetTranslate(finalPos);
 
     // 進行方向を向く処理
-    Vector3 dir = railMover_->GetCurrentDirection();
-    float angle = atan2f(dir.x, dir.z);
-    object_->SetRotate({ 0.0f, angle, 0.0f });
+Vector3 dir = railMover_->GetCurrentDirection();
+    float railAngle = atan2f(dir.x, dir.z);
+
+    // ここでは保持している playerAngle_ を優先して適用
+    object_->SetRotate({ 0.0f, playerAngle_, 0.0f });
 
     object_->Update();
+}
+void Player::UpdateGravity()
+{
+     // 1. 重力の計算 (Y軸のみ独立して計算)
+    if (!isGrounded_) {
+        velocity_.y += kGravity;
+    }
+    worldY_ += velocity_.y;
+
+    // 地面判定 (Y=0を地面とする場合)
+    if (worldY_ <= 0.0f) {
+        worldY_ = 0.0f;
+        velocity_.y = 0.0f;
+        isGrounded_ = true;
+    }
 }
 void Player::HandleInput()
 {
@@ -197,4 +207,14 @@ void Player::OnCollision([[maybe_unused]] Enemy* other) {
     }
 
     // (必要であれば) ノックバックなどの物理挙動をここに書く
+}
+
+Vector3 Player::GetDirection() const
+{
+    return railMover_->GetCurrentDirection();
+}
+
+int Player::GetMoveDirection() const
+{
+    return int(railMover_->GetMoveDirection());
 }

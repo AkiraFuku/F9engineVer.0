@@ -4,6 +4,10 @@
 #include <algorithm>
 class RailMover {
 public:
+    enum class MoveDirection {
+        Forward = 1, // 終点に向かっている (+)
+        Backward = -1 // 始点に向かっている (-)
+    };
 
     bool isRailSet() const {
         return path_ != nullptr;
@@ -39,14 +43,19 @@ public:
         else localProgress_ = t;
     }
 
-     const RailPath*  GetRailPath(){
-     
-         return path_;
-     }
-     float GetCurrentDistance() const;
+    const RailPath* GetRailPath() {
 
+        return path_;
+    }
+    float GetCurrentDistance() const;
+    MoveDirection GetMoveDirection() const {
+        return currentDir_;
+    }
 private:
 
+
+    // メンバ変数に追加
+    MoveDirection currentDir_ = MoveDirection::Forward;
 
     const RailPath* path_ = nullptr;// 進捗の管理方法を柔軟にするため、ローカルと共有の両方を用意
     float localProgress_ = 0.0f;// 個別の進捗。これが共通でないなら、こっちを使う

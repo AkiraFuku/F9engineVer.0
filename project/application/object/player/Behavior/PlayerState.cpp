@@ -16,6 +16,7 @@ void StateNormal::Initialize(Player* player)
     }
     moveAction_ = std::make_unique<NormalMoveAction>(1.0f); // デフォルト速度
     jumpAction_ = std::make_unique<NormalJumpAction>();
+    attackAction_ = std::make_unique<NormalAttackAction>(); // ここで生成
 }
 
 void StateNormal::Update(Player* player)

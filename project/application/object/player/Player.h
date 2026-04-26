@@ -58,7 +58,10 @@ public:
     IPlayerState* GetState(){
         return baseState_.get();
     }
-
+    void SetAngle(float angle) {
+    playerAngle_ = angle;
+}
+    
     void SetRail(RailPath* rail);
     // 状態を切り替えるメソッド
     void ChangeState(std::unique_ptr<IPlayerState> newState);
@@ -74,6 +77,10 @@ public:
     bool IsGround()const{ return isGrounded_;}
 
     void OnCollision(Enemy* other); // Player側
+    // 現在のレールの進行方向ベクトルを返す
+    Vector3 GetDirection() const;
+    int GetMoveDirection() const;
+    void UpdateGravity();
 
 private:
 
@@ -92,6 +99,8 @@ private:
     const float kJumpAcceleration = 0.4f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
     std::unique_ptr<RailMover> railMover_;
+
+    float playerAngle_ = 0.0f;
 
     // --- 被弾表示用 ---
 
