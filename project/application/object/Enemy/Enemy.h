@@ -62,7 +62,15 @@ public:
     bool IsGround() const { return isGrounded_; }
 
     void OnCollision(Player* other); // Enemy側
-
+    void UpdateGravity(); // 重力の更新処理
+    // enemy状態取得
+    IEnemyState* GetState() {
+        return state_.get();
+    }
+    //状態名称取得
+    const char* GetStateName() const;
+    // 行動ビヘイビアの名称取得
+    const char* GetBehaviorName() const;
 private:
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
@@ -79,4 +87,8 @@ private:
     const float kGravity = -0.015f;
 
     void UpdatePhysics(); // 重力やレール座標の合成処理
+
+    bool isHit_ = false;              // クールダウン中かどうかのフラグ
+    float hitVisualTimer_ = 0.0f;     // クールダウンタイマー
+    const float kHitVisualDuration = 0.5f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
 };

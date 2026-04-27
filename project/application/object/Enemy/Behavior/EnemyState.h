@@ -23,7 +23,7 @@ public:
     void Initialize(Enemy* enemy) override;
     void Update(Enemy* enemy) override;
     void Finalize(Enemy* enemy) override;
-    const char* GetName() const override { return "EnemyNormal"; }
+    const char* GetName() const override { return "Normal"; }
 };
 
 // スタン状態（乗っ取り待機状態）
@@ -32,7 +32,7 @@ public:
     void Initialize(Enemy* enemy) override;
     void Update(Enemy* enemy) override;
     void Finalize(Enemy* enemy) override;
-    const char* GetName() const override { return "EnemyStan"; }
+    const char* GetName() const override { return "Stan"; }
 private:
     float timer_ = 0.0f;
     const float kStanDuration = 3.0f; // 3秒で復帰
@@ -44,5 +44,5 @@ public:
     void Initialize(Enemy* enemy) override;
     void Update(Enemy* enemy) override;
     void Finalize(Enemy* enemy) override;
-    const char* GetName() const override { return "EnemyDead"; }
+    const char* GetName() const override { return "Dead"; }
 };

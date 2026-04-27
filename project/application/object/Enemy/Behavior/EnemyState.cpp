@@ -7,6 +7,8 @@ void StateEnemyNormal::Initialize(Enemy* enemy) {
 }
 
 void StateEnemyNormal::Update(Enemy* enemy) {
+
+    enemy->UpdateGravity(); // 重力の更新を行う
     // 通常状態の毎フレーム処理
 }
 

@@ -19,7 +19,7 @@ void BehaviorRoot::Finalize(Player* player)
 }
 
 void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
-   auto moveAction = player->GetState()->GetMoveAction();
+    auto moveAction = player->GetState()->GetMoveAction();
 
     if (auto moveCmd = dynamic_cast<MoveCommand*>(command)) {
         if (moveAction) {
@@ -28,13 +28,13 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
             static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());
             moveAction->Execute(player);
         }
-    } 
-    
+    }
+
     if (dynamic_cast<JumpCommand*>(command)) {
         // ジャンプ状態へ遷移
         player->ChangeBehavior(std::make_unique<BehaviorJump>());
     }
-     if (dynamic_cast<AttackCommand*>(command)) {
+    if (dynamic_cast<AttackCommand*>(command)) {
         player->ChangeBehavior(std::make_unique<BehaviorAttack>());
     }
 }
@@ -50,19 +50,32 @@ void BehaviorAttack::Initialize(Player* player) {
     }
 }
 
+// PlayerBehavior.cpp
+
 void BehaviorAttack::Update(Player* player) {
-   auto attackAction = player->GetState()->GetAttackAction_();
+    auto attackAction = player->GetState()->GetAttackAction_();
+
     if (attackAction) {
-        attackAction->Execute(player);
+        // タイマーに応じて速度に倍率をかける（イージング）
+        // 最初の数フレームは超高速、後半は急ブレーキ
+        float speedMultiplier = 1.0f;
+
+        if (timer_ < 10) {
+            speedMultiplier = 2.5f; // 出だしは鋭く！
+        } else {
+            speedMultiplier = 0.2f; // 後半は反動でゆっくり
+        }
+
+        // Action側に倍率を渡せるようにするか、ここでMoveを直接制御する
+        int attackDir = player->GetMoveDirection();
+        player->Move(float(attackDir) * 0.8f * speedMultiplier);
     }
 
     timer_++;
     if (timer_ >= kAttackDuration) {
-        // 一定時間（kAttackDuration）経ったら通常状態に戻る
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
     }
 }
-
 void BehaviorAttack::Finalize(Player* player)
 {
 }
@@ -73,7 +86,7 @@ void BehaviorAttack::HandleInput(Player* player, ICommand* command) {
 
 // --- BehaviorJump (ジャンプ状態) ---
 void BehaviorJump::Initialize(Player* player) {
-  auto jumpAction = player->GetState()->GetJumpAction();
+    auto jumpAction = player->GetState()->GetJumpAction();
     if (jumpAction) {
         jumpAction->Execute(player);
     }
@@ -89,7 +102,7 @@ void BehaviorJump::Update(Player* player) {
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
 
     }
-       player->UpdateGravity();
+    player->UpdateGravity();
 }
 
 void BehaviorJump::Finalize(Player* player)
@@ -98,7 +111,7 @@ void BehaviorJump::Finalize(Player* player)
 
 // --- BehaviorJump (空中状態) ---
 void BehaviorJump::HandleInput(Player* player, ICommand* command) {
-  auto moveAction = player->GetState()->GetMoveAction();
+    auto moveAction = player->GetState()->GetMoveAction();
 
     if (auto moveCmd = dynamic_cast<MoveCommand*>(command)) {
         if (moveAction) {
@@ -107,14 +120,14 @@ void BehaviorJump::HandleInput(Player* player, ICommand* command) {
             static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());
             moveAction->Execute(player);
         }
-    } 
+    }
     if (dynamic_cast<AttackCommand*>(command)) {
         // 攻撃状態へ遷移
         player->ChangeBehavior(std::make_unique<BehaviorAttack>());
     }
-    
-/*    if (dynamic_cast<JumpCommand*>(command)) {
-        // ジャンプ状態へ遷移
-        player->ChangeBehavior(std::make_unique<BehaviorJump>());
-    }*/
+
+    /*    if (dynamic_cast<JumpCommand*>(command)) {
+            // ジャンプ状態へ遷移
+            player->ChangeBehavior(std::make_unique<BehaviorJump>());
+        }*/
 }

@@ -83,9 +83,9 @@ void Player::Draw()
     // タイマーの残りも出しておくと便利
     ImGui::ProgressBar((float)hitVisualTimer_ / kHitVisualDuration, ImVec2(0, 0), "Hit Timer");
 
-    Vector3 dir= railMover_->GetCurrentDirection();
+    Vector3 dir = railMover_->GetCurrentDirection();
     //進行方向
-    ImGui::Text("DIR: (%.2f, %.2f, %.2f)",dir.x, dir.y, dir.z);
+    ImGui::Text("DIR: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
 
 
     ImGui::End();
@@ -143,7 +143,7 @@ const RailPath* Player::GetRailPath() const
 }
 void Player::UpdateRailPath()
 {
-   
+
 
     // 2. レール上の座標を取得 (XZの土台)
     Vector3 railPos = railMover_->GetCurrentPosition();
@@ -155,7 +155,7 @@ void Player::UpdateRailPath()
     object_->SetTranslate(finalPos);
 
     // 進行方向を向く処理
-Vector3 dir = railMover_->GetCurrentDirection();
+    Vector3 dir = railMover_->GetCurrentDirection();
     float railAngle = atan2f(dir.x, dir.z);
 
     // ここでは保持している playerAngle_ を優先して適用
@@ -165,7 +165,7 @@ Vector3 dir = railMover_->GetCurrentDirection();
 }
 void Player::UpdateGravity()
 {
-     // 1. 重力の計算 (Y軸のみ独立して計算)
+    // 1. 重力の計算 (Y軸のみ独立して計算)
     if (!isGrounded_) {
         velocity_.y += kGravity;
     }
@@ -199,14 +199,38 @@ void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
 }
 void Player::OnCollision([[maybe_unused]] Enemy* other) {
     // 衝突したらフラグとタイマーをセット
-    if (hitVisualTimer_ <= 0.0f)
-    {
-        isHit_ = true;
-        hitVisualTimer_ = kHitVisualDuration;
+// ただし、クールダウン中なら何もしない
+    // プレイヤーの状態を取得
+    const char* playerBehavior = GetBehaviorName();
+    const char* playerState = GetStateName();
 
+    if (playerState && strcmp(playerState, "Normal") == 0)
+    {
+        if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+            // 攻撃が当たった場合は、被弾状態にはならない（例外的に無敵）
+            return;
+        }
+    }
+    //エネミーの状態を取得
+    const char* enemyState = other->GetStateName();
+    // 例えば、敵がスタン状態なら当たってもダメージを受けないなどの例外処理
+
+    if (enemyState && strcmp(enemyState, "Normal") == 0)
+    {
+        if (hitVisualTimer_ <= 0.0f)
+        {
+            isHit_ = true;
+            hitVisualTimer_ = kHitVisualDuration;
+            // (必要であれば) ノックバックなどの物理挙動をここに書く
+
+
+
+        }
     }
 
-    // (必要であれば) ノックバックなどの物理挙動をここに書く
+
+
+
 }
 
 Vector3 Player::GetDirection() const

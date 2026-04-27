@@ -28,6 +28,16 @@ void Enemy::Initialize()
 
 void Enemy::Update()
 {
+
+    if (hitVisualTimer_ > 0.0f) {
+        hitVisualTimer_ -= (1.0f / 60.0f); // 60FPSを想定した減算
+
+        if (hitVisualTimer_ <= 0.0f) {
+            hitVisualTimer_ = 0.0f;
+            isHit_ = false; // クールダウン終了
+        }
+    }
+
     // 1. 現在の状態を更新
     if (state_) {
         state_->Update(this);
@@ -88,6 +98,14 @@ void Enemy::Draw()
     ImGui::Text("WorldY: %.2f", worldY_);
     ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
 
+    ImGui::Separator();
+    if (isHit_) {
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Status: CoolDown (Hit!)");
+    } else {
+        ImGui::Text("Status: Ready");
+    }
+    ImGui::ProgressBar(hitVisualTimer_ / kHitVisualDuration, ImVec2(0, 0), "CD Timer");
+
     ImGui::End();
 #endif // USE_IMGUI
 }
@@ -95,14 +113,14 @@ void Enemy::Draw()
 void Enemy::SetRailPosition(const Vector2& position)
 {
     if (railMover_) {
-            // レール上の位置を直接設定するための関数
-            // 例えば、レールの全長に対して0.0f～1.0fの範囲で位置を指定する場合など
-            // ここでは仮にposition.xを進捗として使用する例を示します
-            // 進捗をx成分から取得（例）
-            railMover_->SetProgress(position.x); // 進捗をRailMoverにバインド 
-            object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z }); // Yは現在のまま、XZはレール上の位置に設定
+        // レール上の位置を直接設定するための関数
+        // 例えば、レールの全長に対して0.0f～1.0fの範囲で位置を指定する場合など
+        // ここでは仮にposition.xを進捗として使用する例を示します
+        // 進捗をx成分から取得（例）
+        railMover_->SetProgress(position.x); // 進捗をRailMoverにバインド 
+        object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z }); // Yは現在のまま、XZはレール上の位置に設定
 
-        }
+    }
 }
 
 void Enemy::SetRail(RailPath* rail)
@@ -116,7 +134,7 @@ void Enemy::Move(float ratio)
 {
     if (railMover_) {
         // 毎フレームの移動量を計算して進める
-        railMover_->Advance(ratio * (kMoveSpeed_ ));
+        railMover_->Advance(ratio * (kMoveSpeed_));
     }
 }
 void Enemy::ChangeBehavior(std::unique_ptr<IEnemyBehavior> newBehavior) {
@@ -133,16 +151,7 @@ void Enemy::ChangeState(std::unique_ptr<IEnemyState> newState) {
 
 void Enemy::UpdatePhysics() {
     // Player::UpdateRailPath() と同様のロジック
-    if (!isGrounded_) {
-        velocity_.y += kGravity;
-    }
-    worldY_ += velocity_.y;
 
-    if (worldY_ <= 0.0f) {
-        worldY_ = 0.0f;
-        velocity_.y = 0.0f;
-        isGrounded_ = true;
-    }
 
     Vector3 railPos = railMover_->GetCurrentPosition();
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
@@ -159,10 +168,52 @@ void Enemy::UpdatePhysics() {
 void Enemy::OnCollision([[maybe_unused]] Player* other) {
     if (!other) return;
 
-    // プレイヤーが攻撃中かどうかを判定
+    // クールダウン中なら何もしない
+    if (isHit_) return;
+
+    // プレイヤーの状態を取得
     const char* playerBehavior = other->GetBehaviorName();
-    if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
-        // プレイヤーが攻撃中なので、敵をスタン状態へ遷移
-        ChangeState(std::make_unique<StateEnemyStan>());
+    const char* playerState = other->GetStateName();
+
+    if (playerState && strcmp(playerState, "Normal") == 0)
+    {
+        if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+
+            // --- 追加：攻撃が当たったのでクールダウン開始 ---
+            isHit_ = true;
+            hitVisualTimer_ = kHitVisualDuration;
+
+            if (state_->GetName() == "Normal")
+            {
+                ChangeState(std::make_unique<StateEnemyStan>());
+            } else if (state_->GetName() == "Stan")
+            {
+                ChangeState(std::make_unique<StateEnemyDead>());
+            }
+        }
     }
+}
+
+void Enemy::UpdateGravity()
+{
+    if (!isGrounded_) {
+        velocity_.y += kGravity;
+    }
+    worldY_ += velocity_.y;
+
+    if (worldY_ <= 0.0f) {
+        worldY_ = 0.0f;
+        velocity_.y = 0.0f;
+        isGrounded_ = true;
+    }
+}
+
+const char* Enemy::GetStateName() const
+{
+    return state_ ? state_->GetName() : "None";
+}
+
+const char* Enemy::GetBehaviorName() const
+{
+    return behavior_ ? behavior_->GetName() : "None";
 }
