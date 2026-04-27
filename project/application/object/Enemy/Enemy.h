@@ -67,6 +67,10 @@ public:
     IEnemyState* GetState() {
         return state_.get();
     }
+    // enemy行動ビヘイビア取得
+    IEnemyBehavior* GetBehavior() {
+        return behavior_.get();
+    };
     //状態名称取得
     const char* GetStateName() const;
     // 行動ビヘイビアの名称取得
@@ -76,7 +80,7 @@ private:
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
     Camera* camera_ = nullptr;
 
-    const float kMoveSpeed_ = 0.1f;
+    const float kMoveSpeed_ = 0.05f;
     std::unique_ptr<IEnemyBehavior> behavior_; // 現在の行動状態
     std::unique_ptr<IEnemyState> state_; // 現在の状態
 
@@ -90,5 +94,5 @@ private:
 
     bool isHit_ = false;              // クールダウン中かどうかのフラグ
     float hitVisualTimer_ = 0.0f;     // クールダウンタイマー
-    const float kHitVisualDuration = 0.5f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
+    const float kHitVisualDuration = 1.0f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
 };

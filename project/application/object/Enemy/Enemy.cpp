@@ -43,10 +43,10 @@ void Enemy::Update()
         state_->Update(this);
     }
 
-    // 2. 現在の行動（AI）を更新
-    if (behavior_) {
-        behavior_->Update(this);
-    }
+    //// 2. 現在の行動（AI）を更新
+    //if (behavior_) {
+    //    behavior_->Update(this);
+    //}
 
     // 3. 物理計算とレール座標の更新
     UpdatePhysics();
@@ -171,6 +171,8 @@ void Enemy::OnCollision([[maybe_unused]] Player* other) {
     // クールダウン中なら何もしない
     if (isHit_) return;
 
+     if (state_->GetName() == "Dead") {return; // すでに死んでいるなら何もしない
+     }
     // プレイヤーの状態を取得
     const char* playerBehavior = other->GetBehaviorName();
     const char* playerState = other->GetStateName();

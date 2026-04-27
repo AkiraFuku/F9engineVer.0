@@ -1,13 +1,17 @@
 #include "EnemyState.h"
 #include "Enemy.h"
-
+#include "EnemyBehavior.h"
 // --- StateEnemyNormal ---
 void StateEnemyNormal::Initialize(Enemy* enemy) {
     // 通常状態の初期化処理
 }
 
 void StateEnemyNormal::Update(Enemy* enemy) {
+    if (enemy->GetBehavior())
+    {
+        enemy->GetBehavior()->Update(enemy); // 現在の行動状態の更新を呼び出す
 
+    }
     enemy->UpdateGravity(); // 重力の更新を行う
     // 通常状態の毎フレーム処理
 }
