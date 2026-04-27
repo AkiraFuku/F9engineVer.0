@@ -18,27 +18,31 @@ public:
     virtual void Finalize(Enemy* enemy) = 0;
     virtual const char* GetName() const = 0; // 追加
 };
-//通常状態
-class StateNormal : public IEnemyState {
+class StateEnemyNormal : public IEnemyState {
 public:
-    StateNormal();
-    ~StateNormal();
     void Initialize(Enemy* enemy) override;
     void Update(Enemy* enemy) override;
     void Finalize(Enemy* enemy) override;
-    const char* GetName() const override {
-        return "Normal";
-    } // StateNormalの場合
-
-private:
+    const char* GetName() const override { return "EnemyNormal"; }
 };
 
-//搭乗状態
-class IStateStan : public IEnemyState {
+// スタン状態（乗っ取り待機状態）
+class StateEnemyStan : public IEnemyState {
 public:
- 
-    IStateStan();
-    ~IStateStan() = default;
+    void Initialize(Enemy* enemy) override;
+    void Update(Enemy* enemy) override;
+    void Finalize(Enemy* enemy) override;
+    const char* GetName() const override { return "EnemyStan"; }
+private:
+    float timer_ = 0.0f;
+    const float kStanDuration = 3.0f; // 3秒で復帰
+};
 
-
+// 死亡状態（爆発エフェクトや削除待ち）
+class StateEnemyDead : public IEnemyState {
+public:
+    void Initialize(Enemy* enemy) override;
+    void Update(Enemy* enemy) override;
+    void Finalize(Enemy* enemy) override;
+    const char* GetName() const override { return "EnemyDead"; }
 };

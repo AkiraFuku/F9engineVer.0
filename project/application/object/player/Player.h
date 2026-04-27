@@ -82,6 +82,17 @@ public:
     int GetMoveDirection() const;
     void UpdateGravity();
 
+    //プレイヤーの状態を取得するための関数
+     bool IsHit() const { return isHit_; }
+     float GetHitVisualTimer() const { return hitVisualTimer_; }
+     float GetRadius() const { return Radius; }
+     InputHandler* GetInputHandler() {
+         return inputHandler_.get();
+     }
+     const char* GetStateName() const;
+     const char* GetBehaviorName() const;
+
+
 private:
 
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態

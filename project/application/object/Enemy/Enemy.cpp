@@ -6,6 +6,9 @@
 #include "RailPath.h"
 #include <cmath>
 #include "enemyBehavior.h"
+#include "EnemyState.h"
+#include "Player.h"
+#include "imgui.h"
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
 
@@ -14,24 +17,29 @@ void Enemy::Initialize()
     object_ = std::make_unique<Object3d>();
     // エネミー用にCubeモデルを作成（既存ならそれを使用）
     ModelManager::GetInstance()->CreateSphereModel("Enemy");
-    
+
     object_->Initialize();
     object_->SetModel("Enemy");
-    
+
     railMover_ = std::make_unique<RailMover>();
     ChangeBehavior(std::make_unique<EnemyBehaviorPatrol>());
+    ChangeState(std::make_unique<StateEnemyNormal>());
 }
 
 void Enemy::Update()
 {
-    // 1. 現在の行動（AI）を更新
+    // 1. 現在の状態を更新
+    if (state_) {
+        state_->Update(this);
+    }
+
+    // 2. 現在の行動（AI）を更新
     if (behavior_) {
         behavior_->Update(this);
     }
 
-    // 2. 物理計算とレール座標の更新
+    // 3. 物理計算とレール座標の更新
     UpdatePhysics();
-
 }
 
 void Enemy::Draw()
@@ -39,6 +47,49 @@ void Enemy::Draw()
     if (object_) {
         object_->Draw();
     }
+
+#ifdef USE_IMGUI
+    ImGui::Begin("Debug/Enemy");
+
+    // 敵の基本情報
+    if (object_) {
+        Vector3 pos = object_->GetTranslate();
+        ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+    }
+
+    // レールの進捗
+    if (railMover_) {
+        ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
+        Vector3 dir = railMover_->GetCurrentDirection();
+        ImGui::Text("Direction: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
+    }
+
+    ImGui::Separator();
+    ImGui::Text("--- Enemy States ---");
+
+    // 敵の状態表示
+    if (state_) {
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "State: %s", state_->GetName());
+    } else {
+        ImGui::Text("State: None");
+    }
+
+    // 敵の行動表示
+    if (behavior_) {
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Behavior: %s", behavior_->GetName());
+    } else {
+        ImGui::Text("Behavior: None");
+    }
+
+    ImGui::Separator();
+
+    // 物理情報
+    ImGui::Text("IsGrounded: %s", isGrounded_ ? "True" : "False");
+    ImGui::Text("WorldY: %.2f", worldY_);
+    ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
+
+    ImGui::End();
+#endif // USE_IMGUI
 }
 
 void Enemy::SetRailPosition(const Vector2& position)
@@ -74,6 +125,12 @@ void Enemy::ChangeBehavior(std::unique_ptr<IEnemyBehavior> newBehavior) {
     if (behavior_) behavior_->Initialize(this);
 }
 
+void Enemy::ChangeState(std::unique_ptr<IEnemyState> newState) {
+    if (state_) state_->Finalize(this);
+    state_ = std::move(newState);
+    if (state_) state_->Initialize(this);
+}
+
 void Enemy::UpdatePhysics() {
     // Player::UpdateRailPath() と同様のロジック
     if (!isGrounded_) {
@@ -100,6 +157,12 @@ void Enemy::UpdatePhysics() {
 }
 // Enemy.cpp
 void Enemy::OnCollision([[maybe_unused]] Player* other) {
-    // プレイヤーに当たった時の処理
-    // 例：HPを減らす、消滅する、など
+    if (!other) return;
+
+    // プレイヤーが攻撃中かどうかを判定
+    const char* playerBehavior = other->GetBehaviorName();
+    if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+        // プレイヤーが攻撃中なので、敵をスタン状態へ遷移
+        ChangeState(std::make_unique<StateEnemyStan>());
+    }
 }

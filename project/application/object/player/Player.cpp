@@ -218,3 +218,17 @@ int Player::GetMoveDirection() const
 {
     return int(railMover_->GetMoveDirection());
 }
+
+const char* Player::GetStateName() const {
+    if (baseState_) {
+        return baseState_->GetName();
+    }
+    return "NoState";
+}
+
+const char* Player::GetBehaviorName() const {
+    if (behavior_) {
+        return behavior_->GetName();
+    }
+    return "NoBehavior";
+}

@@ -7,6 +7,7 @@ class Camera;
 class RailMover;
 class RailPath;
 class IEnemyBehavior; // 前方宣言
+class IEnemyState; // 前方宣言
 class Player; // Enemy.h の場合
 class Enemy
 {
@@ -46,13 +47,16 @@ public:
         return {};
     }
     void SetRailPosition(const Vector2& position);
-     
+
 
     void SetRail(RailPath* rail);
     void Move(float ratio); // 進行させるメソッド
 
     // 行動（Behavior）を切り替えるメソッド
     void ChangeBehavior(std::unique_ptr<IEnemyBehavior> newBehavior);
+
+    // 状態（State）を切り替えるメソッド
+    void ChangeState(std::unique_ptr<IEnemyState> newState);
 
     // プレイヤーと同様に、IsGround() などの判定があると Behavior 側で便利です
     bool IsGround() const { return isGrounded_; }
@@ -65,8 +69,9 @@ private:
     Camera* camera_ = nullptr;
 
     const float kMoveSpeed_ = 0.1f;
-std::unique_ptr<IEnemyBehavior> behavior_; // 現在の行動状態
-    
+    std::unique_ptr<IEnemyBehavior> behavior_; // 現在の行動状態
+    std::unique_ptr<IEnemyState> state_; // 現在の状態
+
     // 物理・移動関連の変数（Playerを参考に）
     bool isGrounded_ = true;
     float worldY_ = 0.0f;
