@@ -21,9 +21,14 @@ void StateNormal::Initialize(Player* player)
 
 void StateNormal::Update(Player* player)
 {
-    /* if (player->GetBehavior()) {
+     if (player->GetBehavior()) {
          player->GetBehavior()->Update(player);
-     }*/
+     }
+   //  player->UpdateGravity();
+}
+void StateNormal::BehaviorUpdate(Player* player)
+{
+   player->UpdateGravity();
 }
 
 void StateNormal::Finalize(Player* player)
@@ -48,11 +53,18 @@ IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<
 
 void IStateRideOn::Update(Player* player)
 {
-    /*if (player->GetBehavior()) {
+    if (player->GetBehavior()) {
         player->GetBehavior()->Update(player);
-    }*/
+    }
 }
+void IStateRideOn::Finalize(Player* player) {
+    // 1. ロボットオブジェクトを弾として生成（またはEnemyを再利用して飛ばす）
+    // LaunchRobot(player->GetPosition(), shootDirection);
 
+    // 2. プレイヤーに反動を与える
+    // Vector3 recoil = shootDirection * -1.0f * kRecoilPower;
+    // player->SetVelocity(recoil); 
+}
 void IStateRideOn::HandleInput(Player* player, ICommand* command)
 {
     if (player->GetBehavior()) {

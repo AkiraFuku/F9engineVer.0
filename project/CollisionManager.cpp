@@ -41,7 +41,8 @@ void CollisionManager::CheckPlayerEnemyCollision(Player* p, Enemy* e) {
     float radiusSum = 2.0f; 
     if (distanceSq <= radiusSum * radiusSum) {
         // --- ここでプレイヤーとエネミーに通知する ---
-        p->OnCollision(e);
+       
         e->OnCollision(p);
+        p->OnCollision(e);
     }
 }

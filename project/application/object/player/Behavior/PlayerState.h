@@ -14,6 +14,7 @@ public:
     virtual ~IPlayerState() = default;
     virtual void Initialize(Player* player) = 0;
     virtual void Update(Player* player) = 0;
+    virtual void  BehaviorUpdate(Player* player) = 0;
     virtual void Finalize(Player* player) = 0;
     virtual void HandleInput(Player* player, ICommand* command) = 0;
     virtual const char* GetName() const = 0; // 追加
@@ -28,6 +29,7 @@ public:
     ~StateNormal();
     void Initialize(Player* player) override;
     void Update(Player* player) override;
+    void  BehaviorUpdate(Player* player)override;
     void Finalize(Player* player) override;
     void HandleInput(Player* player, ICommand* command) override;
     const char* GetName() const override {
@@ -61,7 +63,7 @@ public:
     virtual ~IStateRideOn() = default;
 
     virtual void Initialize(Player* player)override = 0;
-    virtual void Finalize(Player* player)override = 0;
+     void Finalize(Player* player)override ;
 
     virtual void Update(Player* player) override;
 

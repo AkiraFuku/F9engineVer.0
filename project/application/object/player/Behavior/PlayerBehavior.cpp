@@ -11,7 +11,7 @@ void BehaviorRoot::Initialize(Player* player) {
 
 void BehaviorRoot::Update(Player* player) {
     // 毎フレームの処理（特に何もなければ空でもOK）
-    player->UpdateGravity();
+    player->GetState()->BehaviorUpdate(player);
 }
 
 void BehaviorRoot::Finalize(Player* player)

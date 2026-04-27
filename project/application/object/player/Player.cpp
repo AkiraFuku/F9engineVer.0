@@ -26,7 +26,7 @@ void Player::Update()
 {
     HandleInput();
     if (baseState_) baseState_->Update(this);
-    if (behavior_) behavior_->Update(this);
+    // if (behavior_) behavior_->Update(this);
 
     UpdateRailPath();
     // --- タイマーの更新 ---
@@ -206,27 +206,38 @@ void Player::OnCollision([[maybe_unused]] Enemy* other) {
 
     if (playerState && strcmp(playerState, "Normal") == 0)
     {
+
+        //エネミーの状態を取得
+        const char* enemyState = other->GetStateName();
+        // 例えば、敵がスタン状態なら当たってもダメージを受けないなどの例外処理
+
+        if (enemyState && strcmp(enemyState, "Normal") == 0)
+        {
+            if (hitVisualTimer_ <= 0.0f)
+            {
+                isHit_ = true;
+                hitVisualTimer_ = kHitVisualDuration;
+                // (必要であれば) ノックバックなどの物理挙動をここに書く
+
+
+
+            }
+        }
+
         if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+
+            if (enemyState && strcmp(enemyState, "Dead") != 0)
+            {
+                ChangeBehavior(std::make_unique<BehaviorRoot>()); // 通常切り替える
+
+            }
             // 攻撃が当たった場合は、被弾状態にはならない（例外的に無敵）
             return;
         }
+
+
     }
-    //エネミーの状態を取得
-    const char* enemyState = other->GetStateName();
-    // 例えば、敵がスタン状態なら当たってもダメージを受けないなどの例外処理
 
-    if (enemyState && strcmp(enemyState, "Normal") == 0)
-    {
-        if (hitVisualTimer_ <= 0.0f)
-        {
-            isHit_ = true;
-            hitVisualTimer_ = kHitVisualDuration;
-            // (必要であれば) ノックバックなどの物理挙動をここに書く
-
-
-
-        }
-    }
 
 
 
