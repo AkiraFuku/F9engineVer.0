@@ -11,7 +11,7 @@ class RailPath;
 class IPlayerBehavior;
 class Robot;
 class Enemy; // Player.h の場合
-
+class Scene;
 class Player
 {
 public:
@@ -52,6 +52,9 @@ public:
     Vector3 GetVelocity() const {
         return velocity_;
     }
+    void SetVelocity(const Vector3& velocity) {
+        velocity_ = velocity;
+    }   
     IPlayerBehavior* GetBehavior() {
         return baseState_->GetBehavior();
     };
@@ -61,6 +64,7 @@ public:
     void SetAngle(float angle) {
     playerAngle_ = angle;
 }
+    void AddVelocity(Vector3 v);
     
     void SetRail(RailPath* rail);
     // 状態を切り替えるメソッド
@@ -92,11 +96,14 @@ public:
      const char* GetStateName() const;
      const char* GetBehaviorName() const;
 
+     void SetScene(Scene* scene);
+     Scene* GetScene() { return scene_; }
+
 
 private:
 
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態
-   // std::unique_ptr<IPlayerBehavior> behavior_;   // 「通常・攻撃・ジャンプ」
+    Scene* scene_;   // 「通常・攻撃・ジャンプ」
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整

@@ -303,6 +303,9 @@
     <ClCompile Include="Dammy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -506,6 +509,9 @@
     <ClInclude Include="Dammy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
@@ -525,6 +531,7 @@
     <None Include="resources\shaders\Primitive\Primitive.hlsli">
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
+    <None Include="StateRideOnTest_Usage.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">

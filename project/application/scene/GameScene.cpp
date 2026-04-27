@@ -17,6 +17,8 @@
 #include "RailPath.h"
 #include "Enemy.h"
 #include "CollisionManager.h"
+#include "Projectile.h"
+#include "PlayerState.h"
 
 void GameScene::Initialize() {
 
@@ -87,6 +89,7 @@ void GameScene::Initialize() {
     player = std::make_unique<Player>();
     player->Initialize();
     player->SetCamera(activeCamera_);
+    player->SetScene(this);
 
     player->SetPosition({ 0.0f,0.0f,0.0f });
 
@@ -237,6 +240,19 @@ void GameScene::Update() {
 
     player->Update();
 
+    // 全てのProjectileを更新
+    for (auto& projectile : projectiles_) {
+        if (projectile) {
+            projectile->Update();
+        }
+    }
+    // 死んだProjectileを削除
+    projectiles_.erase(
+        std::remove_if(projectiles_.begin(), projectiles_.end(),
+            [](const std::unique_ptr<Projectile>& p) { return p->IsDead(); }),
+        projectiles_.end()
+    );
+
     // 全ての敵を更新
     for (auto& enemy : enemies_) {
         enemy->Update();
@@ -298,7 +314,50 @@ void GameScene::Update() {
         }
     }
 
+    // StateRideOnTestへ切り替えボタン（テスト用）
+    if (ImGui::Button("Switch to RideOnTest State")) {
+        player->ChangeState(std::make_unique<StateRideOnTest>());
+    }
 
+    // 通常状態へ戻すボタン
+    if (ImGui::Button("Switch to Normal State")) {
+        player->ChangeState(std::make_unique<StateNormal>());
+    }
+
+    // テスト用：ステートが保持しているアクション情報を表示
+    ImGui::Separator();
+    ImGui::Text("--- Action Debug ---");
+
+    auto currentState = player->GetState();
+    if (currentState) {
+        ImGui::Text("State Name: %s", currentState->GetName());
+
+        auto moveAction = currentState->GetMoveAction();
+        auto jumpAction = currentState->GetJumpAction();
+        auto attackAction = currentState->GetAttackAction_();
+
+        ImGui::Text("MoveAction: %s", moveAction ? "Available" : "Null");
+        ImGui::Text("JumpAction: %s", jumpAction ? "Available" : "Null");
+        ImGui::Text("AttackAction: %s", attackAction ? "Available" : "Null");
+
+        // テスト用：直接アクション実行ボタン
+        if (ImGui::Button("Test: Execute Move Action")) {
+            if (moveAction) {
+                moveAction->Execute(player.get());
+            }
+        }
+
+        if (ImGui::Button("Test: Execute Shoot Action")) {
+            // RideOnTestの場合のみ射出可能
+            IStateRideOn* rideOnState = dynamic_cast<IStateRideOn*>(currentState);
+            if (rideOnState) {
+                auto shootAction = rideOnState->GetShootAction();
+                if (shootAction) {
+                    shootAction->Execute(player.get());
+                }
+            }
+        }
+    }
 
     ImGui::End();
 
@@ -341,6 +400,12 @@ void GameScene::Draw() {
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();
+    // 全てのProjectileを描画
+    for (auto& projectile : projectiles_) {
+        if (projectile) {
+            projectile->Draw();
+        }
+    }
     // 全ての敵を描画
     for (auto& enemy : enemies_) {
         enemy->Draw();
@@ -371,4 +436,20 @@ void GameScene::AddEnemy(Vector2 pos)
         enemies_.push_back(std::move(newEnemy));
     }
 
+}
+
+void GameScene::AddProjectile(const Vector3& position, float speed)
+{
+    if (stageRail)
+    {
+        std::unique_ptr<Projectile> newProjectile = std::make_unique<Projectile>();
+
+        // プレイヤーの進行方向に沿ってレール上に配置
+        // positionのX値をレール上のパラメータ(0.0 ～ 1.0)として使用
+        float t = position.x;
+
+        newProjectile->Initialize(stageRail.get(), t, speed);
+        newProjectile->SetCamera(cameraMap_["Main"].get());
+        projectiles_.push_back(std::move(newProjectile));
+    }
 }

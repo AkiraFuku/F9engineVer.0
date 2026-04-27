@@ -1,5 +1,8 @@
 #include "PlayerAction.h"
 #include "Player.h"
+#include "Projectile.h"
+#include "Scene.h"
+#include "GameScene.h"
 void NormalMoveAction::Execute(Player* player){
     // Player.cpp にあった移動ロジックをここに移譲
     player->Move(speed_);
@@ -24,4 +27,25 @@ void NormalAttackAction::Execute(Player* player) {
     float moveAmount = float(attackDir) * dashSpeed_;
     
     player->Move(moveAmount);
+}
+
+void ShootRobotAction::Execute(Player* player)
+{
+    // プレイヤーの情報を取得
+    const RailPath* path = player->GetRailPath();
+    float currentT = player->GetRailProgress(); // Player側に GetProgress() が必要
+    int moveDir = player->GetMoveDirection();   // 1(順) or -1(逆)
+
+    // GameSceneへの弾の追加
+    Scene* scene = player->GetScene();
+    if (scene) {
+        float bulletSpeed = 0.5f; // プレイヤーより速い速度
+        Vector3 bulletPosition = { currentT, 0.0f, 0.0f };
+
+        // ダウンキャスト（GameSceneに変換）
+        GameScene* gameScene = dynamic_cast<GameScene*>(scene);
+        if (gameScene) {
+            gameScene->AddProjectile(bulletPosition, (float)moveDir * bulletSpeed);
+        }
+    }
 }

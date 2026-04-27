@@ -98,6 +98,7 @@
     <ClCompile Include="application\Rail\RailMover.cpp" />
     <ClCompile Include="application\Rail\RailPath.cpp" />
     <ClCompile Include="application\object\Robot\Base\Robot.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +172,7 @@
     <ClInclude Include="application\Rail\RailMover.h" />
     <ClInclude Include="application\Rail\RailPath.h" />
     <ClInclude Include="application\object\Robot\Base\Robot.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
@@ -186,6 +188,7 @@
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\Primitive\Primitive.hlsli" />
     <None Include="resources\shaders\Sprite\Sprite.hlsli" />
+    <None Include="StateRideOnTest_Usage.md" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">

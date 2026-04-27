@@ -8,6 +8,7 @@
 #include "PlayerState.h"
 #include "PlayerBehavior.h"
 #include "Enemy.h"
+#include "Scene.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -18,7 +19,8 @@ void Player::Initialize()
     object_->Initialize();
     object_->SetModel("Sphere");
     railMover_ = std::make_unique<RailMover>();
-    ChangeState(std::make_unique<StateNormal>());
+    // テスト用：初期ステートをStateRideOnTestに変更
+    ChangeState(std::make_unique<StateRideOnTest>());
     ChangeBehavior(std::make_unique<BehaviorRoot>());
 }
 
@@ -102,6 +104,10 @@ void Player::SetRailPosition(const Vector2& position)
         object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z }); // Yは現在のまま、XZはレール上の位置に設定
 
     }
+}
+void Player::AddVelocity(Vector3 v)
+{
+    velocity_+=v;
 }
 void Player::SetRail(RailPath* rail)
 {
@@ -270,4 +276,9 @@ const char* Player::GetBehaviorName() const {
         return baseState_->GetBehavior()->GetName();
     }
     return "NoBehavior";
+}
+
+void Player::SetScene(Scene* scene)
+{
+    scene_=scene;
 }

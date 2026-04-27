@@ -86,10 +86,39 @@ public:
     //ロボットを射出して通常状態に戻る
     void DoShoot(Player* player);
 
+    // テスト用：射出アクション取得
+    IPlayerAction* GetShootAction() {
+        return shootAction_.get();
+    }
+
 protected:
     std::unique_ptr<IPlayerAction> moveAction_ = nullptr;
     std::unique_ptr<IPlayerAction> attackAction_ = nullptr;
     std::unique_ptr<IPlayerAction> jumpAction_ = nullptr;
     std::unique_ptr<IPlayerAction> shootAction_ = nullptr;
 
+};
+
+// 仮のライドオンステート派生クラス（テスト用）
+class StateRideOnTest : public IStateRideOn {
+public:
+    StateRideOnTest();
+    ~StateRideOnTest() = default;
+
+    void Initialize(Player* player) override;
+    void BehaviorUpdate(Player* player) override;
+    void HandleInput(Player* player, ICommand* command) override;
+    const char* GetName() const override {
+        return "RideOnTest";
+    }
+
+    IPlayerAction* GetMoveAction() override {
+        return moveAction_.get();
+    }
+    IPlayerAction* GetJumpAction() override {
+        return jumpAction_.get();
+    }
+    IPlayerAction* GetAttackAction_() override {
+        return attackAction_.get();
+    }
 };

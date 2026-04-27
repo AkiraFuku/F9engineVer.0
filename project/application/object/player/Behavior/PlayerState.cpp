@@ -20,6 +20,9 @@ void IPlayerState::HandleInput(Player* player, ICommand* command) {
 //通常状態
 void StateNormal::Initialize(Player* player)
 {
+    // 新しいビヘイビアをセットアップ
+    player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+
     if (player->GetBehavior()) {
         player->GetBehavior()->Initialize(player);
     }
@@ -55,10 +58,14 @@ void StateNormal::HandleInput(Player* player, ICommand* command)
 }
 
 
-
 /*IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<IPlayerAction> attack)
     : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
 }*/
+
+IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move,
+    std::unique_ptr<IPlayerAction> attack)
+    : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
+}
 
 void IStateRideOn::Update(Player* player)
 {
@@ -89,4 +96,44 @@ void IStateRideOn::DoMove(Player* player)
 void IStateRideOn::DoShoot(Player* player)
 {
     if (shootAction_)shootAction_->Execute(player);
+}
+
+// --- StateRideOnTest の実装（テスト用の仮のライドオンステート派生クラス） ---
+StateRideOnTest::StateRideOnTest()
+    : IStateRideOn(
+        std::make_unique<NormalMoveAction>(0.15f),  // 移動速度
+        std::make_unique<NormalAttackAction>()      // 攻撃アクション
+    ) {
+    shootAction_ = std::make_unique<ShootRobotAction>(); // 射出アクション
+}
+
+void StateRideOnTest::Initialize(Player* player) {
+    // 新しいビヘイビアをセットアップ（RideOnTest専用のビヘイビア、またはRootを使用）
+    player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+
+    // Behaviorの初期化
+    if (player->GetBehavior()) {
+        player->GetBehavior()->Initialize(player);
+    }
+}
+
+void StateRideOnTest::BehaviorUpdate(Player* player) {
+    // 重力は適用しない（搭乗状態なので）
+    // 必要に応じて搭乗特有の物理をここに追加
+}
+
+void StateRideOnTest::HandleInput(Player* player, ICommand* command) {
+    // ShootCommand（射出コマンド）を処理する
+    if (dynamic_cast<ShootCommand*>(command)) {
+        // 射出アクションを実行
+        DoShoot(player);
+        // 射出後、通常状態に戻る
+        player->ChangeState(std::make_unique<StateNormal>());
+        return;
+    }
+
+    // その他の入力はBehaviorに任せる
+    if (player->GetBehavior()) {
+        player->GetBehavior()->HandleInput(player, command);
+    }
 }

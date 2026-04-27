@@ -1,5 +1,6 @@
 #pragma once
 class Player;
+class GameScene;
 enum ActionType
 {
     kJump,
@@ -42,4 +43,10 @@ public:
     void Execute(Player* player) override;
 private:
     float dashSpeed_ = 0.5f; // 突進速度（調整してください）
+};
+
+//射出
+class ShootRobotAction : public IPlayerAction {
+public:
+    void Execute(Player* player) override;
 };

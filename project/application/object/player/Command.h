@@ -14,3 +14,4 @@ private:
 
 class JumpCommand : public ICommand {};
 class AttackCommand : public ICommand {};
+class ShootCommand : public ICommand {};

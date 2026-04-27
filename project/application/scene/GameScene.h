@@ -8,6 +8,7 @@
 #include "SkyBox.h"
 #include "CameraController.h"
 #include "Vector2.h"
+#include "Projectile.h"
 
 class RailPath;
 class Enemy;
@@ -24,6 +25,7 @@ public:
     ~GameScene() override;
 
     void AddEnemy(Vector2 pos);
+    void AddProjectile(const Vector3& position, float speed);
 
 
 private:
@@ -48,5 +50,6 @@ private:
     Vector3 point2_ = { 0.0f,0.0f,50.0f };*/
 
      uint32_t handle_=0;
+     std::vector<std::unique_ptr<Projectile>> projectiles_;
 };
 
