@@ -62,9 +62,9 @@ void StateNormal::HandleInput(Player* player, ICommand* command)
     : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
 }*/
 
-IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move,
-    std::unique_ptr<IPlayerAction> attack)
-    : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
+IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move,std::unique_ptr<IPlayerAction> jump,std::unique_ptr<IPlayerAction> attack,
+        std::unique_ptr<IPlayerAction> shoot)
+    : moveAction_(std::move(move)), jumpAction_(std::move(jump)), attackAction_(std::move(attack)), shootAction_(std::move(shoot)) {
 }
 
 void IStateRideOn::Update(Player* player)
@@ -102,7 +102,9 @@ void IStateRideOn::DoShoot(Player* player)
 StateRideOnTest::StateRideOnTest()
     : IStateRideOn(
         std::make_unique<NormalMoveAction>(0.15f),  // 移動速度
-        std::make_unique<NormalAttackAction>()      // 攻撃アクション
+        std::make_unique<NormalJumpAction>(),       // ジャンプアクション
+        std::make_unique<NormalAttackAction>(),     // 攻撃アクション
+        std::make_unique<ShootRobotAction>()        // 射出アクション
     ) {
     shootAction_ = std::make_unique<ShootRobotAction>(); // 射出アクション
 }
@@ -118,8 +120,7 @@ void StateRideOnTest::Initialize(Player* player) {
 }
 
 void StateRideOnTest::BehaviorUpdate(Player* player) {
-    // 重力は適用しない（搭乗状態なので）
-    // 必要に応じて搭乗特有の物理をここに追加
+   player->UpdateGravity();
 }
 
 void StateRideOnTest::HandleInput(Player* player, ICommand* command) {

@@ -19,7 +19,7 @@ void Player::Initialize()
     object_->Initialize();
     object_->SetModel("Sphere");
     railMover_ = std::make_unique<RailMover>();
-    // テスト用：初期ステートをStateRideOnTestに変更
+    // テスト用：初期ステートをStateNormalからStateRideOnTestに変更
     ChangeState(std::make_unique<StateRideOnTest>());
     ChangeBehavior(std::make_unique<BehaviorRoot>());
 }

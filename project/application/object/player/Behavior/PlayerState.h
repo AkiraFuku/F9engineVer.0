@@ -67,8 +67,8 @@ private:
 class IStateRideOn : public IPlayerState {
 public:
     // コンストラクタでアクションを注入できるようにする
-    IStateRideOn(std::unique_ptr<IPlayerAction> move,
-        std::unique_ptr<IPlayerAction> attack);
+    IStateRideOn(std::unique_ptr<IPlayerAction> move,std::unique_ptr<IPlayerAction> jump,std::unique_ptr<IPlayerAction> attack,
+        std::unique_ptr<IPlayerAction> shoot);
 
 
     virtual ~IStateRideOn() = default;
