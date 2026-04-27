@@ -24,7 +24,7 @@ public:
 
 
 private:
-     std::unique_ptr<IStateRideOn>　playerState_=nullptr;
+     std::unique_ptr<IStateRideOn> playerState_=nullptr;
 
 
 };

@@ -1,32 +1,43 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "PlayerBehavior.h"
+#include "PlayerAction.h"
 class Player;
 class ICommand;
-// --- 行動ビヘイビア (Action) ---
-// 物理計算や移動ロジックを担当
-class IPlayerAction;
 
 // --- 状態ビヘイビア (State) ---
 // どの行動を組み合わせて使うか、どの状態へ遷移するかを担当
 class IPlayerState {
 public:
+     IPlayerState() = default;
     virtual ~IPlayerState() = default;
     virtual void Initialize(Player* player) = 0;
-    virtual void Update(Player* player) = 0;
+   // State共通のUpdate。現在のBehaviorを更新する
+    virtual void Update(Player* player);
     virtual void  BehaviorUpdate(Player* player) = 0;
     virtual void Finalize(Player* player) = 0;
-    virtual void HandleInput(Player* player, ICommand* command) = 0;
+    virtual void HandleInput(Player* player, ICommand* command) ;
     virtual const char* GetName() const = 0; // 追加
     virtual IPlayerAction* GetMoveAction() = 0;
     virtual IPlayerAction* GetJumpAction() = 0;
     virtual IPlayerAction* GetAttackAction_() = 0;
+
+    void ChangeBehavior(std::unique_ptr<IPlayerBehavior> next) {
+        currentBehavior_ = std::move(next);
+    }
+    IPlayerBehavior* GetBehavior() {
+        return currentBehavior_.get();
+    }
+
+protected:
+    std::unique_ptr<IPlayerBehavior> currentBehavior_; // StateがBehaviorを管理
 };
 //通常状態
 class StateNormal : public IPlayerState {
 public:
-    StateNormal();
-    ~StateNormal();
+    StateNormal()=default;
+    ~StateNormal() = default;
     void Initialize(Player* player) override;
     void Update(Player* player) override;
     void  BehaviorUpdate(Player* player)override;

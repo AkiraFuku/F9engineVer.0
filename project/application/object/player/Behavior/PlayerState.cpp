@@ -5,8 +5,17 @@
 #include "Player.h"
 #include "PlayerBehavior.h"
 
-StateNormal::StateNormal() = default;
-StateNormal::~StateNormal() = default;
+
+ void IPlayerState::Update(Player* player){
+        if (currentBehavior_) {
+            currentBehavior_->Update(player);
+        }
+    }
+
+void IPlayerState::HandleInput(Player* player, ICommand* command) {
+    // デフォルト実装（必要に応じて派生クラスでオーバーライド）
+}
+
 
 //通常状態
 void StateNormal::Initialize(Player* player)
@@ -47,9 +56,9 @@ void StateNormal::HandleInput(Player* player, ICommand* command)
 
 
 
-IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<IPlayerAction> attack)
+/*IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<IPlayerAction> attack)
     : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
-}
+}*/
 
 void IStateRideOn::Update(Player* player)
 {

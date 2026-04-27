@@ -2,12 +2,12 @@
 #include <memory>
 #include "Transform.h"
 #include "Object3d.h"
+#include "Behavior/PlayerState.h"
 class InputHandler;
 class Input;
 class Camera;
 class RailMover;
 class RailPath;
-class IPlayerState;
 class IPlayerBehavior;
 class Robot;
 class Enemy; // Player.h の場合
@@ -53,7 +53,7 @@ public:
         return velocity_;
     }
     IPlayerBehavior* GetBehavior() {
-        return behavior_.get();
+        return baseState_->GetBehavior();
     };
     IPlayerState* GetState(){
         return baseState_.get();
@@ -96,7 +96,7 @@ public:
 private:
 
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態
-    std::unique_ptr<IPlayerBehavior> behavior_;   // 「通常・攻撃・ジャンプ」
+   // std::unique_ptr<IPlayerBehavior> behavior_;   // 「通常・攻撃・ジャンプ」
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整

@@ -66,8 +66,8 @@ void Player::Draw()
     }
 
     // ビヘイビア（アクション）ステートの表示
-    if (behavior_) {
-        ImGui::Text("Behavior: %s", behavior_->GetName());
+    if (baseState_ && baseState_->GetBehavior()) {
+        ImGui::Text("Behavior: %s", baseState_->GetBehavior()->GetName());
     } else {
         ImGui::Text("Behavior: None");
     }
@@ -194,8 +194,12 @@ void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
     baseState_->Initialize(this);
 }
 void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
-    behavior_ = std::move(newBehavior);
-    behavior_->Initialize(this);
+    if (baseState_) {
+        baseState_->ChangeBehavior(std::move(newBehavior));
+        if (baseState_->GetBehavior()) {
+            baseState_->GetBehavior()->Initialize(this);
+        }
+    }
 }
 void Player::OnCollision([[maybe_unused]] Enemy* other) {
     // 衝突したらフラグとタイマーをセット
@@ -262,8 +266,8 @@ const char* Player::GetStateName() const {
 }
 
 const char* Player::GetBehaviorName() const {
-    if (behavior_) {
-        return behavior_->GetName();
+    if (baseState_ && baseState_->GetBehavior()) {
+        return baseState_->GetBehavior()->GetName();
     }
     return "NoBehavior";
 }
