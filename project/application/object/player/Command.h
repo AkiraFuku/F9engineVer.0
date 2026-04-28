@@ -15,6 +15,7 @@ private:
 class JumpCommand : public ICommand {};
 class AttackCommand : public ICommand {};
 class ShootCommand : public ICommand {};
+class PreShootCommand : public ICommand {};
 // Command.h
 class AimCommand : public ICommand {
 public:

@@ -91,7 +91,7 @@ public:
     /// <summary>
     /// padのボタンが離されたか（離した瞬間 / Release trigger）
     /// </summary>
-    bool TriggerPadUP(int32_t stickNo, WORD button) const;
+    bool TriggerPadUp(int32_t stickNo, WORD button) const;
 
       static std::unique_ptr<Input> instance;
 private:

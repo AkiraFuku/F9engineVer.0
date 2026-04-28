@@ -286,7 +286,7 @@ bool Input::TriggerPadDown(int32_t stickNo, WORD button) const
 // -----------------------------------------------------------
 // ボタンを離した瞬間か (Release Trigger)
 // -----------------------------------------------------------
-bool Input::TriggerPadUP(int32_t stickNo, WORD button) const
+bool Input::TriggerPadUp(int32_t stickNo, WORD button) const
 {
     if (stickNo < 0 || stickNo >= XUSER_MAX_COUNT) return false;
 
