@@ -40,12 +40,12 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
         }
     }
 
-    if (input->TriggerMouseDown(0)) { // 例としてスペース
+    if (input->TriggerMouseDown(0)|| input->TriggerPadDown(0, XINPUT_GAMEPAD_B)) { // 例としてスペース
         commands.push_back(std::make_unique<AttackCommand>());
     }
 
     // 射出コマンド (Zキーまたはゲームパッドの特定ボタン)
-    if (input->TriggerKeyDown(DIK_Z) || input->TriggerPadDown(0, XINPUT_GAMEPAD_X)) {
+    if (input->TriggerKeyUp(DIK_Z) || input->TriggerPadUP(0, XINPUT_GAMEPAD_X)) {
         commands.push_back(std::make_unique<ShootCommand>());
     }
 

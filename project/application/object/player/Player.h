@@ -99,7 +99,7 @@ public:
      void SetScene(Scene* scene);
      Scene* GetScene() { return scene_; }
 
-
+     float GetWorldY() const { return worldY_; }
 private:
 
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態

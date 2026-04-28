@@ -9,7 +9,7 @@ Projectile::Projectile() {
 
 Projectile::~Projectile() = default;
 
-void Projectile::Initialize(const RailPath* path, float startT, float speed) {
+void Projectile::Initialize(const RailPath* path, Vector2 start, float speed) {
     speed_ = speed;
     
     // モデルの初期化（例としてSphereを使用）
@@ -19,31 +19,28 @@ void Projectile::Initialize(const RailPath* path, float startT, float speed) {
 
     // レール設定
     railMover_->SetPath(path);
-    railMover_->SetProgress(startT);
+    railMover_->SetProgress(start.x);
+    worldY_ = start.y;
 }
 
 void Projectile::Update() {
     if (isDead_) return;
 
-    // レール上を進める
     railMover_->Advance(speed_);
 
-    // 座標と回転を更新
-    object_->SetTranslate(railMover_->GetCurrentPosition());
+    // 座標の更新
+    Vector3 railPos = railMover_->GetCurrentPosition();
+    // レールの XZ に、保存しておいた高度 Y を合成する
+    Vector3 finalPos = { railPos.x, worldY_, railPos.z };
+    object_->SetTranslate(finalPos);
     
-    // 進行方向を向く（Playerの回転ロジックを参考）
-    Vector3 dir = railMover_->GetCurrentDirection();
-    float angle = atan2f(dir.x, dir.z);
-    object_->SetRotate({ 0.0f, angle, 0.0f });
-
+    // ... 回転処理などはそのまま ...
     object_->Update();
 
-    // 寿命尽きたら消滅
     if (--lifeTimer_ <= 0) {
         isDead_ = true;
     }
 }
-
 void Projectile::Draw() {
     if (isDead_) return;
     object_->Draw();

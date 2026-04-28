@@ -25,7 +25,7 @@ public:
     ~GameScene() override;
 
     void AddEnemy(Vector2 pos);
-    void AddProjectile(const Vector3& position, float speed);
+    void AddProjectile(const Vector2& position, float speed);
 
 
 private:

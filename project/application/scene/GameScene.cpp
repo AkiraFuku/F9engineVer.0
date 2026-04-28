@@ -446,7 +446,7 @@ void GameScene::AddEnemy(Vector2 pos)
 
 }
 
-void GameScene::AddProjectile(const Vector3& position, float speed)
+void GameScene::AddProjectile(const Vector2& position, float speed)
 {
     if (stageRail)
     {
@@ -454,9 +454,9 @@ void GameScene::AddProjectile(const Vector3& position, float speed)
 
         // プレイヤーの進行方向に沿ってレール上に配置
         // positionのX値をレール上のパラメータ(0.0 ～ 1.0)として使用
-        float t = position.x;
+    
 
-        newProjectile->Initialize(stageRail.get(), t, speed);
+        newProjectile->Initialize(stageRail.get(), position, speed);
         newProjectile->SetCamera(cameraMap_["Main"].get());
         projectiles_.push_back(std::move(newProjectile));
     }

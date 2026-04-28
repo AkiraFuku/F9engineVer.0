@@ -40,7 +40,8 @@ void ShootRobotAction::Execute(Player* player)
     Scene* scene = player->GetScene();
     if (scene) {
         float bulletSpeed = 0.5f; // プレイヤーより速い速度
-        Vector3 bulletPosition = { currentT, 0.0f, 0.0f };
+        float currentY = player->GetWorldY();
+        Vector2 bulletPosition = { currentT, currentY };
 
         // ダウンキャスト（GameSceneに変換）
         GameScene* gameScene = dynamic_cast<GameScene*>(scene);

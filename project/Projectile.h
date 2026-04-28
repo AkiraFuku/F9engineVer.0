@@ -15,7 +15,7 @@ public:
     virtual ~Projectile();
 
     // 初期化: 走行するレール、開始地点(t)、速度(正なら終点方向、負なら始点方向)
-    virtual void Initialize(const RailPath* path, float startT, float speed);
+    virtual void Initialize(const RailPath* path, Vector2 start, float speed);
     virtual void Update();
     virtual void Draw();
 
@@ -34,6 +34,7 @@ protected:
     std::unique_ptr<RailMover> railMover_;
     std::unique_ptr<Object3d> object_;
     Camera* camera_ = nullptr;
+    float worldY_ = 0.0f; // 追加：弾の高度を保持
 
     float speed_ = 0.0f;
     float radius_ = 0.5f;
