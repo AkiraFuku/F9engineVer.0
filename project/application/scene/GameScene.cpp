@@ -258,6 +258,13 @@ void GameScene::Update() {
         enemy->Update();
     }
 
+    // 死んだ敵を削除
+    enemies_.erase(
+        std::remove_if(enemies_.begin(), enemies_.end(),
+            [](const std::unique_ptr<Enemy>& e) { return e->IsDead(); }),
+        enemies_.end()
+    );
+
     // --- 衝突判定の実行 ---
     CollisionManager* colManager = CollisionManager::GetInstance();
     colManager->Clear();

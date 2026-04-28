@@ -219,3 +219,9 @@ const char* Enemy::GetBehaviorName() const
 {
     return behavior_ ? behavior_->GetName() : "None";
 }
+
+bool Enemy::IsDead() const
+{
+    return state_ && strcmp(state_->GetName(), "Dead") == 0;
+}
+

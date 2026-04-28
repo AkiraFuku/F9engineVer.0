@@ -75,6 +75,8 @@ public:
     const char* GetStateName() const;
     // 行動ビヘイビアの名称取得
     const char* GetBehaviorName() const;
+    // 敵が死んでいるかどうかを判定
+    bool IsDead() const;
 private:
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
