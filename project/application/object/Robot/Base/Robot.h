@@ -6,7 +6,8 @@ class IStateRideOn; // 前方宣言
 
 class Robot {
 public:
-    virtual ~Robot() = default;
+    Robot();
+    virtual ~Robot();
 
     // プレイヤーに渡すための「ライドオンステート」を生成する
     // このステートの中に、そのロボット固有のアクションが詰め込まれている

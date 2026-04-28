@@ -190,6 +190,15 @@ void Enemy::OnCollision([[maybe_unused]] Player* other) {
                 ChangeState(std::make_unique<StateEnemyStan>());
             } else if (state_->GetName() == "Stan")
             {
+                // TestEnemy の場合、ロボットの状態を取得してプレイヤーに設定
+                // 前方宣言の都合上、ここで動的キャストを使用
+                // TestEnemy* testEnemy = dynamic_cast<TestEnemy*>(this);
+                // if (testEnemy && testEnemy->GetRobot()) {
+                //     IPlayerState* robotState = testEnemy->GetRobot()->GetRideOnState();
+                //     if (robotState) {
+                //         other->ChangeState(robotState);  // プレイヤーがロボットの状態を取得
+                //     }
+                // }
                 ChangeState(std::make_unique<StateEnemyDead>());
             }
         }

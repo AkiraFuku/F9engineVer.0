@@ -16,6 +16,7 @@
 #include "TextureManager.h"
 #include "RailPath.h"
 #include "Enemy.h"
+#include "TestEnemy.h"
 #include "CollisionManager.h"
 #include "Projectile.h"
 #include "PlayerState.h"
@@ -430,8 +431,8 @@ GameScene::~GameScene() = default;
 void GameScene::AddEnemy(Vector2 pos)
 {
     if (stageRail)
-    {// 新しい敵を生成
-        std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
+    {// 新しい敵を生成（テスト用敵）
+        std::unique_ptr<TestEnemy> newEnemy = std::make_unique<TestEnemy>();
         newEnemy->Initialize();
 
         // 共通の設定

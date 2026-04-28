@@ -13,11 +13,11 @@ class Enemy
 {
 public:
     Enemy();
-    ~Enemy();
+    virtual ~Enemy();
 
-    void Initialize();
-    void Update();
-    void Draw();
+    virtual void Initialize();
+    virtual void Update();
+    virtual void Draw();
 
     void SetCamera(Camera* camera) {
         camera_ = camera;
@@ -61,7 +61,7 @@ public:
     // プレイヤーと同様に、IsGround() などの判定があると Behavior 側で便利です
     bool IsGround() const { return isGrounded_; }
 
-    void OnCollision(Player* other); // Enemy側
+    virtual void OnCollision(Player* other); // Enemy側
     void UpdateGravity(); // 重力の更新処理
     // enemy状態取得
     IEnemyState* GetState() {
@@ -77,7 +77,7 @@ public:
     const char* GetBehaviorName() const;
     // 敵が死んでいるかどうかを判定
     bool IsDead() const;
-private:
+protected:
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
     Camera* camera_ = nullptr;
