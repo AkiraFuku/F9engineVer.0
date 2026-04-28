@@ -131,3 +131,40 @@ void BehaviorJump::HandleInput(Player* player, ICommand* command) {
             player->ChangeBehavior(std::make_unique<BehaviorJump>());
         }*/
 }
+// BehaviorAim::Initialize
+void BehaviorAim::Initialize(Player* player) {
+    // 照準開始時の初期化（必要ならSE再生やエフェクト表示）
+    aimX_ = (float)player->GetMoveDirection(); // 現在の向きを初期値に
+    aimY_ = 0.0f;
+}
+
+void BehaviorAim::Update(Player* player) {
+    // 滞空中に照準を定める場合、ゆっくり降下させる
+    // player->ApplySlowFall(kAimFallSpeed); 
+}
+
+void BehaviorAim::HandleInput(Player* player, ICommand* command) {
+    // 1. AimCommand で方向を更新
+    if (auto aimCmd = dynamic_cast<AimCommand*>(command)) {
+        // コマンドから入力方向を取得 (例: ジョイスティックのベクトル)
+        aimX_ = aimCmd->GetX();
+        aimY_ = aimCmd->GetY();
+    }
+
+    // 2. ShootCommand (決定) で発射
+    if (dynamic_cast<ShootCommand*>(command)) {
+        auto state = dynamic_cast<IStateRideOn*>(player->GetState());
+        if (state) {
+            auto shootAction = state->GetShootAction();
+            if (shootAction) {
+                // ShootAction側にターゲット方向を渡す仕組みが必要
+                // 例: static_cast<ShootRobotAction*>(shootAction)->SetDirection(aimX_, aimY_);
+                shootAction->Execute(player);
+            }
+        }
+        // 発射後は通常状態(Root)に戻る
+        player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+    }
+
+    // 3. プレシュートボタンを離した時にキャンセルしてRootに戻る実装もアリ
+}

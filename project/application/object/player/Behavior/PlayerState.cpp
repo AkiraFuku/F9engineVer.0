@@ -125,13 +125,13 @@ void StateRideOnTest::BehaviorUpdate(Player* player) {
 
 void StateRideOnTest::HandleInput(Player* player, ICommand* command) {
     // ShootCommand（射出コマンド）を処理する
-    if (dynamic_cast<ShootCommand*>(command)) {
+/*    if (dynamic_cast<ShootCommand*>(command)) {
         // 射出アクションを実行
         DoShoot(player);
         // 射出後、通常状態に戻る
         player->ChangeState(std::make_unique<StateNormal>());
         return;
-    }
+    }*/
 
     // その他の入力はBehaviorに任せる
     if (player->GetBehavior()) {
