@@ -238,6 +238,10 @@ void Player::OnCollision([[maybe_unused]] Enemy* other) {
 
             if (enemyState && strcmp(enemyState, "Dead") != 0)
             {
+                Vector3 now=velocity_;
+                now.x=0.0f;
+                velocity_=now;
+
                 ChangeBehavior(std::make_unique<BehaviorRoot>()); // 通常切り替える
 
             }

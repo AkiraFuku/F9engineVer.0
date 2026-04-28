@@ -126,7 +126,7 @@ void GameScene::Initialize() {
 
     // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
-    //   stageRail->SetLoop(true); // ループを有効化
+       stageRail->SetLoop(true); // ループを有効化
 
     float radius = 20.0f;       // 円の半径
     float h = radius * 0.5522f; // ハンドルの長さ
@@ -142,9 +142,9 @@ void GameScene::Initialize() {
     stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
 
     // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
-    //stageRail->AddPointCR({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-    stageRail->AddPointCR({ radius, 0, 0 });
-    stageRail->AddPoint({ 0, 0, 0 });
+    stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+    /*stageRail->AddPointCR({ radius, 0, 0 });
+    stageRail->AddPoint({ 0, 0, 0 });*/
     // 最後に必ず更新して距離テーブルを作成
     stageRail->Update();
 

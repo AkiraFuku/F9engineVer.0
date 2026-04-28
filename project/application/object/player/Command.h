@@ -15,3 +15,17 @@ private:
 class JumpCommand : public ICommand {};
 class AttackCommand : public ICommand {};
 class ShootCommand : public ICommand {};
+// Command.h
+class AimCommand : public ICommand {
+public:
+    // x, y は -1.0f ~ 1.0f の範囲
+    AimCommand(Vector2 direction) : direction_(direction) {}
+    float GetX() const { return direction_.x; }
+    float GetY() const { return direction_.y; }
+    Vector2 GetDirection() const {
+        return direction_;
+    }   
+private:
+   Vector2 direction_;
+   
+};

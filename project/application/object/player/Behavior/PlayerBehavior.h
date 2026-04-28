@@ -56,3 +56,16 @@ public:
         return "Jump";
     } // BehaviorRootの場合
 };
+class BehaviorAim : public IPlayerBehavior {
+public:
+    void Initialize(Player* player) override;
+    void Update(Player* player) override;
+    void Finalize(Player* player) override;
+    void HandleInput(Player* player, ICommand* command) override;
+    const char* GetName() const override { return "Aim"; }
+
+private:
+    float aimX_ = 1.0f; // デフォルトは右向き
+    float aimY_ = 0.0f;
+    const float kAimFallSpeed = 0.02f; // ゆっくり降下する速度
+};
