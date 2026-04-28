@@ -29,24 +29,23 @@ void NormalAttackAction::Execute(Player* player) {
     player->Move(moveAmount);
 }
 
-void ShootRobotAction::Execute(Player* player)
-{
-    // プレイヤーの情報を取得
-    const RailPath* path = player->GetRailPath();
-    float currentT = player->GetRailProgress(); // Player側に GetProgress() が必要
-    int moveDir = player->GetMoveDirection();   // 1(順) or -1(逆)
-
-    // GameSceneへの弾の追加
+void ShootRobotAction::Execute(Player* player) {
     Scene* scene = player->GetScene();
-    if (scene) {
-        float bulletSpeed = 0.5f; // プレイヤーより速い速度
-        float currentY = player->GetWorldY();
-        Vector2 bulletPosition = { currentT, currentY };
+    GameScene* gameScene = dynamic_cast<GameScene*>(scene);
+    if (!gameScene) return;
 
-        // ダウンキャスト（GameSceneに変換）
-        GameScene* gameScene = dynamic_cast<GameScene*>(scene);
-        if (gameScene) {
-            gameScene->AddProjectile(bulletPosition, (float)moveDir * bulletSpeed);
-        }
-    }
+    // 現在のプレイヤー位置をベースに設置位置を計算
+    float currentT = player->GetRailProgress();
+    float currentY = player->GetWorldY();
+    
+    // 1. 設置位置の決定（将来的に aimDir_ を使ってオフセット可能）
+    Vector2 spawnPos = { currentT, currentY };
+
+    // 2. 進行方向の決定
+    // 今回は「弾の進む向きと設置方向を統一」するため aimDir_.x を使用
+    float bulletSpeed = 0.5f * (aimDir_.x >= 0 ? 1.0f : -1.0f);
+
+    gameScene->AddProjectile(spawnPos, bulletSpeed);
+    player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+    player->ChangeState(std::make_unique<StateNormal>());
 }

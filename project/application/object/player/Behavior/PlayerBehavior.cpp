@@ -37,6 +37,12 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
     if (dynamic_cast<AttackCommand*>(command)) {
         player->ChangeBehavior(std::make_unique<BehaviorAttack>());
     }
+    if (dynamic_cast<PreShootCommand*>(command)) {
+        // ライドオン状態の時のみ照準可能にするチェック
+        if (dynamic_cast<IStateRideOn*>(player->GetState())) {
+            player->ChangeBehavior(std::make_unique<BehaviorAim>());
+        }
+    }
 }
 
 // --- BehaviorAttack (攻撃状態) ---
@@ -125,6 +131,12 @@ void BehaviorJump::HandleInput(Player* player, ICommand* command) {
         // 攻撃状態へ遷移
         player->ChangeBehavior(std::make_unique<BehaviorAttack>());
     }
+    if (dynamic_cast<PreShootCommand*>(command)) {
+        // ライドオン状態の時のみ照準可能にするチェック
+        if (dynamic_cast<IStateRideOn*>(player->GetState())) {
+            player->ChangeBehavior(std::make_unique<BehaviorAim>());
+        }
+    }
 
     /*    if (dynamic_cast<JumpCommand*>(command)) {
             // ジャンプ状態へ遷移
@@ -142,7 +154,9 @@ void BehaviorAim::Update(Player* player) {
     // 滞空中に照準を定める場合、ゆっくり降下させる
     // player->ApplySlowFall(kAimFallSpeed); 
 }
-
+void BehaviorAim::Finalize(Player* player)
+{
+}
 void BehaviorAim::HandleInput(Player* player, ICommand* command) {
     // 1. AimCommand で方向を更新
     if (auto aimCmd = dynamic_cast<AimCommand*>(command)) {
@@ -163,7 +177,7 @@ void BehaviorAim::HandleInput(Player* player, ICommand* command) {
             }
         }
         // 発射後は通常状態(Root)に戻る
-        player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+       // player->ChangeBehavior(std::make_unique<BehaviorRoot>());
     }
 
     // 3. プレシュートボタンを離した時にキャンセルしてRootに戻る実装もアリ

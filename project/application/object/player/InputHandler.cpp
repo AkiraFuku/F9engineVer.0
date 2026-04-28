@@ -47,38 +47,39 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
             } else if (input->PushedKeyDown(DIK_D))
             {
                 commands.push_back(std::make_unique<AimCommand>(Vector2{ 1.0f, 0.0f })); // 右入力
-            }else if (input->PushedKeyDown(DIK_W))
+            } else if (input->PushedKeyDown(DIK_W))
             {
                 commands.push_back(std::make_unique<AimCommand>(Vector2{ 0.0f, 1.0f })); // 上入力
-            }else if (input->PushedKeyDown(DIK_S))
+            } else if (input->PushedKeyDown(DIK_S))
             {
                 commands.push_back(std::make_unique<AimCommand>(Vector2{ 0.0f, -1.0f })); // 下入力
             }
         }
-
-        if (input->TriggerPadDown(0, XINPUT_GAMEPAD_A) || input->TriggerKeyDown(DIK_SPACE))
-        {
-            // 2. ジャンプの処理 (TriggerPadDownを使用)
-            if (input->TriggerPadDown(0, XINPUT_GAMEPAD_A)) {
-                commands.push_back(std::make_unique<JumpCommand>());
-            }
-            if (input->TriggerKeyDown(DIK_SPACE))
-            {
-                commands.push_back(std::make_unique<JumpCommand>());
-            }
-        }
-
-        if (input->TriggerMouseDown(0) || input->TriggerPadDown(0, XINPUT_GAMEPAD_B)) { // 例としてスペース
-            commands.push_back(std::make_unique<AttackCommand>());
-        }
-
-        // 射出コマンド (Zキーまたはゲームパッドの特定ボタン)
-        if (input->TriggerKeyDown(DIK_Z) || input->TriggerPadDown(0, XINPUT_GAMEPAD_X)) {
-            commands.push_back(std::make_unique<PreShootCommand>());
-        }
-        if (input->TriggerKeyUp(DIK_Z) || input->TriggerPadUp(0, XINPUT_GAMEPAD_X)) {
-            commands.push_back(std::make_unique<ShootCommand>());
-        }
-
-        return commands;
     }
+
+    if (input->TriggerPadDown(0, XINPUT_GAMEPAD_A) || input->TriggerKeyDown(DIK_SPACE))
+    {
+        // 2. ジャンプの処理 (TriggerPadDownを使用)
+        if (input->TriggerPadDown(0, XINPUT_GAMEPAD_A)) {
+            commands.push_back(std::make_unique<JumpCommand>());
+        }
+        if (input->TriggerKeyDown(DIK_SPACE))
+        {
+            commands.push_back(std::make_unique<JumpCommand>());
+        }
+    }
+
+    if (input->TriggerMouseDown(0) || input->TriggerPadDown(0, XINPUT_GAMEPAD_B)) { // 例としてスペース
+        commands.push_back(std::make_unique<AttackCommand>());
+    }
+
+    // 射出コマンド (Zキーまたはゲームパッドの特定ボタン)
+    if (input->TriggerKeyDown(DIK_Z) || input->TriggerPadDown(0, XINPUT_GAMEPAD_X)) {
+        commands.push_back(std::make_unique<PreShootCommand>());
+    }
+    if (input->TriggerKeyUp(DIK_Z) || input->TriggerPadUp(0, XINPUT_GAMEPAD_X)) {
+        commands.push_back(std::make_unique<ShootCommand>());
+    }
+
+    return commands;
+}

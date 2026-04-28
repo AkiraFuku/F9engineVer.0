@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector2.h"
 class Player;
 class GameScene;
 enum ActionType
@@ -49,4 +50,8 @@ private:
 class ShootRobotAction : public IPlayerAction {
 public:
     void Execute(Player* player) override;
+    void SetAimVector(float x, float y) { aimDir_ = {x, y}; }
+
+private:
+    Vector2 aimDir_ = {1.0f, 0.0f};
 };

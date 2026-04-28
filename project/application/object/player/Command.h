@@ -1,4 +1,6 @@
 // Command.h
+#pragma once
+#include "Vector2.h"
 class ICommand {
 public:
     virtual ~ICommand() = default;
