@@ -112,6 +112,9 @@
     <Filter Include="App\Object\Robot">
       <UniqueIdentifier>{46231f9b-a4c7-492c-a7e5-cd6be40fb652}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Behavior">
+      <UniqueIdentifier>{49d0e117-10c2-419a-9e46-8aaf7c3dce2c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -276,26 +279,11 @@
     <ClCompile Include="application\object\player\Behavior\PlayerAction.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="application\Behavior\BehaviorState.cpp">
-      <Filter>App\Object\Player\Behavia</Filter>
-    </ClCompile>
     <ClCompile Include="application\object\Enemy\Enemy.cpp">
       <Filter>App\Object\Enemy</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Robot\Base\Robot.cpp">
       <Filter>App\Object\Robot</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\Enemy\Behavior\EnemyState.cpp">
-      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="CollisionManager.cpp">
       <Filter>ソース ファイル</Filter>
@@ -311,6 +299,21 @@
     </ClCompile>
     <ClCompile Include="application\object\Enemy\TestEnemy.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp">
+      <Filter>App\Object\Player\Behavia</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Behavior\BehaviorState.cpp">
+      <Filter>App\Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp">
+      <Filter>App\Object\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp">
+      <Filter>App\Object\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyState.cpp">
+      <Filter>App\Object\Enemy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -488,26 +491,11 @@
     <ClInclude Include="application\object\player\Behavior\PlayerAction.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="application\Behavior\BehaviorState.h">
-      <Filter>App\Object\Player\Behavia</Filter>
-    </ClInclude>
     <ClInclude Include="application\object\Enemy\Enemy.h">
       <Filter>App\Object\Enemy</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Robot\Base\Robot.h">
       <Filter>App\Object\Robot</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\Enemy\Behavior\EnemyState.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="CollisionManager.h">
       <Filter>ヘッダー ファイル</Filter>
@@ -523,6 +511,21 @@
     </ClInclude>
     <ClInclude Include="application\object\Enemy\TestEnemy.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h">
+      <Filter>App\Object\Player\Behavia</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Behavior\BehaviorState.h">
+      <Filter>App\Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h">
+      <Filter>App\Object\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h">
+      <Filter>App\Object\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyState.h">
+      <Filter>App\Object\Enemy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
