@@ -445,19 +445,21 @@ void GameScene::AddEnemy(Vector2 pos)
     }
 
 }
+// GameScene.cpp
 
-void GameScene::AddProjectile(const Vector2& position, float speed)
-{
-    if (stageRail)
-    {
+void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param) {
+    if (stageRail) {
         std::unique_ptr<Projectile> newProjectile = std::make_unique<Projectile>();
-
-        // プレイヤーの進行方向に沿ってレール上に配置
-        // positionのX値をレール上のパラメータ(0.0 ～ 1.0)として使用
-    
-
-        newProjectile->Initialize(stageRail.get(), position, speed);
+        
+        // --- 修正箇所 ---
+        // 以前はここで direction.x しか見ていませんでしたが、
+        // param 自体を Initialize に渡すことで y 方向（高度）の速度も反映させます。
+        
         newProjectile->SetCamera(cameraMap_["Main"].get());
+        
+        // Projectile側のInitializeにparamを丸ごと渡す
+        newProjectile->Initialize(stageRail.get(), param);
+
         projectiles_.push_back(std::move(newProjectile));
     }
 }

@@ -173,6 +173,7 @@ void BehaviorAim::HandleInput(Player* player, ICommand* command) {
             if (shootAction) {
                 // ShootAction側にターゲット方向を渡す仕組みが必要
                 // 例: static_cast<ShootRobotAction*>(shootAction)->SetDirection(aimX_, aimY_);
+                static_cast<ShootRobotAction*>(shootAction)->SetAimVector(aimX_, aimY_);
                 shootAction->Execute(player);
             }
         }

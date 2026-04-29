@@ -587,3 +587,33 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m)
 
     return ret;
 }
+
+Vector2 Normalize(const Vector2& v)
+{
+
+    float length = sqrtf(v.x * v.x + v.y * v.y);
+    if (length > 0.0f) {
+        Vector2 result = {
+            v.x / length,
+            v.y / length
+        };
+        return result;
+    }
+    Vector2 result = { 0.0f, 0.0f };
+    return result;
+}
+
+Vector2 Lerp(const Vector2& v1, const Vector2& v2, float t)
+{
+        return v1 + (v2 - v1) * t;
+}
+
+Vector2 operator+(const Vector2& v1, const Vector2& v2)
+{
+        return Vector2{ v1.x + v2.x, v1.y + v2.y };
+}
+
+Vector2 operator-(const Vector2& v1, const Vector2& v2)
+{
+            return Vector2{ v1.x - v2.x, v1.y - v2.y };
+}

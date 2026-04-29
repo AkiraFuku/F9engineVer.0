@@ -25,8 +25,7 @@ public:
     ~GameScene() override;
 
     void AddEnemy(Vector2 pos);
-    void AddProjectile(const Vector2& position, float speed);
-
+void AddProjectile(const Projectile::ProjectileSpawnParam& param);
 
 private:
     std::unique_ptr<Sprite> sprite;

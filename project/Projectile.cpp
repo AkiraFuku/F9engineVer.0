@@ -9,32 +9,41 @@ Projectile::Projectile() {
 
 Projectile::~Projectile() = default;
 
-void Projectile::Initialize(const RailPath* path, Vector2 start, float speed) {
-    speed_ = speed;
-    
+void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& param) {
+    speed_ = param.speed * param.direction.x;
+
+    // 2. 高度方向の速度（Y方向の入力に基づき設定）
+    // param.direction.y は入力の上下 (-1.0 ~ 1.0)
+    velocityY_ = param.speed * param.direction.y;
     // モデルの初期化（例としてSphereを使用）
     object_->Initialize();
     object_->SetModel("Sphere"); // 必要に応じて専用モデルへ
-    object_->SetScale({0.5f, 0.5f, 0.5f});
+    object_->SetScale({ 0.5f, 0.5f, 0.5f });
+    //モデルの向きを進行方向に合わせるための回転を設定
+    Vector3 dir3D = { param.direction.x, 0.0f, param.direction.y };
+    object_->SetRotate(dir3D);
+
 
     // レール設定
     railMover_->SetPath(path);
-    railMover_->SetProgress(start.x);
-    worldY_ = start.y;
+    railMover_->SetProgress(param.position.x);
+    worldY_ = param.position.y;
 }
 
 void Projectile::Update() {
     if (isDead_) return;
 
+    // レール上の位置を更新
     railMover_->Advance(speed_);
 
-    // 座標の更新
+    // 【追加】高度を更新
+    worldY_ += velocityY_;
+
+    // 座標の合成
     Vector3 railPos = railMover_->GetCurrentPosition();
-    // レールの XZ に、保存しておいた高度 Y を合成する
-    Vector3 finalPos = { railPos.x, worldY_, railPos.z };
+    Vector3 finalPos = { railPos.x, worldY_, railPos.z }; // 更新された worldY_ を使う
     object_->SetTranslate(finalPos);
-    
-    // ... 回転処理などはそのまま ...
+
     object_->Update();
 
     if (--lifeTimer_ <= 0) {

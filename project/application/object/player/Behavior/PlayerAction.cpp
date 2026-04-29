@@ -3,6 +3,7 @@
 #include "Projectile.h"
 #include "Scene.h"
 #include "GameScene.h"
+#include "MathFunction.h"
 void NormalMoveAction::Execute(Player* player){
     // Player.cpp にあった移動ロジックをここに移譲
     player->Move(speed_);
@@ -30,22 +31,37 @@ void NormalAttackAction::Execute(Player* player) {
 }
 
 void ShootRobotAction::Execute(Player* player) {
+// PlayerAction.cpp
+
+
     Scene* scene = player->GetScene();
     GameScene* gameScene = dynamic_cast<GameScene*>(scene);
     if (!gameScene) return;
 
-    // 現在のプレイヤー位置をベースに設置位置を計算
-    float currentT = player->GetRailProgress();
-    float currentY = player->GetWorldY();
+    // --- 修正箇所 ---
     
-    // 1. 設置位置の決定（将来的に aimDir_ を使ってオフセット可能）
-    Vector2 spawnPos = { currentT, currentY };
+    // 弾の速さ（スカラー値）を定義
+    float baseSpeed = 0.5f; 
 
-    // 2. 進行方向の決定
-    // 今回は「弾の進む向きと設置方向を統一」するため aimDir_.x を使用
-    float bulletSpeed = 0.5f * (aimDir_.x >= 0 ? 1.0f : -1.0f);
+    // 入力方向ベクトル (aimDir_) をそのまま使い、速さを掛ける
+    // もし入力がない (0,0) の場合は、プレイヤーの向いている方向に飛ばす
+    Vector2 finalDir = aimDir_;
+    if (finalDir.x == 0.0f && finalDir.y == 0.0f) {
+        finalDir = { (float)player->GetMoveDirection(), 0.0f };
+    }
 
-    gameScene->AddProjectile(spawnPos, bulletSpeed);
+    // 方向を正規化（斜め入力でも速さが変わらないようにする）
+    finalDir = Normalize(finalDir);
+
+    // 弾のパラメータを設定
+    Projectile::ProjectileSpawnParam param;
+    param.position = { player->GetRailProgress(), player->GetWorldY() };
+    param.direction = finalDir; // ここで上下(y)も含まれたベクトルを渡す
+    param.speed = baseSpeed;
+
+    gameScene->AddProjectile(param);
+
+    // 状態を戻す
     player->ChangeBehavior(std::make_unique<BehaviorRoot>());
     player->ChangeState(std::make_unique<StateNormal>());
 }
