@@ -115,6 +115,42 @@
     <Filter Include="App\Behavior">
       <UniqueIdentifier>{49d0e117-10c2-419a-9e46-8aaf7c3dce2c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Object\Enemy\Base">
+      <UniqueIdentifier>{643c3d3b-5c31-4096-a5b5-139d866d4c9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Object\Enemy\Base\Behavior">
+      <UniqueIdentifier>{1895f75c-6284-4fe0-ac99-e4a6f376bc71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities">
+      <UniqueIdentifier>{e5705f6c-d814-4df0-95a9-2d84884409db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Fiter">
+      <UniqueIdentifier>{ae4b09d6-e25c-4f0e-b4d5-c51c482eeba3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Wing">
+      <UniqueIdentifier>{ff63373b-6703-4907-b3f6-c1548aa2e68e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Canon">
+      <UniqueIdentifier>{64305731-cfc4-4f23-9337-dd647ed09215}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Drill">
+      <UniqueIdentifier>{71641994-f6cf-48f9-94a1-6b41bb024f8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Spring">
+      <UniqueIdentifier>{11a7c5c4-800c-4b6c-903e-ddb61daf03d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Rocket">
+      <UniqueIdentifier>{f3db390c-47fa-4120-8bc4-07334c8130ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Object\Bullet">
+      <UniqueIdentifier>{f852acd6-215e-463a-a450-897b8f679c34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Abilities\Test">
+      <UniqueIdentifier>{f6fc3870-e5d9-449a-ba32-c340b9ce8b05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\System\Colition">
+      <UniqueIdentifier>{741c0feb-5df3-41df-a14c-8b74901d3f48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -255,7 +291,7 @@
     <ClCompile Include="application\object\player\Player.cpp">
       <Filter>App\Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="CameraController.cpp">
+    <ClCompile Include="application\object\CameraContorol\CameraController.cpp">
       <Filter>App\Object\CameraContorol</Filter>
     </ClCompile>
     <ClCompile Include="application\Rail\RailPath.cpp">
@@ -279,26 +315,8 @@
     <ClCompile Include="application\object\player\Behavior\PlayerAction.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
-    <ClCompile Include="application\object\Enemy\Enemy.cpp">
-      <Filter>App\Object\Enemy</Filter>
-    </ClCompile>
     <ClCompile Include="application\object\Robot\Base\Robot.cpp">
       <Filter>App\Object\Robot</Filter>
-    </ClCompile>
-    <ClCompile Include="CollisionManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Dammy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Projectile.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\Robot\TestRobot.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\object\Enemy\TestEnemy.cpp">
-      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
@@ -306,14 +324,29 @@
     <ClCompile Include="application\Behavior\BehaviorState.cpp">
       <Filter>App\Behavior</Filter>
     </ClCompile>
+    <ClCompile Include="application\object\Enemy\Enemy.cpp">
+      <Filter>App\Object\Enemy\Base</Filter>
+    </ClCompile>
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp">
-      <Filter>App\Object\Enemy</Filter>
+      <Filter>App\Object\Enemy\Base\Behavior</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp">
-      <Filter>App\Object\Enemy</Filter>
+      <Filter>App\Object\Enemy\Base\Behavior</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Enemy\Behavior\EnemyState.cpp">
-      <Filter>App\Object\Enemy</Filter>
+      <Filter>App\Object\Enemy\Base\Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Bullet\Projectile.cpp">
+      <Filter>App\Object\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Enemy\TestEnemy.cpp">
+      <Filter>App\Abilities\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Robot\TestRobot.cpp">
+      <Filter>App\Abilities\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionManager.cpp">
+      <Filter>App\System\Colition</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -467,7 +500,7 @@
     <ClInclude Include="application\object\player\Player.h">
       <Filter>App\Object\Player</Filter>
     </ClInclude>
-    <ClInclude Include="CameraController.h">
+    <ClInclude Include="application\object\CameraContorol\CameraController.h">
       <Filter>App\Object\CameraContorol</Filter>
     </ClInclude>
     <ClInclude Include="application\Rail\RailPath.h">
@@ -491,26 +524,8 @@
     <ClInclude Include="application\object\player\Behavior\PlayerAction.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
-    <ClInclude Include="application\object\Enemy\Enemy.h">
-      <Filter>App\Object\Enemy</Filter>
-    </ClInclude>
     <ClInclude Include="application\object\Robot\Base\Robot.h">
       <Filter>App\Object\Robot</Filter>
-    </ClInclude>
-    <ClInclude Include="CollisionManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Dammy.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Projectile.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\Robot\TestRobot.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\object\Enemy\TestEnemy.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h">
       <Filter>App\Object\Player\Behavia</Filter>
@@ -518,14 +533,29 @@
     <ClInclude Include="application\Behavior\BehaviorState.h">
       <Filter>App\Behavior</Filter>
     </ClInclude>
+    <ClInclude Include="application\object\Enemy\Enemy.h">
+      <Filter>App\Object\Enemy\Base</Filter>
+    </ClInclude>
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h">
-      <Filter>App\Object\Enemy</Filter>
+      <Filter>App\Object\Enemy\Base\Behavior</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h">
-      <Filter>App\Object\Enemy</Filter>
+      <Filter>App\Object\Enemy\Base\Behavior</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Enemy\Behavior\EnemyState.h">
-      <Filter>App\Object\Enemy</Filter>
+      <Filter>App\Object\Enemy\Base\Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Bullet\Projectile.h">
+      <Filter>App\Object\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Robot\TestRobot.h">
+      <Filter>App\Abilities\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Enemy\TestEnemy.h">
+      <Filter>App\Abilities\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionManager.h">
+      <Filter>App\System\Colition</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
