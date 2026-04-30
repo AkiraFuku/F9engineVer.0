@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-class IPlayerState;
+class IStateRideOn;
 class StateRideOnTest;
 
 /// <summary>
@@ -14,6 +14,7 @@ class TestRobot : public Robot {
 public:
     TestRobot();
     ~TestRobot();
+    std::unique_ptr<IStateRideOn> CreateRideOnState()override;
 
     std::string GetName() const override { return "TestRobot"; }
 

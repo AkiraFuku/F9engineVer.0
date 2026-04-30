@@ -19,16 +19,16 @@ public:
     void Draw() override;
 
     // テスト用ロボットを取得
-    TestRobot* GetRobot() {
+   /* TestRobot* GetRobot() {
         return robot_.get();
-    }
+    }*/
 
     // スタン状態時のコールバック
     void OnStun();
 
-    // プレイヤー攻撃時の衝突処理をオーバーライド
-    void OnCollision(Player* other) override;
+    //// プレイヤー攻撃時の衝突処理をオーバーライド
+    //void OnCollision(Player* other) override;
 
-private:
-    std::unique_ptr<TestRobot> robot_;
+/*private:
+    std::unique_ptr<TestRobot> robot_;*/
 };

@@ -9,9 +9,13 @@
 #include "EnemyState.h"
 #include "Player.h"
 #include "imgui.h"
+#include "Robot.h"
+
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
-
+void Enemy::SetRobot(std::unique_ptr<Robot> robot) {
+    robot_ = std::move(robot);
+}
 void Enemy::Initialize()
 {
     object_ = std::make_unique<Object3d>();
@@ -165,40 +169,30 @@ void Enemy::UpdatePhysics() {
     object_->Update();
 }
 // Enemy.cpp
-void Enemy::OnCollision([[maybe_unused]] Player* other) {
-    if (!other) return;
+void Enemy::OnCollision(Player* other) {
+    if (!other || isHit_ || IsDead()) return;
 
-    // クールダウン中なら何もしない
-    if (isHit_) return;
-
-     if (state_->GetName() == "Dead") {return; // すでに死んでいるなら何もしない
-     }
-    // プレイヤーの状態を取得
     const char* playerBehavior = other->GetBehaviorName();
     const char* playerState = other->GetStateName();
 
-    if (playerState && strcmp(playerState, "Normal") == 0)
-    {
+    // プレイヤーが通常状態で攻撃中かチェック
+    if (playerState && strcmp(playerState, "Normal") == 0) {
         if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
 
-            // --- 追加：攻撃が当たったのでクールダウン開始 ---
             isHit_ = true;
             hitVisualTimer_ = kHitVisualDuration;
 
-            if (state_->GetName() == "Normal")
-            {
+            if (strcmp(GetStateName(), "Normal") == 0) {
                 ChangeState(std::make_unique<StateEnemyStan>());
-            } else if (state_->GetName() == "Stan")
-            {
-                // TestEnemy の場合、ロボットの状態を取得してプレイヤーに設定
-                // 前方宣言の都合上、ここで動的キャストを使用
-                // TestEnemy* testEnemy = dynamic_cast<TestEnemy*>(this);
-                // if (testEnemy && testEnemy->GetRobot()) {
-                //     IPlayerState* robotState = testEnemy->GetRobot()->GetRideOnState();
-                //     if (robotState) {
-                //         other->ChangeState(robotState);  // プレイヤーがロボットの状態を取得
-                //     }
-                // }
+            } 
+            else if (strcmp(GetStateName(), "Stan") == 0) {
+                // ★ここがポイント：ロボットを持っていればプレイヤーを強制変身させる
+                if (robot_ && robot_-> CreateRideOnState()) {
+                    // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
+                    // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
+                    other->ChangeState(robot_->CreateRideOnState()); 
+                }
+                
                 ChangeState(std::make_unique<StateEnemyDead>());
             }
         }

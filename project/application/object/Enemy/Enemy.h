@@ -9,6 +9,7 @@ class RailPath;
 class IEnemyBehavior; // 前方宣言
 class IEnemyState; // 前方宣言
 class Player; // Enemy.h の場合
+class Robot; // Enemy.h の場合
 class Enemy
 {
 public:
@@ -59,7 +60,9 @@ public:
     void ChangeState(std::unique_ptr<IEnemyState> newState);
 
     // プレイヤーと同様に、IsGround() などの判定があると Behavior 側で便利です
-    bool IsGround() const { return isGrounded_; }
+    bool IsGround() const {
+        return isGrounded_;
+    }
 
     virtual void OnCollision(Player* other); // Enemy側
     void UpdateGravity(); // 重力の更新処理
@@ -77,6 +80,13 @@ public:
     const char* GetBehaviorName() const;
     // 敵が死んでいるかどうかを判定
     bool IsDead() const;
+
+    // ロボットを設定するメソッド（外部または派生クラスのInitializeで呼ぶ）
+    void SetRobot(std::unique_ptr<Robot> robot);
+    Robot* GetRobot() const {
+        return robot_.get();
+    }
+
 protected:
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
@@ -97,4 +107,6 @@ protected:
     bool isHit_ = false;              // クールダウン中かどうかのフラグ
     float hitVisualTimer_ = 0.0f;     // クールダウンタイマー
     const float kHitVisualDuration = 1.0f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
+    // 基底クラスで保持するように変更
+    std::unique_ptr<Robot> robot_ = nullptr;
 };
