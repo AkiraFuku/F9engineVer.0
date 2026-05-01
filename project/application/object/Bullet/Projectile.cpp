@@ -9,7 +9,8 @@ Projectile::Projectile() {
 
 Projectile::~Projectile() = default;
 
-void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& param) {
+void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& param, ProjectileOwner owner) {
+    owner_ = owner; // 持ち主を保存
     speed_ = param.speed * param.direction.x;
 
     // 2. 高度方向の速度（Y方向の入力に基づき設定）

@@ -11,7 +11,10 @@ class Camera;
 /// </summary>
 class Projectile {
 public:
-
+    enum class ProjectileOwner {
+        Player,
+        Enemy
+    };
     // Projectile.h 辺りに追加
     struct ProjectileSpawnParam {
         Vector2 position;  // 生成位置 (RailProgress t, WorldY)
@@ -23,7 +26,7 @@ public:
     virtual ~Projectile();
 
     // 初期化: 走行するレール、開始地点(t)、速度(正なら終点方向、負なら始点方向)
-    virtual void Initialize(const RailPath* path, const ProjectileSpawnParam& param);
+   virtual void Initialize(const RailPath* path, const ProjectileSpawnParam& param, ProjectileOwner owner);
     virtual void Update();
     virtual void Draw();
 
@@ -41,7 +44,7 @@ public:
             object_->SetCamera(camera);
         }
     }
-
+    ProjectileOwner GetOwner() const { return owner_; }
 protected:
     std::unique_ptr<RailMover> railMover_;
     std::unique_ptr<Object3d> object_;
@@ -52,4 +55,7 @@ protected:
     float radius_ = 0.5f;
     bool isDead_ = false;
     int lifeTimer_ = 180; // 3秒程度(60fps)
+
+private:
+    ProjectileOwner owner_; // 持ち主を保持
 };

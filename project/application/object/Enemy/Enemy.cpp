@@ -198,6 +198,12 @@ void Enemy::OnCollision(Player* other) {
         }
     }
 }
+void Enemy::OnCollision() {
+    if ( isHit_ || IsDead()) return;
+            isHit_ = true;
+
+ ChangeState(std::make_unique<StateEnemyDead>());
+}
 
 void Enemy::UpdateGravity()
 {

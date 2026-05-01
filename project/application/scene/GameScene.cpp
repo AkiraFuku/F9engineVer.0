@@ -272,10 +272,13 @@ void GameScene::Update() {
     colManager->SetPlayer(player.get());
     for (auto& enemy : enemies_) {
         if (enemy) { // 安全確認
-            enemy->Update();
+            //enemy->Update();
             colManager->AddEnemy(enemy.get());
 
         }
+    }
+    for (auto& projectile : projectiles_) {
+        colManager->AddProjectile(projectile.get());
     }
 
     colManager->CheckAllCollisions();
@@ -447,7 +450,7 @@ void GameScene::AddEnemy(Vector2 pos)
 }
 // GameScene.cpp
 
-void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param) {
+void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param,Projectile::ProjectileOwner owner) {
     if (stageRail) {
         std::unique_ptr<Projectile> newProjectile = std::make_unique<Projectile>();
         
@@ -458,7 +461,7 @@ void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param) {
         newProjectile->SetCamera(cameraMap_["Main"].get());
         
         // Projectile側のInitializeにparamを丸ごと渡す
-        newProjectile->Initialize(stageRail.get(), param);
+        newProjectile->Initialize(stageRail.get(), param,owner);
 
         projectiles_.push_back(std::move(newProjectile));
     }

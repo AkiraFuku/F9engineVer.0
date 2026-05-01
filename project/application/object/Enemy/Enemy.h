@@ -65,6 +65,7 @@ public:
     }
 
     virtual void OnCollision(Player* other); // Enemy側
+     void OnCollision(); // Enemy側
     void UpdateGravity(); // 重力の更新処理
     // enemy状態取得
     IEnemyState* GetState() {

@@ -59,7 +59,7 @@ void ShootRobotAction::Execute(Player* player) {
     param.direction = finalDir; // ここで上下(y)も含まれたベクトルを渡す
     param.speed = baseSpeed;
 
-    gameScene->AddProjectile(param);
+    gameScene->AddProjectile(param,Projectile::ProjectileOwner::Player);
 
     // 状態を戻す
     player->ChangeBehavior(std::make_unique<BehaviorRoot>());
