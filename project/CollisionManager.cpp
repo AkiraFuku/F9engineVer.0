@@ -32,13 +32,14 @@ void CollisionManager::CheckPlayerEnemyCollision(Player* p, Enemy* e) {
     Vector3 posP = p->GetTransform().translate;
     Vector3 posE = e->GetTransform().translate;
 
-   /* float dx = posP.x - posE.x;
+    float distanceSq = Length(Subtract(posP, posE));
+  /*    float dx = posP.x - posE.x;
     float dy = posP.y - posE.y;
-    float dz = posP.z - posE.z;*/
-float distanceSq = Length(Subtract(posP, posE));
+    float dz = posP.z - posE.z;
+    float distanceSq = dx * dx + dy * dy + dz * dz;*/
     // 半径を仮に 1.0f ずつとして、距離の2乗で判定 (1.0 + 1.0)^2 = 4.0
     float radiusSum = 2.0f; 
-    if (distanceSq <= radiusSum * radiusSum) {
+    if (distanceSq <= radiusSum ) {
         // --- ここでプレイヤーとエネミーに通知する ---
        
         e->OnCollision(p);
@@ -80,7 +81,7 @@ void CollisionManager::CheckProjectileEnemyCollision(Projectile* p, Enemy* e) {
     float distanceSq = Length(Subtract(posP, posE));
     float radiusSum = p->GetRadius() + 1.0f; // 敵の半径を仮に1.0とする
 
-    if (distanceSq <= radiusSum * radiusSum) {
+    if (distanceSq <= radiusSum ) {
         p->OnCollision(); // 弾の消滅処理など
         // 敵の被弾処理（Enemy側に弾用のOnCollisionが必要な場合は作成してください）
          e->OnCollision(); 
@@ -94,7 +95,7 @@ void CollisionManager::CheckProjectilePlayerCollision(Projectile* p, Player* pla
     float distanceSq = Length(Subtract(posP, posPlayer));
     float radiusSum = p->GetRadius() + 1.0f; // 敵の半径を仮に1.0とする
 
-    if (distanceSq <= radiusSum * radiusSum) {
+    if (distanceSq <= radiusSum) {
         p->OnCollision(); // 弾の消滅処理など
         // 敵の被弾処理（Enemy側に弾用のOnCollisionが必要な場合は作成してください）
        //  e->OCollision(); 
