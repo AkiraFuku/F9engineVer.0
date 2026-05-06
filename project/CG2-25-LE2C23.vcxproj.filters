@@ -393,6 +393,7 @@
     <None Include="resources\shaders\Skybox\Skybox.hlsli">
       <Filter>シェーダー ファイル\Skybox</Filter>
     </None>
+    <None Include="resources\shaders\Cylinder\Particle.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -425,5 +426,7 @@
     <FxCompile Include="resources\shaders\Skybox\Skybox.VS.hlsl">
       <Filter>シェーダー ファイル\Skybox</Filter>
     </FxCompile>
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl" />
   </ItemGroup>
 </Project>

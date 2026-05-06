@@ -140,6 +140,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\Cylinder\Particle.hlsli" />
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\Primitive\Primitive.hlsli" />
@@ -147,6 +148,16 @@
     <None Include="resources\shaders\Sprite\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.PS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>

@@ -38,6 +38,8 @@ struct PsoConfig {
     D3D12_CULL_MODE cullMode = D3D12_CULL_MODE_NONE;
     bool depthEnable = true;
     D3D12_DEPTH_WRITE_MASK depthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    D3D12_COMPARISON_FUNC depthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
 };
 enum class Toporogy{ PointList,LineList,TriangleList,};
 enum class BlendMode { None, Normal, Add, Subtract, Multiply, Screen };

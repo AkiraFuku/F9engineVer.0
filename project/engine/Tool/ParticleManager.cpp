@@ -14,15 +14,114 @@ void ParticleManager::Initialize() {
     randomEngine_.seed(seedGen_());
     //パイプラインステート生成
 
+    
+
+
+
+
+
+    PsoConfig configCylinder{};
+
+    configCylinder.shaderPaths.push_back(PsoConfig::ShaderPath { ShaderType::VS, L"resources/shaders/Cylinder/ParticleCylinder.vs.hlsl", "main", L"vs_6_0" });
+    configCylinder.shaderPaths.push_back(PsoConfig::ShaderPath { ShaderType::PS, L"resources/shaders/Cylinder/ParticleCylinder.ps.hlsl", "main", L"ps_6_0" });
+
+
+
+
+
+
+    configCylinder.rootSignatureGenerator = []() {
+        std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+        std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
+        D3D12_STATIC_SAMPLER_DESC sampler{};
+        sampler = PSOManager::GetInstance()->StaticSamplers();
+
+        sampler.AddressV=D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+
+        staticSamplers.push_back(sampler);
+        D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
+        descRangeTexture[0].BaseShaderRegister = 0; // t0
+        descRangeTexture[0].NumDescriptors = 1;
+        descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+        // パーティクル用インスタンシングレンジ (VS t0)
+            // ※ staticにしないとスコープを抜けてデータが壊れる可能性があるため注意
+            //   ここでは関数内完結させるため、vector等で管理するか、static配列にする
+        static D3D12_DESCRIPTOR_RANGE descRangeInstancing[1]{};
+        descRangeInstancing[0].BaseShaderRegister = 0; // t0 (VS)
+        descRangeInstancing[0].NumDescriptors = 1;
+        descRangeInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+        rootParameters.resize(4);
+
+        // [Param 0] Material (CBV b0, Pixel)
+        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[0].Descriptor.ShaderRegister = 0;
+
+        // [Param 1] Instancing Data (DescriptorTable t0, Vertex) ★ここが重要
+        rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+        rootParameters[1].DescriptorTable.pDescriptorRanges = descRangeInstancing;
+        rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
+
+        // [Param 2] Texture (DescriptorTable t0, Pixel)
+        rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[2].DescriptorTable.pDescriptorRanges = descRangeTexture;
+        rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
+
+        // [Param 3] DirectionalLight (CBV b1, Pixel)
+        rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[3].Descriptor.ShaderRegister = 1;
+        // シリアライズ
+        D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+        descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+        descriptionRootSignature.pParameters = rootParameters.data();
+        descriptionRootSignature.NumParameters = (UINT)rootParameters.size();
+        descriptionRootSignature.pStaticSamplers = staticSamplers.data();
+        descriptionRootSignature.NumStaticSamplers = (UINT)staticSamplers.size();
+
+
+        Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+
+        HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+        if (FAILED(hr)) {
+            Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+            assert(false);
+        }
+
+        Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+        hr = DXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+        assert(SUCCEEDED(hr));
+
+
+
+        return rootSignature;
+        };
+    configCylinder.inputLayoutGenerator = []() {
+        return std::vector<D3D12_INPUT_ELEMENT_DESC>{
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        };
+        };
+    // 深度設定
+    configCylinder.depthEnable = true;
+    configCylinder.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    configCylinder.cullMode = D3D12_CULL_MODE_NONE; // パーティクルは両面描画することが多いので、カリングなしに設定
+
+    // PSOManagerに名前を付けて登録
+    PSOManager::GetInstance()->RegisterPsoGenerator("ParticleCylinder", configCylinder);
+    //auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
+    PsoConfig config{};
     PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Particle/Particle.vs.hlsl", "main", L"vs_6_0" };
     PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Particle/Particle.ps.hlsl", "main", L"ps_6_0" };
-
-
-
-
-
-    PsoConfig config{};
-
     config.shaderPaths.push_back(vsPath);
     config.shaderPaths.push_back(psPath);
 
@@ -119,9 +218,9 @@ void ParticleManager::Initialize() {
 
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Particle", config);
-    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
-    graphicsPipelineState_ = psoSet.pipelineState;
-    rootSignature_ = psoSet.rootSignature;
+/*    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
+   /* graphicsPipelineState_ = psoSet.pipelineState;
+    rootSignature_ = psoSet.rootSignature;*/
 
     //  CreatePSO();
       //頂点データの初期化（座標等）
@@ -202,7 +301,8 @@ void ParticleManager::Update() {
                 }
 
 
-                worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
+               // worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
+                worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 
                 particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
                 particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
@@ -217,10 +317,11 @@ void ParticleManager::Update() {
     }
 }
 void ParticleManager::Draw() {
+    auto psoSet = PSOManager::GetInstance()->GetPso("ParticleCylinder", BlendMode::Normal);
     // RootSignatureの設定
-    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
+    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(psoSet.rootSignature.Get());
     //PSOの設定
-    DXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
+    DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
     DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //VBVの設定
     DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
@@ -238,7 +339,7 @@ void ParticleManager::Draw() {
             DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.materialData.textureIndex));
             // DrawCall
             // 後述するトポロジーの修正に合わせて頂点数を変更 (6 -> 4)
-            uint32_t vertexCount = static_cast<uint32_t>(PrimitiveVertexRing().size());
+            uint32_t vertexCount = static_cast<uint32_t>(PrimitiveVertexCylinder().size());
             DXCommon::GetInstance()->GetCommandList()->DrawInstanced(vertexCount, particleGroup.kNumInstance, 0, 0);
         }
     }
@@ -339,13 +440,55 @@ std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexRing()
 
     return vertices;
 }
+std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexCylinder()
+{
+    const uint32_t kDivide = 32;
+    const float kTopRadius = 0.5f;
+    const float kBottomRadius = 0.5f;
+    const float kHeight = 1.0f;
+    const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kDivide);
+      std::vector<ParticleManager::VertexData> vertices;
+
+    for (uint32_t i = 0; i < kDivide; ++i)
+    {
+        float s = std::sin(i * radianPerDivide);
+        float c = std::cos(i * radianPerDivide);
+        float sNext = std::sin((i + 1) * radianPerDivide);
+        float cNext = std::cos((i + 1) * radianPerDivide);
+        float u = float(i) / float(kDivide);
+        float uNext = float(i + 1) / float(kDivide);
+
+        // 4つの角の頂点座標を計算
+        // p1: 内側(現在), p2: 外側(現在), p3: 内側(次), p4: 外側(次)
+        VertexData p1 = { {-s * kTopRadius, kHeight,c * kTopRadius,1.0f}, {u, 0.0f}, {-s, 0.0f, c} }; // 内
+        VertexData p2 = { {-sNext*kTopRadius,kHeight,cNext*kTopRadius,1.0f }, {uNext, 0.0f}, {-sNext, 0.0f, cNext} }; // 外
+        VertexData p3 = { {-s * kBottomRadius, 0.0f,c * kBottomRadius,1.0f}, {u, 1.0f}, {-s, 0.0f, c} }; // 内(次)
+        VertexData p4 = { {-sNext*kBottomRadius,0.0f,cNext*kBottomRadius,1.0f }, {uNext, 1.0f}, {-sNext, 0.0f, cNext} }; // 外(次)
+
+        // 三角形1: p1 -> p2 -> p3
+        vertices.push_back(p1);
+        vertices.push_back(p2);
+        vertices.push_back(p3);
+
+        // 三角形2: p2 -> p4 -> p3
+        vertices.push_back(p2);
+        vertices.push_back(p4);
+        vertices.push_back(p3);
+    }
+
+
+
+    return vertices;
+}
 ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
     std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
     std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
     Particle particle;
-    particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };
-    particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine) };
+   // particle.transform.scale = { 1.0f,distScale(randomEngine),1.0f };
+    particle.transform.scale = { 1.0f,1.0f,1.0f };
+  //  particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine) };
+    particle.transform.rotate = { 0.0f,0.0f,0.0f};
     particle.transform.translate = translate;
     particle.velocity = { 0.0f,0.0f,0.0f };
 
@@ -356,12 +499,8 @@ ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngi
 
     return particle;
 }
-void ParticleManager::CreateRootSignature()
-{
-
-}
 void ParticleManager::CreateVertexBuffer() {
-    auto vertices = PrimitiveVertexRing();
+    auto vertices = PrimitiveVertexCylinder();
     // vectorのサイズからバイト数を計算
     size_t sizeIB = sizeof(VertexData) * vertices.size();
     //頂点リソースの作成

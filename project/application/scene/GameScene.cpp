@@ -23,11 +23,12 @@ void GameScene::Initialize() {
     Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+    TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 
     //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png");
        EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-   emitter_ = std::make_unique<ParticleEmitter>("Test", M, 10, 5.0f, 0.0f);
+   emitter_ = std::make_unique<ParticleEmitter>("Test", M, 1, 5.0f, 0.0f);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)

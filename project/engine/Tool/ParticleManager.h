@@ -77,6 +77,7 @@ public:
 
   std::vector<ParticleManager::VertexData> PrimitiveVertexPlane();
   std::vector<ParticleManager::VertexData> PrimitiveVertexRing();
+  std::vector<ParticleManager::VertexData> PrimitiveVertexCylinder();
 
 private:
     Particle MakeParticle( std::mt19937& randomEngine,const Vector3& translate );
@@ -92,10 +93,10 @@ private:
     std::mt19937 randomEngine_;
     HRESULT hr_ = 0;
     //ルートシグネチャ
-    Microsoft::WRL::ComPtr<ID3D12RootSignature>rootSignature_;
-    void CreateRootSignature();
-    //グラフィックパイプラインステート
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
+    //Microsoft::WRL::ComPtr<ID3D12RootSignature>rootSignature_;
+    //void CreateRootSignature();
+    ////グラフィックパイプラインステート
+    //Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
 
     //頂点リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexRecourse_;
