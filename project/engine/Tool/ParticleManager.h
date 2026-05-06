@@ -3,13 +3,13 @@
 #include "Vector2.h"
 #include<random>
 #include<list>
-#include "DrawFunction.h"
 #include "DXCommon.h"
 #include <wrl/client.h>
 #include "d3d12.h"
 #include <cstdint>
 #include "Camera.h"
 #include "Transform.h"
+#include <map>
 class ParticleManager
 {
 public:
@@ -47,7 +47,13 @@ public:
 
     };
 
+ enum class EffectType
+    {
+        Plane,
+        Ring,
+        Cylinder
 
+    };
 
     struct ParticleGroup {
         MaterialData materialData;
@@ -57,13 +63,21 @@ public:
         ParticleForGPU* instancingData = nullptr;
         uint32_t kNumInstance;
         std::string name;
+        EffectType effectType;
     };
+
+    struct PrimitiveResource {
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+    D3D12_VERTEX_BUFFER_VIEW vbv;
+    uint32_t vertexCount;
+};
+   
 
 
     void Initialize();
     void Update();
     void Draw();
-    void CreateParticleGroup(const std::string name, const std::string textureFilepath);
+    void CreateParticleGroup(const std::string name, const std::string textureFilepath, EffectType type=EffectType::Plane);
     static ParticleManager* GetInstance();
     void Emit(const std::string name, const Vector3& postion, uint32_t count);
     void Finalize();
@@ -99,13 +113,13 @@ private:
     //Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
 
     //頂点リソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexRecourse_;
+    std::map<EffectType, PrimitiveResource> primitiveResources_;
     VertexData* vertexData_ = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+  //  D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
     //マテリアル
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
     Material* materialData_ = nullptr;
-    void CreateVertexBuffer();
+    void CreateVertexBuffer(EffectType type);
     void CreateMaterialBuffer();
   //  void CreatePSO();
 

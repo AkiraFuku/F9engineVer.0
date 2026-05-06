@@ -14,7 +14,7 @@ void ParticleManager::Initialize() {
     randomEngine_.seed(seedGen_());
     //パイプラインステート生成
 
-    
+
 
 
 
@@ -22,8 +22,8 @@ void ParticleManager::Initialize() {
 
     PsoConfig configCylinder{};
 
-    configCylinder.shaderPaths.push_back(PsoConfig::ShaderPath { ShaderType::VS, L"resources/shaders/Cylinder/ParticleCylinder.vs.hlsl", "main", L"vs_6_0" });
-    configCylinder.shaderPaths.push_back(PsoConfig::ShaderPath { ShaderType::PS, L"resources/shaders/Cylinder/ParticleCylinder.ps.hlsl", "main", L"ps_6_0" });
+    configCylinder.shaderPaths.push_back(PsoConfig::ShaderPath{ ShaderType::VS, L"resources/shaders/Cylinder/ParticleCylinder.vs.hlsl", "main", L"vs_6_0" });
+    configCylinder.shaderPaths.push_back(PsoConfig::ShaderPath{ ShaderType::PS, L"resources/shaders/Cylinder/ParticleCylinder.ps.hlsl", "main", L"ps_6_0" });
 
 
 
@@ -36,7 +36,7 @@ void ParticleManager::Initialize() {
         D3D12_STATIC_SAMPLER_DESC sampler{};
         sampler = PSOManager::GetInstance()->StaticSamplers();
 
-        sampler.AddressV=D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 
         staticSamplers.push_back(sampler);
         D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
@@ -136,7 +136,7 @@ void ParticleManager::Initialize() {
         D3D12_STATIC_SAMPLER_DESC sampler{};
         sampler = PSOManager::GetInstance()->StaticSamplers();
 
-        sampler.AddressV=D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 
         staticSamplers.push_back(sampler);
         D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
@@ -218,16 +218,19 @@ void ParticleManager::Initialize() {
 
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Particle", config);
-/*    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
-   /* graphicsPipelineState_ = psoSet.pipelineState;
-    rootSignature_ = psoSet.rootSignature;*/
+    /*    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
+       /* graphicsPipelineState_ = psoSet.pipelineState;
+        rootSignature_ = psoSet.rootSignature;*/
 
-    //  CreatePSO();
-      //頂点データの初期化（座標等）
-      //頂点リソース生成
-      //頂点バッファビュー（VBV）を作成
-      //頂点リソースにデータを書き込む
-    CreateVertexBuffer();
+        //  CreatePSO();
+          //頂点データの初期化（座標等）
+          //頂点リソース生成
+          //頂点バッファビュー（VBV）を作成
+          //頂点リソースにデータを書き込む
+        // 全形状のバッファを作成
+    CreateVertexBuffer(EffectType::Plane);
+    CreateVertexBuffer(EffectType::Ring);
+    CreateVertexBuffer(EffectType::Cylinder);
     CreateMaterialBuffer();
 }
 ParticleManager* ParticleManager::GetInstance() {
@@ -301,8 +304,15 @@ void ParticleManager::Update() {
                 }
 
 
-               // worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
-                worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
+                if (particleGroup.effectType == EffectType::Plane)
+                {
+                    worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
+
+                } else
+                {
+                    worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
+
+                }
 
                 particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
                 particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
@@ -317,17 +327,30 @@ void ParticleManager::Update() {
     }
 }
 void ParticleManager::Draw() {
-    auto psoSet = PSOManager::GetInstance()->GetPso("ParticleCylinder", BlendMode::Normal);
-    // RootSignatureの設定
-    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(psoSet.rootSignature.Get());
-    //PSOの設定
-    DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
-    DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    PsoSet psoSet{};
+
     //VBVの設定
-    DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    //DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
     for (auto& [key, particleGroup] : particleGroups) {
         if (particleGroup.kNumInstance > 0) {
+
+            const auto& primitive = primitiveResources_[particleGroup.effectType];
+            if (particleGroup.effectType == EffectType::Cylinder)
+            {
+                psoSet = PSOManager::GetInstance()->GetPso("ParticleCylinder", BlendMode::Normal);
+            } else
+            {
+                psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Add);
+            }
+
+            // RootSignatureの設定
+            DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(psoSet.rootSignature.Get());
+            //PSOの設定
+            DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
+            DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &primitive.vbv);
+
 
             // とりあえずコードの意図を汲んで修正すると：
             DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
@@ -339,18 +362,18 @@ void ParticleManager::Draw() {
             DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.materialData.textureIndex));
             // DrawCall
             // 後述するトポロジーの修正に合わせて頂点数を変更 (6 -> 4)
-            uint32_t vertexCount = static_cast<uint32_t>(PrimitiveVertexCylinder().size());
-            DXCommon::GetInstance()->GetCommandList()->DrawInstanced(vertexCount, particleGroup.kNumInstance, 0, 0);
+            DXCommon::GetInstance()->GetCommandList()->DrawInstanced(primitive.vertexCount, particleGroup.kNumInstance, 0, 0);
         }
     }
 }
 
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilepath)
+void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilepath, EffectType type)
 {
     assert(!particleGroups.contains(name));
     //
     ParticleGroup& newParticle = particleGroups[name];
     newParticle.name = name;
+    newParticle.effectType = type; // ★形状を保存
     newParticle.materialData.textureFilePath = textureFilepath;
     newParticle.kNumInstance = kMaxNumInstance;
     newParticle.materialData.textureIndex = newParticle.materialData.textureIndex =
@@ -447,7 +470,7 @@ std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexCylinde
     const float kBottomRadius = 0.5f;
     const float kHeight = 1.0f;
     const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kDivide);
-      std::vector<ParticleManager::VertexData> vertices;
+    std::vector<ParticleManager::VertexData> vertices;
 
     for (uint32_t i = 0; i < kDivide; ++i)
     {
@@ -461,9 +484,9 @@ std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexCylinde
         // 4つの角の頂点座標を計算
         // p1: 内側(現在), p2: 外側(現在), p3: 内側(次), p4: 外側(次)
         VertexData p1 = { {-s * kTopRadius, kHeight,c * kTopRadius,1.0f}, {u, 0.0f}, {-s, 0.0f, c} }; // 内
-        VertexData p2 = { {-sNext*kTopRadius,kHeight,cNext*kTopRadius,1.0f }, {uNext, 0.0f}, {-sNext, 0.0f, cNext} }; // 外
+        VertexData p2 = { {-sNext * kTopRadius,kHeight,cNext * kTopRadius,1.0f }, {uNext, 0.0f}, {-sNext, 0.0f, cNext} }; // 外
         VertexData p3 = { {-s * kBottomRadius, 0.0f,c * kBottomRadius,1.0f}, {u, 1.0f}, {-s, 0.0f, c} }; // 内(次)
-        VertexData p4 = { {-sNext*kBottomRadius,0.0f,cNext*kBottomRadius,1.0f }, {uNext, 1.0f}, {-sNext, 0.0f, cNext} }; // 外(次)
+        VertexData p4 = { {-sNext * kBottomRadius,0.0f,cNext * kBottomRadius,1.0f }, {uNext, 1.0f}, {-sNext, 0.0f, cNext} }; // 外(次)
 
         // 三角形1: p1 -> p2 -> p3
         vertices.push_back(p1);
@@ -485,10 +508,10 @@ ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngi
     std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
     std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
     Particle particle;
-   // particle.transform.scale = { 1.0f,distScale(randomEngine),1.0f };
+    // particle.transform.scale = { 1.0f,distScale(randomEngine),1.0f };
     particle.transform.scale = { 1.0f,1.0f,1.0f };
-  //  particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine) };
-    particle.transform.rotate = { 0.0f,0.0f,0.0f};
+    //  particle.transform.rotate = { 0.0f,0.0f,distRotate(randomEngine) };
+    particle.transform.rotate = { 0.0f,0.0f,0.0f };
     particle.transform.translate = translate;
     particle.velocity = { 0.0f,0.0f,0.0f };
 
@@ -499,26 +522,30 @@ ParticleManager::Particle ParticleManager::MakeParticle(std::mt19937& randomEngi
 
     return particle;
 }
-void ParticleManager::CreateVertexBuffer() {
-    auto vertices = PrimitiveVertexCylinder();
-    // vectorのサイズからバイト数を計算
-    size_t sizeIB = sizeof(VertexData) * vertices.size();
-    //頂点リソースの作成
-    vertexRecourse_ =
-        DXCommon::GetInstance()->
-        CreateBufferResource(sizeIB);
-    //頂点バッファビューの設定
-    vertexBufferView_.BufferLocation =
-        vertexRecourse_.Get()->GetGPUVirtualAddress();
-    vertexBufferView_.SizeInBytes = UINT(sizeIB);
-    vertexBufferView_.StrideInBytes = sizeof(VertexData);
-    vertexRecourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+void ParticleManager::CreateVertexBuffer(EffectType type) {
+    std::vector<VertexData> vertices;
+    switch (type) {
+    case EffectType::Plane:    vertices = PrimitiveVertexPlane(); break;
+    case EffectType::Ring:     vertices = PrimitiveVertexRing(); break;
+    case EffectType::Cylinder: vertices = PrimitiveVertexCylinder(); break;
+    }
 
-    //頂点データの転送
-    memcpy(vertexData_, vertices.data(), sizeIB);
+    size_t sizeVB = sizeof(VertexData) * vertices.size();
+    PrimitiveResource res;
+    res.resource = DXCommon::GetInstance()->CreateBufferResource(sizeVB);
+    res.vertexCount = static_cast<uint32_t>(vertices.size());
 
+    res.vbv.BufferLocation = res.resource->GetGPUVirtualAddress();
+    res.vbv.SizeInBytes = static_cast<UINT>(sizeVB);
+    res.vbv.StrideInBytes = sizeof(VertexData);
+
+    void* mappedData = nullptr;
+    res.resource->Map(0, nullptr, &mappedData);
+    memcpy(mappedData, vertices.data(), sizeVB);
+    res.resource->Unmap(0, nullptr);
+
+    primitiveResources_[type] = std::move(res);
 }
-
 void ParticleManager::CreateMaterialBuffer()
 {
     //データの設定

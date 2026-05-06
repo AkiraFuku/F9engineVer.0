@@ -26,7 +26,7 @@ void GameScene::Initialize() {
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 
     //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png",ParticleManager::EffectType::Cylinder);
        EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
    emitter_ = std::make_unique<ParticleEmitter>("Test", M, 1, 5.0f, 0.0f);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
