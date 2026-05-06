@@ -298,11 +298,13 @@ void ParticleManager::Update() {
                 Matrix4x4 worldMatrix = {};
                 /*  if (isBillboard)
                   {*/
-                if (particleGroup.name != "Test")
-                {
-                    (*particleIterator).transform.rotate.z += 1.0f / 60.0f;
+                  /* if (particleGroup.name != "Test")
+                   {
+                       (*particleIterator).transform.rotate.z += 1.0f / 60.0f;
+                   }*/
+                if (particleGroup.update) {
+                    particleGroup.update(*particleIterator, DXCommon::kDeltaTime);
                 }
-
 
                 if (particleGroup.effectType == EffectType::Plane)
                 {
@@ -367,11 +369,20 @@ void ParticleManager::Draw() {
     }
 }
 
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilepath, EffectType type)
+void ParticleManager::CreateParticleGroup(
+    const std::string name,
+    const std::string textureFilepath,
+    EffectType type,
+    ParticleEmitterFunc initialize,
+    ParticleUpdateFunc update
+)
 {
+
     assert(!particleGroups.contains(name));
     //
     ParticleGroup& newParticle = particleGroups[name];
+    newParticle.initialize = initialize;
+    newParticle.update = update;
     newParticle.name = name;
     newParticle.effectType = type; // ★形状を保存
     newParticle.materialData.textureFilePath = textureFilepath;
@@ -399,19 +410,30 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
 {
     assert(particleGroups.contains(name));
 
-    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-    std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
-
-    for (uint32_t i = 0; i < count; ++i)
-    {
-        Particle particle;
-        Vector3 randomTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
-
-        Vector3 pPosition = position;
-        particle = MakeParticle(randomEngine_, pPosition);
-
-        particleGroups[name].particles.push_back(particle);
+    auto& group = particleGroups[name];
+    for (uint32_t i = 0; i < count; ++i) {
+        Particle p;
+        if (group.initialize) {
+            group.initialize(p, position, randomEngine_);
+        } else {
+            p = MakeParticle(randomEngine_, position); // デフォルト
+        }
+        group.particles.push_back(p);
     }
+
+    /*    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+        std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
+
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            Particle particle;
+            Vector3 randomTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
+
+            Vector3 pPosition = position;
+            particle = MakeParticle(randomEngine_, pPosition);
+
+            particleGroups[name].particles.push_back(particle);
+        }*/
 
 }
 std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexPlane()

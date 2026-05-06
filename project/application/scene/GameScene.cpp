@@ -42,9 +42,24 @@ void GameScene::Initialize() {
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 
     //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png",ParticleManager::EffectType::Cylinder);
-       EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-   emitter_ = std::make_unique<ParticleEmitter>("Test", M, 1, 5.0f, 0.0f);
+    ParticleManager::ParticleEmitterFunc initializeFunc = [](ParticleManager::Particle& particle, const Vector3& emitterPosition, std::mt19937& randomEngine) {
+
+        std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+        std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
+        Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+
+        Vector3 pPosition = emitterPosition;
+        particle = ParticleManager::GetInstance()->MakeParticle(randomEngine, pPosition);
+        };
+    ParticleManager::ParticleUpdateFunc updateFunc = [](ParticleManager::Particle& particle, float deltaTime) {
+        // パーティクルの更新処理
+        // 例: 速度に基づいて位置を更新し、寿命を減少させる
+        particle.transform.translate += particle.velocity * deltaTime;
+        };
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
+    EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+    emitter_ = std::make_unique<ParticleEmitter>("Test", M, 1, 5.0f, 0.0f);
+    ParticleManager::GetInstance()->SetCamera(activeCamera_);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
@@ -127,7 +142,7 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
-     emitter_->Update();
+    emitter_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -148,7 +163,7 @@ void GameScene::Update() {
 
     // Aボタンを押していたら
 
-    if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
+    if (Input::GetInstance()->TriggerKeyDown(DIK_E)) {
 
         emitter_->Emit();
 
@@ -259,20 +274,20 @@ void GameScene::Update() {
 void GameScene::Draw() {
 
     skyBox->Draw();
-/*    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });*/
-   // PrimitiveDrawer::GetInstance()->Draw();
+    /*    PrimitiveDrawer::GetInstance()->DrawLine({ 0.0f,0.0f,10.0f }, { 1.5f,1.0f,-10.0f }, { 1.0f,0.0f,0.0f,1.0f });
+        PrimitiveDrawer::GetInstance()->DrawLine(position_, { 0.0f,1.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f });
+        PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });*/
+        // PrimitiveDrawer::GetInstance()->Draw();
 
-    Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
-    sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）*/
+     /*    Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
+         sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）*/
 
 
-    PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
-    PrimitiveDrawer::GetInstance()->DrawSphere({ {2.0f,0.0f,0.0f},1.0f ,rotation_}, { 1.0f,0.0f,0.0f,1.0f });
-/*    stageRail->DebugDraw();
-    cameraRail->DebugDraw();*/
-    player->Draw();
+         /*PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });
+         PrimitiveDrawer::GetInstance()->DrawSphere({ {2.0f,0.0f,0.0f},1.0f ,rotation_}, { 1.0f,0.0f,0.0f,1.0f });*/
+         /*    stageRail->DebugDraw();
+             cameraRail->DebugDraw();*/
+             //  player->Draw();
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
