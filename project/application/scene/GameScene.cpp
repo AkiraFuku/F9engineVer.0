@@ -5,6 +5,7 @@
 #include "PrimitiveDrawer.h"
 #include "SceneManager.h"
 #include "ParticleManager.h"//フレームワークに移植
+#include "ParicleEmitter.h"
 #include "PSOManager.h"
 #include "LightManager.h"
 
@@ -38,14 +39,17 @@ void GameScene::Initialize() {
     Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+    TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/uvChecker.png");
+    //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png",ParticleManager::EffectType::Cylinder);
+       EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+   emitter_ = std::make_unique<ParticleEmitter>("Test", M, 1, 5.0f, 0.0f);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
        for (uint32_t i = 0; i < 5; i++)
        {*/
     sprite = std::make_unique<Sprite>();
-    // sprite->Initialize(spritecommon,"resources/monsterBall.png");
     sprite->Initialize("resources/monsterBall.png");
 
     sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });
@@ -123,7 +127,7 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
-
+     emitter_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -146,15 +150,15 @@ void GameScene::Update() {
 
     if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
 
-
+        emitter_->Emit();
 
         // Aボタンを押したときの処理
-
+/*
         if (Audio::GetInstance()->IsPlaying(handle_))
         {
 
             Audio::GetInstance()->StopAudio(handle_);
-        }
+        }*/
 
         //  GetSceneManager()->ChangeScene("GameScene");
 
@@ -260,8 +264,8 @@ void GameScene::Draw() {
     PrimitiveDrawer::GetInstance()->DrawTriangle({ 0.0f,0.0f,0.0f }, { 1.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f }, { 1.0f,1.0f,1.0f,1.0f });*/
    // PrimitiveDrawer::GetInstance()->Draw();
 
-    Sphere sphere = { 0.0f,0.0f,0.0f,1.0f };
-    sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）
+    Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
+    sphere.rotate = rotation_; // クォータニオンの回転を設定（例: 回転なし）*/
 
 
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 0.0f,1.0f,0.0f,1.0f });

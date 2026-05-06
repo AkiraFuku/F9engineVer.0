@@ -84,15 +84,15 @@ void SkyBox::Initialize()
     PSO.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     PSO.depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     PSOManager::GetInstance()->RegisterPsoGenerator("SkyBox", PSO);
-    vertexResourse_ =
+    vertexRecourse_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(VertexData) * 24);
-    vertexBufferView_.BufferLocation = vertexResourse_.Get()->GetGPUVirtualAddress();
+    vertexBufferView_.BufferLocation = vertexRecourse_.Get()->GetGPUVirtualAddress();
     vertexBufferView_.SizeInBytes = sizeof(VertexData) * 24;
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 
-    vertexResourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+    vertexRecourse_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
     //右 描画インデックス[0,1,2],[2,1,3]
     vertexData_[0].position = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -161,8 +161,8 @@ void SkyBox::Initialize()
         CreateBufferResource(sizeof(TransformationMatrix));
     transformationMatrixResource_.Get()->
         Map(0, nullptr, reinterpret_cast<void**>(&wvpResource_));
-    wvpResource_->WVP = Makeidetity4x4();
-    wvpResource_->World = Makeidetity4x4();
+    wvpResource_->WVP = Makeidentity4x4();
+    wvpResource_->World = Makeidentity4x4();
     wvpResource_->WorldInverseTranspose = Inverse(wvpResource_->World);
 
 
@@ -182,7 +182,7 @@ void SkyBox::Finalize()
 
 void SkyBox::Update()
 {
-    Matrix4x4 worldMatrix = MakeAfineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+    Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
     Matrix4x4 worldViewProjectionMatrix = {};
     //ワールド行列とビュー行列とプロジェクション行列を掛け算
     if (camera_)
@@ -191,7 +191,7 @@ void SkyBox::Update()
         worldViewProjectionMatrix = Multiply(worldMatrix, camera_->GetViewProtectionMatrix());
         //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
     } else {
-        worldViewProjectionMatrix = Multiply(worldMatrix, Makeidetity4x4());
+        worldViewProjectionMatrix = Multiply(worldMatrix, Makeidentity4x4());
     }
     //行列をGPUに転送
     wvpResource_->WVP = worldViewProjectionMatrix;

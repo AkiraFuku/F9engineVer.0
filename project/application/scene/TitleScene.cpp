@@ -26,7 +26,7 @@ void TitleScene::Initialize() {
 
 
     Object3dCommon::GetInstance()->SetDefaultCamera(activeCamera_);
-    ParticleManager::GetInstance()->Setcamera(activeCamera_);
+    ParticleManager::GetInstance()->SetCamera(activeCamera_);
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
     Audio::GetInstance()->PlayAudio(handle_, true);
@@ -39,7 +39,6 @@ void TitleScene::Initialize() {
        for (uint32_t i = 0; i < 5; i++)
        {*/
     sprite = std::make_unique<Sprite>();
-    // sprite->Initialize(spritecommon,"resources/monsterBall.png");
     sprite->Initialize("resources/monsterBall.png");
 
     sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });

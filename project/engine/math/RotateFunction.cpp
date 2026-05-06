@@ -127,7 +127,7 @@ Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to)
 
 	// 完全に同方向 (0度)
 	if (c > 0.9999f) {
-		return Makeidetity4x4();
+		return Makeidentity4x4();
 	}
 
 	// 完全に反対方向 (180度)

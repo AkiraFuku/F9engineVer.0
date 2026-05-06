@@ -207,7 +207,7 @@
     <ClCompile Include="engine\math\Mass.cpp">
       <Filter>engine\math</Filter>
     </ClCompile>
-    <ClCompile Include="engine\math\Quanternion.cpp">
+    <ClCompile Include="engine\math\Quaternion.cpp">
       <Filter>engine\math</Filter>
     </ClCompile>
     <ClCompile Include="engine\math\RotateFunction.cpp">
@@ -380,7 +380,7 @@
     <ClInclude Include="engine\math\Mass.h">
       <Filter>engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="engine\math\Quanternion.h">
+    <ClInclude Include="engine\math\Quaternion.h">
       <Filter>engine\math</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\RotateFunction.h">
@@ -474,6 +474,7 @@
     <None Include="resources\shaders\Primitive\Primitive.hlsli">
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
+    <None Include="resources\shaders\Cylinder\Particle.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -500,5 +501,7 @@
     <FxCompile Include="resources\shaders\Primitive\Primitive.VS.hlsl">
       <Filter>シェーダー ファイル\Primitive</Filter>
     </FxCompile>
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl" />
   </ItemGroup>
 </Project>

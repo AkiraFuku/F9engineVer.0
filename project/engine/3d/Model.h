@@ -40,7 +40,7 @@ public:
     struct Node
     {
      QuaternionTransform transform   ;
-        Matrix4x4 localMatrix=Makeidetity4x4();
+        Matrix4x4 localMatrix=Makeidentity4x4();
         std::string name;
         std::vector <Node>children;
     };

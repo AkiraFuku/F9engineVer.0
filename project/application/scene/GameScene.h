@@ -7,7 +7,7 @@
 #include <memory>
 #include "SkyBox.h"
 #include "CameraController.h"
-
+class ParticleEmitter;
 class RailPath;
 
 #include "Animation.h"
@@ -36,6 +36,9 @@ private:
     std::unique_ptr<CameraController> debugCameraC; 
 
     bool isDebugCamera_ = false;
+    std::unique_ptr<ParticleEmitter>emitter_;
+
+    
 
     Vector3 position_ = { 2.0f,0.0f,0.0f };
     Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };
