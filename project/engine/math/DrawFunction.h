@@ -3,7 +3,7 @@
 #pragma once
 #include "MathFunction.h"
 #include "Vector4.h"
-#include "Quanternion.h"
+#include "Quaternion.h"
 struct Sphere{
 	Vector3 center;//中心
 	float radius;

@@ -181,6 +181,7 @@ void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fi
     psoDesc.DepthStencilState.DepthEnable = config.depthEnable;
     psoDesc.DepthStencilState.DepthWriteMask = config.depthWriteMask;
     // 深度比較関数が設定されていない場合のデフォルト
+    psoDesc.DepthStencilState.DepthFunc = config.depthFunc;
     if (psoDesc.DepthStencilState.DepthFunc == 0) {
         psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     }

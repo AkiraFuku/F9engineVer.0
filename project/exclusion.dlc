@@ -21,5 +21,6 @@ dxguid
 Assimp
 Dbghelp
 winmm
+Slerp
 aabb
 gltf

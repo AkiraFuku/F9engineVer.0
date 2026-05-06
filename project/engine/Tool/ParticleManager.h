@@ -3,13 +3,13 @@
 #include "Vector2.h"
 #include<random>
 #include<list>
-#include "DrawFunction.h"
 #include "DXCommon.h"
 #include <wrl/client.h>
 #include "d3d12.h"
 #include <cstdint>
 #include "Camera.h"
 #include "Transform.h"
+#include <map>
 class ParticleManager
 {
 public:
@@ -19,7 +19,7 @@ public:
     };
     struct VertexData {
         Vector4 position; // 4D position vector
-        Vector2 texcoord; // 2D texture coordinate vector
+        Vector2 record; // 2D texture coordinate vector
         Vector3 normal;
     };
     struct Material
@@ -31,7 +31,7 @@ public:
     };
     struct Particle
     {
-        EulerTransform transfom;
+        EulerTransform transform;
         Vector3 velocity;
         Vector4 color;
         float lifeTime;
@@ -47,7 +47,13 @@ public:
 
     };
 
+ enum class EffectType
+    {
+        Plane,
+        Ring,
+        Cylinder
 
+    };
 
     struct ParticleGroup {
         MaterialData materialData;
@@ -56,25 +62,39 @@ public:
         Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
         ParticleForGPU* instancingData = nullptr;
         uint32_t kNumInstance;
+        std::string name;
+        EffectType effectType;
     };
+
+    struct PrimitiveResource {
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+    D3D12_VERTEX_BUFFER_VIEW vbv;
+    uint32_t vertexCount;
+};
+   
 
 
     void Initialize();
     void Update();
     void Draw();
-    void CreateParticleGroup(const std::string name, const std::string textureFilepath);
+    void CreateParticleGroup(const std::string name, const std::string textureFilepath, EffectType type=EffectType::Plane);
     static ParticleManager* GetInstance();
     void Emit(const std::string name, const Vector3& postion, uint32_t count);
     void Finalize();
-    void Setcamera(Camera* camera) {
+    void SetCamera(Camera* camera) {
         camera_ = camera;
     }
     void ReleaseParticleGroup(const std::string name);
     std::unordered_map<std::string, ParticleGroup> particleGroups;
     friend struct std::default_delete<ParticleManager>;
   static std::unique_ptr<ParticleManager> instance;
-private:
 
+  std::vector<ParticleManager::VertexData> PrimitiveVertexPlane();
+  std::vector<ParticleManager::VertexData> PrimitiveVertexRing();
+  std::vector<ParticleManager::VertexData> PrimitiveVertexCylinder();
+
+private:
+    Particle MakeParticle( std::mt19937& randomEngine,const Vector3& translate );
     ParticleManager() = default;
     ~ParticleManager() = default;
     ParticleManager(ParticleManager&) = delete;
@@ -87,21 +107,21 @@ private:
     std::mt19937 randomEngine_;
     HRESULT hr_ = 0;
     //ルートシグネチャ
-    Microsoft::WRL::ComPtr<ID3D12RootSignature>rootSignature_;
-    void CreateRootSignature();
-    //グラフィックパイプラインステート
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
+    //Microsoft::WRL::ComPtr<ID3D12RootSignature>rootSignature_;
+    //void CreateRootSignature();
+    ////グラフィックパイプラインステート
+    //Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
 
     //頂点リソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourse_;
+    std::map<EffectType, PrimitiveResource> primitiveResources_;
     VertexData* vertexData_ = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+  //  D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
     //マテリアル
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
     Material* materialData_ = nullptr;
-    void CreateVertexBuffer();
+    void CreateVertexBuffer(EffectType type);
     void CreateMaterialBuffer();
-    void CreatePSO();
+  //  void CreatePSO();
 
 
 

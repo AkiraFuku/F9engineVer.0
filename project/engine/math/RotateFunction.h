@@ -1,6 +1,6 @@
 #pragma once
 #include "Vector4.h"
-#include "Quanternion.h"
+#include "Quaternion.h"
 
 
 Quaternion Slerp(const Quaternion& q0,const Quaternion& q1,float t);

@@ -1,26 +1,26 @@
 #include "ParicleEmitter.h"
 #include "DXCommon.h"
 
-ParicleEmitter::ParicleEmitter(const  std::string name, EulerTransform transfom, uint32_t count, float frequency, float frequencyTime) {
-    transfom_ = transfom;
+ParticleEmitter::ParticleEmitter(const  std::string name, EulerTransform transform, uint32_t count, float frequency, float frequencyTime) {
+    transform_ = transform;
     count_ = count;
     frequency_ = frequency;
     frequencyTime_ = frequencyTime;
     name_ = name;
 
 }
-void ParicleEmitter::Update() {
+void ParticleEmitter::Update() {
     frequencyTime_ += DXCommon::kDeltaTime;
     if (frequency_ <= frequencyTime_)
     {
-       ParticleManager::GetInstance()->Emit(name_,transfom_.translate,count_);
+       ParticleManager::GetInstance()->Emit(name_,transform_.translate,count_);
         frequencyTime_ -= frequency_;
 
     }
 }
 
-void ParicleEmitter::Emit()
+void ParticleEmitter::Emit()
 {
-           ParticleManager::GetInstance()->Emit(name_,transfom_.translate,count_);
+           ParticleManager::GetInstance()->Emit(name_,transform_.translate,count_);
 
 }

@@ -133,7 +133,7 @@ private:
 
 
     //buffer
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourse_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexRecourse_;
     Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
     VertexData* vertexData_ = nullptr;
     uint32_t* indexData_ = nullptr;

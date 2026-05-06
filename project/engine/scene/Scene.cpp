@@ -8,6 +8,6 @@ void Scene::ChangeActiveCamera(Camera* targetCamera) {
 
     // 各マネージャーに新しいカメラを通知
     Object3dCommon::GetInstance()->SetDefaultCamera(activeCamera_);
-    ParticleManager::GetInstance()->Setcamera(activeCamera_);
+    ParticleManager::GetInstance()->SetCamera(activeCamera_);
     PrimitiveDrawer::GetInstance()->SetCamera(activeCamera_);
 }

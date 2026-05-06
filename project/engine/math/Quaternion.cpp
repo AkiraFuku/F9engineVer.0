@@ -1,4 +1,4 @@
-#include "Quanternion.h"
+#include "Quaternion.h"
 #include "MathFunction.h"
 #include <cmath>
 Quaternion operator-(const Quaternion q)

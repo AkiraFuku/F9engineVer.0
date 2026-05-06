@@ -30,7 +30,7 @@
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
     <ClCompile Include="engine\math\Mass.cpp" />
-    <ClCompile Include="engine\math\Quanternion.cpp" />
+    <ClCompile Include="engine\math\Quaternion.cpp" />
     <ClCompile Include="engine\math\RotateFunction.cpp" />
     <ClCompile Include="engine\Tool\Camera.cpp" />
     <ClCompile Include="engine\2d\Vector2.cpp" />
@@ -113,7 +113,7 @@
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
-    <ClInclude Include="engine\math\Quanternion.h" />
+    <ClInclude Include="engine\math\Quaternion.h" />
     <ClInclude Include="engine\math\RotateFunction.h" />
     <ClInclude Include="engine\math\Transform.h" />
     <ClInclude Include="engine\scene\AbstractSceneFactory.h" />
@@ -178,6 +178,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\Cylinder\Particle.hlsli" />
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\Primitive\Primitive.hlsli" />
@@ -189,6 +190,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.PS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
