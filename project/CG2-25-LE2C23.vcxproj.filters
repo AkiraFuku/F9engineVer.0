@@ -348,6 +348,9 @@
     <ClCompile Include="CollisionManager.cpp">
       <Filter>App\System\Colition</Filter>
     </ClCompile>
+    <ClCompile Include="PunchEnemy.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -556,6 +559,9 @@
     </ClInclude>
     <ClInclude Include="CollisionManager.h">
       <Filter>App\System\Colition</Filter>
+    </ClInclude>
+    <ClInclude Include="PunchEnemy.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -96,6 +96,7 @@
     <ClCompile Include="application\Rail\RailPath.cpp" />
     <ClCompile Include="application\object\Robot\Base\Robot.cpp" />
     <ClCompile Include="application\object\Bullet\Projectile.cpp" />
+    <ClCompile Include="PunchEnemy.cpp" />
     <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +168,7 @@
     <ClInclude Include="application\Rail\RailPath.h" />
     <ClInclude Include="application\object\Robot\Base\Robot.h" />
     <ClInclude Include="application\object\Bullet\Projectile.h" />
+    <ClInclude Include="PunchEnemy.h" />
     <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
