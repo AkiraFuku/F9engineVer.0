@@ -50,7 +50,7 @@ public:
         Matrix4x4 WVP;
         Matrix4x4 World;
         Vector4 color;
-
+        Matrix4x4 uvTransform; // 追加：インスタンスごとのUV変換行列
     };
 
     enum class EffectType

@@ -312,9 +312,12 @@ void ParticleManager::Update() {
                 }
 
                 particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
-                particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
-                particleGroup.instancingData[numInstance].color.y = (*particleIterator).color.y;
-                particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;
+                /*   particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
+                   particleGroup.instancingData[numInstance].color.y = (*particleIterator).color.y;
+                   particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;*/
+                particleGroup.instancingData[numInstance].color = (*particleIterator).color;
+
+                particleGroup.instancingData[numInstance].uvTransform = Makeidentity4x4();
                 ++numInstance;
             }
             ++particleIterator;
@@ -398,6 +401,7 @@ void ParticleManager::CreateParticleGroup(
     for (uint32_t i = 0; i < newParticle.kNumInstance; ++i) {
         newParticle.instancingData[i].WVP = Makeidentity4x4(); // 単位行列などで埋める
         newParticle.instancingData[i].color = { 1.0f, 1.0f, 1.0f, 0.0f };
+        newParticle.instancingData[i].uvTransform = Makeidentity4x4(); // 単位行列などで埋める
     }
 }
 
