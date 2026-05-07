@@ -577,7 +577,6 @@
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
     <None Include="StateRideOnTest_Usage.md" />
-    <None Include="resources\shaders\Cylinder\Particle.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
