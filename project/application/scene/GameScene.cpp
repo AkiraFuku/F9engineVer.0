@@ -67,6 +67,7 @@ void GameScene::Initialize() {
     ParticleManager::ParticleUpdateFunc updateFunc = [](ParticleManager::Particle& particle, float deltaTime) {
         // パーティクルの更新処理
         // 例: 速度に基づいて位置を更新し、寿命を減少させる
+        particle.uvOffset.x+=deltaTime;
         particle.transform.translate += particle.velocity * deltaTime;
         };
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);

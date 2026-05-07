@@ -316,8 +316,12 @@ void ParticleManager::Update() {
                    particleGroup.instancingData[numInstance].color.y = (*particleIterator).color.y;
                    particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;*/
                 particleGroup.instancingData[numInstance].color = (*particleIterator).color;
-
-                particleGroup.instancingData[numInstance].uvTransform = Makeidentity4x4();
+                Matrix4x4 uvMatrix = MakeAffineMatrix(
+                    Vector3{ particleIterator->uvScale.x, particleIterator->uvScale.y, 1.0f }, // Scale
+                    Vector3{ 0.0f, 0.0f, particleIterator->uvRotation },         // Rotate
+                    Vector3{ particleIterator->uvOffset.x, particleIterator->uvOffset.y, 0.0f } // Translate
+                );
+                particleGroup.instancingData[numInstance].uvTransform = uvMatrix;
                 ++numInstance;
             }
             ++particleIterator;
