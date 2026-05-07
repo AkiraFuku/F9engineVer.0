@@ -70,9 +70,34 @@ void GameScene::Initialize() {
         particle.uvOffset.x+=deltaTime;
         particle.transform.translate += particle.velocity * deltaTime;
         };
+    ParticleManager::ParticleEmitterFunc initialize = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
+
+        std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+        std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
+        ParticleManager::Particle particle;
+        particle.transform.scale = { 1.0f,1.0f,1.0f };
+        particle.transform.rotate = { 0.0f,0.0f,0.0f };
+        Vector3 randamTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+        particle.transform.translate = emitterPosition + randamTranslate;
+        particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+
+        particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine),1.0f };
+
+        particle.lifeTime = distTime(randomEngine);
+        particle.currentTime = 0.0f;
+        return particle;
+        };
+    ParticleManager::ParticleUpdateFunc update = [](ParticleManager::Particle& particle, float deltaTime) {
+        // パーティクルの更新処理
+        // 例: 速度に基づいて位置を更新し、寿命を減少させる
+        particle.uvOffset.x+=deltaTime;
+        particle.transform.translate += particle.velocity * deltaTime;
+        };
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
+
+    ParticleManager::GetInstance()->CreateParticleGroup("Hit", "resources/gradationLine.png", ParticleManager::EffectType::Ring, initializeFunc, updateFunc);
     EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-    emitter_ = std::make_unique<ParticleEmitter>("Test", M, 1, 5.0f, 0.0f);
+    emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 1, 5.0f, 0.0f);
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
