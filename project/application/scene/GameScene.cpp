@@ -5,7 +5,7 @@
 #include "PrimitiveDrawer.h"
 #include "SceneManager.h"
 #include "ParticleManager.h"//フレームワークに移植
-#include "ParicleEmitter.h"
+#include "ParticleEmitter.h"
 #include "PSOManager.h"
 #include "LightManager.h"
 
@@ -21,7 +21,7 @@
 #include "CollisionManager.h"
 #include "Projectile.h"
 #include "PlayerState.h"
-
+#include <numbers>
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -72,32 +72,30 @@ void GameScene::Initialize() {
         };
     ParticleManager::ParticleEmitterFunc initialize = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
 
-        std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-        std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
+        std::uniform_real_distribution<float> rotation(-std::numbers::pi_v<float>,std::numbers::pi_v<float>);
         ParticleManager::Particle particle;
-        particle.transform.scale = { 1.0f,1.0f,1.0f };
-        particle.transform.rotate = { 0.0f,0.0f,0.0f };
-        Vector3 randamTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-        particle.transform.translate = emitterPosition + randamTranslate;
-        particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+        particle.transform.scale = { 0.05f,1.0f,1.0f };
+        particle.transform.rotate = {rotation(randomEngine),rotation(randomEngine),rotation(randomEngine) };
+        particle.transform.translate = emitterPosition ;
+        particle.velocity = { 0.0f, 0.0f, 0.0f };
 
-        particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine),1.0f };
+        particle.color = {1.0f,1.0f,1.0f,1.5f };
 
-        particle.lifeTime = distTime(randomEngine);
+        particle.lifeTime = 1.0f;
         particle.currentTime = 0.0f;
         return particle;
         };
     ParticleManager::ParticleUpdateFunc update = [](ParticleManager::Particle& particle, float deltaTime) {
         // パーティクルの更新処理
         // 例: 速度に基づいて位置を更新し、寿命を減少させる
-        particle.uvOffset.x+=deltaTime;
-        particle.transform.translate += particle.velocity * deltaTime;
+   /*     particle.uvOffset.x+=deltaTime;
+        particle.transform.translate += particle.velocity * deltaTime;*/
         };
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Hit", "resources/gradationLine.png", ParticleManager::EffectType::Ring, initializeFunc, updateFunc);
-    EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-    emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 1, 5.0f, 0.0f);
+    ParticleManager::GetInstance()->CreateParticleGroup("Hit", "resources/gradationLine.png", ParticleManager::EffectType::Ring, initialize, update);
+    /*EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+    emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 5, 5.0f, 0.0f);*/
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
     /*   std::vector<Sprite*> sprites;
@@ -218,7 +216,7 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
-    emitter_->Update();
+    //emitter_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -241,7 +239,7 @@ void GameScene::Update() {
 
     if (Input::GetInstance()->TriggerKeyDown(DIK_E)) {
 
-        emitter_->Emit();
+     //   emitter_->Emit();
 
         // Aボタンを押したときの処理
 /*

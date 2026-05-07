@@ -4,7 +4,7 @@
 #include"Object3D.h"
 #include "Model.h"
 #include "Camera.h"
-#include "ParicleEmitter.h"
+#include "ParticleEmitter.h"
 #include "Audio.h"
 #include "TextureManager.h"
 

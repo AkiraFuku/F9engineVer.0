@@ -282,7 +282,7 @@
     <ClCompile Include="engine\Tool\ParticleManager.cpp">
       <Filter>engine\Tool\Paeticle</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Tool\ParicleEmitter.cpp">
+    <ClCompile Include="engine\Tool\ParticleEmitter.cpp">
       <Filter>engine\Tool\Paeticle</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Player.cpp">
@@ -491,7 +491,7 @@
     <ClInclude Include="engine\Tool\ParticleManager.h">
       <Filter>engine\Tool\Paeticle</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Tool\ParicleEmitter.h">
+    <ClInclude Include="engine\Tool\ParticleEmitter.h">
       <Filter>engine\Tool\Paeticle</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Player.h">

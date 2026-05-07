@@ -86,6 +86,9 @@ public:
     void SetPsoName(const std::string& psoName) {
         psoName_ = psoName;
     }
+    EulerTransform GetTransform() const {
+        return transform_;
+    }
 
     //void SetRadius(float radius) { radius_ = radius; }
 private:

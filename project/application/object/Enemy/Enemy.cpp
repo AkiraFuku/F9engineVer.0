@@ -10,7 +10,7 @@
 #include "Player.h"
 #include "imgui.h"
 #include "Robot.h"
-
+#include "ParticleEmitter.h"
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
 void Enemy::SetRobot(std::unique_ptr<Robot> robot) {
@@ -28,6 +28,8 @@ void Enemy::Initialize()
     railMover_ = std::make_unique<RailMover>();
     ChangeBehavior(std::make_unique<EnemyBehaviorPatrol>());
     ChangeState(std::make_unique<StateEnemyNormal>());
+    hitParticle_ = std::make_unique<ParticleEmitter>("Hit", object_->GetTransform(), 5, 5.0f, 0.0f);
+
 }
 
 void Enemy::Update()
@@ -178,31 +180,30 @@ void Enemy::OnCollision(Player* other) {
     // プレイヤーが通常状態で攻撃中かチェック
     if (playerState && strcmp(playerState, "Normal") == 0) {
         if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
-
+            PlayHitEffect();
             isHit_ = true;
             hitVisualTimer_ = kHitVisualDuration;
 
             if (strcmp(GetStateName(), "Normal") == 0) {
                 ChangeState(std::make_unique<StateEnemyStan>());
-            } 
-            else if (strcmp(GetStateName(), "Stan") == 0) {
+            } else if (strcmp(GetStateName(), "Stan") == 0) {
                 // ★ここがポイント：ロボットを持っていればプレイヤーを強制変身させる
-                if (robot_ && robot_-> CreateRideOnState()) {
+                if (robot_ && robot_->CreateRideOnState()) {
                     // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
                     // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
-                    other->ChangeState(robot_->CreateRideOnState()); 
+                    other->ChangeState(robot_->CreateRideOnState());
                 }
-                
+
                 ChangeState(std::make_unique<StateEnemyDead>());
             }
         }
     }
 }
 void Enemy::OnCollision() {
-    if ( isHit_ || IsDead()) return;
-            isHit_ = true;
-
- ChangeState(std::make_unique<StateEnemyDead>());
+    if (isHit_ || IsDead()) return;
+    isHit_ = true;
+    PlayHitEffect();
+    ChangeState(std::make_unique<StateEnemyDead>());
 }
 
 void Enemy::UpdateGravity()
@@ -234,3 +235,10 @@ bool Enemy::IsDead() const
     return state_ && strcmp(state_->GetName(), "Dead") == 0;
 }
 
+void Enemy::PlayHitEffect() {
+    if (hitParticle_) {
+
+        hitParticle_->SetTransform(object_->GetTransform());
+        hitParticle_->Emit();
+    }
+}

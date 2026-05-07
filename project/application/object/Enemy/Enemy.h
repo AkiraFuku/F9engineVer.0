@@ -10,6 +10,7 @@ class IEnemyBehavior; // 前方宣言
 class IEnemyState; // 前方宣言
 class Player; // Enemy.h の場合
 class Robot; // Enemy.h の場合
+class ParticleEmitter; // Enemy.h の場合
 class Enemy
 {
 public:
@@ -110,4 +111,10 @@ protected:
     const float kHitVisualDuration = 1.0f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
     // 基底クラスで保持するように変更
     std::unique_ptr<Robot> robot_ = nullptr;
+
+   // パーティクルエミッタの保持
+    std::unique_ptr<ParticleEmitter> hitParticle_;
+
+    // パーティクルを発生させるヘルパー関数
+    void PlayHitEffect();
 };
