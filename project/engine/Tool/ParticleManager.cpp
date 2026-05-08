@@ -218,16 +218,6 @@ void ParticleManager::Initialize() {
 
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Particle", config);
-    /*    auto psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Normal);
-       /* graphicsPipelineState_ = psoSet.pipelineState;
-        rootSignature_ = psoSet.rootSignature;*/
-
-        //  CreatePSO();
-          //頂点データの初期化（座標等）
-          //頂点リソース生成
-          //頂点バッファビュー（VBV）を作成
-          //頂点リソースにデータを書き込む
-        // 全形状のバッファを作成
     CreateVertexBuffer(EffectType::Plane);
     CreateVertexBuffer(EffectType::Ring);
     CreateVertexBuffer(EffectType::Cylinder);
@@ -296,12 +286,6 @@ void ParticleManager::Update() {
 
                 particleGroup.instancingData[numInstance].color.w = alpha;
                 Matrix4x4 worldMatrix = {};
-                /*  if (isBillboard)
-                  {*/
-                  /* if (particleGroup.name != "Test")
-                   {
-                       (*particleIterator).transform.rotate.z += 1.0f / 60.0f;
-                   }*/
                 if (particleGroup.update) {
                     particleGroup.update(*particleIterator, DXCommon::kDeltaTime);
                 }

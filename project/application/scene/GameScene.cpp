@@ -94,7 +94,8 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("sphere");
+    object3d->SetModel("AnimatedCube.gltf");
+    object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);
 
 
@@ -142,7 +143,7 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
 }
 void GameScene::Update() {
-    emitter_->Update();
+   // emitter_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -292,7 +293,7 @@ void GameScene::Draw() {
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     //sprite->Draw();
-   // object3d->Draw();
+    object3d->Draw();
 }
 GameScene::GameScene() = default;
 
