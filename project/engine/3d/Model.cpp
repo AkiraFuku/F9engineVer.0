@@ -165,12 +165,18 @@ void Model::ApplyAnimation(float time)
     if (!animation_) {
         return;
     }
+    const auto& nodeAnims = animation_->GetAnimationData().nodeAnimations;
     if (animation_)
     {
         for (Joint& joint : skeleton_.joints)
         {
-            if (auto it = animation_->GetAnimationData().nodeAnimations.find(joint.name);it != animation_->GetAnimationData().nodeAnimations.end())
-            {
+            // ジョイント名を確実に取得
+            std::string searchName = joint.name;
+
+            // ここでクラッシュする場合、nodeAnims（std::map）自体が壊れている
+            auto it = nodeAnims.find(searchName);
+
+            if (it != nodeAnims.end()) {
                 const Animation::NodeAnimation& anima = it->second;
                 joint.transform.translate = animation_->CalculateValue(anima.translate.keyFrames, time);
                 joint.transform.rotate = animation_->CalculateValue(anima.rotate.keyFrames, time);

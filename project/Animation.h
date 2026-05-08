@@ -43,7 +43,7 @@ public:
     void Update();
 
 
-     void Draw();
+     
      AnimationData GetAnimationData() const {
          return AnimeData_;
      }

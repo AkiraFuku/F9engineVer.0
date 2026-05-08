@@ -99,7 +99,7 @@ void GameScene::Initialize() {
     object3d->Initialize();
     object3d->SetModel("simpleSkin.gltf");
 
-   // object3d->SetAnimations(animation.get());
+    object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);
 
 
