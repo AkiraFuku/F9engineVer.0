@@ -13,6 +13,7 @@
 #include "Animation.h"
 
 #include "Transform.h"
+#include <optional>
 
 class Model
 {
@@ -50,6 +51,24 @@ public:
         MaterialData material; // マテリアルデータ
         Node rootNode;
     };
+
+    struct Joint{
+        QuaternionTransform transform;
+        Matrix4x4 localMatrix;
+        Matrix4x4 skeletonMatrix; // スケルトン行列
+        std::string name;
+        std::vector<int32_t> children;
+        int32_t index;
+        std::optional<int32_t> parentIndex;
+    };
+    struct Skeleton
+    {
+        int32_t rootIndex;
+        std::map<std::string, int32_t> jointMap; // ジョイント名とインデックスのマップ   
+        std::vector<Joint> joints; // ジョイントの配列
+
+    };
+
     enum  DiffuseType
     {
         Lambert,
@@ -60,6 +79,8 @@ public:
         Phong,
         BlinnPhong,
     };
+
+
 
     void Initialize(const std::string& directryPath, const std::string& filename);
     void Update();
@@ -87,13 +108,18 @@ public:
     static Model* CreatePlaneFromTex(const std::string& textureFilePath);
 
     static Node ReadNode(aiNode*node );
+    static Skeleton CreateSkelton(const Node& rootNode);
+    static int32_t CreateJoint(const Node& node, std::optional<int32_t> parent, std::vector<Joint>& joints);
+
 
 public: // 外部入出力
 
     void SetName(const std::string& name) { name_ = name; }
 
-private:
+  
 
+private:
+    void DebugDrawSkeleton();
 
     ModelData modelData_;
 
@@ -111,5 +137,8 @@ private:
     Material* materialData_ = nullptr;
     void CreateMaterialResource();
     void ApplyAnimation(Node& node, float time);
+    void ApplyAnimation( float time);
+
+    Skeleton skeleton_ ;
 };
 

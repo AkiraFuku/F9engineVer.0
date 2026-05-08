@@ -40,10 +40,17 @@ void Object3d::Update()
     if (camera_)
     {
         cameraData_->worldPosition = camera_->GetTranslate();
-        worldViewProjectionMatrix = Multiply(Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix), camera_->GetViewProtectionMatrix());
+       // worldViewProjectionMatrix = Multiply(Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix), camera_->GetViewProtectionMatrix());
+        worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
         //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
     } else {
-        worldViewProjectionMatrix = Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix);
+
+        Matrix4x4 viewMatrix = Makeidentity4x4();
+        Matrix4x4 projectionMatrix = Makeidentity4x4(); 
+        Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+        
+
+        worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
     }
     //行列をGPUに転送
     wvpResource_->WVP = worldViewProjectionMatrix;

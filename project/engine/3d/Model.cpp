@@ -8,13 +8,14 @@
 #include <Windows.h>
 #include <numbers>
 #include <imgui.h>
+#include "PrimitiveDrawer.h"
 
 
-void Model::Initialize(const std::string& directryPath, const std::string& filename)
+void Model::Initialize(const std::string& directoryPath, const std::string& filename)
 {
 
     name_ = filename;
-    modelData_ = LoadModelFile(directryPath, filename);
+    modelData_ = LoadModelFile(directoryPath, filename);
     if (modelData_.material.textureFilePath.empty()) {
         modelData_.material.textureFilePath = "resources/uvChecker.png"; // 確実に存在する画像を指定
         TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilePath);
@@ -31,11 +32,38 @@ void Model::Initialize(const std::string& directryPath, const std::string& filen
     modelData_.material.textureIndex =
         TextureManager::GetInstance()->GetTextureIndexByFilePath(
             modelData_.material.textureFilePath);
+    //スケルトンの作成
+    skeleton_ = CreateSkelton(modelData_.rootNode);
+
 
 }
 
 void Model::Update()
 {
+    if (animation_)
+    {
+        animation_->Update();
+
+        ApplyAnimation(animation_->GetCurrentTime_());
+    }
+
+    for (Joint& joint : skeleton_.joints)
+    {
+        joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
+        if (joint.parentIndex)
+        {
+            joint.skeletonMatrix = Multiply(joint.localMatrix, skeleton_.joints[*joint.parentIndex].skeletonMatrix);
+
+        } else
+        {
+            joint.skeletonMatrix = joint.localMatrix;
+        }
+
+    }
+
+
+
+
 #ifdef USE_IMGUI
     ImGui::Begin((std::string("Settings: ") + name_).c_str());
     int* pEnableLighting = reinterpret_cast<int*>(&materialData_->enableLighting);
@@ -58,16 +86,12 @@ void Model::Update()
         ImGui::DragFloat("EnvironmentCoefficient", &materialData_->environmentCoefficient, 0.1f, 1.0f, 256.0f);
     }
 
+
+    DebugDrawSkeleton();
     ImGui::End();
 
 #endif // USE_IMGUI
 
-    if (animation_)
-    {
-        animation_->Update();
-
-        ApplyAnimation(modelData_.rootNode, animation_->GetCurrentTime_());
-    }
 }
 void Model::Draw() {
     //VBVの設定
@@ -81,6 +105,8 @@ void Model::Draw() {
             TextureManager::GetInstance()->GetSrvHandleGPU(modelData_.material.textureIndex));
     //描画コマンド
     DXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+
+
 
 }
 
@@ -134,6 +160,28 @@ void Model::ApplyAnimation(Node& node, float time)
         ApplyAnimation(child, time);
     }
 }
+void Model::ApplyAnimation(float time)
+{
+    if (!animation_) {
+        return;
+    }
+    if (animation_)
+    {
+        for (Joint& joint : skeleton_.joints)
+        {
+            if (auto it = animation_->GetAnimationData().nodeAnimations.find(joint.name);it != animation_->GetAnimationData().nodeAnimations.end())
+            {
+                const Animation::NodeAnimation& anima = it->second;
+                joint.transform.translate = animation_->CalculateValue(anima.translate.keyFrames, time);
+                joint.transform.rotate = animation_->CalculateValue(anima.rotate.keyFrames, time);
+                joint.transform.scale = animation_->CalculateValue(anima.scale.keyFrames, time);
+
+            }
+
+        }
+
+    }
+}
 Model::MaterialData  Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
     //1. 変数の宣言
     MaterialData materialData{}; // 修正: 初期化
@@ -170,8 +218,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 
     const aiScene* scene = importer.ReadFile(filePath.c_str(),
         aiProcess_FlipWindingOrder |              // 三角形化されていないポリゴンを三角形にする
-        aiProcess_FlipUVs |        // 法線がない場合、自動計算する
-        aiProcess_PreTransformVertices
+        aiProcess_FlipUVs        // 法線がない場合、自動計算する
     );
     assert(scene->HasMeshes());
     for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
@@ -210,7 +257,11 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
         }
     }
     modelData.rootNode = ReadNode(scene->mRootNode);
+
     // 4. モデルデータを返す
+
+
+
     return modelData;
 
 }
@@ -353,19 +404,91 @@ Model::Node Model::ReadNode(aiNode* node)
     aiLocalMatrix.Transpose();
 
 
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            // Assimpの行列は [row][col] でアクセス可能
-            // 自作Matrix構造体の定義に合わせて代入 (例: result.localMatrix.m[i][j])
-            result.localMatrix.m[i][j] = aiLocalMatrix[i][j];
-        }
-    }
+    //for (int i = 0; i < 4; i++) {
+    //    for (int j = 0; j < 4; j++) {
+    //        // Assimpの行列は [row][col] でアクセス可能
+    //        // 自作Matrix構造体の定義に合わせて代入 (例: result.localMatrix.m[i][j])
+    //        result.localMatrix.m[i][j] = aiLocalMatrix[i][j];
+    //    }
+    //}
     result.name = node->mName.C_Str();
     result.children.resize(node->mNumChildren);
     for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex)
     {
         result.children[childIndex] = ReadNode(node->mChildren[childIndex]);
     }
+
+    aiVector3D scale, translate;
+    aiQuaternion rotate;
+    node->mTransformation.Decompose(scale, rotate, translate);
+    result.transform.scale = { scale.x,scale.y,scale.z };
+    result.transform.rotate = { rotate.x,rotate.y,rotate.z,rotate.w };
+    result.transform.translate = { translate.x,translate.y,translate.z };
+    result.localMatrix = MakeAffineMatrix(result.transform.scale, result.transform.rotate, result.transform.translate);
+
+
+
     return result;
+}
+
+Model::Skeleton Model::CreateSkelton(const Node& rootNode)
+{
+    Skeleton skeleton;
+    skeleton.rootIndex = CreateJoint(rootNode, {}, skeleton.joints);
+
+    for (const Joint& joint : skeleton.joints)
+    {
+        skeleton.jointMap.emplace(joint.name, joint.index);
+    }
+    return skeleton;
+}
+
+int32_t Model::CreateJoint(const Node& node, std::optional<int32_t> parent, std::vector<Joint>& joints)
+{
+    Joint joint;
+    joint.name = node.name;
+    joint.localMatrix = node.localMatrix;
+    joint.skeletonMatrix = Makeidentity4x4();
+    joint.transform = node.transform;
+    joint.index = static_cast<int32_t>(joints.size());
+    joint.parentIndex = parent;
+    joints.push_back(joint);
+
+    for (const Node& child : node.children)
+    {
+        int32_t childIndex = CreateJoint(child, joint.index, joints);
+        joints[joint.index].children.push_back(childIndex);
+    }
+
+    return joint.index;
+}
+
+void Model::DebugDrawSkeleton()
+{
+
+
+    for (const Joint& joint : skeleton_.joints)
+    {
+        Vector3 start = { joint.skeletonMatrix.m[3][0], joint.skeletonMatrix.m[3][1], joint.skeletonMatrix.m[3][2] };
+        for (int32_t childIndex : joint.children)
+        {
+            const Joint& childJoint = skeleton_.joints[childIndex];
+            Vector3 end = { childJoint.skeletonMatrix.m[3][0], childJoint.skeletonMatrix.m[3][1], childJoint.skeletonMatrix.m[3][2] };
+            PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 0.0f, 0.0f, 1.0f });
+
+
+        }
+        //  Vector3 position = { joint.skeletonMatrix.m[3][0], joint.skeletonMatrix.m[3][1], joint.skeletonMatrix.m[3][2] };
+
+        Sphere sphere;
+        sphere.center = start;
+        sphere.radius = 0.25f; // 小さな球の半径
+        sphere.rotate = joint.transform.rotate; // ジョイントの回転を適用
+
+        PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 1.0f, 1.0f, 1.0f, 1.0f });
+
+    }
+
+
 }
 

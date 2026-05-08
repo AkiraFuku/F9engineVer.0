@@ -18,6 +18,10 @@ void CameraController::Initialize(Camera* camera) {
 }
 
 void CameraController::Update() {
+    if (!camera_)
+    {
+        return;
+    }
     const EulerTransform& targetWorldTransform = target_->GetTransform();
 
 

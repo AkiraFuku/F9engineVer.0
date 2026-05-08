@@ -16,6 +16,7 @@
 #include"Audio.h"
 #include "TextureManager.h"
 #include "RailPath.h"
+#include <Model.h>
 
 void GameScene::Initialize() {
 
@@ -25,10 +26,10 @@ void GameScene::Initialize() {
 
     cameraMap_["Main"] = std::move(mainCamera);
 
-    // 2. デバッグ用カメラの生成
-    auto debugCamera = std::make_unique<Camera>();
-    debugCamera->SetTranslate({ 0.0f, 10.0f, -20.0f });
-    cameraMap_["Debug"] = std::move(debugCamera);
+    //// 2. デバッグ用カメラの生成
+    //auto debugCamera = std::make_unique<Camera>();
+    //debugCamera->SetTranslate({ 0.0f, 10.0f, -20.0f });
+    //cameraMap_["Debug"] = std::move(debugCamera);
 
     // 3. 最初はメインカメラをセット
     ChangeActiveCamera(cameraMap_["Main"].get());
@@ -79,7 +80,8 @@ void GameScene::Initialize() {
 
     animation = std::make_unique<Animation>();
 
-    animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
+   // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
+    animation->Initialize("resources/simpleSkin", "simpleSkin.gltf");
     animation->SetCurrentTime(0.0f);
 
     skyBox = std::make_unique<SkyBox>();
@@ -91,11 +93,13 @@ void GameScene::Initialize() {
 
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
+    ModelManager::GetInstance()->LoadModel("resources/simpleSkin", "simpleSkin.gltf");
     ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("AnimatedCube.gltf");
-    object3d->SetAnimations(animation.get());
+    object3d->SetModel("simpleSkin.gltf");
+
+   // object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);
 
 
@@ -108,21 +112,21 @@ void GameScene::Initialize() {
 
     player->SetPosition({ 0.0f,0.0f,0.0f });
 
-
+/*
     cameraController = std::make_unique<CameraController>();
     cameraController->Initialize(cameraMap_["Main"].get());
-    cameraController->SetTarget(player.get());
+    cameraController->SetTarget(player.get());*/
     cameraRail = std::make_unique<RailPath>();
 
     cameraRail->AddPoint({ 0.0f, 0.0f, -5.0f });
     cameraRail->AddPoint({ 25.0f, 5.0f, -5.0f });
     cameraRail->AddPoint({ 50.0f, 0.0f, -5.0f });
 
-    cameraController->SetRailPath(cameraRail.get());
+   /* cameraController->SetRailPath(cameraRail.get());
 
     debugCameraC = std::make_unique<CameraController>();
     debugCameraC->Initialize(cameraMap_["Debug"].get());
-    debugCameraC->SetTarget(player.get());
+    debugCameraC->SetTarget(player.get());*/
 
 
     stageRail = std::make_unique<RailPath>();
@@ -209,9 +213,9 @@ void GameScene::Update() {
         cameraTranslate = Add(cameraTranslate, Vector3{ normalizedY / 60.0f,normalizedX / 60.0f,0.0f });
         activeCamera_->SetRotate(cameraTranslate);
     }
-
+/*
     cameraController->Update();
-    debugCameraC->Update();
+    debugCameraC->Update();*/
 
     activeCamera_->Update();
 
