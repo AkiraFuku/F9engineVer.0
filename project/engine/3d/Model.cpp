@@ -87,7 +87,7 @@ void Model::Update()
     }
 
 
-    DebugDrawSkeleton();
+   
     ImGui::End();
 
 #endif // USE_IMGUI
@@ -105,7 +105,7 @@ void Model::Draw() {
             TextureManager::GetInstance()->GetSrvHandleGPU(modelData_.material.textureIndex));
     //描画コマンド
     DXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
-
+ DebugDrawSkeleton();
 
 
 }
@@ -475,21 +475,25 @@ void Model::DebugDrawSkeleton()
 
     for (const Joint& joint : skeleton_.joints)
     {
-        Vector3 start = { joint.skeletonMatrix.m[3][0], joint.skeletonMatrix.m[3][1], joint.skeletonMatrix.m[3][2] };
+        Vector3 start = joint.transform.translate;
         for (int32_t childIndex : joint.children)
         {
             const Joint& childJoint = skeleton_.joints[childIndex];
-            Vector3 end = { childJoint.skeletonMatrix.m[3][0], childJoint.skeletonMatrix.m[3][1], childJoint.skeletonMatrix.m[3][2] };
-            PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 0.0f, 0.0f, 1.0f });
+            Vector3 end =  childJoint.transform.translate;
+            PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 1.0f, 1.0f, 1.0f });
 
 
         }
-        //  Vector3 position = { joint.skeletonMatrix.m[3][0], joint.skeletonMatrix.m[3][1], joint.skeletonMatrix.m[3][2] };
 
         Sphere sphere;
         sphere.center = start;
-        sphere.radius = 0.25f; // 小さな球の半径
-        sphere.rotate = joint.transform.rotate; // ジョイントの回転を適用
+        sphere.radius = 0.125f; // 小さな球の半径
+        sphere.rotate = Normalize( joint.transform.rotate); // ジョイントの回転を適用
+     /*   if ( sphere.rotate.w!=1)
+        {
+
+            sphere.rotate.w=1;
+        }*/
 
         PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 1.0f, 1.0f, 1.0f, 1.0f });
 

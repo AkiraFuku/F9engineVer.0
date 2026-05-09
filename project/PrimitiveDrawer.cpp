@@ -94,6 +94,7 @@ void PrimitiveDrawer::AddPSO()
         };
         };
 
+    config.cullMode = D3D12_CULL_MODE_NONE; // カリングなし
     PSOManager::GetInstance()->RegisterPsoGenerator("Primitive", config);
 
 }

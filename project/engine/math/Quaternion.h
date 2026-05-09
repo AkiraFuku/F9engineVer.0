@@ -1,10 +1,10 @@
 #pragma once
 #include "Vector2.h"
 struct Quaternion{
-	float x;
-	float y;
-	float z;
-	float w;
+	float x=0;
+	float y=0;
+	float z=0;
+	float w=1;
 };
 
 Quaternion operator-(const Quaternion q);
