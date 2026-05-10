@@ -62,10 +62,10 @@ void TitleScene::Initialize() {
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube","AnimatedCube.gltf");
         object3d = std::make_unique<Object3d>();
         object3d->Initialize();
-        object3d->SetModel("AnimatedCube.gltf");
+        object3d->AddModel("AnimatedCube", "AnimatedCube", "");
         object3d->SetCamera(activeCamera_);
 
-    object3d->SetAnimations(animation.get());
+    object3d->SetAnimations("AnimatedCube", animation.get());
 
 
 

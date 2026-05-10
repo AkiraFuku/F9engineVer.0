@@ -54,8 +54,8 @@ void GameScene::Initialize() {
         ParticleManager::Particle particle;
         particle.transform.scale = { 1.0f,1.0f,1.0f };
         particle.transform.rotate = { 0.0f,0.0f,0.0f };
-        Vector3 randamTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-        particle.transform.translate = emitterPosition + randamTranslate;
+        Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+        particle.transform.translate = emitterPosition + randomTranslate;
         particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 
         particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine),1.0f };
@@ -131,7 +131,7 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("sphere");
+    object3d->AddModel("sphere", "sphere", "");
     object3d->SetCamera(activeCamera_);
 
 

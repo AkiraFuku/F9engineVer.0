@@ -17,7 +17,7 @@ void Player::Initialize()
     object_ = std::make_unique<Object3d>();
     ModelManager::GetInstance()->CreateSphereModel("Sphere", 16);
     object_->Initialize();
-    object_->SetModel("Sphere");
+    object_->AddModel("Sphere", "Sphere", "");
     railMover_ = std::make_unique<RailMover>();
     // テスト用：初期ステートをStateNormalからStateRideOnTestに変更
     ChangeState(std::make_unique<StateNormal>());
