@@ -1,6 +1,4 @@
 #include "CameraController.h"
-#include <algorithm>  
-#include "CameraController.h"  
 #include "Player.h"  
 #include "MathFunction.h"  
 #include "Camera.h"
@@ -8,6 +6,7 @@
 #include <iostream>
 #include "RailMover.h"
 #include "RailPath.h"
+#include "Imgui.h"
 using namespace std;
 CameraController::CameraController() = default;
 CameraController::~CameraController() = default;
@@ -29,6 +28,19 @@ void CameraController::Update() {
     // 
     //camera_->SetTranslate(targetWorldTransform.translate + targetOffset_);
 
+#ifdef USE_IMGUI
+    ImGui::Begin("Debug/camera");
+    // ここにプレイヤーのデバッグ情報を表示
+    //レールの進捗を表示
+    ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
+    Vector3 pos = target_->GetTransform().translate;
+    ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+
+
+
+
+    ImGui::End();
+#endif // USE_IMGUI
 
 
     RailCamera();
@@ -68,37 +80,46 @@ void CameraController::RequestShake(float duration, float power) {
 }
 
 void CameraController::RotateCamera() {
-    if (!target_)return;
+    if (!target_ || !camera_) return;
+
+    // プレイヤーの座標
     Vector3 targetPos = target_->GetTransform().translate;
+    // 注視点を少し上げる（足元ではなく腰や頭あたりにする）
+    targetPos.y += 2.0f;
+
+    // LookAt関数の実装（ターゲットの方向を向くように回転角を計算）
     Vector3 cameraPos = camera_->GetTranslate();
+    Vector3 direction = Normalize(targetPos - cameraPos);
 
-    // 方向ベクトル (Vector3 の引き算)
-    Vector3 direction = {
-        targetPos.x - cameraPos.x,
-        targetPos.y - cameraPos.y,
-        targetPos.z - cameraPos.z
-    };
-
-    // 2. 回転角を計算
-    // Y軸周りの回転 (左右): XとZの差分から計算
     float angleY = std::atan2(direction.x, direction.z);
-
-    // X軸周りの回転 (上下): 水平距離と高さの差分から計算
     float distanceXZ = std::sqrt(direction.x * direction.x + direction.z * direction.z);
-    float angleX = std::atan2(-direction.y, distanceXZ); // - をつけることで対象を見下ろす/見上げる
+    float angleX = std::atan2(-direction.y, distanceXZ);
 
-    // 3. カメラに回転を適用
     camera_->SetRotate({ angleX, angleY, 0.0f });
 }
 
 void CameraController::RailCamera()
 {
-    if (railMover_->isRailSet() && target_)
-    {
-        float progress = target_->GetRailProgress();    
-        railMover_->Advance(progress - railMover_->GetProgress());
-        Vector3 railPos = railMover_->GetCurrentPosition();
-        Vector3 desiredPos = Add(railPos, targetOffset_);
-        camera_->SetTranslate(desiredPos);
-    }
+ if (!target_ || !railMover_ || !railMover_->isRailSet()) return;
+
+    // 1. プレイヤー側のレール情報を取得
+    const RailPath* playerPath = target_->GetRailPath(); // PlayerにGetRailPath()を追加してください
+    if (!playerPath) return;
+
+    // 2. プレイヤーが「全行程の何％」にいるかを算出 (0.0f ～ 1.0f)
+    float playerDist = target_->GetCurrentDistance();
+    float playerTotalLen = playerPath->GetTotalLength();
+    float progressRate = playerDist / playerTotalLen;
+
+    // 3. カメラ側のレールの「同じ％」にあたる距離を算出
+    const RailPath* cameraPath = railMover_->GetRailPath();
+    float cameraTotalLen = cameraPath->GetTotalLength();
+    float targetCameraDist = cameraTotalLen * progressRate;
+
+    // 4. その距離に対応する T を取得して適用
+    float cameraT = cameraPath->GetTFromDistance(targetCameraDist);
+    railMover_->SetProgress(cameraT);
+
+    // 座標更新
+    camera_->SetTranslate(railMover_->GetCurrentPosition());
 }

@@ -16,10 +16,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
+    <ClCompile Include="application\object\Enemy\TestEnemy.cpp" />
+    <ClCompile Include="application\object\Robot\TestRobot.cpp" />
     <ClCompile Include="application\scene\GameScene.cpp" />
     <ClCompile Include="application\scene\TitleScene.cpp" />
-    <ClCompile Include="BehaviaState.cpp" />
-    <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="application\Behavior\BehaviorState.cpp" />
+    <ClCompile Include="application\object\CameraContorol\CameraController.cpp" />
+    <ClCompile Include="application\object\Enemy\Enemy.cpp" />
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp" />
+    <ClCompile Include="application\object\Enemy\Behavior\EnemyState.cpp" />
+    <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
     <ClCompile Include="engine\math\Mass.cpp" />
@@ -76,25 +83,34 @@
     <ClCompile Include="engine\2d\TextureManager.cpp" />
     <ClCompile Include="engine\Tool\ParticleManager.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
-    <ClCompile Include="engine\Tool\ParicleEmitter.cpp" />
+    <ClCompile Include="engine\Tool\ParticleEmitter.cpp" />
     <ClCompile Include="engine\scene\Scene.cpp" />
     <ClCompile Include="engine\scene\SceneManager.cpp" />
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="application\object\player\Player.cpp" />
-    <ClCompile Include="application\object\player\Behavia\PlayerState.cpp" />
-    <ClCompile Include="application\object\player\Behavia\PlayerAction.cpp" />
+    <ClCompile Include="application\object\player\Behavior\PlayerState.cpp" />
+    <ClCompile Include="application\object\player\Behavior\PlayerAction.cpp" />
+    <ClCompile Include="application\object\player\Behavior\PlayerBehavior.cpp" />
     <ClCompile Include="PrimitiveDrawer.cpp" />
-    <ClCompile Include="RailMover.cpp" />
-    <ClCompile Include="RailPath.cpp" />
-    <ClCompile Include="Robot.cpp" />
+    <ClCompile Include="application\Rail\RailMover.cpp" />
+    <ClCompile Include="application\Rail\RailPath.cpp" />
+    <ClCompile Include="application\object\Robot\Base\Robot.cpp" />
+    <ClCompile Include="application\object\Bullet\Projectile.cpp" />
     <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
+    <ClInclude Include="application\object\Enemy\TestEnemy.h" />
+    <ClInclude Include="application\object\Robot\TestRobot.h" />
     <ClInclude Include="application\scene\GameScene.h" />
     <ClInclude Include="application\scene\TitleScene.h" />
-    <ClInclude Include="BehaviaState.h" />
-    <ClInclude Include="CameraController.h" />
+    <ClInclude Include="application\Behavior\BehaviorState.h" />
+    <ClInclude Include="application\object\CameraContorol\CameraController.h" />
+    <ClInclude Include="application\object\Enemy\Enemy.h" />
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h" />
+    <ClInclude Include="application\object\Enemy\Behavior\EnemyState.h" />
+    <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
     <ClInclude Include="engine\math\Quaternion.h" />
@@ -133,7 +149,7 @@
     <ClInclude Include="engine\2d\TextureManager.h" />
     <ClInclude Include="engine\Tool\ParticleManager.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
-    <ClInclude Include="engine\Tool\ParicleEmitter.h" />
+    <ClInclude Include="engine\Tool\ParticleEmitter.h" />
     <ClInclude Include="engine\GAME\Framework.h" />
     <ClInclude Include="engine\GAME\GameEngine.h" />
     <ClInclude Include="engine\scene\Scene.h" />
@@ -143,12 +159,14 @@
     <ClInclude Include="application\object\player\Player.h" />
     <ClInclude Include="application\object\player\Command.h" />
     <ClInclude Include="application\object\player\InputHandler.h" />
-    <ClInclude Include="application\object\player\Behavia\PlayerState.h" />
-    <ClInclude Include="application\object\player\Behavia\PlayerAction.h" />
+    <ClInclude Include="application\object\player\Behavior\PlayerState.h" />
+    <ClInclude Include="application\object\player\Behavior\PlayerAction.h" />
+    <ClInclude Include="application\object\player\Behavior\PlayerBehavior.h" />
     <ClInclude Include="PrimitiveDrawer.h" />
-    <ClInclude Include="RailMover.h" />
-    <ClInclude Include="RailPath.h" />
-    <ClInclude Include="Robot.h" />
+    <ClInclude Include="application\Rail\RailMover.h" />
+    <ClInclude Include="application\Rail\RailPath.h" />
+    <ClInclude Include="application\object\Robot\Base\Robot.h" />
+    <ClInclude Include="application\object\Bullet\Projectile.h" />
     <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
@@ -160,11 +178,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\shaders\Cylinder\Particle.hlsli" />
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\Primitive\Primitive.hlsli" />
     <None Include="resources\shaders\Sprite\Sprite.hlsli" />
+    <None Include="StateRideOnTest_Usage.md">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.PS.hlsl">
@@ -299,7 +321,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collsion;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -327,7 +349,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collsion;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -358,7 +380,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavia</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collsion;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

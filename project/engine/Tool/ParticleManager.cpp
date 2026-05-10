@@ -286,6 +286,7 @@ void ParticleManager::Update() {
 
                 particleGroup.instancingData[numInstance].color.w = alpha;
                 Matrix4x4 worldMatrix = {};
+
                 if (particleGroup.update) {
                     particleGroup.update(*particleIterator, DXCommon::kDeltaTime);
                 }
@@ -301,9 +302,16 @@ void ParticleManager::Update() {
                 }
 
                 particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
-                particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
-                particleGroup.instancingData[numInstance].color.y = (*particleIterator).color.y;
-                particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;
+                /*   particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
+                   particleGroup.instancingData[numInstance].color.y = (*particleIterator).color.y;
+                   particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;*/
+                particleGroup.instancingData[numInstance].color = (*particleIterator).color;
+                Matrix4x4 uvMatrix = MakeAffineMatrix(
+                    Vector3{ particleIterator->uvScale.x, particleIterator->uvScale.y, 1.0f }, // Scale
+                    Vector3{ 0.0f, 0.0f, particleIterator->uvRotation },         // Rotate
+                    Vector3{ particleIterator->uvOffset.x, particleIterator->uvOffset.y, 0.0f } // Translate
+                );
+                particleGroup.instancingData[numInstance].uvTransform = uvMatrix;
                 ++numInstance;
             }
             ++particleIterator;
@@ -387,6 +395,7 @@ void ParticleManager::CreateParticleGroup(
     for (uint32_t i = 0; i < newParticle.kNumInstance; ++i) {
         newParticle.instancingData[i].WVP = Makeidentity4x4(); // 単位行列などで埋める
         newParticle.instancingData[i].color = { 1.0f, 1.0f, 1.0f, 0.0f };
+        newParticle.instancingData[i].uvTransform = Makeidentity4x4(); // 単位行列などで埋める
     }
 }
 
@@ -396,13 +405,13 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
 
     auto& group = particleGroups[name];
     for (uint32_t i = 0; i < count; ++i) {
-        Particle p;
+        //Particle p;
         if (group.initialize) {
-            group.initialize(p, position, randomEngine_);
+            // 関数が「値」を返すようになったので、そのまま push_back できる
+            group.particles.push_back(group.initialize(position, randomEngine_));
         } else {
-            p = MakeParticle(randomEngine_, position); // デフォルト
+            group.particles.push_back(MakeParticle(randomEngine_, position));
         }
-        group.particles.push_back(p);
     }
 
     /*    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);

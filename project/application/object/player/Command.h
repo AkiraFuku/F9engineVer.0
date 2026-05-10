@@ -1,31 +1,34 @@
 // Command.h
 #pragma once
-
-class Player;
-
-// コマンドのインターフェース
+#include "Vector2.h"
 class ICommand {
 public:
     virtual ~ICommand() = default;
-    virtual void Execute(Player& player) = 0;
 };
 
-// 移動コマンド
 class MoveCommand : public ICommand {
 public:
     MoveCommand(float speed) : speed_(speed) {}
-    void Execute(Player& player) override; // 後述するPlayerのメソッドを呼ぶ
-    float GetSpeed()const{return speed_;};
+    float GetSpeed() const { return speed_; }
 private:
     float speed_;
 };
 
-// ジャンプコマンド
-class JumpCommand : public ICommand {
+class JumpCommand : public ICommand {};
+class AttackCommand : public ICommand {};
+class ShootCommand : public ICommand {};
+class PreShootCommand : public ICommand {};
+// Command.h
+class AimCommand : public ICommand {
 public:
-    void Execute(Player& player) override;
-};
-class AttackCommand : public ICommand {
-    public:
-    void Execute(Player& player) override;
+    // x, y は -1.0f ~ 1.0f の範囲
+    AimCommand(Vector2 direction) : direction_(direction) {}
+    float GetX() const { return direction_.x; }
+    float GetY() const { return direction_.y; }
+    Vector2 GetDirection() const {
+        return direction_;
+    }   
+private:
+   Vector2 direction_;
+   
 };

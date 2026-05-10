@@ -68,34 +68,51 @@ public:
     void Update();
 
     // ベジェ曲線として点を追加
-    void AddBezierPoint(const Vector3& pos, const Vector3& cIn, const Vector3& cOut) {
-        points_.push_back({ pos, InterpolationType::Bezier, cIn, cOut });
+    void AddBezierPoint(const Vector3& pos, const Vector3& offsetIn, const Vector3& offsetOut) {
+        points_.push_back({
+            pos,
+            InterpolationType::Bezier,
+            pos + offsetOut, // 出ていくハンドル
+            pos + offsetIn   // 入ってくるハンドル
+            });
     }
+    void SetBezierHandles(size_t index, const Vector3& offsetIn, const Vector3& offsetOut);
 
     Vector3 GetPosition(float globalT) const {
         if (points_.size() < 2) return points_.empty() ? Vector3{ 0,0,0 } : points_[0].position;
 
-        size_t index = static_cast<size_t>(globalT);
-        float t = globalT - static_cast<float>(index);
+        float maxT = GetMaxT();
+        // ループ対応：Tを 0.0 ～ maxT の範囲に収める
+        if (isLoop_) {
+            globalT = fmodf(globalT, maxT);
+            if (globalT < 0) globalT += maxT;
+        } else {
+            if (globalT >= maxT) return points_.back().position;
+        }
 
-        if (index >= points_.size() - 1) return points_.back().position;
+        size_t index1 = static_cast<size_t>(globalT);
+        size_t index2 = (index1 + 1) % points_.size(); // ループして0に戻る
 
-        const auto& p1 = points_[index];
-        const auto& p2 = points_[index + 1];
+        float t = globalT - static_cast<float>(index1);
+
+        const auto& p1 = points_[index1];
+        const auto& p2 = points_[index2];
 
         switch (p1.type) {
         case InterpolationType::Linear:
             return Lerp(p1.position, p2.position, t);
 
         case InterpolationType::Bezier:
-            // p1から出るハンドルと、p2へ入るハンドルを使用
+            // p1のOutハンドルと、p2のInハンドルで補間
             return Bezier(p1.position, p1.controlOut, p2.controlIn, p2.position, t);
 
         case InterpolationType::CatmullRom: {
-            // 前後の点を取得（外挿処理含む）
-            Vector3 p0 = (index > 0) ? points_[index - 1].position : p1.position - (p2.position - p1.position);
-            Vector3 p3 = (index + 2 < points_.size()) ? points_[index + 2].position : p2.position + (p2.position - p1.position);
-            return CatmullRom(p0, p1.position, p2.position, p3, t);
+            // ループを考慮した隣接4点の取得
+            size_t i0 = (index1 > 0) ? index1 - 1 : (isLoop_ ? points_.size() - 1 : index1);
+            size_t i3 = (index2 + 1) % points_.size();
+            if (!isLoop_ && index2 == points_.size() - 1) i3 = index2; // 終端クランプ
+
+            return CatmullRom(points_[i0].position, p1.position, p2.position, points_[i3].position, t);
         }
         }
         return p1.position;
@@ -103,11 +120,29 @@ public:
     // 次の点への方向ベクトルを取得（回転制御用）
     Vector3 GetDirection(float globalT) const;
     float GetMaxT() const {
-        return points_.empty() ? 0.0f : static_cast<float>(points_.size() - 1);
+        if (points_.empty()) return 0.0f;
+        // ループなら点と同じ数（例: 4点あれば T=4.0 で一周）、非ループなら点数-1
+        return isLoop_ ? static_cast<float>(points_.size()) : static_cast<float>(points_.size() - 1);
     }
-
+    float GetTFromDistance(float distance) const;
+    float GetTotalLength() const {
+        return totalLength_;
+    }
+    void BuildDistanceTable();
+    float GetDistanceFromT(float t) const;
     void DebugDraw();
-
+    void SetLoop(bool loop) {
+        isLoop_ = loop;
+    }
+    bool IsLoop()const{return isLoop_;}
 private:
+    bool isLoop_ = false; // ループフラグ
+    // RailPath.h に追加
+    struct DistanceMap {
+        float distance; // 始点からの累積距離
+        float t;        // その時の globalT
+    };
+    std::vector<DistanceMap> distanceTable_;
+    float totalLength_ = 0.0f;
     std::vector<RailPoint> points_;
 };

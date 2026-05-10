@@ -16,7 +16,7 @@
 class ParticleManager
 {
 public:
-    
+
     struct MaterialData {
         std::string textureFilePath;
         uint_fast16_t textureIndex = 0;
@@ -40,9 +40,13 @@ public:
         Vector4 color;
         float lifeTime;
         float currentTime;
+        // 追加：UV変換行列
+        Vector2 uvOffset = { 0.0f, 0.0f };
+        Vector2 uvScale = { 1.0f, 1.0f };
+        float uvRotation = 0.0f;
 
     };
-    using ParticleEmitterFunc = std::function<void(Particle&, const Vector3&, std::mt19937&)>;
+    using ParticleEmitterFunc = std::function<Particle(const Vector3&, std::mt19937&)>;
     using ParticleUpdateFunc = std::function<void(Particle&, float)>;
 
     struct ParticleForGPU
@@ -50,7 +54,7 @@ public:
         Matrix4x4 WVP;
         Matrix4x4 World;
         Vector4 color;
-
+        Matrix4x4 uvTransform; // 追加：インスタンスごとのUV変換行列
     };
 
     enum class EffectType
@@ -64,7 +68,7 @@ public:
     struct ParticleGroup {
 
         // 追加：生成時の振る舞いを定義する関数
-       ParticleEmitterFunc initialize;
+        ParticleEmitterFunc initialize;
         // 追加：更新時の振る舞いを定義する関数 (オプション)
         ParticleUpdateFunc update;
 
@@ -93,8 +97,8 @@ public:
         const std::string name,
         const std::string textureFilepath,
         EffectType type = EffectType::Plane,
-      ParticleEmitterFunc initialize = nullptr,
-      ParticleUpdateFunc update = nullptr
+        ParticleEmitterFunc initialize = nullptr,
+        ParticleUpdateFunc update = nullptr
     );
     static ParticleManager* GetInstance();
     void Emit(const std::string name, const Vector3& postion, uint32_t count);

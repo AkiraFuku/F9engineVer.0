@@ -7,9 +7,12 @@
 #include <memory>
 #include "SkyBox.h"
 #include "CameraController.h"
+#include "Vector2.h"
+#include "Projectile.h"
+
 class ParticleEmitter;
 class RailPath;
-
+class Enemy;
 #include "Animation.h"
 
 class GameScene :public Scene
@@ -22,6 +25,8 @@ public:
     GameScene() ;
     ~GameScene() override;
 
+    void AddEnemy(Vector2 pos);
+void AddProjectile(const Projectile::ProjectileSpawnParam& param,Projectile::ProjectileOwner owner);
 
 private:
     std::unique_ptr<Sprite> sprite;
@@ -32,6 +37,8 @@ private:
     std::unique_ptr<RailPath> cameraRail;
 
     std::unique_ptr<CameraController> cameraController; 
+    std::vector<std::unique_ptr<Enemy>> enemies_;
+   // std::unique_ptr<Enemy> enemy; 
     std::unique_ptr<SkyBox> skyBox;
     std::unique_ptr<CameraController> debugCameraC; 
 
@@ -46,5 +53,6 @@ private:
     Vector3 point2_ = { 0.0f,0.0f,50.0f };*/
 
      uint32_t handle_=0;
+     std::vector<std::unique_ptr<Projectile>> projectiles_;
 };
 
