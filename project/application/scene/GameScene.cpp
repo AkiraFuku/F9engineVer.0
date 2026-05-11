@@ -67,7 +67,7 @@ void GameScene::Initialize() {
     ParticleManager::ParticleUpdateFunc updateFunc = [](ParticleManager::Particle& particle, float deltaTime) {
         // パーティクルの更新処理
         // 例: 速度に基づいて位置を更新し、寿命を減少させる
-        particle.uvOffset.x+=deltaTime;
+        particle.uvTransform.offset.x += deltaTime;
         particle.transform.translate += particle.velocity * deltaTime;
         };
     ParticleManager::ParticleEmitterFunc initialize = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
@@ -475,7 +475,7 @@ void GameScene::Draw() {
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
-    //sprite->Draw();
+   // sprite->Draw();
    // object3d->Draw();
 }
 GameScene::GameScene() = default;

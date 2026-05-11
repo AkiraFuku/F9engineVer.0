@@ -41,9 +41,7 @@ public:
         float lifeTime;
         float currentTime;
         // 追加：UV変換行列
-        Vector2 uvOffset = { 0.0f, 0.0f };
-        Vector2 uvScale = { 1.0f, 1.0f };
-        float uvRotation = 0.0f;
+        UVTransform uvTransform;
 
     };
     using ParticleEmitterFunc = std::function<Particle(const Vector3&, std::mt19937&)>;

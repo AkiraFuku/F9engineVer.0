@@ -36,6 +36,10 @@ void Model::Initialize(const std::string& directryPath, const std::string& filen
 
 void Model::Update()
 {
+
+    Matrix4x4 uvMatrix = MakeUVTransformMatrix(uvTransform_);
+
+    materialData_->uvTransform = uvMatrix;
 #ifdef USE_IMGUI
     ImGui::Begin((std::string("Settings: ") + name_).c_str());
     int* pEnableLighting = reinterpret_cast<int*>(&materialData_->enableLighting);
@@ -110,7 +114,9 @@ void Model::CreateMaterialResource() {
 
     materialData_->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
     materialData_->enableLighting = false;
-    materialData_->uvTransform = Makeidentity4x4();
+    uvTransform_ = {};
+    Matrix4x4 uvMatrix = MakeUVTransformMatrix(uvTransform_);
+    materialData_->uvTransform = uvMatrix;
     materialData_->shininess = 50.0f;
     materialData_->specularType = BlinnPhong;
     materialData_->diffuseType = HarfLambert;
@@ -264,6 +270,7 @@ Model* Model::CreateSphere(uint32_t subdivision)
                 vertex.normal.z = vertex.position.z;
 
                 // UV座標
+
                 vertex.texcord = { u, 1.0f - v }; // DXはVが逆の場合があるため適宜調整
                 return vertex;
                 };

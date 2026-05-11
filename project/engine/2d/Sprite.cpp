@@ -6,7 +6,9 @@
 #include "Transform.h"
 void Sprite::Initialize(std::string textureFilePath) {
 
-
+    uvTransform_.scale = { 1.0f,1.0f };
+    uvTransform_.rotate =  0.0f;
+    uvTransform_.offset = { 0.0f,0.0f };
 
     vertexRecourse_ =
         DXCommon::GetInstance()->
@@ -36,7 +38,10 @@ void Sprite::Initialize(std::string textureFilePath) {
     //データの設定
     materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData_->enableLighting = false;
-    materialData_->uvTransform = Makeidentity4x4();
+
+    Matrix4x4 uvMatrix = MakeUVTransformMatrix(uvTransform_);
+
+    materialData_->uvTransform = uvMatrix;
     //座標変換
     transformationMatrixResourse_ =
         DXCommon::GetInstance()->
@@ -113,6 +118,10 @@ void Sprite::Update() {
     Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
     transformationMatrixData_->WVP = worldViewProjectionMatrix;
     transformationMatrixData_->World = worldMatrix;
+
+
+    Matrix4x4 uvMatrix = MakeUVTransformMatrix(uvTransform_);
+    materialData_->uvTransform = uvMatrix;
 
 
 }

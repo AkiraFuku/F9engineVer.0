@@ -11,3 +11,10 @@ struct QuaternionTransform{
    Quaternion rotate;
     Vector3 translate;
 };
+// UV変換用の構造体
+struct UVTransform
+{
+    Vector2 scale = {1.0f, 1.0f};
+    float rotate = 0.0f;
+    Vector2 offset = {0.0f, 0.0f};
+};
