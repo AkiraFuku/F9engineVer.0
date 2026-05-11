@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include "RotateFunction.h"
 #include "MathFunction.h"
+#include "DXCommon.h"
 Animation::AnimationData Animation::LoadAnimationFile(const std::string& directoryPath, const std::string& filename)
 {
     AnimationData animation;
@@ -58,7 +59,7 @@ void Animation::Initialize(const std::string& directoryPath, const std::string& 
 
 void Animation::Update()
 {
-    currentTime_ += 0.016f; // 仮の時間の進行（例: 60 FPSで約16msごとに更新）
+    currentTime_ += DXCommon::kDeltaTime; // 仮の時間の進行（例: 60 FPSで約16msごとに更新）
     if (currentTime_ > AnimeData_.duration) {
         currentTime_ = 0.0f; // アニメーションをループさせる
     }
