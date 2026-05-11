@@ -54,9 +54,12 @@ public:
         Microsoft::WRL::ComPtr<ID3D12Resource> resource;
         TransformationMatrix* mappedData = nullptr;
 
+        bool Active = true; // インスタンスの有効/無効フラグ
+
         // ★パフォーマンス最適化: ダーティフラグの追加
-        bool isDirty = true; // 初期状態は更新が必要
+        bool isDirty = true; // 初期状態は更新が必要//
         QuaternionTransform cachedTransform; // キャッシュされたトランスフォーム
+        
 
     };
 
@@ -130,17 +133,7 @@ public:
     EulerTransform GetTransform() const {
         return transform_;
     }
-/*    void SetColor(const Vector4& color) {
-        if (model_) {
-            model_->SetColor(color);
-        }
-    }
-     Vector4 GetColor() const {
-        if (model_) {
-            return model_->GetColor();
-        }
-        return {1.0f, 1.0f, 1.0f, 1.0f}; // デフォルトの白色
-     }*/
+
      void SetModelInstanceColor(const std::string& instanceName, const Vector4& color) {
          for (const auto& instance : models_) {
              if (instance->name == instanceName) {
@@ -167,10 +160,54 @@ public:
     // モデルを追加する関数
     void AddModel(const std::string& modelPath, const std::string& name, const std::string& parent = {});
 
+    void RemoveModel(const std::string& name);
     // 特定のモデルの座標を操作するゲッターなど
     ModelInstance* FindInstance(const std::string& name);
 
-    //void SetRadius(float radius) { radius_ = radius; }
+    void SetSkyBox(SkyBox* box) {
+        box_ = box;
+    }
+    void SetInstanceUVTransform(const std::string& instanceName, const UVTransform& uvTransform) {
+        for (const auto& instance : models_) {
+            if (instance->name == instanceName) {
+                instance->model->SetUVTransform(uvTransform);
+                break;
+            }
+        }
+    }
+    UVTransform GetInstanceUVTransform(const std::string& instanceName) const {
+        for (const auto& instance : models_) {
+            if (instance->name == instanceName) {
+                return instance->model->GetUVTransform();
+            }
+        }
+        return {}; // デフォルトのUVTransform
+    }
+    Vector2 GetInstanceUVScale(const std::string& instanceName) const {
+        for (const auto& instance : models_) {
+            if (instance->name == instanceName) {
+                return instance->model->GetUVScale();
+            }
+        }
+        return {1.0f, 1.0f}; // デフォルトのスケール
+    }
+    float GetInstanceUVRotation(const std::string& instanceName) const {
+        for (const auto& instance : models_) {
+            if (instance->name == instanceName) {
+                return instance->model->GetUVRotation();
+            }
+        }
+        return 0.0f; // デフォルトの回転
+    }
+    Vector2 GetInstanceUVOffset(const std::string& instanceName) const {
+        for (const auto& instance : models_) {
+            if (instance->name == instanceName) {
+                return instance->model->GetUVOffset();
+            }
+        }
+        return {0.0f, 0.0f}; // デフォルトのオフセット
+    }
+
 private:
     void ImguiInstances();
     std::vector<std::unique_ptr<ModelInstance>> models_; // 複数のモデル実体

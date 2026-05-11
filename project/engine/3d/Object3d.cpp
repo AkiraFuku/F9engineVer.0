@@ -115,8 +115,12 @@ void Object3d::Draw()
                 instance->resource->GetGPUVirtualAddress()
             );
 
+            if (instance->Active)
+            {
+                instance->model->Draw();
+
+            }
             // インスタンスごとのモデル描画
-            instance->model->Draw();
         }
     }
 
@@ -248,11 +252,14 @@ void Object3d::UpdateModelInstances()
     }
 
     // ★修正: カメラが存在する場合は毎フレーム更新（安全）
-    bool cameraUpdated = (camera_ != nullptr); 
+    bool cameraUpdated = (camera_ != nullptr);
 
     for (auto& instance : models_) {
         // ★修正: モデルのアニメーション更新を最初に実行
+
+
         if (instance->model) {
+
             instance->model->Update();
         }
 
@@ -265,7 +272,7 @@ void Object3d::UpdateModelInstances()
         // - カメラが更新された（毎フレーム）
         // - または常に更新する（最も安全なアプローチ）
         if (transformChanged || instance->isDirty || cameraUpdated) {
-            
+
             // ローカル行列を計算
             instance->localMatrix = MakeAffineMatrix(
                 instance->transform.scale,
@@ -277,7 +284,8 @@ void Object3d::UpdateModelInstances()
             if (instance->parent) {
                 instance->worldMatrix = Multiply(instance->localMatrix, instance->parent->worldMatrix);
             } else {
-                instance->worldMatrix = Multiply(instance->localMatrix, objectBaseMatrix);
+                instance->localMatrix = objectBaseMatrix;
+                instance->worldMatrix = objectBaseMatrix;
             }
 
             // GPU に転送

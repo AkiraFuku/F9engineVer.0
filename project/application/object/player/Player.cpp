@@ -15,9 +15,18 @@ void Player::Initialize()
 {
     inputHandler_ = std::make_unique<InputHandler>();
     object_ = std::make_unique<Object3d>();
-    ModelManager::GetInstance()->CreateSphereModel("Sphere", 16);
+    //ModelManager::GetInstance()->CreateSphereModel("Player", 16);
+    // ModelManager::GetInstance()->CreatePlaneFromTex("PlayerShadow", "resources/gradationLine.png");
+    ModelManager::GetInstance()->LoadModel("resources/player/", "playerCursor.obj");
+    ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
     object_->Initialize();
-    object_->AddModel("Sphere", "Sphere", "");
+    object_->AddModel("player.obj", "Player", "");
+    object_->AddModel("playerCursor.obj", "Cursor", "Player");
+    auto cursorInstance = object_->FindInstance("Cursor");
+    cursorInstance->transform.scale = { 0.5f, 0.5f, 0.5f };
+    cursorInstance->transform.translate = { 0.0f, 0.0f, 0.0f };
+
+
     railMover_ = std::make_unique<RailMover>();
     // テスト用：初期ステートをStateNormalからStateRideOnTestに変更
     ChangeState(std::make_unique<StateNormal>());
@@ -107,7 +116,7 @@ void Player::SetRailPosition(const Vector2& position)
 }
 void Player::AddVelocity(Vector3 v)
 {
-    velocity_+=v;
+    velocity_ += v;
 }
 void Player::SetRail(RailPath* rail)
 {
@@ -149,23 +158,40 @@ const RailPath* Player::GetRailPath() const
 }
 void Player::UpdateRailPath()
 {
-
-
-    // 2. レール上の座標を取得 (XZの土台)
+    // 1. RailMoverから現在のレール上の座標と進行方向を取得
     Vector3 railPos = railMover_->GetCurrentPosition();
+    Vector3 railDir = railMover_->GetCurrentDirection(); // レールの接線ベクトル
 
-    // 3. 【重要】レールのXZと、自分のYを合成する
+    // 2. 座標の更新
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
-
-    // 座標と回転の反映
     object_->SetTranslate(finalPos);
 
-    // 進行方向を向く処理
-    Vector3 dir = railMover_->GetCurrentDirection();
-    float railAngle = atan2f(dir.x, dir.z);
+    // 3. 移動方向（前進/後退）を考慮した向きの計算
+    if (Length(railDir) > 0.001f) {
+        // 基本となるレールの向きを計算
+        playerAngle_ = atan2f(railDir.x, railDir.z);
 
-    // ここでは保持している playerAngle_ を優先して適用
+        // --- 追加：後ろに動いている場合は180度(M_PI)回転させる ---
+        // GetMoveDirection() が Backward (-1) の場合、逆を向かせる
+        if (railMover_->GetMoveDirection() == RailMover::MoveDirection::Backward) {
+            playerAngle_ += 3.14159265f; // 180度加算
+        }
+    }
+
+    // モデルの回転を更新
     object_->SetRotate({ 0.0f, playerAngle_, 0.0f });
+
+    // 4. Cursorの位置を更新（プレイヤーの向き playerAngle_ に従う）
+    auto cursorInstance = object_->FindInstance("Cursor");
+    if (cursorInstance) {
+        float forwardOffset = 2.0f; 
+        float heightOffset = 1.0f;  
+
+        // 常に「モデルが向いている正面」にカーソルが出る
+        cursorInstance->transform.translate.x = sinf(playerAngle_) * forwardOffset;
+        cursorInstance->transform.translate.z = cosf(playerAngle_) * forwardOffset;
+        cursorInstance->transform.translate.y = heightOffset;
+    }
 
     object_->Update();
 }
@@ -238,9 +264,9 @@ void Player::OnCollision([[maybe_unused]] Enemy* other) {
 
             if (enemyState && strcmp(enemyState, "Dead") != 0)
             {
-                Vector3 now=velocity_;
-                now.x=0.0f;
-                velocity_=now;
+                Vector3 now = velocity_;
+                now.x = 0.0f;
+                velocity_ = now;
 
                 ChangeBehavior(std::make_unique<BehaviorRoot>()); // 通常切り替える
 
@@ -284,5 +310,5 @@ const char* Player::GetBehaviorName() const {
 
 void Player::SetScene(Scene* scene)
 {
-    scene_=scene;
+    scene_ = scene;
 }
