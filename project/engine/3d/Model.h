@@ -146,5 +146,7 @@ private:
     void ApplyAnimation( float time);
 
     Skeleton skeleton_ ;
+
+    void UpdateSkeleton();
 };
 

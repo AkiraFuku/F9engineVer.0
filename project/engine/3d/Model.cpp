@@ -49,19 +49,7 @@ void Model::Update()
         ApplyAnimation(animation_->GetCurrentTime_());
     }
 
-    for (Joint& joint : skeleton_.joints)
-    {
-        joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
-        if (joint.parentIndex)
-        {
-            joint.skeletonMatrix = Multiply(joint.localMatrix, skeleton_.joints[*joint.parentIndex].skeletonMatrix);
-
-        } else
-        {
-            joint.skeletonMatrix = joint.localMatrix;
-        }
-
-    }
+    UpdateSkeleton();
 
 
 
@@ -89,7 +77,7 @@ void Model::Update()
     }
 
 
-   
+
     ImGui::End();
 
 #endif // USE_IMGUI
@@ -113,7 +101,7 @@ void Model::Draw() {
 
 
     //DXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
- DebugDrawSkeleton();
+    DebugDrawSkeleton();
 
 
 }
@@ -136,7 +124,7 @@ void Model::CreateVertexBuffer() {
 
 void Model::CreateIndexBuffer()
 {
-    
+
     indexResource_ =
         DXCommon::GetInstance()->
         CreateBufferResource(sizeof(uint32_t) * modelData_.indices.size());
@@ -144,7 +132,7 @@ void Model::CreateIndexBuffer()
         indexResource_.Get()->GetGPUVirtualAddress();
     indexBufferView_.SizeInBytes = UINT(sizeof(uint32_t) * modelData_.indices.size());
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-   
+
     indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
     memcpy(indexData_, modelData_.indices.data(), sizeof(uint32_t) * modelData_.indices.size());
 }
@@ -211,6 +199,22 @@ void Model::ApplyAnimation(float time)
 
     }
 }
+void Model::UpdateSkeleton()
+{
+    for (Joint& joint : skeleton_.joints)
+    {
+        joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
+        if (joint.parentIndex)
+        {
+            joint.skeletonMatrix = Multiply(joint.localMatrix, skeleton_.joints[*joint.parentIndex].skeletonMatrix);
+
+        } else
+        {
+            joint.skeletonMatrix = joint.localMatrix;
+        }
+
+    }
+}
 Model::MaterialData  Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
     //1. 変数の宣言
     MaterialData materialData{}; // 修正: 初期化
@@ -247,7 +251,8 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 
     const aiScene* scene = importer.ReadFile(filePath.c_str(),
         aiProcess_FlipWindingOrder |              // 三角形化されていないポリゴンを三角形にする
-        aiProcess_FlipUVs        // 法線がない場合、自動計算する
+        aiProcess_FlipUVs      // 法線がない場合、自動計算する
+       // aiProcess_CalcTangentSpace//UV座標を反転させる
     );
     assert(scene->HasMeshes());
     for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
@@ -263,8 +268,8 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
             aiVector3D& normal = mesh->mNormals[i];
             aiVector3D& texcord = mesh->mTextureCoords[0][i];
             VertexData& vertex = modelData.vertices[i];
-            vertex.position = { position.x,position.y,position.z,1.0f };
-            vertex.normal = { normal.x,normal.y,normal.z };
+            vertex.position = { position.x,position.y,-position.z,1.0f };
+            vertex.normal = { normal.x,normal.y,-normal.z };
             vertex.texcord = { texcord.x,texcord.y };
         }
         for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
@@ -279,25 +284,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 
         }
 
-       /* for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces;++faceIndex)
-        {
-            aiFace& face = mesh->mFaces[faceIndex];
-            assert(face.mNumIndices == 3);
-            for (uint32_t element = 0; element < face.mNumIndices; ++element)
-            {
-                uint32_t vertexIndex = face.mIndices[element];
-                aiVector3D& position = mesh->mVertices[vertexIndex];
-                aiVector3D& normal = mesh->mNormals[vertexIndex];
-                aiVector3D& texcord = mesh->mTextureCoords[0][vertexIndex];
-                VertexData vertex;
-                vertex.position = { position.x,position.y,position.z,1.0f };
-                vertex.normal = { normal.x,normal.y,normal.z };
-                vertex.texcord = { texcord.x,texcord.y };
-                vertex.position.x *= -1.0f;
-                vertex.normal.x *= -1.0f;
-                modelData.vertices.push_back(vertex);
-            }
-        }*/
+        
     }
     for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex)
     {
@@ -518,34 +505,18 @@ int32_t Model::CreateJoint(const Node& node, std::optional<int32_t> parent, std:
 
 void Model::DebugDrawSkeleton()
 {
+    for (const Joint& joint : skeleton_.joints) {
+        // 現在のジョイントのワールド座標
+        Vector3 start = { joint.skeletonMatrix.m[3][0], joint.skeletonMatrix.m[3][1], joint.skeletonMatrix.m[3][2] };
 
-
-    for (const Joint& joint : skeleton_.joints)
-    {
-        Vector3 start = joint.transform.translate;
-        for (int32_t childIndex : joint.children)
-        {
+        for (int32_t childIndex : joint.children) {
             const Joint& childJoint = skeleton_.joints[childIndex];
-            Vector3 end =  childJoint.transform.translate;
+            // 子ジョイントのワールド座標
+            Vector3 end = { childJoint.skeletonMatrix.m[3][0], childJoint.skeletonMatrix.m[3][1], childJoint.skeletonMatrix.m[3][2] };
+
             PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 1.0f, 1.0f, 1.0f });
-
-
         }
-
-        Sphere sphere;
-        sphere.center = start;
-        sphere.radius = 0.125f; // 小さな球の半径
-        sphere.rotate = Normalize( joint.transform.rotate); // ジョイントの回転を適用
-     /*   if ( sphere.rotate.w!=1)
-        {
-
-            sphere.rotate.w=1;
-        }*/
-
-        PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 1.0f, 1.0f, 1.0f, 1.0f });
-
     }
-
 
 }
 

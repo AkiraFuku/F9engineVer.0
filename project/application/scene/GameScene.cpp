@@ -81,7 +81,7 @@ void GameScene::Initialize() {
     animation = std::make_unique<Animation>();
 
    // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
-    animation->Initialize("resources/simpleSkin", "simpleSkin.gltf");
+    animation->Initialize("resources/human", "walk.gltf");
     animation->SetCurrentTime(0.0f);
 
     skyBox = std::make_unique<SkyBox>();
@@ -94,10 +94,12 @@ void GameScene::Initialize() {
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
     ModelManager::GetInstance()->LoadModel("resources/simpleSkin", "simpleSkin.gltf");
-    ModelManager::GetInstance()->CreateSphereModel("sphere");
+    ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
+    ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
+  //  ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("simpleSkin.gltf");
+    object3d->SetModel("walk.gltf");
 
     object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);

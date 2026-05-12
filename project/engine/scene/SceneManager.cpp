@@ -45,15 +45,16 @@ void SceneManager::Update() {
     }
     if (scene_) {
         scene_->Update();
-      
+
 
     }
 }
 
 void SceneManager::Draw() {
     if (scene_) {
+
         scene_->Draw();
-         PrimitiveDrawer::GetInstance()->Draw(); // シーンの描画後にプリミティブ描画を実行   
+        PrimitiveDrawer::GetInstance()->Draw(); // シーンの描画後にプリミティブ描画を実行   
     }
 }
 
