@@ -24,6 +24,8 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 
     }  //頂点リソースの作成
     CreateVertexBuffer();
+    //インデックスリソースの作成
+    CreateIndexBuffer();
     //マテリアルリソースの作成
     CreateMaterialResource();
     //テクスチャの読み込み
@@ -96,6 +98,8 @@ void Model::Update()
 void Model::Draw() {
     //VBVの設定
     DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    //IBVの設定
+    DXCommon::GetInstance()->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
     //マテリアルリソースの設定
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
     //SRVのディスクリプタテーブルの設定
@@ -104,7 +108,11 @@ void Model::Draw() {
         SetGraphicsRootDescriptorTable(2,
             TextureManager::GetInstance()->GetSrvHandleGPU(modelData_.material.textureIndex));
     //描画コマンド
-    DXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+    //インデックスドローコマンド
+    DXCommon::GetInstance()->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
+
+
+    //DXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
  DebugDrawSkeleton();
 
 
@@ -124,6 +132,21 @@ void Model::CreateVertexBuffer() {
 
     //頂点データの転送
     memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
+}
+
+void Model::CreateIndexBuffer()
+{
+    
+    indexResource_ =
+        DXCommon::GetInstance()->
+        CreateBufferResource(sizeof(uint32_t) * modelData_.indices.size());
+    indexBufferView_.BufferLocation =
+        indexResource_.Get()->GetGPUVirtualAddress();
+    indexBufferView_.SizeInBytes = UINT(sizeof(uint32_t) * modelData_.indices.size());
+    indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+   
+    indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
+    memcpy(indexData_, modelData_.indices.data(), sizeof(uint32_t) * modelData_.indices.size());
 }
 
 void Model::CreateMaterialResource() {
@@ -232,7 +255,31 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
         aiMesh* mesh = scene->mMeshes[meshIndex];
         assert(mesh->HasNormals());
         assert(mesh->HasTextureCoords(0));
-        for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces;++faceIndex)
+        modelData.vertices.resize(mesh->mNumVertices);
+
+        for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
+        {
+            aiVector3D& position = mesh->mVertices[i];
+            aiVector3D& normal = mesh->mNormals[i];
+            aiVector3D& texcord = mesh->mTextureCoords[0][i];
+            VertexData& vertex = modelData.vertices[i];
+            vertex.position = { position.x,position.y,position.z,1.0f };
+            vertex.normal = { normal.x,normal.y,normal.z };
+            vertex.texcord = { texcord.x,texcord.y };
+        }
+        for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
+        {
+            aiFace& face = mesh->mFaces[faceIndex];
+            assert(face.mNumIndices == 3);
+            for (uint32_t element = 0; element < face.mNumIndices; ++element)
+            {
+                uint32_t vertexIndex = face.mIndices[element];
+                modelData.indices.push_back(vertexIndex);
+            }
+
+        }
+
+       /* for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces;++faceIndex)
         {
             aiFace& face = mesh->mFaces[faceIndex];
             assert(face.mNumIndices == 3);
@@ -250,7 +297,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
                 vertex.normal.x *= -1.0f;
                 modelData.vertices.push_back(vertex);
             }
-        }
+        }*/
     }
     for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex)
     {
