@@ -9,6 +9,8 @@
 #include "PlayerBehavior.h"
 #include "Enemy.h"
 #include "Scene.h"
+#include "PrimitiveDrawer.h"
+#include <numbers>
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -20,11 +22,11 @@ void Player::Initialize()
     ModelManager::GetInstance()->LoadModel("resources/player/", "playerCursor.obj");
     ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
     object_->Initialize();
-    object_->AddModel("player.obj", "Player", "");
-    object_->AddModel("playerCursor.obj", "Cursor", "Player");
+    object_->AddModel("player.obj", "Player");
+    object_->AddModel("playerCursor.obj", "Cursor");
     auto cursorInstance = object_->FindInstance("Cursor");
     cursorInstance->transform.scale = { 0.5f, 0.5f, 0.5f };
-    cursorInstance->transform.translate = { 0.0f, 0.0f, 0.0f };
+    cursorInstance->transform.translate = { 0.0f, 0.0f, 2.0f };
 
 
     railMover_ = std::make_unique<RailMover>();
@@ -65,6 +67,11 @@ void Player::Draw()
     ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
     Vector3 pos = object_->GetTranslate();
     ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
+    Vector3 rot = object_->GetRotate();
+    ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", rot.x, rot.y, rot.z);
+    Vector3 scale = object_->GetScale();
+    ImGui::Text("Scale: (%.2f, %.2f, %.2f)", scale.x, scale.y, scale.z);
 
     ImGui::Separator(); // 区切り線
     ImGui::Text("--- Player States ---");
@@ -101,6 +108,10 @@ void Player::Draw()
 
     ImGui::End();
 #endif // USE_IMGUI
+
+    // --- 当たり判定 ---
+    Sphere collisionSphere = { object_->GetTranslate(), Radius ,EulerToQuaternion(object_->GetRotate())};
+    PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, isHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f });
 }
 void Player::SetRailPosition(const Vector2& position)
 {
@@ -158,39 +169,39 @@ const RailPath* Player::GetRailPath() const
 }
 void Player::UpdateRailPath()
 {
-    // 1. RailMoverから現在のレール上の座標と進行方向を取得
+    // 1. RailMoverから情報を取得
     Vector3 railPos = railMover_->GetCurrentPosition();
-    Vector3 railDir = railMover_->GetCurrentDirection(); // レールの接線ベクトル
+    Vector3 railDir = railMover_->GetCurrentDirection();
 
-    // 2. 座標の更新
+
+    // 2. 座標更新
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
     object_->SetTranslate(finalPos);
 
-    // 3. 移動方向（前進/後退）を考慮した向きの計算
+    // 3. 回転の計算（メンバ変数の playerAngle_ を使わずローカルで算出）
+    float currentFrameAngle = 0.0f; 
     if (Length(railDir) > 0.001f) {
-        // 基本となるレールの向きを計算
-        playerAngle_ = atan2f(railDir.x, railDir.z);
+        // atan2f(x, z) でラジアン角を取得
+        currentFrameAngle = atan2f(railDir.x, railDir.z);
 
-        // --- 追加：後ろに動いている場合は180度(M_PI)回転させる ---
-        // GetMoveDirection() が Backward (-1) の場合、逆を向かせる
+        // 進行方向が逆（Backward）なら180度反転
         if (railMover_->GetMoveDirection() == RailMover::MoveDirection::Backward) {
-            playerAngle_ += 3.14159265f; // 180度加算
+            currentFrameAngle += std::numbers::pi_v<float>;
         }
     }
 
-    // モデルの回転を更新
-    object_->SetRotate({ 0.0f, playerAngle_, 0.0f });
+    // ★重要：SetRotateが「加算」ではなく「上書き」であることを確認してください
+    // もしObject3dが内部で角度を蓄積しているなら、ここを 0 にリセットする処理が必要です
+    object_->SetRotate({ 0.0f, currentFrameAngle, 0.0f });
 
-    // 4. Cursorの位置を更新（プレイヤーの向き playerAngle_ に従う）
+    // 4. Cursorの座標更新
     auto cursorInstance = object_->FindInstance("Cursor");
     if (cursorInstance) {
-        float forwardOffset = 2.0f; 
-        float heightOffset = 1.0f;  
-
-        // 常に「モデルが向いている正面」にカーソルが出る
-        cursorInstance->transform.translate.x = sinf(playerAngle_) * forwardOffset;
-        cursorInstance->transform.translate.z = cosf(playerAngle_) * forwardOffset;
-        cursorInstance->transform.translate.y = heightOffset;
+        cursorInstance->transform.translate = { 0.0f, 0.0f, 2.0f };
+        // カーソルも「累積」を防ぐため、常に計算した角度の正面に配置
+   /*     cursorInstance->transform.translate.x = sinf(currentFrameAngle) * forwardOffset;
+        cursorInstance->transform.translate.z = cosf(currentFrameAngle) * forwardOffset;
+        cursorInstance->transform.translate.y = heightOffset;*/
     }
 
     object_->Update();

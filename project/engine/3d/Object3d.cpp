@@ -284,8 +284,7 @@ void Object3d::UpdateModelInstances()
             if (instance->parent) {
                 instance->worldMatrix = Multiply(instance->localMatrix, instance->parent->worldMatrix);
             } else {
-                instance->localMatrix = objectBaseMatrix;
-                instance->worldMatrix = objectBaseMatrix;
+                instance->worldMatrix = Multiply(instance->localMatrix, objectBaseMatrix);
             }
 
             // GPU に転送

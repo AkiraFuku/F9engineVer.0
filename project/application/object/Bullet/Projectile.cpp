@@ -5,6 +5,7 @@
 Projectile::Projectile() {
     railMover_ = std::make_unique<RailMover>();
     object_ = std::make_unique<Object3d>();
+   
 }
 
 Projectile::~Projectile() = default;
@@ -18,7 +19,7 @@ void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& pa
     velocityY_ = param.speed * param.direction.y;
     // モデルの初期化（例としてSphereを使用）
     object_->Initialize();
-    object_->AddModel("Sphere", "Bullet", ""); // 必要に応じて専用モデルへ
+    object_->AddModel("sphere", "Bullet", ""); // 必要に応じて専用モデルへ
     object_->SetScale({ 0.5f, 0.5f, 0.5f });
     //モデルの向きを進行方向に合わせるための回転を設定
     Vector3 dir3D = { param.direction.x, 0.0f, param.direction.y };
