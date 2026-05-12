@@ -4,7 +4,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include<string>
-
+#include "Transform.h"
 #include "PSOManager.h"
 class Sprite
 {
@@ -110,11 +110,41 @@ public:
     //テクスチャ変更
     void SetTextureByFilePath(const std::string& textureFilePath);
 
+    UVTransform GetUVTransform() const {
+        return uvTransform_;
+    }
+
+    void SetUVTransform(const UVTransform& uvTransform) {
+        uvTransform_ = uvTransform;
+    }
+
+    void SetUVScale(const Vector2& scale) {
+        uvTransform_.scale = scale;
+    }
+    Vector2 GetUVScale() const {
+        return uvTransform_.scale;
+    }
+    void SetUVRotate(float rotate) {
+        uvTransform_.rotate = rotate;
+    }
+    float GetUVRotate() const {
+        return uvTransform_.rotate;
+    }
+
+    void SetUVOffset(const Vector2& offset) {
+        uvTransform_.offset = offset;
+    }
+    Vector2 GetUVOffset() const {
+        return uvTransform_.offset;
+    }
+
+
 private:
     void AdjustTextureSize();
     BlendMode blendMode_ = BlendMode::Normal;
 private:
     
+    UVTransform uvTransform_ ;
 
     Vector2 position_ = { 0.0f,0.0f };
     float rotation_ = 0.0f;

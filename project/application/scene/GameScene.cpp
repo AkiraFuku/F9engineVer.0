@@ -56,8 +56,8 @@ void GameScene::Initialize() {
         ParticleManager::Particle particle;
         particle.transform.scale = { 1.0f,1.0f,1.0f };
         particle.transform.rotate = { 0.0f,0.0f,0.0f };
-        Vector3 randamTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-        particle.transform.translate = emitterPosition + randamTranslate;
+        Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+        particle.transform.translate = emitterPosition + randomTranslate;
         particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 
         particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine),1.0f };
@@ -69,7 +69,7 @@ void GameScene::Initialize() {
     ParticleManager::ParticleUpdateFunc updateFunc = [](ParticleManager::Particle& particle, float deltaTime) {
         // パーティクルの更新処理
         // 例: 速度に基づいて位置を更新し、寿命を減少させる
-        particle.uvOffset.x+=deltaTime;
+        particle.uvTransform.offset.x += deltaTime;
         particle.transform.translate += particle.velocity * deltaTime;
         };
     ParticleManager::ParticleEmitterFunc initialize = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
@@ -135,9 +135,9 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->SetModel("simpleSkin.gltf");
+    object3d->AddModel("simpleSkin.gltf", "simpleSkin", "");
+    object3d->SetAnimations("simpleSkin", animation.get());
 
-    object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);
 
 
@@ -289,7 +289,7 @@ void GameScene::Update() {
         activeCamera_->SetRotate(cameraTranslate);
     }
 
-    cameraController->Update();
+  //  cameraController->Update();
     debugCameraC->Update();
 
     activeCamera_->Update();
@@ -481,8 +481,8 @@ void GameScene::Draw() {
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
-    //sprite->Draw();
-    //object3d->Draw();
+   // sprite->Draw();
+    object3d->Draw();
 }
 GameScene::GameScene() = default;
 

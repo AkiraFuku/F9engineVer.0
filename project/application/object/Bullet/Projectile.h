@@ -12,6 +12,7 @@ class Camera;
 class Projectile {
 public:
     enum class ProjectileOwner {
+        Unknown,
         Player,
         Enemy
     };
@@ -57,5 +58,5 @@ protected:
     int lifeTimer_ = 180; // 3秒程度(60fps)
 
 private:
-    ProjectileOwner owner_; // 持ち主を保持
+    ProjectileOwner owner_=ProjectileOwner::Unknown; // 持ち主を保持
 };

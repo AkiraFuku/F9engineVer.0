@@ -23,7 +23,7 @@ void Enemy::Initialize()
     ModelManager::GetInstance()->CreateSphereModel("Enemy");
 
     object_->Initialize();
-    object_->SetModel("Enemy");
+    object_->AddModel("Enemy", "Enemy", "");
 
     railMover_ = std::make_unique<RailMover>();
     ChangeBehavior(std::make_unique<EnemyBehaviorPatrol>());

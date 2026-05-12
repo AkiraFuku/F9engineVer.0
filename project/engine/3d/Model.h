@@ -25,14 +25,14 @@ public:
     };
     struct Material {
         Vector4 color;
-        int32_t enableLighting=1;
-        int32_t environment=1;
+        int32_t enableLighting = 1;
+        int32_t environment = 1;
         int32_t diffuseType;  // 0:Lambert, 1:Half-Lambert
         int32_t specularType; // 0:None, 1:Phong, 2:BlinnPhong
         Matrix4x4 uvTransform; // UV変換行列
         float  shininess;
         float  environmentCoefficient;//反射率
-        
+
     };
     struct MaterialData {
         std::string textureFilePath;
@@ -40,8 +40,8 @@ public:
     };
     struct Node
     {
-     QuaternionTransform transform   ;
-        Matrix4x4 localMatrix=Makeidentity4x4();
+        QuaternionTransform transform;
+        Matrix4x4 localMatrix = Makeidentity4x4();
         std::string name;
         std::vector <Node>children;
     };
@@ -89,15 +89,17 @@ public:
     void SetAnimation(Animation* animation) {
         animation_ = animation;
     }
-     void SetAnimationTime(float time){
+    void SetAnimationTime(float time) {
 
-         if(animation_){
+        if (animation_) {
             animation_->SetCurrentTime(time);
-         }
-     
-     }
+        }
 
-    ModelData GetModelData(){return modelData_;}
+    }
+
+    ModelData GetModelData() {
+        return modelData_;
+    }
     //マテリアルの読み込み
     static MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std::string& filename);
     //OBJファイルの読み込み
@@ -113,8 +115,53 @@ public:
 
 
 public: // 外部入出力
+    void SetColor(const Vector4& color) {
+        materialData_->color = color;
+    }
+    Vector4 GetColor() const {
+        return materialData_->color;
+    }
+    void SetEnableLighting(bool enable) {
+        materialData_->enableLighting = enable ? 1 : 0;
+    }
+    bool GetEnableLighting() const {
+        return materialData_->enableLighting != 0;
+    }
+    void SetEnvironment(bool enable) {
+        materialData_->environment = enable ? 1 : 0;
+    }
+    bool GetEnvironment() const {
+        return materialData_->environment != 0;
+    }
+    //UV移動
+    void SetUVTransform(const UVTransform& uvTransform) {
+        uvTransform_ = uvTransform;
+    }
+    UVTransform GetUVTransform() const {
+        return uvTransform_;
+    }
+    void SetUVScale(const Vector2& scale) {
+        uvTransform_.scale = scale;
+    }
+    Vector2 GetUVScale() const {
+        return uvTransform_.scale;
+    }
+    void SetUVRotation(float rotation) {
+        uvTransform_.rotate = rotation;
+    }
+    float GetUVRotation() const {
+        return uvTransform_.rotate;
+    }
+    void SetUVOffset(const Vector2& offset) {
+        uvTransform_.offset = offset;
+    }
+    Vector2 GetUVOffset() const {
+        return uvTransform_.offset;
+    }
 
-    void SetName(const std::string& name) { name_ = name; }
+    void SetName(const std::string& name) {
+        name_ = name;
+    }
 
   
 
@@ -125,7 +172,7 @@ private:
 
     Animation* animation_ = nullptr;
 
-    std::string name_="name";
+    std::string name_ = "name";
 
     //頂点リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
@@ -140,5 +187,7 @@ private:
     void ApplyAnimation( float time);
 
     Skeleton skeleton_ ;
+
+    UVTransform uvTransform_ = {};
 };
 

@@ -66,7 +66,7 @@ public:
     }
 
     virtual void OnCollision(Player* other); // Enemy側
-     void OnCollision(); // Enemy側
+    void OnCollision(); // Enemy側
     void UpdateGravity(); // 重力の更新処理
     // enemy状態取得
     IEnemyState* GetState() {
@@ -88,6 +88,9 @@ public:
     Robot* GetRobot() const {
         return robot_.get();
     }
+    float GetRadius() const {
+        return radius_;
+    }
 
 protected:
     std::unique_ptr<Object3d> object_;
@@ -104,6 +107,7 @@ protected:
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
     const float kGravity = -0.015f;
 
+
     void UpdatePhysics(); // 重力やレール座標の合成処理
 
     bool isHit_ = false;              // クールダウン中かどうかのフラグ
@@ -112,9 +116,12 @@ protected:
     // 基底クラスで保持するように変更
     std::unique_ptr<Robot> robot_ = nullptr;
 
-   // パーティクルエミッタの保持
+    // パーティクルエミッタの保持
     std::unique_ptr<ParticleEmitter> hitParticle_;
 
     // パーティクルを発生させるヘルパー関数
     void PlayHitEffect();
+    //enemyの当たり判定
+
+    float radius_ = 1.0f; // 当たり判定の半径
 };

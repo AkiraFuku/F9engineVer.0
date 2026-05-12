@@ -16,7 +16,11 @@ public:
     static std::unique_ptr<ModelManager> instance;
     friend struct std::default_delete<ModelManager>;
     void CreateSphereModel(const std::string& modelName, uint32_t subdivision = 16);
-
+    /// <summary>
+    /// 板ポリゴンをテクスチャから生成する
+    /// </summary>
+    /// <param name="modelName">モデルの名前</param>
+    /// <param name="textureFilePath">テクスチャファイルのパス</param>
     void CreatePlaneFromTex(const std::string& modelName, const std::string& textureFilePath);
 
 private:

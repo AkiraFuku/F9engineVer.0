@@ -102,6 +102,7 @@ public:
      float GetWorldY() const { return worldY_; }
 private:
 
+    // --- 状態管理 ---
     std::unique_ptr<IPlayerState> baseState_; // 現在の状態
     Scene* scene_;   // 「通常・攻撃・ジャンプ」
     std::unique_ptr<InputHandler> inputHandler_;
@@ -122,10 +123,12 @@ private:
 
     // --- 被弾表示用 ---
 
-    float Radius=1.0f;
+    float Radius = 1.0f;// 当たり判定の半径
     bool isHit_ = false;       // 今当たっているか
     float hitVisualTimer_ = 0.0f;   // 当たった後の表示持続タイマー
     const float kHitVisualDuration = 10.0f; // 何フレーム表示するか
+    // --- その他必要なメンバ変数や関数をここに追加 ---
+    //playerの当たり判定用の変数
 
 };
 

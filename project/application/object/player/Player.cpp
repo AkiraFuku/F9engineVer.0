@@ -9,15 +9,26 @@
 #include "PlayerBehavior.h"
 #include "Enemy.h"
 #include "Scene.h"
+#include "PrimitiveDrawer.h"
+#include <numbers>
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
 {
     inputHandler_ = std::make_unique<InputHandler>();
     object_ = std::make_unique<Object3d>();
-    ModelManager::GetInstance()->CreateSphereModel("Sphere", 16);
+    //ModelManager::GetInstance()->CreateSphereModel("Player", 16);
+    // ModelManager::GetInstance()->CreatePlaneFromTex("PlayerShadow", "resources/gradationLine.png");
+    ModelManager::GetInstance()->LoadModel("resources/player/", "playerCursor.obj");
+    ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
     object_->Initialize();
-    object_->SetModel("Sphere");
+    object_->AddModel("player.obj", "Player");
+    object_->AddModel("playerCursor.obj", "Cursor");
+    auto cursorInstance = object_->FindInstance("Cursor");
+    cursorInstance->transform.scale = { 0.5f, 0.5f, 0.5f };
+    cursorInstance->transform.translate = { 0.0f, 0.0f, 2.0f };
+
+
     railMover_ = std::make_unique<RailMover>();
     // テスト用：初期ステートをStateNormalからStateRideOnTestに変更
     ChangeState(std::make_unique<StateNormal>());
@@ -56,6 +67,11 @@ void Player::Draw()
     ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
     Vector3 pos = object_->GetTranslate();
     ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
+    Vector3 rot = object_->GetRotate();
+    ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", rot.x, rot.y, rot.z);
+    Vector3 scale = object_->GetScale();
+    ImGui::Text("Scale: (%.2f, %.2f, %.2f)", scale.x, scale.y, scale.z);
 
     ImGui::Separator(); // 区切り線
     ImGui::Text("--- Player States ---");
@@ -92,6 +108,10 @@ void Player::Draw()
 
     ImGui::End();
 #endif // USE_IMGUI
+
+    // --- 当たり判定 ---
+    Sphere collisionSphere = { object_->GetTranslate(), Radius ,EulerToQuaternion(object_->GetRotate())};
+    PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, isHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f });
 }
 void Player::SetRailPosition(const Vector2& position)
 {
@@ -107,7 +127,7 @@ void Player::SetRailPosition(const Vector2& position)
 }
 void Player::AddVelocity(Vector3 v)
 {
-    velocity_+=v;
+    velocity_ += v;
 }
 void Player::SetRail(RailPath* rail)
 {
@@ -149,23 +169,40 @@ const RailPath* Player::GetRailPath() const
 }
 void Player::UpdateRailPath()
 {
-
-
-    // 2. レール上の座標を取得 (XZの土台)
+    // 1. RailMoverから情報を取得
     Vector3 railPos = railMover_->GetCurrentPosition();
+    Vector3 railDir = railMover_->GetCurrentDirection();
 
-    // 3. 【重要】レールのXZと、自分のYを合成する
+
+    // 2. 座標更新
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
-
-    // 座標と回転の反映
     object_->SetTranslate(finalPos);
 
-    // 進行方向を向く処理
-    Vector3 dir = railMover_->GetCurrentDirection();
-    float railAngle = atan2f(dir.x, dir.z);
+    // 3. 回転の計算（メンバ変数の playerAngle_ を使わずローカルで算出）
+    float currentFrameAngle = 0.0f; 
+    if (Length(railDir) > 0.001f) {
+        // atan2f(x, z) でラジアン角を取得
+        currentFrameAngle = atan2f(railDir.x, railDir.z);
 
-    // ここでは保持している playerAngle_ を優先して適用
-    object_->SetRotate({ 0.0f, playerAngle_, 0.0f });
+        // 進行方向が逆（Backward）なら180度反転
+        if (railMover_->GetMoveDirection() == RailMover::MoveDirection::Backward) {
+            currentFrameAngle += std::numbers::pi_v<float>;
+        }
+    }
+
+    // ★重要：SetRotateが「加算」ではなく「上書き」であることを確認してください
+    // もしObject3dが内部で角度を蓄積しているなら、ここを 0 にリセットする処理が必要です
+    object_->SetRotate({ 0.0f, currentFrameAngle, 0.0f });
+
+    // 4. Cursorの座標更新
+    auto cursorInstance = object_->FindInstance("Cursor");
+    if (cursorInstance) {
+        cursorInstance->transform.translate = { 0.0f, 0.0f, 2.0f };
+        // カーソルも「累積」を防ぐため、常に計算した角度の正面に配置
+   /*     cursorInstance->transform.translate.x = sinf(currentFrameAngle) * forwardOffset;
+        cursorInstance->transform.translate.z = cosf(currentFrameAngle) * forwardOffset;
+        cursorInstance->transform.translate.y = heightOffset;*/
+    }
 
     object_->Update();
 }
@@ -238,9 +275,9 @@ void Player::OnCollision([[maybe_unused]] Enemy* other) {
 
             if (enemyState && strcmp(enemyState, "Dead") != 0)
             {
-                Vector3 now=velocity_;
-                now.x=0.0f;
-                velocity_=now;
+                Vector3 now = velocity_;
+                now.x = 0.0f;
+                velocity_ = now;
 
                 ChangeBehavior(std::make_unique<BehaviorRoot>()); // 通常切り替える
 
@@ -284,5 +321,5 @@ const char* Player::GetBehaviorName() const {
 
 void Player::SetScene(Scene* scene)
 {
-    scene_=scene;
+    scene_ = scene;
 }

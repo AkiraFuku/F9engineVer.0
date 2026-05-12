@@ -307,9 +307,9 @@ void ParticleManager::Update() {
                    particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;*/
                 particleGroup.instancingData[numInstance].color = (*particleIterator).color;
                 Matrix4x4 uvMatrix = MakeAffineMatrix(
-                    Vector3{ particleIterator->uvScale.x, particleIterator->uvScale.y, 1.0f }, // Scale
-                    Vector3{ 0.0f, 0.0f, particleIterator->uvRotation },         // Rotate
-                    Vector3{ particleIterator->uvOffset.x, particleIterator->uvOffset.y, 0.0f } // Translate
+                    Vector3{ particleIterator->uvTransform.scale.x, particleIterator->uvTransform.scale.y, 1.0f }, // Scale
+                    Vector3{ 0.0f, 0.0f, particleIterator->uvTransform.rotate },         // Rotate
+                    Vector3{ particleIterator->uvTransform.offset.x, particleIterator->uvTransform.offset.y, 0.0f } // Translate
                 );
                 particleGroup.instancingData[numInstance].uvTransform = uvMatrix;
                 ++numInstance;

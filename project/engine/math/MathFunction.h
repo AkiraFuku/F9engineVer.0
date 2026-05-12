@@ -6,6 +6,10 @@
 #include "Quaternion.h"
 #include "Vector3.h"
 #include "Vector2.h"
+//#include "Transform.h"
+struct EulerTransform;
+struct QuaternionTransform;
+struct UVTransform;
 Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 static const int kColumnWidth = 60;
@@ -35,8 +39,11 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 ///ビューポート行列
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 
+Matrix4x4 MakeUVTransformMatrix(const UVTransform& uvTransform);
+Matrix4x4 MakeTranslateMatrix(const Vector2& translate);
+Matrix4x4 MakeScaleMatrix(const Vector2& scale);
+Matrix4x4 MakeUVRotateMatrix(const float& rotate);
 
-//
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& traslate);
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& traslate);
 Matrix4x4 MakeTranslateMatrix(const Vector3& traslate);

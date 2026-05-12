@@ -3,6 +3,9 @@
 #include "Vector3.h"
 #include <cmath>
 #include <assert.h>
+#include "Transform.h"
+
+
 
 //
 // 
@@ -194,6 +197,42 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 
     );
 }
+
+Matrix4x4 MakeUVTransformMatrix(const UVTransform& uvTransform)
+{
+    Matrix4x4 scaleMatrix = MakeScaleMatrix(uvTransform.scale);
+    Matrix4x4 rotateMatrix = MakeUVRotateMatrix(uvTransform.rotate);
+    Matrix4x4 translateMatrix = MakeTranslateMatrix(uvTransform.offset);
+    Matrix4x4 result = Multiply( translateMatrix,Multiply(scaleMatrix, rotateMatrix));
+    return result;
+}
+
+Matrix4x4 MakeTranslateMatrix(const Vector2& translate)
+{
+    Matrix4x4 result = Makeidentity4x4();
+    result.m[3][0] = translate.x;
+    result.m[3][1] = translate.y;
+    return result;
+}
+
+Matrix4x4 MakeScaleMatrix(const Vector2& scale)
+{
+    Matrix4x4 result =Makeidentity4x4();
+    result.m[0][0] = scale.x;
+    result.m[1][1] = scale.y;
+    return result ;
+}
+
+Matrix4x4 MakeUVRotateMatrix(const float& rotate)
+{
+    Matrix4x4 result =Makeidentity4x4();
+    result.m[0][0] = std::cos(rotate);
+    result.m[0][1] = -std::sin(rotate);
+    result.m[1][0] = std::sin(rotate);
+    result.m[1][1] = std::cos(rotate);
+    return result;
+}
+
 
 	Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
 	{
