@@ -105,10 +105,11 @@ private:
         Microsoft::WRL::ComPtr<ID3D12Resource> resource;
         uint32_t srvIndex;
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
+        Vector4 clearColor;
     };
     RenderTexture renderTexture_;
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(DXGI_FORMAT format, const Vector4& ClearColor);
-    D3D12_CLEAR_VALUE renderTextureClearValue_{};
+   // D3D12_CLEAR_VALUE renderTextureClearValue_{};
     //Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_;
     //レンダーテクスチャリソースデスクリプション
     D3D12_RESOURCE_DESC renderTextureResourceDesc_{};

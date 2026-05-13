@@ -84,7 +84,7 @@ void Framework::Initialize()
     // 引数には生のポインタが必要なので .get() を使用
     DXCommon::GetInstance()->Initialize();
     SrvManager::GetInstance()->Initialize();
-   // DXCommon::GetInstance()->CreateRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    DXCommon::GetInstance()->CreateRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     PSOManager::GetInstance()->Initialize();
 
 
@@ -159,7 +159,7 @@ void Framework::PreDraw()
 
 void Framework::Draw()
 {
-   // DXCommon::GetInstance()->SwapChainDraw();
+    DXCommon::GetInstance()->SwapChainDraw();
 #ifdef USE_IMGUI
     ImGuiManager::GetInstance()->End();
 
