@@ -74,14 +74,14 @@ void GameScene::Initialize() {
         };
     ParticleManager::ParticleEmitterFunc initialize = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
 
-        std::uniform_real_distribution<float> rotation(-std::numbers::pi_v<float>,std::numbers::pi_v<float>);
+        std::uniform_real_distribution<float> rotation(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
         ParticleManager::Particle particle;
         particle.transform.scale = { 0.05f,1.0f,1.0f };
-        particle.transform.rotate = {rotation(randomEngine),rotation(randomEngine),rotation(randomEngine) };
-        particle.transform.translate = emitterPosition ;
+        particle.transform.rotate = { rotation(randomEngine),rotation(randomEngine),rotation(randomEngine) };
+        particle.transform.translate = emitterPosition;
         particle.velocity = { 0.0f, 0.0f, 0.0f };
 
-        particle.color = {1.0f,1.0f,1.0f,1.5f };
+        particle.color = { 1.0f,1.0f,1.0f,1.5f };
 
         particle.lifeTime = 1.0f;
         particle.currentTime = 0.0f;
@@ -118,7 +118,7 @@ void GameScene::Initialize() {
 
     animation = std::make_unique<Animation>();
 
-   // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
+    // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->Initialize("resources/simpleSkin", "simpleSkin.gltf");
     animation->SetCurrentTime(0.0f);
 
@@ -245,17 +245,17 @@ void GameScene::Update() {
 
     if (Input::GetInstance()->TriggerKeyDown(DIK_E)) {
 
-     //   emitter_->Emit();
+        //   emitter_->Emit();
 
-        // Aボタンを押したときの処理
-/*
-        if (Audio::GetInstance()->IsPlaying(handle_))
-        {
+           // Aボタンを押したときの処理
+   /*
+           if (Audio::GetInstance()->IsPlaying(handle_))
+           {
 
-            Audio::GetInstance()->StopAudio(handle_);
-        }*/
+               Audio::GetInstance()->StopAudio(handle_);
+           }*/
 
-        //  GetSceneManager()->ChangeScene("GameScene");
+           //  GetSceneManager()->ChangeScene("GameScene");
 
     }
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
@@ -289,7 +289,7 @@ void GameScene::Update() {
         activeCamera_->SetRotate(cameraTranslate);
     }
 
-  //  cameraController->Update();
+    cameraController->Update();
     debugCameraC->Update();
 
     activeCamera_->Update();
