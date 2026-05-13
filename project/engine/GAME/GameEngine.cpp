@@ -32,6 +32,7 @@ void GameEngine::Update() {
 };
 void GameEngine::Draw() {
 
+    Framework::PreDraw();
    
   
     SceneManager::GetInstance()->Draw();

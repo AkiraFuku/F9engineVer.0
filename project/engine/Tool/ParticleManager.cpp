@@ -385,7 +385,7 @@ void ParticleManager::CreateParticleGroup(
 
     newParticle.instancingSrvIndex = SrvManager::GetInstance()->AllocateSRV();
 
-    SrvManager::GetInstance()->CreateSRVforStructuredBuffer(
+    SrvManager::GetInstance()->CreateSRVForStructuredBuffer(
         newParticle.instancingSrvIndex,
         newParticle.instancingResource.Get(),
         newParticle.kNumInstance,

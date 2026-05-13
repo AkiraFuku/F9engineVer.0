@@ -19,14 +19,15 @@ public:
     virtual void Initialize();
     virtual void Finalize();
     virtual void Update();
+    virtual void PreDraw();
     virtual void Draw() = 0;
     bool IsEnd() {
-        return endReqest_;
+        return endRequest_;
     }
     void Run();
 
     void RequestEnd() {
-        endReqest_ = true;
+        endRequest_ = true;
     }
 
     AbstractSceneFactory* GetSceneFactory() {
@@ -34,7 +35,7 @@ public:
     }
 
 private:
-    bool endReqest_ = false;
+    bool endRequest_ = false;
 
     std::unique_ptr<D3DResourceLeakChecker> LeakCheck;  // スタック変数から動的割り当てに変更
     

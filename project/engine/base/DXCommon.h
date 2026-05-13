@@ -11,6 +11,7 @@
 #include"d3dx12.h"
 #include <chrono>
 #include <memory>
+#include "Vector4.h"
 
 class DXCommon
 {
@@ -31,7 +32,7 @@ public:
     void PreDraw();
     //描画終了後処理
     void PostDraw();
-
+    void SwapChainDraw();
 
 
     //getter
@@ -62,10 +63,15 @@ public:
     }
     static const float kDeltaTime;
 
+
+    void CreateRenderTexture(DXGI_FORMAT format, const Vector4& ClearColor);
 private:
     // コンストラクタ・デストラクタをprivateにして外部生成を禁止
     DXCommon() = default;
     ~DXCommon() = default;
+
+    void RenderTextureDraw();
+
 
     static std::unique_ptr<DXCommon> instance;
 
@@ -94,6 +100,21 @@ private:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_;
     //コマンドリスト  
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_;
+    //レンダーテクスチャ
+    struct RenderTexture {
+        Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+        uint32_t srvIndex;
+        D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
+    };
+    RenderTexture renderTexture_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(DXGI_FORMAT format, const Vector4& ClearColor);
+    D3D12_CLEAR_VALUE renderTextureClearValue_{};
+    //Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_;
+    //レンダーテクスチャリソースデスクリプション
+    D3D12_RESOURCE_DESC renderTextureResourceDesc_{};
+    D3D12_HEAP_PROPERTIES renderTextureHeapProperties_{};
+    //レンダーテクスチャのRTV
+    void CreateRenderTextureRTV();
     //スワップチェーン
     void CreateSwapChain();
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;

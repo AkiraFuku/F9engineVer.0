@@ -77,17 +77,17 @@ void Framework::Initialize()
     //ファイルへの書き込み
     std::ofstream logStream(logFilePath);
 
-    
+
     WinApp::GetInstance()->Initialize();
 
-  
+
     // 引数には生のポインタが必要なので .get() を使用
     DXCommon::GetInstance()->Initialize();
- 
     SrvManager::GetInstance()->Initialize();
-PSOManager::GetInstance()->Initialize();
+   // DXCommon::GetInstance()->CreateRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    PSOManager::GetInstance()->Initialize();
 
-  
+
 
     ImGuiManager::GetInstance()->Initialize();
     TextureManager::GetInstance()->Initialize();
@@ -112,16 +112,16 @@ void Framework::Finalize()
     SceneManager::GetInstance()->Finalize();
     DXCommon::GetInstance()->Finalize();
     PSOManager::GetInstance()->Finalize();
-    
+
     // すべてのD3D12リソース破棄後に、DXGIDebugチェックを実行
     LeakCheck.reset();  // この時点で全リソースが破棄済み
-    
+
     Audio::GetInstance()->Finalize();
     Input::GetInstance()->Finalize();
     Object3dCommon::GetInstance()->Finalize();
 
     ImGuiManager::GetInstance()->Finalize();
-   
+
     SpriteCommon::GetInstance()->Finalize();
     TextureManager::GetInstance()->Finalize();
     ModelManager::GetInstance()->Finalize();
@@ -133,7 +133,7 @@ void Framework::Update()
 {
     //メッセージがある限りGetMessageを呼び出す
     if (WinApp::GetInstance()->ProcessMessage()) {
-        endReqest_ = true;
+        endRequest_ = true;
 
 
     }
@@ -141,20 +141,30 @@ void Framework::Update()
     ImGuiManager::GetInstance()->Begin();
 #endif
     Input::GetInstance()->Update();
-    Audio::GetInstance()-> Update();
+    Audio::GetInstance()->Update();
     LightManager::GetInstance()->Update();
+
+
+}
+
+void Framework::PreDraw()
+{
+
+#ifdef USE_IMGUI
+
+#endif
     DXCommon::GetInstance()->PreDraw();
     SrvManager::GetInstance()->PreDraw();
-  
 }
 
 void Framework::Draw()
 {
-    #ifdef USE_IMGUI
-
+   // DXCommon::GetInstance()->SwapChainDraw();
+#ifdef USE_IMGUI
     ImGuiManager::GetInstance()->End();
+
     ImGuiManager::GetInstance()->Draw();
-    #endif
+#endif
 
     DXCommon::GetInstance()->PostDraw();
     TextureManager::GetInstance()->ReleaseIntermediateResources();
