@@ -32,24 +32,7 @@ void Object3d::Update()
 
     }
 
-    ////model_->Update();
-    ////  WVP行列の作成
-    //Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
-    //Matrix4x4 worldViewProjectionMatrix = {};
-    ////ワールド行列とビュー行列とプロジェクション行列を掛け算
-    //if (camera_)
-    //{
-    //    cameraData_->worldPosition = camera_->GetTranslate();
-    //    worldViewProjectionMatrix = Multiply(Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix), camera_->GetViewProtectionMatrix());
-    //    //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
-    //} else {
-    //    worldViewProjectionMatrix = Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix);
-    //}
-    ////行列をGPUに転送
-    //wvpResource_->WVP = worldViewProjectionMatrix;
-    //wvpResource_->World = worldMatrix;
-    //wvpResource_->WorldInverseTranspose = Transpose(Inverse(worldMatrix));
-
+   
     ImguiInstances();
 
     UpdateModelInstances();
@@ -69,14 +52,7 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
-    // カメラがセットされていない場合は描画できないので終了
-
-  /*  if (camera_)
-    {
-
-
-
-    }*/
+ 
 
 
     Object3dCommon::GetInstance()->Object3dCommonDraw();
@@ -86,11 +62,7 @@ void Object3d::Draw()
     commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
     commandList->SetPipelineState(psoSet.pipelineState.Get());
 
-    // PSOをセット
-   // DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
-    //WVP行列リソースの設定
-    //DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());
-   // LightManager::GetInstance()->Draw(3);
+   
     LightManager::GetInstance()->Draw(3);
 
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(7, cameraResource_->GetGPUVirtualAddress());

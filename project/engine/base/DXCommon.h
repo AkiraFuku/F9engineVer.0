@@ -65,6 +65,10 @@ public:
 
 
     void CreateRenderTexture(DXGI_FORMAT format, const Vector4& ClearColor);
+
+    uint32_t GetRenderTextureSrvIndex()const {
+        return renderTexture_.srvIndex;
+    }
 private:
     // コンストラクタ・デストラクタをprivateにして外部生成を禁止
     DXCommon() = default;
@@ -109,9 +113,9 @@ private:
     };
     RenderTexture renderTexture_;
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(DXGI_FORMAT format, const Vector4& ClearColor);
-   // D3D12_CLEAR_VALUE renderTextureClearValue_{};
-    //Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_;
-    //レンダーテクスチャリソースデスクリプション
+    // D3D12_CLEAR_VALUE renderTextureClearValue_{};
+     //Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_;
+     //レンダーテクスチャリソースデスクリプション
     D3D12_RESOURCE_DESC renderTextureResourceDesc_{};
     D3D12_HEAP_PROPERTIES renderTextureHeapProperties_{};
     //レンダーテクスチャのRTV

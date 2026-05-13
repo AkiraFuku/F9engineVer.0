@@ -16,6 +16,7 @@
 #include <iostream> 
 #include "PSOManager.h"
 #include "LightManager.h"
+#include "OffScreen.h"
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
     //ダンプファイルの作成
     SYSTEMTIME time;
@@ -83,11 +84,8 @@ void Framework::Initialize()
 
     // 引数には生のポインタが必要なので .get() を使用
     DXCommon::GetInstance()->Initialize();
-    SrvManager::GetInstance()->Initialize();
-    DXCommon::GetInstance()->CreateRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     PSOManager::GetInstance()->Initialize();
-
-
+    OffScreen::GetInstance()->Initialize();
 
     ImGuiManager::GetInstance()->Initialize();
     TextureManager::GetInstance()->Initialize();
@@ -165,7 +163,7 @@ void Framework::Draw()
 
     ImGuiManager::GetInstance()->Draw();
 #endif
-
+    OffScreen::GetInstance()->Draw();
     DXCommon::GetInstance()->PostDraw();
     TextureManager::GetInstance()->ReleaseIntermediateResources();
 

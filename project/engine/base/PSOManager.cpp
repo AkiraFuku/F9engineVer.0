@@ -14,10 +14,11 @@ using namespace Microsoft::WRL;
 std::unique_ptr<PSOManager> PSOManager::instance_ = nullptr;
 
 PSOManager* PSOManager::GetInstance() {
-      if (instance_ == nullptr) {
+    if (instance_ == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public PSOManager {
-            Helper() : PSOManager() {}
+            Helper() : PSOManager() {
+            }
         };
         instance_ = std::make_unique<Helper>();
     }
@@ -124,10 +125,10 @@ void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fi
     auto rootSignature = rootSigCache_[name];
 
     // 2. InputLayout の取得
-    std::vector<D3D12_INPUT_ELEMENT_DESC> inputElements;
+    /*std::vector<D3D12_INPUT_ELEMENT_DESC> inputElements;
     if (config.inputLayoutGenerator) {
         inputElements = config.inputLayoutGenerator();
-    }
+    }*/
 
     // 3. Shader の取得
     ShaderSet shaders;
@@ -138,9 +139,21 @@ void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fi
     psoDesc.pRootSignature = rootSignature.Get();
 
     // InputLayout
-    psoDesc.InputLayout = { inputElements.data(), static_cast<UINT>(inputElements.size()) };
 
-    // Mapから各シェーダーを割り当て
+
+    InputLayout layoutHold;
+
+    if (config.inputLayoutGenerator) {
+        // 2. 構造体ごと受け取り、この関数が終わるまで保持する
+        layoutHold = config.inputLayoutGenerator();
+
+        // 3. 保持している実体のポインタを改めてセットする
+        psoDesc.InputLayout = layoutHold.inputLayout;
+        psoDesc.InputLayout.pInputElementDescs = layoutHold.inputElement.data();
+    }
+    /*{ inputElements.data(), static_cast<UINT>(inputElements.size()) };*/
+
+   // Mapから各シェーダーを割り当て
     if (shaders.blobs.count(ShaderType::VS)) {
         auto& b = shaders.blobs[ShaderType::VS];
         psoDesc.VS = { b->GetBufferPointer(), b->GetBufferSize() };

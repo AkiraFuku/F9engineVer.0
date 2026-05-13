@@ -19,6 +19,11 @@ struct ShaderSet {
     std::unordered_map<ShaderType, Microsoft::WRL::ComPtr<IDxcBlob>> blobs;
 };
 
+struct InputLayout
+{
+    D3D12_INPUT_LAYOUT_DESC inputLayout{};
+    std::vector<D3D12_INPUT_ELEMENT_DESC>inputElement{};
+};
 struct PsoConfig {
   struct ShaderPath {
         ShaderType type;
@@ -31,7 +36,7 @@ struct PsoConfig {
     using RootSignatureGenerator = std::function<Microsoft::WRL::ComPtr<ID3D12RootSignature>()>;
     RootSignatureGenerator rootSignatureGenerator;   
 
-    using InputLayoutGenerator = std::function<std::vector<D3D12_INPUT_ELEMENT_DESC>()>;
+    using InputLayoutGenerator = std::function<InputLayout()>;
     InputLayoutGenerator inputLayoutGenerator;
 
     D3D12_DEPTH_STENCIL_DESC depth = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -44,6 +49,8 @@ struct PsoConfig {
 enum class Toporogy{ PointList,LineList,TriangleList,};
 enum class BlendMode { None, Normal, Add, Subtract, Multiply, Screen };
 enum class FillMode { kSolid, kWireFrame };
+
+
 
 struct PsoSet {
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

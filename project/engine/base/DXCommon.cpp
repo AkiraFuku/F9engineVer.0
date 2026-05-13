@@ -37,6 +37,8 @@ void DXCommon::Initialize()
     CreateViewport();
     CreateScissorRect();
     CreateDXCompiler();
+    SrvManager::GetInstance()->Initialize();
+    CreateRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
 
 }
 
@@ -54,6 +56,13 @@ void DXCommon::PreDraw()
     barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     //noneにする
     barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+    barrier_.Transition.pResource = renderTexture_.resource.Get();
+    barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    commandList_->ResourceBarrier(1, &barrier_);
+
+
     //バリアを得るリソース。バックアップｂufferのインデックスを取得
     barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
     //遷移前（現在）のリソース状態
@@ -112,6 +121,10 @@ void DXCommon::PostDraw()
 void DXCommon::SwapChainDraw()
 {    //バックバッファのインデックス取得
     UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+    barrier_.Transition.pResource = renderTexture_.resource.Get();
+    barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    commandList_->ResourceBarrier(1, &barrier_);
 
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvHeap_, descriptorSizeDSV_, 0);
     commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], FALSE, &dsvHandle);
@@ -137,6 +150,22 @@ void DXCommon::SwapChainDraw()
 }
 void DXCommon::RenderTextureDraw()
 {
+    UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+    ////リソースバリアで書き込み可能に変更
+    //barrier_ = {};
+    ////Transitionバリアー
+    //barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    ////noneにする
+    //barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    ////バリアを得るリソース。バックアップｂufferのインデックスを取得
+    //barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+    ////遷移前（現在）のリソース状態
+    //barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    ////遷移後のリソース状態
+    //barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    ////transitionバリアーを張る
+    //commandList_->ResourceBarrier(1, &barrier_);
+
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvHeap_, descriptorSizeDSV_, 0);
     commandList_->OMSetRenderTargets(1, &renderTexture_.rtvHandle, FALSE, &dsvHandle);
     //画面クリア
@@ -504,7 +533,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DXCommon::CreateRenderTextureResource(DXG
         &renderTextureHeapProperties_,
         D3D12_HEAP_FLAG_NONE,
         &renderTextureResourceDesc_,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
         &renderTextureClearValue_,
         IID_PPV_ARGS(&renderTextureResource)
     );
@@ -521,7 +550,7 @@ void DXCommon::CreateRenderTextureRTV()
     device_->CreateRenderTargetView(
         renderTexture_.resource.Get(),
         &rtvDesc_,
-       renderTexture_.rtvHandle
+        renderTexture_.rtvHandle
     );
 }
 

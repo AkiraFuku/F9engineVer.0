@@ -73,10 +73,14 @@ void SkyBox::Initialize()
         };
 
     PSO.inputLayoutGenerator = []() {
-        return std::vector<D3D12_INPUT_ELEMENT_DESC>{
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        InputLayout inputLayout = {};
+        inputLayout.inputElement = {
+           { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+           { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         };
+        inputLayout.inputLayout.pInputElementDescs = inputLayout.inputElement.data();
+        inputLayout.inputLayout.NumElements = static_cast<UINT>(inputLayout.inputElement.size());
+        return inputLayout;
 
         };
     PSO.cullMode = D3D12_CULL_MODE_NONE;

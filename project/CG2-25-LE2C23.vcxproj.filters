@@ -348,6 +348,9 @@
     <ClCompile Include="engine\math\Quaternion.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="OffScreen.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -557,6 +560,9 @@
     <ClInclude Include="engine\math\Quaternion.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="OffScreen.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
@@ -577,6 +583,7 @@
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
     <None Include="StateRideOnTest_Usage.md" />
+    <None Include="resources\shaders\CopyImage\CopyImage.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -609,5 +616,7 @@
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl">
       <Filter>シェーダー ファイル\Particle</Filter>
     </FxCompile>
+    <FxCompile Include="resources\shaders\CopyImage\CopyImage.VS.hlsl" />
+    <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl" />
   </ItemGroup>
 </Project>

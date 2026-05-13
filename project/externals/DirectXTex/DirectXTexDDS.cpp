@@ -1230,7 +1230,7 @@ namespace
     //-------------------------------------------------------------------------------------
     // Converts or copies image data from pPixels into scratch image data
     //-------------------------------------------------------------------------------------
-    HRESULT CopyImage(
+    HRESULT OffScreen(
         _In_reads_bytes_(size) const void* pPixels,
         _In_ size_t size,
         _In_ const TexMetadata& metadata,
@@ -1713,7 +1713,7 @@ HRESULT DirectX::LoadFromDDSMemory(
 
     const void* pPixels = static_cast<const uint8_t*>(pSource) + offset;
     assert(pPixels);
-    hr = CopyImage(pPixels,
+    hr = OffScreen(pPixels,
         size - offset,
         mdata,
         cflags,
@@ -1917,7 +1917,7 @@ HRESULT DirectX::LoadFromDDSFile(
             cflags |= CP_FLAGS_BAD_DXTN_TAILS;
         }
 
-        hr = CopyImage(temp.get(),
+        hr = OffScreen(temp.get(),
             remaining,
             mdata,
             cflags,
