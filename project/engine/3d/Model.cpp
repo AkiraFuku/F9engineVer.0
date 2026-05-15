@@ -250,7 +250,7 @@ void Model::UpdateSkinCluster()
 
         assert(jointIndex < skinCluster_.inverseBindMatrices.size());
         skinCluster_.mappedPalette[jointIndex].skeletonSpaceMatrix =
-            skeleton_.joints[jointIndex].skeletonSpaceMatrix * skinCluster_.inverseBindMatrices[jointIndex];
+            skinCluster_.inverseBindMatrices[jointIndex] * skeleton_.joints[jointIndex].skeletonSpaceMatrix;
         skinCluster_.mappedPalette[jointIndex].skeletonInverseTransposeMatrix = Transpose(Inverse(skinCluster_.mappedPalette[jointIndex].skeletonSpaceMatrix));
 
     }
@@ -338,7 +338,6 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
                 Quaternion{ rotate.x,rotate.y,rotate.z,rotate.w },
                 Vector3{ translate.x,translate.y,-translate.z }
             );
-           // jointWeightData.inverseBindMatrix = (bindPoseMatrix);
             jointWeightData.inverseBindMatrix = Inverse(bindPoseMatrix);
 
             for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
