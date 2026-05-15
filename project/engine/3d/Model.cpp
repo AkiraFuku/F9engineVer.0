@@ -104,7 +104,7 @@ void Model::Draw() {
           skinCluster_.influenceBufferView
         };
         DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
-       
+
         SrvManager::GetInstance()->SetGraphicsRootDescriptorTable(9, skinCluster_.paletteSrvIndex);
 
     } else
@@ -234,11 +234,11 @@ void Model::UpdateSkeleton()
         joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
         if (joint.parentIndex)
         {
-            joint.skeletonMatrix = Multiply(joint.localMatrix, skeleton_.joints[*joint.parentIndex].skeletonMatrix);
+            joint.skeletonSpaceMatrix = Multiply(joint.localMatrix, skeleton_.joints[*joint.parentIndex].skeletonSpaceMatrix);
 
         } else
         {
-            joint.skeletonMatrix = joint.localMatrix;
+            joint.skeletonSpaceMatrix = joint.localMatrix;
         }
 
     }
@@ -249,9 +249,9 @@ void Model::UpdateSkinCluster()
     {
 
         assert(jointIndex < skinCluster_.inverseBindMatrices.size());
-        skinCluster_.mappedPalette[jointIndex].skeletonMatrix =
-            skinCluster_.inverseBindMatrices[jointIndex] * skeleton_.joints[jointIndex].skeletonMatrix;
-        skinCluster_.mappedPalette[jointIndex].skeletonInverseTransposeMatrix = Transpose(Inverse(skinCluster_.mappedPalette[jointIndex].skeletonMatrix));
+        skinCluster_.mappedPalette[jointIndex].skeletonSpaceMatrix =
+            skeleton_.joints[jointIndex].skeletonSpaceMatrix * skinCluster_.inverseBindMatrices[jointIndex];
+        skinCluster_.mappedPalette[jointIndex].skeletonInverseTransposeMatrix = Transpose(Inverse(skinCluster_.mappedPalette[jointIndex].skeletonSpaceMatrix));
 
     }
 }
@@ -327,7 +327,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
         {
             aiBone* bone = mesh->mBones[boneIndex];
             std::string boneName = bone->mName.C_Str();
-            JointWeightData jointWeightData = modelData.skinClusterData[boneName];
+            JointWeightData& jointWeightData = modelData.skinClusterData[boneName];
 
             aiMatrix4x4 bindPoseMatrixAssimp = bone->mOffsetMatrix.Inverse();
             aiVector3D translate, scale;
@@ -338,6 +338,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
                 Quaternion{ rotate.x,rotate.y,rotate.z,rotate.w },
                 Vector3{ translate.x,translate.y,-translate.z }
             );
+           // jointWeightData.inverseBindMatrix = (bindPoseMatrix);
             jointWeightData.inverseBindMatrix = Inverse(bindPoseMatrix);
 
             for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
@@ -552,7 +553,7 @@ int32_t Model::CreateJoint(const Node& node, std::optional<int32_t> parent, std:
     Joint joint;
     joint.name = node.name;
     joint.localMatrix = node.localMatrix;
-    joint.skeletonMatrix = Makeidentity4x4();
+    joint.skeletonSpaceMatrix = Makeidentity4x4();
     joint.transform = node.transform;
     joint.index = static_cast<int32_t>(joints.size());
     joint.parentIndex = parent;
@@ -641,12 +642,12 @@ void Model::DebugDrawSkeleton()
 {
     for (const Joint& joint : skeleton_.joints) {
         // 現在のジョイントのワールド座標
-        Vector3 start = { joint.skeletonMatrix.m[3][0], joint.skeletonMatrix.m[3][1], joint.skeletonMatrix.m[3][2] };
+        Vector3 start = { joint.skeletonSpaceMatrix.m[3][0], joint.skeletonSpaceMatrix.m[3][1], joint.skeletonSpaceMatrix.m[3][2] };
 
         for (int32_t childIndex : joint.children) {
             const Joint& childJoint = skeleton_.joints[childIndex];
             // 子ジョイントのワールド座標
-            Vector3 end = { childJoint.skeletonMatrix.m[3][0], childJoint.skeletonMatrix.m[3][1], childJoint.skeletonMatrix.m[3][2] };
+            Vector3 end = { childJoint.skeletonSpaceMatrix.m[3][0], childJoint.skeletonSpaceMatrix.m[3][1], childJoint.skeletonSpaceMatrix.m[3][2] };
 
             PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 1.0f, 1.0f, 1.0f });
         }
