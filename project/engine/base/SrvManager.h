@@ -14,6 +14,8 @@ public:
     // シングルトンインスタンス取得
     static SrvManager* GetInstance();
     friend struct std::default_delete<SrvManager>;
+
+    //
     uint32_t AllocateSRV();
      
     /// <summary>
@@ -35,6 +37,8 @@ public:
 
 
     void CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
+
+    void CreateSRVForMatrixPalette(ID3D12Resource* pResource, UINT numElements, UINT structureByteStride,D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor);
 
     void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
     void PreDraw();

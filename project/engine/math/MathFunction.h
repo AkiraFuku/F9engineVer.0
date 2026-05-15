@@ -21,6 +21,9 @@ Vector3 operator*(float scalar, const Vector3& v);
 Vector3 operator*(const Vector3& v, float scalar);
 Vector3 operator/(const Vector3& v, float scalar);
 Vector3 operator/=(Vector3& v, float scalar);
+
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4&m2);
+
 Matrix4x4 MakeBillboardMatrix(const Vector3& scale, const Vector3& rotate, Matrix4x4& billboardMatrix, const Vector3& translate);Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& traslate);
 
 template <typename T>

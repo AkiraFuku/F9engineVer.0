@@ -503,5 +503,6 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.PS.hlsl" />
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl" />
+    <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl" />
   </ItemGroup>
 </Project>

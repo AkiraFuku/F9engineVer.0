@@ -16,7 +16,7 @@
 #include <optional>
 #include <utility>
 #include <span>
-
+#include<array>
 class Model
 {
 public:
@@ -87,7 +87,7 @@ public:
     struct  VertexInfluence
     {
         std::array<float, kNumMaxInfluences > weights; // 頂点に影響を与えるジョイントの重み
-        std::array<uint32_t, kNumMaxInfluences > jointIndices; // 頂点に影響を与えるジョイントのインデックス
+        std::array<int32_t, kNumMaxInfluences > jointIndices; // 頂点に影響を与えるジョイントのインデックス
 
     };
     struct WellForGPU
@@ -106,7 +106,8 @@ public:
         //
         Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
         std::span<WellForGPU> mappedPalette;
-        std::pair<D3D12_CPU_DESCRIPTOR_HANDLE,D3D12_GPU_DESCRIPTOR_HANDLE>paletteSrvHandle;
+        std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE>paletteSrvHandle;
+            uint32_t paletteSrvIndex;
 
     };
 
@@ -153,8 +154,11 @@ public:
     static Node ReadNode(aiNode* node);
     static Skeleton CreateSkelton(const Node& rootNode);
     static int32_t CreateJoint(const Node& node, std::optional<int32_t> parent, std::vector<Joint>& joints);
-
-
+    static SkinCluster CreateSkinCluster(const Skeleton& skeleton, const ModelData& modelData);
+public:
+    bool HasSkinning() const {
+        return !modelData_.skinClusterData.empty() ;
+    }
 public: // 外部入出力
 
     void SetName(const std::string& name) {
@@ -165,7 +169,7 @@ public: // 外部入出力
 
 private:
 
-    const uint32_t kNumMaxInfluences = 4; // 頂点あたりの最大影響数
+    //static const uint32_t kNumMaxInfluences = 4; // 頂点あたりの最大影響数
 
     void DebugDrawSkeleton();
 
@@ -196,6 +200,10 @@ private:
 
     void UpdateSkeleton();
 
+    SkinCluster skinCluster_;
+
+    void UpdateSkinCluster();
+    bool hasSkinning_ = false; // 初期値は false
 
 };
 
