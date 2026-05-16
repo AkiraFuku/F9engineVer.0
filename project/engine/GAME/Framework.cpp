@@ -158,12 +158,13 @@ void Framework::PreDraw()
 void Framework::Draw()
 {
     DXCommon::GetInstance()->SwapChainDraw();
+    OffScreen::GetInstance()->Draw();
+
 #ifdef USE_IMGUI
     ImGuiManager::GetInstance()->End();
 
     ImGuiManager::GetInstance()->Draw();
 #endif
-    OffScreen::GetInstance()->Draw();
     DXCommon::GetInstance()->PostDraw();
     TextureManager::GetInstance()->ReleaseIntermediateResources();
 
