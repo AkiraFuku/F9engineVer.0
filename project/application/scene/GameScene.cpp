@@ -56,8 +56,8 @@ void GameScene::Initialize() {
         ParticleManager::Particle particle;
         particle.transform.scale = { 1.0f,1.0f,1.0f };
         particle.transform.rotate = { 0.0f,0.0f,0.0f };
-        Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-        particle.transform.translate = emitterPosition + randomTranslate;
+        Vector3 randamTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+        particle.transform.translate = emitterPosition + randamTranslate;
         particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 
         particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine),1.0f };
@@ -129,15 +129,14 @@ void GameScene::Initialize() {
 
     Object3dCommon::GetInstance()->SetDefaultSkyBox(skyBox.get());
 
+    ModelManager::GetInstance()->LoadModel("resources/player/", "playerCursor.obj");
 
     ModelManager::GetInstance()->LoadModel("resources/AnimatedCube", "AnimatedCube.gltf");
     ModelManager::GetInstance()->LoadModel("resources/simpleSkin", "simpleSkin.gltf");
     ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
-    object3d->AddModel("simpleSkin.gltf", "simpleSkin", "");
-    object3d->SetAnimations("simpleSkin", animation.get());
-
+    object3d->SetModel("sphere");
     object3d->SetCamera(activeCamera_);
 
 
@@ -454,7 +453,7 @@ void GameScene::Update() {
 void GameScene::Draw() {
 
     skyBox->Draw();
-  
+
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();

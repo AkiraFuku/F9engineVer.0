@@ -19,16 +19,9 @@ void Player::Initialize()
     object_ = std::make_unique<Object3d>();
     //ModelManager::GetInstance()->CreateSphereModel("Player", 16);
     // ModelManager::GetInstance()->CreatePlaneFromTex("PlayerShadow", "resources/gradationLine.png");
-    ModelManager::GetInstance()->LoadModel("resources/player/", "playerCursor.obj");
     ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
     object_->Initialize();
-    object_->AddModel("player.obj", "Player");
-    object_->AddModel("playerCursor.obj", "Cursor");
-    auto cursorInstance = object_->FindInstance("Cursor");
-    cursorInstance->transform.scale = { 0.5f, 0.5f, 0.5f };
-    cursorInstance->transform.translate = { 0.0f, 0.0f, 2.0f };
-
-
+    object_->SetModel("player.obj");
     railMover_ = std::make_unique<RailMover>();
     // テスト用：初期ステートをStateNormalからStateRideOnTestに変更
     ChangeState(std::make_unique<StateNormal>());
@@ -195,14 +188,12 @@ void Player::UpdateRailPath()
     object_->SetRotate({ 0.0f, currentFrameAngle, 0.0f });
 
     // 4. Cursorの座標更新
-    auto cursorInstance = object_->FindInstance("Cursor");
-    if (cursorInstance) {
-        cursorInstance->transform.translate = { 0.0f, 0.0f, 2.0f };
+  
         // カーソルも「累積」を防ぐため、常に計算した角度の正面に配置
    /*     cursorInstance->transform.translate.x = sinf(currentFrameAngle) * forwardOffset;
         cursorInstance->transform.translate.z = cosf(currentFrameAngle) * forwardOffset;
         cursorInstance->transform.translate.y = heightOffset;*/
-    }
+   
 
     object_->Update();
 }

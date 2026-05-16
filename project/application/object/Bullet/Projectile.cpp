@@ -17,9 +17,11 @@ void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& pa
     // 2. 高度方向の速度（Y方向の入力に基づき設定）
     // param.direction.y は入力の上下 (-1.0 ~ 1.0)
     velocityY_ = param.speed * param.direction.y;
+
+
     // モデルの初期化（例としてSphereを使用）
     object_->Initialize();
-    object_->AddModel("sphere", "Bullet", ""); // 必要に応じて専用モデルへ
+    object_->SetModel("playerCursor.obj"); // 必要に応じて専用モデルへ
     object_->SetScale({ 0.5f, 0.5f, 0.5f });
     //モデルの向きを進行方向に合わせるための回転を設定
     Vector3 dir3D = { param.direction.x, 0.0f, param.direction.y };
