@@ -48,6 +48,7 @@ public:
 
     struct ModelData {
         std::vector<VertexData> vertices; // 頂点データの配列
+        std::vector<uint32_t> indices; // インデックスデータの配列
         MaterialData material; // マテリアルデータ
         Node rootNode;
     };
@@ -179,6 +180,11 @@ private:
     VertexData* vertexData_ = nullptr;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
     void CreateVertexBuffer();
+    //インデックスリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+    uint32_t* indexData_ = nullptr;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView_; 
+    void CreateIndexBuffer();
     //マテリアルリソース
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
     Material* materialData_ = nullptr;
