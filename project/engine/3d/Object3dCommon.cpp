@@ -142,7 +142,7 @@ void Object3dCommon::Initialize()
             { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         };
 
-        
+
         inputLayout.inputLayout.pInputElementDescs = inputLayout.inputElement.data();
         inputLayout.inputLayout.NumElements = static_cast<UINT>(inputLayout.inputElement.size());
         return inputLayout;
@@ -153,6 +153,152 @@ void Object3dCommon::Initialize()
 
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Object3d", config);
+
+    //スキニング
+    vsPath = { ShaderType::VS, L"resources/shaders/Object3d/SkinningObj3D.vs.hlsl", "main", L"vs_6_0" };
+
+
+    config.shaderPaths.clear();
+    config.shaderPaths.push_back(vsPath);
+    config.shaderPaths.push_back(psPath);
+
+    config.rootSignatureGenerator = []() {
+        std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+        std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
+        D3D12_STATIC_SAMPLER_DESC sampler{};
+        sampler = PSOManager::GetInstance()->StaticSamplers();
+
+        staticSamplers.push_back(sampler);
+        D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
+        descRangeTexture[0].BaseShaderRegister = 0; // t0
+        descRangeTexture[0].NumDescriptors = 1;
+        descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+        D3D12_DESCRIPTOR_RANGE descRangeEnv[1]{};
+        descRangeEnv[0].BaseShaderRegister = 4;
+        descRangeEnv[0].NumDescriptors = 1;
+        descRangeEnv[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeEnv[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+        D3D12_DESCRIPTOR_RANGE descRangeMatrixPalette[1]{};
+        descRangeMatrixPalette[0].BaseShaderRegister = 0; // t0
+        descRangeMatrixPalette[0].NumDescriptors = 1;
+        descRangeMatrixPalette[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeMatrixPalette[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+
+        rootParameters.resize(10);
+
+
+
+        // Enum定義 (可読性のため)
+        enum {
+            kMaterial, kTransform, kTexture, DirLight, PointLight, SpotLight, Count, kCamera, kEnvironment, kMatrixPalette
+        };
+
+        // 0. Material (CBV b0, Pixel)
+        rootParameters[kMaterial].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameters[kMaterial].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[kMaterial].Descriptor.ShaderRegister = 0;
+
+        // 1. Transform (CBV b0, Vertex)
+        rootParameters[kTransform].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameters[kTransform].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+        rootParameters[kTransform].Descriptor.ShaderRegister = 0;
+
+        // 2. Texture (Table t0, Pixel)
+        rootParameters[kTexture].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[kTexture].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[kTexture].DescriptorTable.pDescriptorRanges = descRangeTexture;
+        rootParameters[kTexture].DescriptorTable.NumDescriptorRanges = 1;
+
+        // ★変更: 3. DirectionalLight (SRV t1)
+        rootParameters[DirLight].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+        rootParameters[DirLight].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[DirLight].Descriptor.ShaderRegister = 1; // t1
+
+        // ★追加: 4. PointLight (SRV t2)
+        rootParameters[PointLight].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+        rootParameters[PointLight].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[PointLight].Descriptor.ShaderRegister = 2; // t2
+
+        // ★追加: 5. SpotLight (SRV t3)
+        rootParameters[SpotLight].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+        rootParameters[SpotLight].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[SpotLight].Descriptor.ShaderRegister = 3; // t3
+
+        // ★追加: 6. LightCounts (CBV b3)
+        rootParameters[Count].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rootParameters[Count].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[Count].Descriptor.ShaderRegister = 3; // b3 (b0,b1,b2は使用済みと仮定、あるいは空いている番号)
+        //7カメラ
+        rootParameters[kCamera].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // 定数バッファビュー
+        rootParameters[kCamera].Descriptor.ShaderRegister = 2; // レジスタ番号 2 (b2)
+        rootParameters[kCamera].Descriptor.RegisterSpace = 0;
+        rootParameters[kCamera].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダーのみ見える
+
+        // 8. kEnvironmentTexture (Table t0, Pixel)
+        rootParameters[kEnvironment].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[kEnvironment].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[kEnvironment].DescriptorTable.pDescriptorRanges = descRangeEnv;
+        rootParameters[kEnvironment].DescriptorTable.NumDescriptorRanges = 1;
+        /// 9.  MatrixPalette
+
+        rootParameters[kMatrixPalette].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[kMatrixPalette].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+        rootParameters[kMatrixPalette].DescriptorTable.pDescriptorRanges = descRangeMatrixPalette;
+        rootParameters[kMatrixPalette].DescriptorTable.NumDescriptorRanges = 1;
+        // シリアライズ
+        D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+        descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+        descriptionRootSignature.pParameters = rootParameters.data();
+        descriptionRootSignature.NumParameters = (UINT)rootParameters.size();
+        descriptionRootSignature.pStaticSamplers = staticSamplers.data();
+        descriptionRootSignature.NumStaticSamplers = (UINT)staticSamplers.size();
+
+
+        Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+
+        HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+        if (FAILED(hr)) {
+            Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+            assert(false);
+        }
+
+        Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+        hr = DXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+        assert(SUCCEEDED(hr));
+
+
+
+        return rootSignature;
+        };
+    config.inputLayoutGenerator = []() {
+        InputLayout inputLayout = {};
+
+        inputLayout.inputElement = {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            //スキニングようの追加設定
+        { "WEIGHT",0,DXGI_FORMAT_R32G32B32A32_FLOAT,1,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "INDEX",0,DXGI_FORMAT_R32G32B32A32_SINT,1,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+
+
+        };
+        inputLayout.inputLayout.pInputElementDescs = inputLayout.inputElement.data();
+        inputLayout.inputLayout.NumElements = static_cast<UINT>(inputLayout.inputElement.size());
+        return inputLayout;
+        };
+    // 深度設定
+    config.depthEnable = true;
+    config.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+
+    // PSOManagerに名前を付けて登録
+    PSOManager::GetInstance()->RegisterPsoGenerator("SkiningObj3d", config);
     auto psoSet = PSOManager::GetInstance()->GetPso("Object3d");
     rootSignature_ = psoSet.rootSignature;
     graphicsPipelineState_ = psoSet.pipelineState;

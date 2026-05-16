@@ -24,5 +24,6 @@ winmm
 Slerp
 aabb
 gltf
+vbvs
 hlsl
 euler
