@@ -39,7 +39,7 @@ void OffScreen::Initialize()
         descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        CD3DX12_ROOT_PARAMETER rootParameters[1]{};
         rootParameters[0].InitAsDescriptorTable(1, &descRangeTexture[0]);
 
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc{};

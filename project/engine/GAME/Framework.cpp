@@ -147,10 +147,6 @@ void Framework::Update()
 
 void Framework::PreDraw()
 {
-
-#ifdef USE_IMGUI
-
-#endif
     DXCommon::GetInstance()->PreDraw();
     SrvManager::GetInstance()->PreDraw();
 }
@@ -178,6 +174,7 @@ void Framework::Run()
         if (IsEnd()) {
             break;
         }
+        PreDraw();
         Draw();
     }
     Finalize();

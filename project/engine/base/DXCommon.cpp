@@ -63,7 +63,7 @@ void DXCommon::PreDraw()
     commandList_->ResourceBarrier(1, &barrier_);
 
 
-    //バリアを得るリソース。バックアップｂufferのインデックスを取得
+    //バリアを得るリソース。バックアップbufferのインデックスを取得
     barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
     //遷移前（現在）のリソース状態
     barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
@@ -71,8 +71,6 @@ void DXCommon::PreDraw()
     barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
     //transitionバリアーを張る
     commandList_->ResourceBarrier(1, &barrier_);
-
-    //SwapChainDraw();
     RenderTextureDraw();
 }
 
@@ -151,20 +149,7 @@ void DXCommon::SwapChainDraw()
 void DXCommon::RenderTextureDraw()
 {
     UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
-    ////リソースバリアで書き込み可能に変更
-    //barrier_ = {};
-    ////Transitionバリアー
-    //barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    ////noneにする
-    //barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    ////バリアを得るリソース。バックアップｂufferのインデックスを取得
-    //barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
-    ////遷移前（現在）のリソース状態
-    //barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    ////遷移後のリソース状態
-    //barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-    ////transitionバリアーを張る
-    //commandList_->ResourceBarrier(1, &barrier_);
+    
 
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvHeap_, descriptorSizeDSV_, 0);
     commandList_->OMSetRenderTargets(1, &renderTexture_.rtvHandle, FALSE, &dsvHandle);

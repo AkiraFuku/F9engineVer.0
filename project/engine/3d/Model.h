@@ -213,7 +213,6 @@ public: // 外部入出力
 
 private:
 
-    //static const uint32_t kNumMaxInfluences = 4; // 頂点あたりの最大影響数
 
     void DebugDrawSkeleton();
 

@@ -25,6 +25,9 @@ struct InputLayout
     std::vector<D3D12_INPUT_ELEMENT_DESC>inputElement{};
 };
 struct PsoConfig {
+  /// <summary>
+  /// 
+  /// </summary>
   struct ShaderPath {
         ShaderType type;
         std::wstring path;

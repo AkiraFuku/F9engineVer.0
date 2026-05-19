@@ -15,6 +15,7 @@ public:
     void Finalize()override;
 
     void Update()override;
+    void PreDraw()override;
 
     void Draw()override;
 

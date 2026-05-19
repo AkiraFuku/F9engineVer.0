@@ -263,9 +263,9 @@ void GameScene::Update() {
     }
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
     {
-        Vector3 camreaTranslate = activeCamera_->GetRotate();
-        camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
-        activeCamera_->SetRotate(camreaTranslate);
+        Vector3 cameraTranslate = activeCamera_->GetRotate();
+        cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
+        activeCamera_->SetRotate(cameraTranslate);
 
     }
 
@@ -273,9 +273,9 @@ void GameScene::Update() {
 
     if (Input::GetInstance()->GetMouseMove().z)
     {
-        Vector3 camreaTranslate = cameraMap_["Main"]->GetTranslate();
-        camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-        cameraMap_["Main"]->SetTranslate(camreaTranslate);
+        Vector3 cameraTranslate = cameraMap_["Main"]->GetTranslate();
+        cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
+        cameraMap_["Main"]->SetTranslate(cameraTranslate);
 
     }
     if (Input::GetInstance()->GetJoyStick(0, state))
@@ -292,7 +292,7 @@ void GameScene::Update() {
         activeCamera_->SetRotate(cameraTranslate);
     }
 
-    //cameraController->Update();
+    cameraController->Update();
     debugCameraC->Update();
 
     activeCamera_->Update();

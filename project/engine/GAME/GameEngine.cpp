@@ -29,12 +29,14 @@ void GameEngine::Update() {
    
 
  
-};
-void GameEngine::Draw() {
-
+}
+void GameEngine::PreDraw()
+{
     Framework::PreDraw();
+}
+;
+void GameEngine::Draw() {
    
-  
     SceneManager::GetInstance()->Draw();
 
     Framework::Draw();
