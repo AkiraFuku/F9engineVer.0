@@ -292,7 +292,7 @@ void GameScene::Update() {
         activeCamera_->SetRotate(cameraTranslate);
     }
 
-    cameraController->Update();
+    //cameraController->Update();
     debugCameraC->Update();
 
     activeCamera_->Update();

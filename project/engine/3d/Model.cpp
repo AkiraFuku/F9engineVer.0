@@ -323,8 +323,8 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
             aiVector3D& normal = mesh->mNormals[i];
             aiVector3D& texcord = mesh->mTextureCoords[0][i];
             VertexData& vertex = modelData.vertices[i];
-            vertex.position = { position.x,position.y,-position.z,1.0f };
-            vertex.normal = { normal.x,normal.y,-normal.z };
+            vertex.position = { position.x,position.y,position.z,1.0f };
+            vertex.normal = { normal.x,normal.y,normal.z };
             vertex.texcord = { texcord.x,texcord.y };
         }
         for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
@@ -351,7 +351,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
             Matrix4x4 bindPoseMatrix = MakeAffineMatrix(
                 Vector3{ scale.x,scale.y,scale.z },
                 Quaternion{ rotate.x,rotate.y,rotate.z,rotate.w },
-                Vector3{ translate.x,translate.y,-translate.z }
+                Vector3{ translate.x,translate.y,translate.z }
             );
             jointWeightData.inverseBindMatrix = Inverse(bindPoseMatrix);
 
