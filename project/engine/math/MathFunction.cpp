@@ -155,6 +155,11 @@ Vector3 operator/=(Vector3& v, float scalar)
     return v;
 }
 
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2)
+{
+    return Multiply(m1,m2);
+}
+
 
 	Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip){
 		float cot = 1.0f / std::tan(fovY / 2.0f);

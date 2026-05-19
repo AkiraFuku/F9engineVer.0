@@ -14,7 +14,9 @@
 
 #include "Transform.h"
 #include <optional>
-
+#include <utility>
+#include <span>
+#include<array>
 class Model
 {
 public:
@@ -45,27 +47,67 @@ public:
         std::string name;
         std::vector <Node>children;
     };
+    struct VertexWeightData {
+        float weight;
+        uint32_t vertexIndex;
+    };
+    struct JointWeightData {
+        Matrix4x4 inverseBindMatrix;
+        std::vector<VertexWeightData> vertexWeights;
+
+    };
 
     struct ModelData {
+        std::map<std::string, JointWeightData>skinClusterData; // ジョイント名とそのウェイトデータのマップ
         std::vector<VertexData> vertices; // 頂点データの配列
+        std::vector<uint32_t> indices; // インデックスデータの配列
         MaterialData material; // マテリアルデータ
         Node rootNode;
     };
 
-    struct Joint{
+    struct Joint {
         QuaternionTransform transform;
         Matrix4x4 localMatrix;
-        Matrix4x4 skeletonMatrix; // スケルトン行列
+        Matrix4x4 skeletonSpaceMatrix; // スケルトン行列
         std::string name;
         std::vector<int32_t> children;
         int32_t index;
         std::optional<int32_t> parentIndex;
     };
+
     struct Skeleton
     {
         int32_t rootIndex;
         std::map<std::string, int32_t> jointMap; // ジョイント名とインデックスのマップ   
         std::vector<Joint> joints; // ジョイントの配列
+
+    };
+    static const uint32_t kNumMaxInfluences = 4; // 頂点あたりの最大影響数
+
+    struct  VertexInfluence
+    {
+        std::array<float, kNumMaxInfluences > weights; // 頂点に影響を与えるジョイントの重み
+        std::array<int32_t, kNumMaxInfluences > jointIndices; // 頂点に影響を与えるジョイントのインデックス
+
+    };
+    struct WellForGPU
+    {
+        Matrix4x4 skeletonSpaceMatrix;
+        Matrix4x4 skeletonInverseTransposeMatrix;
+
+    };
+    struct SkinCluster
+    {
+        std::vector<Matrix4x4> inverseBindMatrices; // ジョイントの逆バインド行列の配列
+        //
+        Microsoft::WRL::ComPtr<ID3D12Resource> influenceResource; // ジョイントの影響データを格納するGPUリソース
+        D3D12_VERTEX_BUFFER_VIEW influenceBufferView; // ジョイントの影響データのバッファビュー
+        std::span<VertexInfluence> mappedInfluences; // 頂点の影響データのスパン
+        //
+        Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
+        std::span<WellForGPU> mappedPalette;
+        std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE>paletteSrvHandle;
+            uint32_t paletteSrvIndex;
 
     };
 
@@ -109,10 +151,19 @@ public:
 
     static Model* CreatePlaneFromTex(const std::string& textureFilePath);
 
-    static Node ReadNode(aiNode*node );
+    static Node ReadNode(aiNode* node);
     static Skeleton CreateSkelton(const Node& rootNode);
     static int32_t CreateJoint(const Node& node, std::optional<int32_t> parent, std::vector<Joint>& joints);
+    static SkinCluster CreateSkinCluster(const Skeleton& skeleton, const ModelData& modelData);
+public:
+    bool HasSkinning() const {
+        return !modelData_.skinClusterData.empty() ;
+    }
+public: // 外部入出力
 
+    void SetName(const std::string& name) {
+        name_ = name;
+    }
 
 public: // 外部入出力
     void SetColor(const Vector4& color) {
@@ -159,13 +210,11 @@ public: // 外部入出力
         return uvTransform_.offset;
     }
 
-    void SetName(const std::string& name) {
-        name_ = name;
-    }
-
-  
 
 private:
+
+    //static const uint32_t kNumMaxInfluences = 4; // 頂点あたりの最大影響数
+
     void DebugDrawSkeleton();
 
     ModelData modelData_;
@@ -179,14 +228,28 @@ private:
     VertexData* vertexData_ = nullptr;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
     void CreateVertexBuffer();
+    //インデックスリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+    uint32_t* indexData_ = nullptr;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView_;
+    void CreateIndexBuffer();
     //マテリアルリソース
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
     Material* materialData_ = nullptr;
     void CreateMaterialResource();
     void ApplyAnimation(Node& node, float time);
-    void ApplyAnimation( float time);
+    void ApplyAnimation(float time);
 
-    Skeleton skeleton_ ;
+    Skeleton skeleton_;
+
+    void UpdateSkeleton();
+
+    SkinCluster skinCluster_;
+
+    void UpdateSkinCluster();
+    bool hasSkinning_ = false; // 初期値は false
+
+   
 
     UVTransform uvTransform_ = {};
 };

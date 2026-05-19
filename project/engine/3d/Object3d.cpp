@@ -18,16 +18,16 @@ void Object3d::Initialize()
    // CreateDirectionalLightResource();
     transform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
     camera_ = Object3dCommon::GetInstance()->GetDefaultCamera();
-    box_=Object3dCommon::GetInstance()->GetDefaultSkyBox();
+    box_ = Object3dCommon::GetInstance()->GetDefaultSkyBox();
     CreateCameraResource();
 }
 void Object3d::Update()
 {
 
 
-    if (Object3dCommon::GetInstance() ->GetDefaultCamera()!=camera_)
+    if (Object3dCommon::GetInstance()->GetDefaultCamera() != camera_)
     {
-        camera_=Object3dCommon::GetInstance() ->GetDefaultCamera();
+        camera_ = Object3dCommon::GetInstance()->GetDefaultCamera();
 
 
     }
@@ -40,10 +40,15 @@ void Object3d::Update()
     if (camera_)
     {
         cameraData_->worldPosition = camera_->GetTranslate();
-        worldViewProjectionMatrix = Multiply(Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix), camera_->GetViewProtectionMatrix());
-        //   worldViewProjectionMatrix = Multiply( worldMatrix, camera_->GetViewProtectionMatrix());
+        worldViewProjectionMatrix = Multiply(worldMatrix, camera_->GetViewProtectionMatrix());
     } else {
-        worldViewProjectionMatrix = Multiply(model_->GetModelData().rootNode.localMatrix, worldMatrix);
+
+        Matrix4x4 viewMatrix = Makeidentity4x4();
+        Matrix4x4 projectionMatrix = Makeidentity4x4();
+        Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+
+
+        worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
     }
     //行列をGPUに転送
     wvpResource_->WVP = worldViewProjectionMatrix;
@@ -67,7 +72,14 @@ void Object3d::Draw()
 {
  
 
+    if (model_->HasSkinning())
+    {
+        psoName_ = "SkiningObj3d";
 
+    } else
+    {
+        psoName_ = "Object3d";
+    }
     Object3dCommon::GetInstance()->Object3dCommonDraw();
     auto psoSet = PSOManager::GetInstance()->GetPso(psoName_, blendMode_, fillMode_);
 
@@ -75,8 +87,7 @@ void Object3d::Draw()
     commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
     commandList->SetPipelineState(psoSet.pipelineState.Get());
 
-    // PSOをセット
-   // DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
+ 
     //WVP行列リソースの設定
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());LightManager::GetInstance()->Draw(3);
     LightManager::GetInstance()->Draw(3);
@@ -87,13 +98,13 @@ void Object3d::Draw()
 
         // SkyBoxクラスにテクスチャのGPUハンドルを取得するメソッドがあると仮定
         // 例: targetBox->GetSrvHandle()
-        commandList->SetGraphicsRootDescriptorTable(8,TextureManager::GetInstance()->GetSrvHandleGPU(box_->GetTextureIndex())); 
+        commandList->SetGraphicsRootDescriptorTable(8, TextureManager::GetInstance()->GetSrvHandleGPU(box_->GetTextureIndex()));
     }
 
     //light
-    
 
-   
+
+
     if (model_) {
         model_->Draw();
     }

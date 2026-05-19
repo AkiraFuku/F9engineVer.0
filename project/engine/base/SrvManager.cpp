@@ -69,7 +69,7 @@ void SrvManager::CreateSRVForTexture2D(uint32_t srvIndex, ID3D12Resource* pResou
         srvDesc.TextureCube.MostDetailedMip = 0;//最初のミップマップ
         srvDesc.TextureCube.MipLevels = UINT(metadata.mipLevels);//最初のミップマップ
         srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-        
+
 
         // SRV
 
@@ -115,6 +115,18 @@ void SrvManager::CreateSRVForStructuredBuffer(uint32_t srvIndex, ID3D12Resource*
     D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGPUDescriptorHandle(srvIndex);
     DXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(pResource, &srvDesc, instancingSrvHandleCPU);
 
+}
+void SrvManager::CreateSRVForMatrixPalette(ID3D12Resource* pResource, UINT numElements, UINT structureByteStride ,D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC paletteSrvDesc{};
+    paletteSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    paletteSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    paletteSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    paletteSrvDesc.Buffer.FirstElement = 0;
+    paletteSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+    paletteSrvDesc.Buffer.NumElements = numElements;
+    paletteSrvDesc.Buffer.StructureByteStride = structureByteStride;
+    DXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(pResource, &paletteSrvDesc, cpuDescriptor);
 }
 void SrvManager::SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex) {
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(RootParameterIndex, GetGPUDescriptorHandle(srvIndex));
