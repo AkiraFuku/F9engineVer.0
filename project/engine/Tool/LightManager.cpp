@@ -1,5 +1,4 @@
 #include "LightManager.h"
-#include "MathFunction.h" // Normalize関数など
 #include "DXCommon.h"
 #include <cassert>
 // 静的メンバ変数の実体定義

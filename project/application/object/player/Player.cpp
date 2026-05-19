@@ -17,8 +17,6 @@ void Player::Initialize()
 {
     inputHandler_ = std::make_unique<InputHandler>();
     object_ = std::make_unique<Object3d>();
-    //ModelManager::GetInstance()->CreateSphereModel("Player", 16);
-    // ModelManager::GetInstance()->CreatePlaneFromTex("PlayerShadow", "resources/gradationLine.png");
     ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
     object_->Initialize();
     object_->SetModel("player.obj");
@@ -187,13 +185,7 @@ void Player::UpdateRailPath()
     // もしObject3dが内部で角度を蓄積しているなら、ここを 0 にリセットする処理が必要です
     object_->SetRotate({ 0.0f, currentFrameAngle, 0.0f });
 
-    // 4. Cursorの座標更新
-  
-        // カーソルも「累積」を防ぐため、常に計算した角度の正面に配置
-   /*     cursorInstance->transform.translate.x = sinf(currentFrameAngle) * forwardOffset;
-        cursorInstance->transform.translate.z = cosf(currentFrameAngle) * forwardOffset;
-        cursorInstance->transform.translate.y = heightOffset;*/
-   
+
 
     object_->Update();
 }

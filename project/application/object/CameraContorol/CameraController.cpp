@@ -24,9 +24,7 @@ void CameraController::Update() {
     const EulerTransform& targetWorldTransform = target_->GetTransform();
 
 
-    // カメラをターゲット進行度に合わせて移動
-    // 
-    //camera_->SetTranslate(targetWorldTransform.translate + targetOffset_);
+  
 
 #ifdef USE_IMGUI
     ImGui::Begin("Debug/camera");
@@ -69,7 +67,6 @@ void CameraController::SetRailProgress(float progress)
 void CameraController::Reset() {
     const EulerTransform& targetWorldTransform = target_->GetTransform();
     // 必要に応じて targetWorldTransform を使用して処理を追加  
-    //camera_->translation_ = Add(targetWorldTransform.translation_, targetOffset_);
     camera_->SetTranslate(targetWorldTransform.translate + targetOffset_);
 
 }

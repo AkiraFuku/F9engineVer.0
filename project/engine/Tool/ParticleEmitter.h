@@ -9,6 +9,10 @@ public:
     void SetTransform(const EulerTransform& transform) {
         transform_ = transform;
     }
+    void SetTranslate(const Vector3& translate) {
+        transform_.translate = translate;//位置
+
+    };
     void Update();
     void Emit();
 private:

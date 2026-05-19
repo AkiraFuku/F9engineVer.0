@@ -126,11 +126,7 @@ private:
     std::random_device seedGen_;
     std::mt19937 randomEngine_;
     HRESULT hr_ = 0;
-    //ルートシグネチャ
-    //Microsoft::WRL::ComPtr<ID3D12RootSignature>rootSignature_;
-    //void CreateRootSignature();
-    ////グラフィックパイプラインステート
-    //Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
+   
 
     //頂点リソース
     std::map<EffectType, PrimitiveResource> primitiveResources_;

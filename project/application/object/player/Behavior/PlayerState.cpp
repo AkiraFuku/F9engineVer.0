@@ -58,9 +58,6 @@ void StateNormal::HandleInput(Player* player, ICommand* command)
 }
 
 
-/*IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<IPlayerAction> attack)
-    : moveAction_(std::move(move)), attackAction_(std::move(attack)) {
-}*/
 
 IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move,std::unique_ptr<IPlayerAction> jump,std::unique_ptr<IPlayerAction> attack,
         std::unique_ptr<IPlayerAction> shoot)
@@ -74,12 +71,7 @@ void IStateRideOn::Update(Player* player)
     }
 }
 void IStateRideOn::Finalize(Player* player) {
-    // 1. ロボットオブジェクトを弾として生成（またはEnemyを再利用して飛ばす）
-    // LaunchRobot(player->GetPosition(), shootDirection);
-
-    // 2. プレイヤーに反動を与える
-    // Vector3 recoil = shootDirection * -1.0f * kRecoilPower;
-    // player->SetVelocity(recoil); 
+    
 }
 void IStateRideOn::HandleInput(Player* player, ICommand* command)
 {
@@ -124,14 +116,7 @@ void StateRideOnTest::BehaviorUpdate(Player* player) {
 }
 
 void StateRideOnTest::HandleInput(Player* player, ICommand* command) {
-    // ShootCommand（射出コマンド）を処理する
-/*    if (dynamic_cast<ShootCommand*>(command)) {
-        // 射出アクションを実行
-        DoShoot(player);
-        // 射出後、通常状態に戻る
-        player->ChangeState(std::make_unique<StateNormal>());
-        return;
-    }*/
+
 
     // その他の入力はBehaviorに任せる
     if (player->GetBehavior()) {

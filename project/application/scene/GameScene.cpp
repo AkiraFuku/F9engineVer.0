@@ -88,10 +88,7 @@ void GameScene::Initialize() {
         return particle;
         };
     ParticleManager::ParticleUpdateFunc update = [](ParticleManager::Particle& particle, float deltaTime) {
-        // パーティクルの更新処理
-        // 例: 速度に基づいて位置を更新し、寿命を減少させる
-   /*     particle.uvOffset.x+=deltaTime;
-        particle.transform.translate += particle.velocity * deltaTime;*/
+     
         };
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
 
@@ -107,7 +104,11 @@ void GameScene::Initialize() {
     sprite->Initialize("resources/monsterBall.png");
 
     sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });
-    // sprite->SetSize(Vector2{ 100.0f,100.0f });
+    
+    
+    
+    
+    sprite->SetSize(Vector2{ 100.0f,100.0f });
     //sprites.push_back(sprite);
    // sprite->SetBlendMode(BlendMode::Add);
     sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
@@ -199,13 +200,12 @@ void GameScene::Initialize() {
 
     // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
     stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-    /*stageRail->AddPointCR({ radius, 0, 0 });
-    stageRail->AddPoint({ 0, 0, 0 });*/
+  
     // 最後に必ず更新して距離テーブルを作成
     stageRail->Update();
 
     player->SetRail(stageRail.get());
-    // player->SetRail(stageRail.get());
+
 
 
     // テスト用に敵を生成する場合

@@ -113,7 +113,7 @@ void ParticleManager::Initialize() {
           { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         };
 
-        
+
         inputLayout.inputLayout.pInputElementDescs = inputLayout.inputElement.data();
         inputLayout.inputLayout.NumElements = static_cast<UINT>(inputLayout.inputElement.size());
         return inputLayout;
@@ -280,10 +280,6 @@ void ParticleManager::Update() {
             particleIterator != particleGroup.particles.end();
             )
         {
-
-
-
-
             if ((*particleIterator).lifeTime <= (*particleIterator).currentTime)
             {
                 particleIterator = particleGroup.particles.erase(particleIterator);
@@ -427,19 +423,7 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
         }
     }
 
-    /*    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-        std::uniform_real_distribution<float> distTime(1.0f, 10.0f);
 
-        for (uint32_t i = 0; i < count; ++i)
-        {
-            Particle particle;
-            Vector3 randomTranslate = { distribution(randomEngine_),distribution(randomEngine_) ,distribution(randomEngine_) };
-
-            Vector3 pPosition = position;
-            particle = MakeParticle(randomEngine_, pPosition);
-
-            particleGroups[name].particles.push_back(particle);
-        }*/
 
 }
 std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexPlane()

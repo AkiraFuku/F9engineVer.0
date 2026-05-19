@@ -2,6 +2,11 @@
 #include "SrvManager.h"
 #include "WinApp.h"
 #include "DXCommon.h"
+#ifdef USE_IMGUI
+#include"imgui.h"
+#include"imgui_impl_dx12.h"
+#include"imgui_impl_win32.h"
+#endif // USE_IMGUI
 
 // 静的メンバ変数の実体
 std::unique_ptr<ImGuiManager> ImGuiManager::instance = nullptr;

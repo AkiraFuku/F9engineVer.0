@@ -138,10 +138,7 @@ void BehaviorJump::HandleInput(Player* player, ICommand* command) {
         }
     }
 
-    /*    if (dynamic_cast<JumpCommand*>(command)) {
-            // ジャンプ状態へ遷移
-            player->ChangeBehavior(std::make_unique<BehaviorJump>());
-        }*/
+ 
 }
 // BehaviorAim::Initialize
 void BehaviorAim::Initialize(Player* player) {
@@ -152,7 +149,6 @@ void BehaviorAim::Initialize(Player* player) {
 
 void BehaviorAim::Update(Player* player) {
     // 滞空中に照準を定める場合、ゆっくり降下させる
-    // player->ApplySlowFall(kAimFallSpeed); 
 }
 void BehaviorAim::Finalize(Player* player)
 {
@@ -177,8 +173,7 @@ void BehaviorAim::HandleInput(Player* player, ICommand* command) {
                 shootAction->Execute(player);
             }
         }
-        // 発射後は通常状態(Root)に戻る
-       // player->ChangeBehavior(std::make_unique<BehaviorRoot>());
+    
     }
 
     // 3. プレシュートボタンを離した時にキャンセルしてRootに戻る実装もアリ

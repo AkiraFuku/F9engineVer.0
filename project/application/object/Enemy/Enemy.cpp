@@ -49,11 +49,6 @@ void Enemy::Update()
         state_->Update(this);
     }
 
-    //// 2. 現在の行動（AI）を更新
-    //if (behavior_) {
-    //    behavior_->Update(this);
-    //}
-
     // 3. 物理計算とレール座標の更新
     UpdatePhysics();
 }
