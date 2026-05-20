@@ -23,7 +23,7 @@ void OffScreen::Initialize()
     PsoConfig psoConfig = {};
     psoConfig.shaderPaths = {
         { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
-        { ShaderType::PS, L"resources/shaders/GlayScale/GlayScale.ps.hlsl", "main", L"ps_6_0" }
+        { ShaderType::PS, L"resources/shaders/Vignetting/Vignette.ps.hlsl", "main", L"ps_6_0" }
     };
     
     psoConfig.rootSignatureGenerator = []() {
