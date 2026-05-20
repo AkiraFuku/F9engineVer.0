@@ -583,7 +583,7 @@
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
     <None Include="StateRideOnTest_Usage.md" />
-    <None Include="resources\shaders\CopyImage\CopyImage.hlsli" />
+    <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -616,7 +616,8 @@
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl">
       <Filter>シェーダー ファイル\Particle</Filter>
     </FxCompile>
-    <FxCompile Include="resources\shaders\CopyImage\CopyImage.VS.hlsl" />
+    <FxCompile Include="resources\shaders\CopyImage\FullScreen.VS.hlsl" />
     <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl" />
+    <FxCompile Include="resources\shaders\GlayScale\GlayScale.PS.hlsl" />
   </ItemGroup>
 </Project>
