@@ -74,7 +74,7 @@ void TitleScene::Initialize() {
 }
 void TitleScene::Finalize() {
 
-    ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
+    ParticleManager::GetInstance()->ReleaseParticleGroup();
 }
 void TitleScene::Update() {
 

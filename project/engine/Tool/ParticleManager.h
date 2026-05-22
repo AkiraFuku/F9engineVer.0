@@ -104,7 +104,7 @@ public:
     void SetCamera(Camera* camera) {
         camera_ = camera;
     }
-    void ReleaseParticleGroup(const std::string name);
+    void ReleaseParticleGroup();
     std::unordered_map<std::string, ParticleGroup> particleGroups;
     friend struct std::default_delete<ParticleManager>;
     static std::unique_ptr<ParticleManager> instance;

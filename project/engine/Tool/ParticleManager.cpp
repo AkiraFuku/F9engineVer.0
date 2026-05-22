@@ -254,13 +254,12 @@ void ParticleManager::Finalize() {
     instance.reset();
 }
 
-void ParticleManager::ReleaseParticleGroup(const std::string name)
+void ParticleManager::ReleaseParticleGroup()
 {
-    particleGroups.erase(name);
+    particleGroups.clear();
+
+
 }
-
-
-
 void ParticleManager::Update() {
     Matrix4x4 backFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
     //ビルボード行列計算

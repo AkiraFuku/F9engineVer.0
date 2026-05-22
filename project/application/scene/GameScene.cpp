@@ -97,21 +97,7 @@ void GameScene::Initialize() {
     emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 5, 5.0f, 0.0f);*/
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
-    /*   std::vector<Sprite*> sprites;
-       for (uint32_t i = 0; i < 5; i++)
-       {*/
-    sprite = std::make_unique<Sprite>();
-    sprite->Initialize("resources/monsterBall.png");
 
-    sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });
-    
-    
-    
-    
-    sprite->SetSize(Vector2{ 100.0f,100.0f });
-    //sprites.push_back(sprite);
-   // sprite->SetBlendMode(BlendMode::Add);
-    sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
 
     //}
 
@@ -222,7 +208,7 @@ void GameScene::Initialize() {
 }
 void GameScene::Finalize() {
 
-    ParticleManager::GetInstance()->ReleaseParticleGroup("Test");
+    ParticleManager::GetInstance()->ReleaseParticleGroup();
 }
 void GameScene::Update() {
     //emitter_->Update();
@@ -353,10 +339,7 @@ void GameScene::Update() {
     ImGui::Begin("Debug");
 
     ImGui::Text("Sprite");
-    Vector2 Position =
-        sprite->GetPosition();
-    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
-    sprite->SetPosition(Position);
+    
 
 
     ImGui::SliderFloat3("Start", &(position_.x), 0.1f, 1000.0f);
@@ -449,8 +432,7 @@ void GameScene::Update() {
     ImGui::End();
 #endif // USE_IMGUI
 
-    //sprite->SetRotation(sprite->GetRotation() + 0.1f);
-    sprite->Update();
+ 
     LightManager::GetInstance()->Update();
 
 }
@@ -474,7 +456,6 @@ void GameScene::Draw() {
 
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
-   // sprite->Draw();
     object3d->Draw();
 }
 GameScene::GameScene() = default;
@@ -514,5 +495,20 @@ void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param, Pro
         newProjectile->Initialize(stageRail.get(), param, owner);
 
         projectiles_.push_back(std::move(newProjectile));
+    }
+}
+
+void GameScene::CheckClear()
+{
+    // 2. シーン遷移の実行
+    if (isCleared_) {
+        // 必要に応じてフェードアウト演出やSE再生をここで行う
+        if (Audio::GetInstance()->IsPlaying(handle_)) {
+            Audio::GetInstance()->StopAudio(handle_);
+        }
+
+        // 次のシーン（例: TitleScene や ResultScene）へ遷移（仮）
+        GetSceneManager()->ChangeScene("TitleScene"); 
+        return; // 遷移が決まったら以降の更新は不要
     }
 }

@@ -22,6 +22,9 @@ public:
     void Finalize()override;
     void Update()override;
     void Draw()override;
+
+
+
     GameScene() ;
     ~GameScene() override;
 
@@ -29,7 +32,10 @@ public:
 void AddProjectile(const Projectile::ProjectileSpawnParam& param,Projectile::ProjectileOwner owner);
 
 private:
-    std::unique_ptr<Sprite> sprite;
+    /// <summary>
+    /// クリアフラグが立ったら遷移
+    /// </summary>
+    void CheckClear();
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
@@ -49,9 +55,8 @@ private:
 
     Vector3 position_ = { 2.0f,0.0f,0.0f };
     Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };
-    /*Vector3 point1_ = { 0.0f,0.0f,0.0f };
-    Vector3 point2_ = { 0.0f,0.0f,50.0f };*/
-
+ 
+    bool isCleared_=false;
      uint32_t handle_=0;
      std::vector<std::unique_ptr<Projectile>> projectiles_;
 };
