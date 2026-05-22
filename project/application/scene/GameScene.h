@@ -13,6 +13,7 @@
 class ParticleEmitter;
 class RailPath;
 class Enemy;
+class GoalObject;
 #include "Animation.h"
 
 class GameScene :public Scene
@@ -23,7 +24,10 @@ public:
     void Update()override;
     void Draw()override;
 
-
+   const Player* GetPlayer(){return player.get();}
+   const std::vector<std::unique_ptr<Enemy>>& GetEnemies(){return enemies_;}
+   const std::vector<std::unique_ptr<Projectile>>& GetProjectile(){return projectiles_;}
+   const GoalObject* GetGoal(){return goal_.get(); }
 
     GameScene() ;
     ~GameScene() override;
@@ -44,14 +48,13 @@ private:
 
     std::unique_ptr<CameraController> cameraController; 
     std::vector<std::unique_ptr<Enemy>> enemies_;
-   // std::unique_ptr<Enemy> enemy; 
     std::unique_ptr<SkyBox> skyBox;
     std::unique_ptr<CameraController> debugCameraC; 
 
     bool isDebugCamera_ = false;
     std::unique_ptr<ParticleEmitter>emitter_;
 
-    
+    std::unique_ptr<GoalObject> goal_;
 
     Vector3 position_ = { 2.0f,0.0f,0.0f };
     Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };

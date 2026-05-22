@@ -23,7 +23,7 @@
 #include "PlayerState.h"
 #include <numbers>
 #include <Model.h>
-
+#include "GoalObject.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -56,8 +56,8 @@ void GameScene::Initialize() {
         ParticleManager::Particle particle;
         particle.transform.scale = { 1.0f,1.0f,1.0f };
         particle.transform.rotate = { 0.0f,0.0f,0.0f };
-        Vector3 randamTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-        particle.transform.translate = emitterPosition + randamTranslate;
+        Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+        particle.transform.translate = emitterPosition + randomTranslate;
         particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 
         particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine),1.0f };
@@ -88,7 +88,7 @@ void GameScene::Initialize() {
         return particle;
         };
     ParticleManager::ParticleUpdateFunc update = [](ParticleManager::Particle& particle, float deltaTime) {
-     
+
         };
     ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
 
@@ -105,7 +105,7 @@ void GameScene::Initialize() {
 
     animation = std::make_unique<Animation>();
 
-   // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
+    // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->Initialize("resources/human", "walk.gltf");
     animation->SetCurrentTime(0.0f);
 
@@ -122,7 +122,7 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->LoadModel("resources/simpleSkin", "simpleSkin.gltf");
     ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
     ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
-  //  ModelManager::GetInstance()->CreateSphereModel("sphere");
+    //  ModelManager::GetInstance()->CreateSphereModel("sphere");
     object3d = std::make_unique<Object3d>();
     object3d->Initialize();
     object3d->SetModel("walk.gltf");
@@ -173,7 +173,7 @@ void GameScene::Initialize() {
 
     // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
-    stageRail->SetLoop(true); // ループを有効化
+    stageRail->SetLoop(false); // ループを有効化
 
     float radius = 20.0f;       // 円の半径
     float h = radius * 0.5522f; // ハンドルの長さ
@@ -190,7 +190,7 @@ void GameScene::Initialize() {
 
     // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
     stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-  
+
     // 最後に必ず更新して距離テーブルを作成
     stageRail->Update();
 
@@ -202,16 +202,22 @@ void GameScene::Initialize() {
     AddEnemy({ 0.1f, 0.0f });
     AddEnemy({ 0.2f, 0.0f });
 
+    goal_ = std::make_unique<GoalObject>();
+    goal_->Initialize();
+    goal_->SetCamera(activeCamera_);
+    goal_->SetRail(stageRail.get());
+    goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
 
 
-
+    CollisionManager::GetInstance()->SetScene(this);
 }
 void GameScene::Finalize() {
 
     ParticleManager::GetInstance()->ReleaseParticleGroup();
 }
 void GameScene::Update() {
-    //emitter_->Update();
+    CheckClear();
+    goal_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -314,18 +320,18 @@ void GameScene::Update() {
 
     // --- 衝突判定の実行 ---
     CollisionManager* colManager = CollisionManager::GetInstance();
-    colManager->Clear();
-    colManager->SetPlayer(player.get());
-    for (auto& enemy : enemies_) {
-        if (enemy) { // 安全確認
-            //enemy->Update();
-            colManager->AddEnemy(enemy.get());
+    //colManager->Clear();
+    //colManager->SetPlayer(player.get());
+    //for (auto& enemy : enemies_) {
+    //    if (enemy) { // 安全確認
+    //        //enemy->Update();
+    //        colManager->AddEnemy(enemy.get());
 
-        }
-    }
-    for (auto& projectile : projectiles_) {
-        colManager->AddProjectile(projectile.get());
-    }
+    //    }
+    //}
+    //for (auto& projectile : projectiles_) {
+    //    colManager->AddProjectile(projectile.get());
+    //}
 
     colManager->CheckAllCollisions();
 
@@ -339,7 +345,7 @@ void GameScene::Update() {
     ImGui::Begin("Debug");
 
     ImGui::Text("Sprite");
-    
+
 
 
     ImGui::SliderFloat3("Start", &(position_.x), 0.1f, 1000.0f);
@@ -432,7 +438,7 @@ void GameScene::Update() {
     ImGui::End();
 #endif // USE_IMGUI
 
- 
+
     LightManager::GetInstance()->Update();
 
 }
@@ -443,6 +449,12 @@ void GameScene::Draw() {
     stageRail->DebugDraw();
     cameraRail->DebugDraw();
     player->Draw();
+
+    if (goal_)
+    {
+        goal_->Draw();
+    }
+
     // 全てのProjectileを描画
     for (auto& projectile : projectiles_) {
         if (projectile) {
@@ -508,7 +520,7 @@ void GameScene::CheckClear()
         }
 
         // 次のシーン（例: TitleScene や ResultScene）へ遷移（仮）
-        GetSceneManager()->ChangeScene("TitleScene"); 
+        GetSceneManager()->ChangeScene("TitleScene");
         return; // 遷移が決まったら以降の更新は不要
     }
 }

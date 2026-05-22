@@ -5,11 +5,15 @@
 class Player;
 class Enemy;
 class Projectile; // 前方宣言
-
+class GameScene;
+class GoalObject;
 class CollisionManager {
 public:
     static CollisionManager* GetInstance();
     void Finalize();
+
+
+    void SetScene(GameScene* scene );
 
     // 判定対象の登録（毎フレームリセットする想定）
     void SetPlayer(Player* player) { player_ = player; }
@@ -18,7 +22,7 @@ public:
     
     // リストのクリア
     void Clear() {
-        player_ = nullptr;
+      //  player_ = nullptr;
         enemies_.clear();
         projectiles_.clear(); // 弾リストもクリア
     }
@@ -27,6 +31,8 @@ public:
     void CheckAllCollisions();
 
 private:
+   GameScene* scene_=nullptr;
+   GoalObject* goal_=nullptr;
     CollisionManager() = default;
     ~CollisionManager() = default;
     CollisionManager(const CollisionManager&) = delete;

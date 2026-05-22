@@ -31,8 +31,10 @@ void Object3d::Update()
 
 
     }
-
-    model_->Update();
+    if (model_)
+    {
+        model_->Update();
+    }
     //  WVP行列の作成
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
     Matrix4x4 worldViewProjectionMatrix = {};
@@ -70,7 +72,7 @@ void Object3d::Update()
 
 void Object3d::Draw()
 {
- 
+
 
     if (model_->HasSkinning())
     {
@@ -87,7 +89,7 @@ void Object3d::Draw()
     commandList->SetGraphicsRootSignature(psoSet.rootSignature.Get());
     commandList->SetPipelineState(psoSet.pipelineState.Get());
 
- 
+
     //WVP行列リソースの設定
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());LightManager::GetInstance()->Draw(3);
     LightManager::GetInstance()->Draw(3);

@@ -267,13 +267,13 @@
     <ClCompile Include="engine\scene\SceneFactory.cpp">
       <Filter>engine\scene</Filter>
     </ClCompile>
-    <ClCompile Include="Animation.cpp">
+    <ClCompile Include="engine\3d\Animation.cpp">
       <Filter>engine\Tool\Animation</Filter>
     </ClCompile>
     <ClCompile Include="engine\Tool\Camera.cpp">
       <Filter>engine\Tool\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="PrimitiveDrawer.cpp">
+    <ClCompile Include="engine\Tool\PrimitiveDrawer.cpp">
       <Filter>engine\Tool\Primitive</Filter>
     </ClCompile>
     <ClCompile Include="engine\Tool\ImGuiManager.cpp">
@@ -303,7 +303,7 @@
     <ClCompile Include="application\object\player\Command.cpp">
       <Filter>App\Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="SkyBox.cpp">
+    <ClCompile Include="engine\Tool\SkyBox.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\object\player\Behavior\PlayerState.cpp">
@@ -342,13 +342,16 @@
     <ClCompile Include="application\object\Robot\TestRobot.cpp">
       <Filter>App\Abilities\Test</Filter>
     </ClCompile>
-    <ClCompile Include="CollisionManager.cpp">
+    <ClCompile Include="application\Collision\CollisionManager.cpp">
       <Filter>App\System\Colition</Filter>
     </ClCompile>
     <ClCompile Include="engine\math\Quaternion.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="OffScreen.cpp">
+    <ClCompile Include="engine\base\OffScreen.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\object\Goal\GoalObject.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -476,7 +479,7 @@
     <ClInclude Include="engine\scene\SceneFactory.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
-    <ClInclude Include="Animation.h">
+    <ClInclude Include="engine\3d\Animation.h">
       <Filter>engine\Tool\Animation</Filter>
     </ClInclude>
     <ClInclude Include="engine\Tool\Camera.h">
@@ -485,7 +488,7 @@
     <ClInclude Include="engine\Tool\LightManager.h">
       <Filter>engine\Tool</Filter>
     </ClInclude>
-    <ClInclude Include="PrimitiveDrawer.h">
+    <ClInclude Include="engine\Tool\PrimitiveDrawer.h">
       <Filter>engine\Tool\Primitive</Filter>
     </ClInclude>
     <ClInclude Include="engine\Tool\ImGuiManager.h">
@@ -515,7 +518,7 @@
     <ClInclude Include="application\object\player\Command.h">
       <Filter>App\Object\Player</Filter>
     </ClInclude>
-    <ClInclude Include="SkyBox.h">
+    <ClInclude Include="engine\Tool\SkyBox.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Behavior\PlayerState.h">
@@ -554,13 +557,16 @@
     <ClInclude Include="application\object\Enemy\TestEnemy.h">
       <Filter>App\Abilities\Test</Filter>
     </ClInclude>
-    <ClInclude Include="CollisionManager.h">
+    <ClInclude Include="application\Collision\CollisionManager.h">
       <Filter>App\System\Colition</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\Quaternion.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="OffScreen.h">
+    <ClInclude Include="engine\base\OffScreen.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\object\Goal\GoalObject.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -618,5 +624,6 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\CopyImage\CopyImage.VS.hlsl" />
     <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl" />
   </ItemGroup>
 </Project>
