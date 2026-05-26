@@ -10,20 +10,21 @@
 std::unique_ptr<Input> Input::instance = nullptr;
 
 Input* Input::GetInstance() {
-     if (instance == nullptr) {
+    if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public Input {
-            Helper() : Input() {}
+            Helper() : Input() {
+            }
         };
         instance = std::make_unique<Helper>();
     }
     return instance.get();
 }
 void Input::Finalize() {
-   instance.reset();
+    instance.reset();
 }
 void Input::Initialize() {
-    
+
     // DirectInputの初期化
     HRESULT hr;
     Microsoft::WRL::ComPtr<IDirectInput8> directInput = nullptr;
@@ -109,55 +110,25 @@ void Input::Update()
 bool Input::PushedKeyDown(BYTE keys)
 {
 
-    if (key[keys] && preKey[keys])
-    {
-        return true;
-
-    }
-    return false;
+    return (key[keys] & 0x80) && (preKey[keys] & 0x80);
 }
 
 bool Input::PushedKeyUp(BYTE keys)
 {
-    //キーボードのキーが離した状態かどうかを確認
-    //GetAsyncKeyState関数を使用してキーの状態を取得
-    if (!key[keys] && !preKey[keys])
-    {
-        //キーが押されている状態で、前回のキー状態も押されている場合
-        //つまり、キーが離された状態ではない
-        return true;
 
-    }
+    return !(key[keys] & 0x80) && !(preKey[keys] & 0x80);
 
-    //キーが離されているかどうかを確認
-    //低位ビットが1であればキーが離されている
-    return false;
 }
 
 bool Input::TriggerKeyDown(BYTE keys)
 {
-    if (key[keys] && !preKey[keys])
-    {
-        //キーが押されている状態で、前回のキー状態も押されている場合
-        //つまり、キーが離された状態ではない
-        return true;
-
-    }
-
-    return false;
+    return (key[keys] & 0x80) && !(preKey[keys] & 0x80);
 }
 
 bool Input::TriggerKeyUp(BYTE keys)
 {
-    //キーボードのキーを離した瞬間かどうかを確認
-    if (!key[keys] && preKey[keys])
-    {
-        //キーが押されている状態で、前回のキー状態も押されている場合
-        //つまり、キーが離された状態ではない
-        return true;
+     return !(key[keys] & 0x80) && (preKey[keys] & 0x80);
 
-    }
-    return false;
 }
 bool Input::PushMouseDown(int32_t button) {
     // マウスボタンが押されているか確認

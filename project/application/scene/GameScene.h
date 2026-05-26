@@ -14,6 +14,8 @@ class ParticleEmitter;
 class RailPath;
 class Enemy;
 class GoalObject;
+class Phase;
+
 #include "Animation.h"
 
 class GameScene :public Scene
@@ -24,10 +26,12 @@ public:
     void Update()override;
     void Draw()override;
 
-   const Player* GetPlayer(){return player.get();}
+    Player* GetPlayer(){return player.get();}
+    CameraController* GetCamera(){return cameraController.get();}
+    RailPath* GetStageRall(){return stageRail.get();}
    const std::vector<std::unique_ptr<Enemy>>& GetEnemies(){return enemies_;}
    const std::vector<std::unique_ptr<Projectile>>& GetProjectile(){return projectiles_;}
-   const GoalObject* GetGoal(){return goal_.get(); }
+    GoalObject* GetGoal(){return goal_.get(); }
 
     GameScene() ;
     ~GameScene() override;
@@ -41,6 +45,9 @@ private:
     /// </summary>
     void CheckClear();
     std::unique_ptr<Object3d> object3d;
+    std::unique_ptr<Phase> currentPhase_;
+    std::unique_ptr<Phase> nextPhase_;
+
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
     std::unique_ptr<RailPath> stageRail;

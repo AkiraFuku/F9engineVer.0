@@ -45,7 +45,7 @@ void SceneManager::Update() {
     }
     if (scene_) {
         scene_->Update();
-
+        LightManager::GetInstance()->Update();
 
     }
 }
