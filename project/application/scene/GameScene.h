@@ -28,7 +28,7 @@ public:
 
     Player* GetPlayer(){return player.get();}
     CameraController* GetCamera(){return cameraController.get();}
-    RailPath* GetStageRall(){return stageRail.get();}
+    RailPath* GetStageRaill(){return stageRail.get();}
    const std::vector<std::unique_ptr<Enemy>>& GetEnemies(){return enemies_;}
    const std::vector<std::unique_ptr<Projectile>>& GetProjectile(){return projectiles_;}
     GoalObject* GetGoal(){return goal_.get(); }

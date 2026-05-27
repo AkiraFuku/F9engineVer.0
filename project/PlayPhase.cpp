@@ -18,7 +18,7 @@ void PlayPhase::Update(Scene* scene)
 
     gameScene->GetGoal()->Update();
     gameScene->GetCamera()->Update();
-    gameScene->GetStageRall()->Update();
+    gameScene->GetStageRaill()->Update();
     gameScene->GetPlayer()->Update();
 
   // --- 修正箇所: auto& (参照) で受け取る ---

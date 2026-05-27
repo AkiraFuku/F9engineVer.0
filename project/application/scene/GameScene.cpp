@@ -225,7 +225,6 @@ void GameScene::Finalize() {
 }
 void GameScene::Update() {
     CheckClear();
-    //   goal_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -292,26 +291,13 @@ void GameScene::Update() {
         activeCamera_->SetRotate(cameraTranslate);
     }
 
-    // cameraController->Update();
     debugCameraC->Update();
 
     activeCamera_->Update();
     if (currentPhase_)
     {
         currentPhase_->Update(this);
-
     }
-
-    //stageRail->Update();
-
-    //player->Update();
-
-    // 全てのProjectileを更新
-    //for (auto& projectile : projectiles_) {
-    //    if (projectile) {
-    //        projectile->Update();
-    //    }
-    //}
     // 死んだProjectileを削除
     projectiles_.erase(
         std::remove_if(projectiles_.begin(), projectiles_.end(),
@@ -319,10 +305,7 @@ void GameScene::Update() {
         projectiles_.end()
     );
 
-    //// 全ての敵を更新
-    //for (auto& enemy : enemies_) {
-    //    enemy->Update();
-    //}
+
 
    // 死んだ敵を削除
     enemies_.erase(
@@ -331,16 +314,10 @@ void GameScene::Update() {
         enemies_.end()
     );
 
-    //// --- 衝突判定の実行 ---
-    //CollisionManager* colManager = CollisionManager::GetInstance();
-
-
-    //colManager->CheckAllCollisions();
 
     skyBox->SetTranslate(activeCamera_->GetTranslate());
     skyBox->Update();
 
-    //activeCamera_->UpdateViewProjection();
     object3d->Update();
 
 #ifdef USE_IMGUI
