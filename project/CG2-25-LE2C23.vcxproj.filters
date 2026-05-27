@@ -622,5 +622,6 @@
     <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl" />
     <FxCompile Include="resources\shaders\Vignetting\Vignette.PS.hlsl" />
     <FxCompile Include="resources\shaders\Smooth\BoxFilter.PS.hlsl" />
+    <FxCompile Include="resources\shaders\GaussianFilter\GaussianFilter.PS.hlsl" />
   </ItemGroup>
 </Project>

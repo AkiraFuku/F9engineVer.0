@@ -76,7 +76,8 @@ void OffScreen::Initialize()
 
     psoConfig.shaderPaths.clear();  psoConfig.shaderPaths = {
         { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
-        { ShaderType::PS, L"resources/shaders/Smooth/BoxFilter.ps.hlsl", "main", L"ps_6_0" }
+        //{ ShaderType::PS, L"resources/shaders/Smooth/BoxFilter.ps.hlsl", "main", L"ps_6_0" }
+        { ShaderType::PS, L"resources/shaders/GaussianFilter/GaussianFilter.ps.hlsl", "main", L"ps_6_0" }
     };
     
     psoConfig.rootSignatureGenerator = []() {
