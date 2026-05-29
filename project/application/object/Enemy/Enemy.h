@@ -2,7 +2,7 @@
 #include <memory>
 #include "Transform.h"
 #include "Object3d.h"
-
+#include "ICollider.h"
 class Camera;
 class RailMover;
 class RailPath;
@@ -11,11 +11,24 @@ class IEnemyState; // 前方宣言
 class Player; // Enemy.h の場合
 class Robot; // Enemy.h の場合
 class ParticleEmitter; // Enemy.h の場合
-class Enemy
+class Enemy : public ICollider
 {
 public:
     Enemy();
     virtual ~Enemy();
+    //コリジョン
+
+    float GetRadius() const override {
+        return radius_;
+    }
+    virtual void OnCollision(ICollider* other) override; // Enemy側
+    Vector3 GetWorldPosition() const override {
+        return object_->GetTranslate();
+    }
+    CollisionCategory GetCategory() const override {
+        return CollisionCategory::Enemy;
+    }
+
 
     virtual void Initialize();
     virtual void Update();
@@ -65,8 +78,6 @@ public:
         return isGrounded_;
     }
 
-    virtual void OnCollision(Player* other); // Enemy側
-    void OnCollision(); // Enemy側
     void UpdateGravity(); // 重力の更新処理
     // enemy状態取得
     IEnemyState* GetState() {
@@ -88,9 +99,7 @@ public:
     Robot* GetRobot() const {
         return robot_.get();
     }
-    float GetRadius() const {
-        return radius_;
-    }
+
 
 protected:
     std::unique_ptr<Object3d> object_;

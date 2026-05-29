@@ -7,7 +7,16 @@ Projectile::Projectile() {
     object_ = std::make_unique<Object3d>();
    
 }
-
+CollisionCategory Projectile::GetCategory() const {
+    switch (owner_) {
+    case ProjectileOwner::Player:
+        return CollisionCategory::PlayerProjectile;
+    case ProjectileOwner::Enemy:
+        return CollisionCategory::EnemyProjectile;
+    default:
+        return CollisionCategory::PlayerProjectile; // デフォルトはプレイヤー弾とする
+    }
+}
 Projectile::~Projectile() = default;
 
 void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& param, ProjectileOwner owner) {
@@ -59,10 +68,11 @@ void Projectile::Draw() {
     object_->Draw();
 }
 
-Vector3 Projectile::GetPosition() const {
+Vector3 Projectile::GetWorldPosition() const {
     return railMover_->GetCurrentPosition();
 }
 
-void Projectile::OnCollision() {
+void Projectile::OnCollision( ICollider* other) {
+    other; // 使わない場合は警告回避のために記述
     isDead_ = true; // 何かに当たったら消える
 }

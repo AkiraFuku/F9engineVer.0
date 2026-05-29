@@ -210,9 +210,14 @@ public: // 外部入出力
         return uvTransform_.offset;
     }
 
+    const std::vector<VertexData>& GetVertices() const {
+        return modelData_.vertices;
+    }
+    const std::vector<uint32_t>& GetIndices() const {
+        return modelData_.indices;
+    }
 
 private:
-
 
     void DebugDrawSkeleton();
 

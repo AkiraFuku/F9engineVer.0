@@ -2,14 +2,14 @@
 #include "Vector3.h"
 #include "Object3d.h"
 #include <memory>
-
+#include "ICollider.h"
 class RailMover;
 class RailPath;
 class Camera;
 /// <summary>
 /// プレイヤーが射出する弾の基底クラス
 /// </summary>
-class Projectile {
+class Projectile : public ICollider {
 public:
     enum class ProjectileOwner {
         Unknown,
@@ -25,6 +25,13 @@ public:
 
     Projectile();
     virtual ~Projectile();
+    // コリジョン
+  Vector3 GetWorldPosition() const override;
+    float GetRadius() const override{
+        return radius_;
+    }
+    void OnCollision(ICollider* other) override;
+    CollisionCategory GetCategory() const override;
 
     // 初期化: 走行するレール、開始地点(t)、速度(正なら終点方向、負なら始点方向)
    virtual void Initialize(const RailPath* path, const ProjectileSpawnParam& param, ProjectileOwner owner);
@@ -34,11 +41,7 @@ public:
     bool IsDead() const {
         return isDead_;
     }
-    Vector3 GetPosition() const;
-    float GetRadius() const {
-        return radius_;
-    }
-    void OnCollision();
+  
     void SetCamera(Camera* camera) {
         camera_ = camera;
         if (object_) {

@@ -101,7 +101,7 @@ void Player::Draw()
 #endif // USE_IMGUI
 
     // --- 当たり判定 ---
-    Sphere collisionSphere = { object_->GetTranslate(), Radius ,EulerToQuaternion(object_->GetRotate())};
+    Sphere collisionSphere = { object_->GetTranslate(), Radius ,EulerToQuaternion(object_->GetRotate()) };
     PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, isHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f });
 }
 void Player::SetRailPosition(const Vector2& position)
@@ -170,7 +170,7 @@ void Player::UpdateRailPath()
     object_->SetTranslate(finalPos);
 
     // 3. 回転の計算（メンバ変数の playerAngle_ を使わずローカルで算出）
-    float currentFrameAngle = 0.0f; 
+    float currentFrameAngle = 0.0f;
     if (Length(railDir) > 0.001f) {
         // atan2f(x, z) でラジアン角を取得
         currentFrameAngle = atan2f(railDir.x, railDir.z);
@@ -227,55 +227,64 @@ void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
         }
     }
 }
-void Player::OnCollision([[maybe_unused]] Enemy* other) {
-    // 衝突したらフラグとタイマーをセット
-// ただし、クールダウン中なら何もしない
-    // プレイヤーの状態を取得
-    const char* playerBehavior = GetBehaviorName();
-    const char* playerState = GetStateName();
+void Player::OnCollision([[maybe_unused]] ICollider* other) {
 
-    if (playerState && strcmp(playerState, "Normal") == 0)
-    {
+    if (!other) return;
 
-        //エネミーの状態を取得
-        const char* enemyState = other->GetStateName();
-        // 例えば、敵がスタン状態なら当たってもダメージを受けないなどの例外処理
+    // カテゴリで判定（これが ICollider 設計の肝です）
+    if (other->GetCategory() == CollisionCategory::Enemy) {
+        // 必要に応じて dynamic_cast するが、基本はカテゴリで振り分ける
+        Enemy* enemy = dynamic_cast<Enemy*>(other);
+        if (!enemy) return;
+        // 衝突したらフラグとタイマーをセット
+    // ただし、クールダウン中なら何もしない
+        // プレイヤーの状態を取得
+        const char* playerBehavior = GetBehaviorName();
+        const char* playerState = GetStateName();
 
-        if (enemyState && strcmp(enemyState, "Normal") == 0)
+        if (playerState && strcmp(playerState, "Normal") == 0)
         {
-            if (hitVisualTimer_ <= 0.0f)
+
+            //エネミーの状態を取得
+            const char* enemyState = enemy->GetStateName();
+            // 例えば、敵がスタン状態なら当たってもダメージを受けないなどの例外処理
+
+            if (enemyState && strcmp(enemyState, "Normal") == 0)
             {
-                isHit_ = true;
-                hitVisualTimer_ = kHitVisualDuration;
-                // (必要であれば) ノックバックなどの物理挙動をここに書く
+                if (hitVisualTimer_ <= 0.0f)
+                {
+                    isHit_ = true;
+                    hitVisualTimer_ = kHitVisualDuration;
+                    // (必要であれば) ノックバックなどの物理挙動をここに書く
 
 
 
+                }
             }
+
+            if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+
+                if (enemyState && strcmp(enemyState, "Dead") != 0)
+                {
+                    Vector3 now = velocity_;
+                    now.x = 0.0f;
+                    velocity_ = now;
+
+                    ChangeBehavior(std::make_unique<BehaviorRoot>()); // 通常切り替える
+
+                }
+                // 攻撃が当たった場合は、被弾状態にはならない（例外的に無敵）
+                return;
+            }
+
+
         }
 
-        if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
-
-            if (enemyState && strcmp(enemyState, "Dead") != 0)
-            {
-                Vector3 now = velocity_;
-                now.x = 0.0f;
-                velocity_ = now;
-
-                ChangeBehavior(std::make_unique<BehaviorRoot>()); // 通常切り替える
-
-            }
-            // 攻撃が当たった場合は、被弾状態にはならない（例外的に無敵）
-            return;
-        }
-
-
-    }
 
 
 
 
-
+    };
 }
 
 Vector3 Player::GetDirection() const

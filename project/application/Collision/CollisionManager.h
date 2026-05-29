@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
-
+class ICollider;
 class Player;
 class Enemy;
 class Projectile; // 前方宣言
@@ -43,14 +43,15 @@ private:
 
     Player* player_ = nullptr;
     std::vector<Enemy*> enemies_;
+    void CheckCollision(ICollider* a, ICollider* b);
 
-    // 2点間の球判定（必要に応じて引数を調整してください）
-    void CheckPlayerEnemyCollision(Player* p, Enemy* e);
+    //// 2点間の球判定（必要に応じて引数を調整してください）
+    //void CheckPlayerEnemyCollision(Player* p, Enemy* e);
 
     std::vector<Projectile*> projectiles_;
     
-    // 弾と敵の衝突判定
-    void CheckProjectileEnemyCollision(Projectile* p, Enemy* e);
-    // 弾とプレイヤーの衝突判定（敵の弾用）
-    void CheckProjectilePlayerCollision(Projectile* p, Player* player);
+    //// 弾と敵の衝突判定
+    //void CheckProjectileEnemyCollision(Projectile* p, Enemy* e);
+    //// 弾とプレイヤーの衝突判定（敵の弾用）
+    //void CheckProjectilePlayerCollision(Projectile* p, Player* player);
 };

@@ -3,6 +3,7 @@
 #include "Transform.h"
 #include "Object3d.h"
 #include "Behavior/PlayerState.h"
+#include "ICollider.h"
 class InputHandler;
 class Input;
 class Camera;
@@ -12,11 +13,24 @@ class IPlayerBehavior;
 class Robot;
 class Enemy; // Player.h の場合
 class Scene;
-class Player
+class Player : public ICollider
 {
 public:
     Player();
     ~Player();
+
+    //コリジョン
+    void OnCollision(ICollider* other) override; // Player側
+
+    Vector3 GetWorldPosition() const override {
+        return object_->GetTranslate();
+    }
+    float GetRadius() const override {
+        return Radius;
+    }
+    CollisionCategory GetCategory() const override {
+        return CollisionCategory::Player;
+    }
 
     void Initialize();
     void Update();
@@ -54,18 +68,18 @@ public:
     }
     void SetVelocity(const Vector3& velocity) {
         velocity_ = velocity;
-    }   
+    }
     IPlayerBehavior* GetBehavior() {
         return baseState_->GetBehavior();
     };
-    IPlayerState* GetState(){
+    IPlayerState* GetState() {
         return baseState_.get();
     }
     void SetAngle(float angle) {
-    playerAngle_ = angle;
-}
+        playerAngle_ = angle;
+    }
     void AddVelocity(Vector3 v);
-    
+
     void SetRail(RailPath* rail);
     // 状態を切り替えるメソッド
     void ChangeState(std::unique_ptr<IPlayerState> newState);
@@ -77,29 +91,38 @@ public:
 
     float GetRailProgress() const;
     float GetCurrentDistance() const;
-    const RailPath* GetRailPath()const; 
-    bool IsGround()const{ return isGrounded_;}
+    const RailPath* GetRailPath()const;
+    bool IsGround()const {
+        return isGrounded_;
+    }
 
-    void OnCollision(Enemy* other); // Player側
     // 現在のレールの進行方向ベクトルを返す
     Vector3 GetDirection() const;
     int GetMoveDirection() const;
     void UpdateGravity();
 
     //プレイヤーの状態を取得するための関数
-     bool IsHit() const { return isHit_; }
-     float GetHitVisualTimer() const { return hitVisualTimer_; }
-     float GetRadius() const { return Radius; }
-     InputHandler* GetInputHandler() {
-         return inputHandler_.get();
-     }
-     const char* GetStateName() const;
-     const char* GetBehaviorName() const;
+    bool IsHit() const {
+        return isHit_;
+    }
+    float GetHitVisualTimer() const {
+        return hitVisualTimer_;
+    }
 
-     void SetScene(Scene* scene);
-     Scene* GetScene() { return scene_; }
+    InputHandler* GetInputHandler() {
+        return inputHandler_.get();
+    }
+    const char* GetStateName() const;
+    const char* GetBehaviorName() const;
 
-     float GetWorldY() const { return worldY_; }
+    void SetScene(Scene* scene);
+    Scene* GetScene() {
+        return scene_;
+    }
+
+    float GetWorldY() const {
+        return worldY_;
+    }
 private:
 
     // --- 状態管理 ---

@@ -21,7 +21,19 @@ CollisionManager* CollisionManager::GetInstance() {
 
 
 
+void CollisionManager::CheckCollision(ICollider* a, ICollider* b) {
+    Vector3 posA = a->GetWorldPosition();
+    Vector3 posB = b->GetWorldPosition();
 
+    float distanceSq = Length(Subtract(posA, posB));
+    float radiusSum = a->GetRadius() + b->GetRadius();
+
+    if (distanceSq <= radiusSum) {
+        // お互いに「相手」を渡して通知する
+        a->OnCollision(b);
+        b->OnCollision(a);
+    }
+}
 
 
 
@@ -40,22 +52,22 @@ void CollisionManager::Finalize() {
     instance.reset();
 }
 
-
-void CollisionManager::CheckPlayerEnemyCollision(Player* p, Enemy* e) {
-    Vector3 posP = p->GetTransform().translate;
-    Vector3 posE = e->GetTransform().translate;
-
-    float distanceSq = Length(Subtract(posP, posE));
-
-    // 半径を仮に 1.0f ずつとして、距離の2乗で判定 (1.0 + 1.0)^2 = 4.0
-    float radiusSum = p->GetRadius() + e->GetRadius();
-    if (distanceSq <= radiusSum) {
-        // --- ここでプレイヤーとエネミーに通知する ---
-
-        e->OnCollision(p);
-        p->OnCollision(e);
-    }
-}
+//
+//void CollisionManager::CheckPlayerEnemyCollision(Player* p, Enemy* e) {
+//    Vector3 posP = p->GetTransform().translate;
+//    Vector3 posE = e->GetTransform().translate;
+//
+//    float distanceSq = Length(Subtract(posP, posE));
+//
+//    // 半径を仮に 1.0f ずつとして、距離の2乗で判定 (1.0 + 1.0)^2 = 4.0
+//    float radiusSum = p->GetRadius() + e->GetRadius();
+//    if (distanceSq <= radiusSum) {
+//        // --- ここでプレイヤーとエネミーに通知する ---
+//
+//        e->OnCollision(p);
+//        p->OnCollision(e);
+//    }
+//}
 void CollisionManager::CheckAllCollisions() {
     Clear();
     if (scene_)
@@ -84,7 +96,7 @@ void CollisionManager::CheckAllCollisions() {
         if (!enemies_.empty())
         {
             for (Enemy* enemy : enemies_) {
-                CheckPlayerEnemyCollision(player_, enemy);
+                CheckCollision( enemy,player_);
             }
         }
 
@@ -100,14 +112,14 @@ void CollisionManager::CheckAllCollisions() {
                 if (!enemies_.empty())
                 {
                     for (Enemy* enemy : enemies_) {
-                        CheckProjectileEnemyCollision(projectile, enemy);
+                        CheckCollision(projectile, enemy);
                     }
                 }
             }
             // 敵が撃った弾なら、プレイヤーとの判定を行う
             else if (projectile->GetOwner() == Projectile::ProjectileOwner::Enemy) {
                 if (player_) {
-                    CheckProjectilePlayerCollision(projectile, player_);
+                    CheckCollision(projectile, player_);
                 }
             }
         }
@@ -115,36 +127,36 @@ void CollisionManager::CheckAllCollisions() {
 
     if (player_ && goal_)
     {
-        goal_->OnCollision(player_);
+        CheckCollision(player_, goal_);
     }
 
 }
 
-void CollisionManager::CheckProjectileEnemyCollision(Projectile* p, Enemy* e) {
-    // 球体同士の判定ロジック
-    Vector3 posP = p->GetPosition();
-    Vector3 posE = e->GetTransform().translate;
-
-    float distanceSq = Length(Subtract(posP, posE));
-    float radiusSum = p->GetRadius() + 1.0f; // 敵の半径を仮に1.0とする
-
-    if (distanceSq <= radiusSum) {
-        p->OnCollision(); // 弾の消滅処理など
-        // 敵の被弾処理（Enemy側に弾用のOnCollisionが必要な場合は作成してください）
-        e->OnCollision();
-    }
-}
-void CollisionManager::CheckProjectilePlayerCollision(Projectile* p, Player* player) {
-    // 球体同士の判定ロジック
-    Vector3 posP = p->GetPosition();
-    Vector3 posPlayer = player->GetTransform().translate;
-
-    float distanceSq = Length(Subtract(posP, posPlayer));
-    float radiusSum = p->GetRadius() + player->GetRadius(); // プレイヤーの半径を取得
-
-    if (distanceSq <= radiusSum) {
-        p->OnCollision(); // 弾の消滅処理など
-        // プレイヤーの被弾処理（Player側に弾用のOnCollisionが必要な場合は作成してください）
-       //  player->OnCollision(); 
-    }
-}
+//void CollisionManager::CheckProjectileEnemyCollision(Projectile* p, Enemy* e) {
+//    // 球体同士の判定ロジック
+//    Vector3 posP = p->GetWorldPosition();
+//    Vector3 posE = e->GetTransform().translate;
+//
+//    float distanceSq = Length(Subtract(posP, posE));
+//    float radiusSum = p->GetRadius() + 1.0f; // 敵の半径を仮に1.0とする
+//
+//    if (distanceSq <= radiusSum) {
+//        p->OnCollision(); // 弾の消滅処理など
+//        // 敵の被弾処理（Enemy側に弾用のOnCollisionが必要な場合は作成してください）
+//        e->OnCollision();
+//    }
+//}
+//void CollisionManager::CheckProjectilePlayerCollision(Projectile* p, Player* player) {
+//    // 球体同士の判定ロジック
+//    Vector3 posP = p->GetWorldPosition();
+//    Vector3 posPlayer = player->GetTransform().translate;
+//
+//    float distanceSq = Length(Subtract(posP, posPlayer));
+//    float radiusSum = p->GetRadius() + player->GetRadius(); // プレイヤーの半径を取得
+//
+//    if (distanceSq <= radiusSum) {
+//        p->OnCollision(); // 弾の消滅処理など
+//        // プレイヤーの被弾処理（Player側に弾用のOnCollisionが必要な場合は作成してください）
+//       //  player->OnCollision(); 
+//    }
+//}

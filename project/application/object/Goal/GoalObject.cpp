@@ -50,16 +50,10 @@ void GoalObject::Draw() {
     PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, color);
 }
 
-void GoalObject::OnCollision(Player* player) {
-    Vector3 pPos = player->GetTransform().translate;
-    Vector3 gPos = object_->GetTranslate();
-    float dist = Length(pPos - gPos);
-    if (dist < (player->GetRadius() + radius_)) {
+void GoalObject::OnCollision(ICollider* other) {
+   if (other->GetCategory() == CollisionCategory::Player) {
         isCleared_ = true;
     }
 
 }
 
-Vector3 GoalObject::GetPosition() const {
-    return object_->GetTranslate();
-}

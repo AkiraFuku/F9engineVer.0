@@ -166,40 +166,54 @@ void Enemy::UpdatePhysics() {
     object_->Update();
 }
 // Enemy.cpp
-void Enemy::OnCollision(Player* other) {
+void Enemy::OnCollision(ICollider* other) {
+
+    // ぶつかった相手がPlayerかどうかを確認
     if (!other || isHit_ || IsDead()) return;
 
-    const char* playerBehavior = other->GetBehaviorName();
-    const char* playerState = other->GetStateName();
+    if (other->GetCategory() == CollisionCategory::Player) {
+        Player* player = dynamic_cast<Player*>(other);
 
-    // プレイヤーが通常状態で攻撃中かチェック
-    if (playerState && strcmp(playerState, "Normal") == 0) {
-        if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
-            PlayHitEffect();
-            isHit_ = true;
-            hitVisualTimer_ = kHitVisualDuration;
+        const char* playerBehavior = player->GetBehaviorName();
+        const char* playerState = player->GetStateName();
 
-            if (strcmp(GetStateName(), "Normal") == 0) {
-                ChangeState(std::make_unique<StateEnemyStan>());
-            } else if (strcmp(GetStateName(), "Stan") == 0) {
-                // ★ここがポイント：ロボットを持っていればプレイヤーを強制変身させる
-                if (robot_ && robot_->CreateRideOnState()) {
-                    // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
-                    // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
-                    other->ChangeState(robot_->CreateRideOnState());
+        // プレイヤーが通常状態で攻撃中かチェック
+        if (playerState && strcmp(playerState, "Normal") == 0) {
+            //攻撃中ならエネミーの状態遷移
+            if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+                PlayHitEffect();
+                isHit_ = true;
+                hitVisualTimer_ = kHitVisualDuration;
+
+                if (strcmp(GetStateName(), "Normal") == 0) {
+                    ChangeState(std::make_unique<StateEnemyStan>());
+                } else if (strcmp(GetStateName(), "Stan") == 0) {
+                    // ★ここがポイント：ロボットを持っていればプレイヤーを強制変身させる
+                    if (robot_ && robot_->CreateRideOnState()) {
+                        // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
+                        // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
+                        player->ChangeState(robot_->CreateRideOnState());
+                    }
+
+                    ChangeState(std::make_unique<StateEnemyDead>());
                 }
-
-                ChangeState(std::make_unique<StateEnemyDead>());
             }
         }
     }
-}
-void Enemy::OnCollision() {
-    if (isHit_ || IsDead()) return;
-    isHit_ = true;
+    //　弾カテゴリの判定
+    if (other->GetCategory()==CollisionCategory::PlayerProjectile)
+    {
+         isHit_ = true;
     PlayHitEffect();
     ChangeState(std::make_unique<StateEnemyDead>());
+    }
 }
+//void Enemy::OnCollision() {
+//    if (isHit_ || IsDead()) return;
+//    isHit_ = true;
+//    PlayHitEffect();
+//    ChangeState(std::make_unique<StateEnemyDead>());
+//}
 
 void Enemy::UpdateGravity()
 {
