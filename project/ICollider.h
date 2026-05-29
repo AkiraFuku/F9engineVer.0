@@ -1,5 +1,11 @@
 #pragma once
 #include "Vector3.h"
+#include "DrawFunction.h"
+struct RayCastHit {
+    Vector3 hitPoint; // 衝突地点
+    float distance;   // 起点からの距離
+    ICollider* object;// 当たった相手
+};
 enum class CollisionCategory {
     Player,
     Enemy,
@@ -26,5 +32,17 @@ class ICollider
     /// </summary>
     /// <returns></returns>
     virtual CollisionCategory GetCategory() const = 0;
+
+    virtual const AABB& GetBoundingBox() const {
+        return boundingBox_;
+    }
+    virtual void UpdateBoundingBox() = 0; // AABBを更新するための関数
+    virtual bool TestCollision(const ICollider* other) const = 0; // 他のコライダーとの衝突判定
+    virtual bool TestRay(const Ray& ray, RayCastHit* outHit) =0;
+
+
+protected:
+        AABB boundingBox_; // 衝突判定用のAABB
+
 };
 
