@@ -24,6 +24,8 @@
 #include <numbers>
 #include <Model.h>
 #include "GoalObject.h"
+#include "Phase.h"
+#include "PlayPhase.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -206,10 +208,16 @@ void GameScene::Initialize() {
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
-    goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
+   
+    goal_->SetRailPosition({  stageRail->GetMaxT(), 0.0f }); // レールの終端付近に配置
+
+
 
 
     CollisionManager::GetInstance()->SetScene(this);
+
+    currentPhase_ = std::make_unique<PlayPhase>();
+
 }
 void GameScene::Finalize() {
 
@@ -217,7 +225,6 @@ void GameScene::Finalize() {
 }
 void GameScene::Update() {
     CheckClear();
-    goal_->Update();
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -284,20 +291,12 @@ void GameScene::Update() {
         activeCamera_->SetRotate(cameraTranslate);
     }
 
-    cameraController->Update();
     debugCameraC->Update();
 
     activeCamera_->Update();
-
-    stageRail->Update();
-
-    player->Update();
-
-    // 全てのProjectileを更新
-    for (auto& projectile : projectiles_) {
-        if (projectile) {
-            projectile->Update();
-        }
+    if (currentPhase_)
+    {
+        currentPhase_->Update(this);
     }
     // 死んだProjectileを削除
     projectiles_.erase(
@@ -306,39 +305,19 @@ void GameScene::Update() {
         projectiles_.end()
     );
 
-    // 全ての敵を更新
-    for (auto& enemy : enemies_) {
-        enemy->Update();
-    }
 
-    // 死んだ敵を削除
+
+   // 死んだ敵を削除
     enemies_.erase(
         std::remove_if(enemies_.begin(), enemies_.end(),
             [](const std::unique_ptr<Enemy>& e) { return e->IsDead(); }),
         enemies_.end()
     );
 
-    // --- 衝突判定の実行 ---
-    CollisionManager* colManager = CollisionManager::GetInstance();
-    //colManager->Clear();
-    //colManager->SetPlayer(player.get());
-    //for (auto& enemy : enemies_) {
-    //    if (enemy) { // 安全確認
-    //        //enemy->Update();
-    //        colManager->AddEnemy(enemy.get());
-
-    //    }
-    //}
-    //for (auto& projectile : projectiles_) {
-    //    colManager->AddProjectile(projectile.get());
-    //}
-
-    colManager->CheckAllCollisions();
 
     skyBox->SetTranslate(activeCamera_->GetTranslate());
     skyBox->Update();
 
-    //activeCamera_->UpdateViewProjection();
     object3d->Update();
 
 #ifdef USE_IMGUI
@@ -439,7 +418,7 @@ void GameScene::Update() {
 #endif // USE_IMGUI
 
 
-    LightManager::GetInstance()->Update();
+    //  LightManager::GetInstance()->Update();
 
 }
 void GameScene::Draw() {

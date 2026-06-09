@@ -17,13 +17,17 @@ void GoalObject::Initialize() {
 }
 
 void GoalObject::SetRail(RailPath* rail) {
-    if (railMover_) railMover_->SetPath(rail);
+
+    if (railMover_) {
+          railMover_->SetPath(rail);
+     //   object_->SetTranslate(railMover_->GetCurrentPosition());
+    }
 }
 
 void GoalObject::SetRailPosition(const Vector2& position) {
     if (railMover_) {
         float progress = position.x; // 進捗をx成分から取得（例）
-        railMover_->BindProgress(&progress); // 進捗をRailMoverにバインド 
+        railMover_->SetProgress(progress); // 進捗をRailMoverにバインド 
         // 初期座標の更新
         Vector3 railPos = railMover_->GetCurrentPosition();
         object_->SetTranslate({ railPos.x, position.y, railPos.z });
@@ -31,12 +35,18 @@ void GoalObject::SetRailPosition(const Vector2& position) {
 }
 
 void GoalObject::SetCamera(Camera* camera) {
+   /* if (railMover_) {
+        object_->SetTranslate(railMover_->GetCurrentPosition());
+    }*/
     if (object_) object_->SetCamera(camera);
 }
 
 void GoalObject::Update() {
     if (railMover_) {
-        object_->SetTranslate(railMover_->GetCurrentPosition());
+        Vector3 pos = railMover_->GetCurrentPosition();
+        // SetRailPositionで設定した Y座標（高さ）を維持したい場合、
+        // メンバ変数に高さを保持しておく必要があります
+        object_->SetTranslate(pos); 
     }
     object_->Update();
 }

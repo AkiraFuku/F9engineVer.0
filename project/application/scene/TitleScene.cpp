@@ -171,7 +171,5 @@ void TitleScene::Draw() {
     PrimitiveDrawer::GetInstance()->DrawSphere(sphere2,{1.0f,1.0f,1.0f,1.0f});
 
     ParticleManager::GetInstance()->Draw();
-    ///////スプライトの描画
-    //sprite->Draw();
-  //  object3d->Draw();
+
 }
