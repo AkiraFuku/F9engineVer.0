@@ -583,7 +583,9 @@
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
     <None Include="StateRideOnTest_Usage.md" />
-    <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
+    <None Include="resources\shaders\CopyImage\FullScreen.hlsli">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -616,12 +618,28 @@
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl">
       <Filter>シェーダー ファイル\Particle</Filter>
     </FxCompile>
-    <FxCompile Include="resources\shaders\CopyImage\FullScreen.VS.hlsl" />
-    <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl" />
-    <FxCompile Include="resources\shaders\GlayScale\GlayScale.PS.hlsl" />
-    <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl" />
-    <FxCompile Include="resources\shaders\Vignetting\Vignette.PS.hlsl" />
-    <FxCompile Include="resources\shaders\Smooth\BoxFilter.PS.hlsl" />
-    <FxCompile Include="resources\shaders\GaussianFilter\GaussianFilter.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Smooth\BoxFilter.PS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\CopyImage\FullScreen.VS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\GaussianFilter\GaussianFilter.PS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\GlayScale\GlayScale.PS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Vignetting\Vignette.PS.hlsl">
+      <Filter>シェーダー ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\OutLine\LuminanceBasedOutline.PS.hlsl" />
+    <FxCompile Include="resources\shaders\OutLine\DepthBasedOutline.PS.hlsl" />
   </ItemGroup>
 </Project>
