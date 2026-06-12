@@ -69,13 +69,15 @@ private:
     Quaternion rotation_ ={ 0.0f,0.0f,0.0f,1.0f };
  
     bool isCleared_=false;
-     uint32_t handle_=0;
-     std::vector<std::unique_ptr<Projectile>> projectiles_;
+    uint32_t handle_=0;
+    std::vector<std::unique_ptr<Projectile>> projectiles_;
 
-     // テスト用レイキャスト衝突判定メンバ変数
-     Triangle testTriangle_;
-     bool isRayHit_ = false;
-     Vector3 rayHitPoint_ = {};
-     float rayHitDistance_ = 0.0f;
-     Ray debugRay_ = {};
+    // テスト用レイキャスト衝突判定メンバ変数
+    std::unique_ptr<Object3d> boxObject_;
+    bool isBoxHit_ = false;
+    Vector3 boxHitPoint_ = {};
+    float boxHitDistance_ = 0.0f;
+    Triangle hitTriangle_ = {};
+    Ray debugRay_ = {};
 };
+

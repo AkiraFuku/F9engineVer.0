@@ -165,4 +165,30 @@ void Object3d::CreateCameraResource()
 
 }
 
+std::vector<Triangle> Object3d::GetWorldTriangles() const {
+    std::vector<Triangle> worldTriangles;
+    if (!model_) {
+        return worldTriangles;
+    }
+
+    // モデルからローカル空間の三角形リストを取得
+    std::vector<Triangle> localTriangles = model_->GetLocalTriangles();
+    worldTriangles.reserve(localTriangles.size());
+
+    // 自身のワールド行列を取得
+    Matrix4x4 worldMat = GetWorldMatrix();
+
+    // 各三角形の頂点をワールド空間に変換
+    for (const auto& localTri : localTriangles) {
+        Triangle worldTri;
+        worldTri.vertices[0] = vector3Transform(localTri.vertices[0], worldMat);
+        worldTri.vertices[1] = vector3Transform(localTri.vertices[1], worldMat);
+        worldTri.vertices[2] = vector3Transform(localTri.vertices[2], worldMat);
+        worldTriangles.push_back(worldTri);
+    }
+
+    return worldTriangles;
+}
+
+
 

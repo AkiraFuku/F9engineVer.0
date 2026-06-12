@@ -89,6 +89,21 @@ public:
     EulerTransform GetTransform() const {
         return transform_;
     }
+    
+    // モデルゲッター
+    Model* GetModel() const { return model_.get(); }
+
+    // ワールド行列ゲッター
+    Matrix4x4 GetWorldMatrix() const {
+        if (wvpResource_) {
+            return wvpResource_->World;
+        }
+        return Makeidentity4x4();
+    }
+
+    // ワールド空間の三角形リストを取得
+    std::vector<Triangle> GetWorldTriangles() const;
+
 
     void SetModelColor(const Vector4& color) {
         if (model_) {

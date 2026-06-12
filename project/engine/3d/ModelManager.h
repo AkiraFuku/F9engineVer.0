@@ -22,6 +22,8 @@ public:
     /// <param name="modelName">モデルの名前</param>
     /// <param name="textureFilePath">テクスチャファイルのパス</param>
     void CreatePlaneFromTex(const std::string& modelName, const std::string& textureFilePath);
+    void CreateBoxModel(const std::string& modelName);
+
 
 private:
   

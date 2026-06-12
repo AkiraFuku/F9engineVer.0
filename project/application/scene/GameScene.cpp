@@ -218,10 +218,17 @@ void GameScene::Initialize() {
 
     currentPhase_ = std::make_unique<PlayPhase>();
 
-    // テスト用三角形オブジェクトの設置 (プレイヤー初期位置(0,0,20)の真下付近)
-    testTriangle_.vertices[0] = { -3.0f, -2.0f, 23.0f };
-    testTriangle_.vertices[1] = { 3.0f, -2.0f, 23.0f };
-    testTriangle_.vertices[2] = { 0.0f, -2.0f, 17.0f };
+    // 立方体モデルの登録と、オブジェクトの生成・配置
+    ModelManager::GetInstance()->CreateBoxModel("box");
+    boxObject_ = std::make_unique<Object3d>();
+    boxObject_->Initialize();
+    boxObject_->SetModel("box");
+    boxObject_->SetCamera(activeCamera_);
+
+    // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
+    Vector3 railPoint1 = stageRail->GetPointPos(1);
+    boxObject_->SetTranslate({ railPoint1.x, -3.0f, railPoint1.z });
+    boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
 }
 void GameScene::Finalize() {
 
@@ -422,19 +429,43 @@ void GameScene::Update() {
 #endif // USE_IMGUI
 
 
-    // プレイヤーの位置から真下にレイキャスト
-    if (player) {
+    // 四角いオブジェクトの更新
+    if (boxObject_) {
+        boxObject_->SetCamera(activeCamera_);
+        boxObject_->Update();
+    }
+
+    // プレイヤーの位置から真下にレイキャスト (箱のメッシュとの判定)
+    if (player && boxObject_) {
         debugRay_.origin = player->GetWorldPosition();
         debugRay_.diff = { 0.0f, -10.0f, 0.0f }; // 長さ10の下向きレイ
 
-        isRayHit_ = CheckRayTriangle(debugRay_, testTriangle_, &rayHitDistance_, &rayHitPoint_);
+        isBoxHit_ = false;
+        boxHitDistance_ = FLT_MAX;
+
+        // 箱オブジェクトのワールド空間の三角形リストを取得
+        std::vector<Triangle> triangles = boxObject_->GetWorldTriangles();
+
+        for (const auto& tri : triangles) {
+            float dist = 0.0f;
+            Vector3 hitPt = {};
+            if (CheckRayTriangle(debugRay_, tri, &dist, &hitPt)) {
+                // 最も近い衝突面を選択
+                if (dist < boxHitDistance_) {
+                    boxHitDistance_ = dist;
+                    boxHitPoint_ = hitPt;
+                    hitTriangle_ = tri;
+                    isBoxHit_ = true;
+                }
+            }
+        }
 
 #ifdef USE_IMGUI
-        ImGui::Begin("Raycast Debug");
-        ImGui::Text("Ray Hit: %s", isRayHit_ ? "True" : "False");
-        if (isRayHit_) {
-            ImGui::Text("Hit Distance: %.3f", rayHitDistance_);
-            ImGui::Text("Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
+        ImGui::Begin("Raycast Box Debug");
+        ImGui::Text("Box Hit: %s", isBoxHit_ ? "True" : "False");
+        if (isBoxHit_) {
+            ImGui::Text("Hit Distance: %.3f", boxHitDistance_);
+            ImGui::Text("Hit Point: (%.3f, %.3f, %.3f)", boxHitPoint_.x, boxHitPoint_.y, boxHitPoint_.z);
         }
         ImGui::End();
 #endif
@@ -471,28 +502,35 @@ void GameScene::Draw() {
     ///////スプライトの描画
     object3d->Draw();
 
+    // 箱オブジェクトの描画
+    if (boxObject_) {
+        boxObject_->Draw();
+    }
+
     // --- レイキャストのデバッグ描画 ---
-    // 三角形の板を描画 (オレンジ色の半透明)
-    PrimitiveDrawer::GetInstance()->DrawTriangle(
-        testTriangle_.vertices[0],
-        testTriangle_.vertices[1],
-        testTriangle_.vertices[2],
-        { 1.0f, 0.5f, 0.0f, 0.5f },
-        FillMode::kSolid
-    );
-    // 三角形の輪郭線も描画して見やすくする
-    PrimitiveDrawer::GetInstance()->DrawLine(testTriangle_.vertices[0], testTriangle_.vertices[1], { 1.0f, 1.0f, 1.0f, 1.0f });
-    PrimitiveDrawer::GetInstance()->DrawLine(testTriangle_.vertices[1], testTriangle_.vertices[2], { 1.0f, 1.0f, 1.0f, 1.0f });
-    PrimitiveDrawer::GetInstance()->DrawLine(testTriangle_.vertices[2], testTriangle_.vertices[0], { 1.0f, 1.0f, 1.0f, 1.0f });
+    // 衝突した三角形があれば赤色で強調描画する
+    if (isBoxHit_) {
+        PrimitiveDrawer::GetInstance()->DrawTriangle(
+            hitTriangle_.vertices[0],
+            hitTriangle_.vertices[1],
+            hitTriangle_.vertices[2],
+            { 1.0f, 0.0f, 0.0f, 0.5f }, // 赤色の半透明
+            FillMode::kSolid
+        );
+        // 輪郭線も描画
+        PrimitiveDrawer::GetInstance()->DrawLine(hitTriangle_.vertices[0], hitTriangle_.vertices[1], { 1.0f, 1.0f, 1.0f, 1.0f });
+        PrimitiveDrawer::GetInstance()->DrawLine(hitTriangle_.vertices[1], hitTriangle_.vertices[2], { 1.0f, 1.0f, 1.0f, 1.0f });
+        PrimitiveDrawer::GetInstance()->DrawLine(hitTriangle_.vertices[2], hitTriangle_.vertices[0], { 1.0f, 1.0f, 1.0f, 1.0f });
+    }
 
     // プレイヤーから射出されるレイを描画 (当たっているなら赤、外れているなら緑)
-    Vector4 rayColor = isRayHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f };
+    Vector4 rayColor = isBoxHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f };
     Vector3 rayEnd = Add(debugRay_.origin, debugRay_.diff);
     PrimitiveDrawer::GetInstance()->DrawLine(debugRay_.origin, rayEnd, rayColor);
 
     // 衝突点がある場合は、交点に球体を描画
-    if (isRayHit_) {
-        Sphere hitSphere = { rayHitPoint_, 0.2f, { 0.0f, 0.0f, 0.0f, 1.0f } };
+    if (isBoxHit_) {
+        Sphere hitSphere = { boxHitPoint_, 0.2f, { 0.0f, 0.0f, 0.0f, 1.0f } };
         PrimitiveDrawer::GetInstance()->DrawSphere(hitSphere, { 0.0f, 0.0f, 1.0f, 1.0f }); // 青い球
     }
 }

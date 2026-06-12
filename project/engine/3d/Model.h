@@ -17,6 +17,7 @@
 #include <utility>
 #include <span>
 #include<array>
+#include "DrawFunction.h"
 class Model
 {
 public:
@@ -216,6 +217,13 @@ public: // 外部入出力
     const std::vector<uint32_t>& GetIndices() const {
         return modelData_.indices;
     }
+    
+    // ローカル空間の三角形リストを取得
+    std::vector<Triangle> GetLocalTriangles() const;
+
+    // 四角いモデル（Box）を動的に生成する
+    static Model* CreateBox();
+
 
 private:
 

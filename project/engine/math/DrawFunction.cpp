@@ -352,10 +352,13 @@ bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistan
     Vector3 cross12 = Cross(v12, v2p);
     Vector3 cross20 = Cross(v20, v0p);
 
-    // すべての外積と法線の内積が同じ向き（>= 0.0f）なら交差している
-    if (Dot(cross01, normal) >= 0.0f &&
-        Dot(cross12, normal) >= 0.0f &&
-        Dot(cross20, normal) >= 0.0f) {
+    float d0 = Dot(cross01, normal);
+    float d1 = Dot(cross12, normal);
+    float d2 = Dot(cross20, normal);
+
+    // すべての外積と法線の内積が同じ向き（すべて0以上、またはすべて0以下）なら交差している
+    if ((d0 >= 0.0f && d1 >= 0.0f && d2 >= 0.0f) ||
+        (d0 <= 0.0f && d1 <= 0.0f && d2 <= 0.0f)) {
         if (outDistance) {
             *outDistance = t;
         }

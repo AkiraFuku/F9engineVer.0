@@ -647,3 +647,105 @@ void Model::DebugDrawSkeleton()
 
 }
 
+std::vector<Triangle> Model::GetLocalTriangles() const {
+    std::vector<Triangle> triangles;
+    const auto& vertices = modelData_.vertices;
+    const auto& indices = modelData_.indices;
+
+    // 3点ごとに三角形を構築
+    triangles.reserve(indices.size() / 3);
+    for (size_t i = 0; i < indices.size(); i += 3) {
+        if (i + 2 < indices.size()) {
+            Triangle tri;
+            tri.vertices[0] = vertices[indices[i]].position.ToVector3();
+            tri.vertices[1] = vertices[indices[i + 1]].position.ToVector3();
+            tri.vertices[2] = vertices[indices[i + 2]].position.ToVector3();
+            triangles.push_back(tri);
+        }
+    }
+    return triangles;
+}
+
+Model* Model::CreateBox() {
+    Model* model = new Model();
+    model->modelData_.material.textureFilePath = "resources/uvChecker.png";
+    TextureManager::GetInstance()->LoadTexture(model->modelData_.material.textureFilePath);
+    model->modelData_.material.textureIndex =
+        TextureManager::GetInstance()->GetTextureIndexByFilePath(model->modelData_.material.textureFilePath);
+
+    // 立方体のサイズは 1x1x1 (半径 0.5f)
+    float w = 0.5f;
+
+    // 24頂点のデータ定義 (位置, UV, 法線)
+    struct TempVertex {
+        Vector3 pos;
+        Vector2 uv;
+        Vector3 normal;
+    };
+
+    std::vector<TempVertex> tempVertices = {
+        // 前面 (Z+)
+        { {-w, -w,  w}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
+        { { w, -w,  w}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
+        { {-w,  w,  w}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} },
+        { { w,  w,  w}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f} },
+
+        // 後面 (Z-)
+        { { w, -w, -w}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} },
+        { {-w, -w, -w}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} },
+        { { w,  w, -w}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} },
+        { {-w,  w, -w}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} },
+
+        // 左面 (X-)
+        { {-w, -w, -w}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f} },
+        { {-w, -w,  w}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f} },
+        { {-w,  w, -w}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f} },
+        { {-w,  w,  w}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f} },
+
+        // 右面 (X+)
+        { { w, -w,  w}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f} },
+        { { w, -w, -w}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f} },
+        { { w,  w,  w}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f} },
+        { { w,  w, -w}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f} },
+
+        // 上面 (Y+)
+        { {-w,  w,  w}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f} },
+        { { w,  w,  w}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f} },
+        { {-w,  w, -w}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f} },
+        { { w,  w, -w}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f} },
+
+        // 下面 (Y-)
+        { {-w, -w, -w}, {0.0f, 1.0f}, {0.0f, -1.0f, 0.0f} },
+        { { w, -w, -w}, {1.0f, 1.0f}, {0.0f, -1.0f, 0.0f} },
+        { {-w, -w,  w}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f} },
+        { { w, -w,  w}, {1.0f, 0.0f}, {0.0f, -1.0f, 0.0f} },
+    };
+
+    model->modelData_.vertices.resize(tempVertices.size());
+    for (size_t i = 0; i < tempVertices.size(); ++i) {
+        model->modelData_.vertices[i].position = { tempVertices[i].pos.x, tempVertices[i].pos.y, tempVertices[i].pos.z, 1.0f };
+        model->modelData_.vertices[i].texcord = tempVertices[i].uv;
+        model->modelData_.vertices[i].normal = tempVertices[i].normal;
+    }
+
+    // インデックスの設定
+    for (uint32_t i = 0; i < 6; ++i) {
+        uint32_t offset = i * 4;
+        // 三角形1
+        model->modelData_.indices.push_back(offset + 0);
+        model->modelData_.indices.push_back(offset + 2);
+        model->modelData_.indices.push_back(offset + 1);
+        // 三角形2
+        model->modelData_.indices.push_back(offset + 1);
+        model->modelData_.indices.push_back(offset + 2);
+        model->modelData_.indices.push_back(offset + 3);
+    }
+
+    model->CreateVertexBuffer();
+    model->CreateIndexBuffer();
+    model->CreateMaterialResource();
+
+    return model;
+}
+
+

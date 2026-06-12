@@ -81,3 +81,14 @@ void ModelManager::CreatePlaneFromTex(const std::string& modelName, const std::s
 
     
 }
+
+void ModelManager::CreateBoxModel(const std::string& modelName)
+{
+    if (models.contains(modelName)) return;
+
+    std::shared_ptr<Model> model(Model::CreateBox());
+    model->SetName(modelName);
+
+    models.insert(std::make_pair(modelName, std::move(model)));
+}
+
