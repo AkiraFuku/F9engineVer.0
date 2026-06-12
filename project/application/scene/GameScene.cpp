@@ -218,6 +218,10 @@ void GameScene::Initialize() {
 
     currentPhase_ = std::make_unique<PlayPhase>();
 
+    // テスト用三角形オブジェクトの設置 (プレイヤー初期位置(0,0,20)の真下付近)
+    testTriangle_.vertices[0] = { -3.0f, -2.0f, 23.0f };
+    testTriangle_.vertices[1] = { 3.0f, -2.0f, 23.0f };
+    testTriangle_.vertices[2] = { 0.0f, -2.0f, 17.0f };
 }
 void GameScene::Finalize() {
 
@@ -418,6 +422,24 @@ void GameScene::Update() {
 #endif // USE_IMGUI
 
 
+    // プレイヤーの位置から真下にレイキャスト
+    if (player) {
+        debugRay_.origin = player->GetWorldPosition();
+        debugRay_.diff = { 0.0f, -10.0f, 0.0f }; // 長さ10の下向きレイ
+
+        isRayHit_ = CheckRayTriangle(debugRay_, testTriangle_, &rayHitDistance_, &rayHitPoint_);
+
+#ifdef USE_IMGUI
+        ImGui::Begin("Raycast Debug");
+        ImGui::Text("Ray Hit: %s", isRayHit_ ? "True" : "False");
+        if (isRayHit_) {
+            ImGui::Text("Hit Distance: %.3f", rayHitDistance_);
+            ImGui::Text("Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
+        }
+        ImGui::End();
+#endif
+    }
+
     //  LightManager::GetInstance()->Update();
 
 }
@@ -448,6 +470,31 @@ void GameScene::Draw() {
     ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     object3d->Draw();
+
+    // --- レイキャストのデバッグ描画 ---
+    // 三角形の板を描画 (オレンジ色の半透明)
+    PrimitiveDrawer::GetInstance()->DrawTriangle(
+        testTriangle_.vertices[0],
+        testTriangle_.vertices[1],
+        testTriangle_.vertices[2],
+        { 1.0f, 0.5f, 0.0f, 0.5f },
+        FillMode::kSolid
+    );
+    // 三角形の輪郭線も描画して見やすくする
+    PrimitiveDrawer::GetInstance()->DrawLine(testTriangle_.vertices[0], testTriangle_.vertices[1], { 1.0f, 1.0f, 1.0f, 1.0f });
+    PrimitiveDrawer::GetInstance()->DrawLine(testTriangle_.vertices[1], testTriangle_.vertices[2], { 1.0f, 1.0f, 1.0f, 1.0f });
+    PrimitiveDrawer::GetInstance()->DrawLine(testTriangle_.vertices[2], testTriangle_.vertices[0], { 1.0f, 1.0f, 1.0f, 1.0f });
+
+    // プレイヤーから射出されるレイを描画 (当たっているなら赤、外れているなら緑)
+    Vector4 rayColor = isRayHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f };
+    Vector3 rayEnd = Add(debugRay_.origin, debugRay_.diff);
+    PrimitiveDrawer::GetInstance()->DrawLine(debugRay_.origin, rayEnd, rayColor);
+
+    // 衝突点がある場合は、交点に球体を描画
+    if (isRayHit_) {
+        Sphere hitSphere = { rayHitPoint_, 0.2f, { 0.0f, 0.0f, 0.0f, 1.0f } };
+        PrimitiveDrawer::GetInstance()->DrawSphere(hitSphere, { 0.0f, 0.0f, 1.0f, 1.0f }); // 青い球
+    }
 }
 GameScene::GameScene() = default;
 

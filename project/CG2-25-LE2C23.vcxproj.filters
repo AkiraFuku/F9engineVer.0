@@ -151,6 +151,15 @@
     <Filter Include="App\System\Colition">
       <UniqueIdentifier>{741c0feb-5df3-41df-a14c-8b74901d3f48}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Object\Goal">
+      <UniqueIdentifier>{41b279d9-e08e-46ef-a948-99d8e5ed0354}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="シェーダー ファイル\ofScrene">
+      <UniqueIdentifier>{fba86445-915a-474c-b853-40ff87b947e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App\Scene\GameScene">
+      <UniqueIdentifier>{a05eb41e-6709-40b0-ad9d-b4bfc8eff064}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -246,9 +255,6 @@
     <ClCompile Include="engine\scene\SceneManager.cpp">
       <Filter>engine\scene</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\GameScene.cpp">
-      <Filter>App\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="application\scene\TitleScene.cpp">
       <Filter>App\Scene</Filter>
     </ClCompile>
@@ -303,9 +309,6 @@
     <ClCompile Include="application\object\player\Command.cpp">
       <Filter>App\Object\Player</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Tool\SkyBox.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="application\object\player\Behavior\PlayerState.cpp">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClCompile>
@@ -345,23 +348,29 @@
     <ClCompile Include="application\Collision\CollisionManager.cpp">
       <Filter>App\System\Colition</Filter>
     </ClCompile>
-    <ClCompile Include="engine\math\Quaternion.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\base\OffScreen.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ICollider.cpp">
+      <Filter>App\System\Colition</Filter>
     </ClCompile>
     <ClCompile Include="application\object\Goal\GoalObject.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Object\Goal</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\GameScene.cpp">
+      <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
     <ClCompile Include="Phase.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Scene</Filter>
     </ClCompile>
     <ClCompile Include="PlayPhase.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
-    <ClCompile Include="ICollider.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="engine\math\Quaternion.cpp">
+      <Filter>engine\math</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\base\OffScreen.cpp">
+      <Filter>engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\SkyBox.cpp">
+      <Filter>engine\base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -461,9 +470,6 @@
     <ClInclude Include="engine\scene\SceneManager.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\GameScene.h">
-      <Filter>App\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="application\scene\TitleScene.h">
       <Filter>App\Scene</Filter>
     </ClInclude>
@@ -527,9 +533,6 @@
     <ClInclude Include="application\object\player\Command.h">
       <Filter>App\Object\Player</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Tool\SkyBox.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="application\object\player\Behavior\PlayerState.h">
       <Filter>App\Object\Player\Behavia</Filter>
     </ClInclude>
@@ -569,23 +572,29 @@
     <ClInclude Include="application\Collision\CollisionManager.h">
       <Filter>App\System\Colition</Filter>
     </ClInclude>
-    <ClInclude Include="engine\math\Quaternion.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\base\OffScreen.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="ICollider.h">
+      <Filter>App\System\Colition</Filter>
     </ClInclude>
     <ClInclude Include="application\object\Goal\GoalObject.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Object\Goal</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\GameScene.h">
+      <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
     <ClInclude Include="Phase.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Scene</Filter>
     </ClInclude>
     <ClInclude Include="PlayPhase.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
-    <ClInclude Include="ICollider.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="engine\math\Quaternion.h">
+      <Filter>engine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\SkyBox.h">
+      <Filter>engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\base\OffScreen.h">
+      <Filter>engine\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -607,7 +616,9 @@
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
     <None Include="StateRideOnTest_Usage.md" />
-    <None Include="resources\shaders\CopyImage\CopyImage.hlsli" />
+    <None Include="resources\shaders\CopyImage\CopyImage.hlsli">
+      <Filter>シェーダー ファイル\ofScrene</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -640,8 +651,14 @@
     <FxCompile Include="resources\shaders\Cylinder\ParticleCylinder.VS.hlsl">
       <Filter>シェーダー ファイル\Particle</Filter>
     </FxCompile>
-    <FxCompile Include="resources\shaders\CopyImage\CopyImage.VS.hlsl" />
-    <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl" />
-    <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl" />
+    <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl">
+      <Filter>シェーダー ファイル\Object3d</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\CopyImage\CopyImage.VS.hlsl">
+      <Filter>シェーダー ファイル\ofScrene</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl">
+      <Filter>シェーダー ファイル\ofScrene</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

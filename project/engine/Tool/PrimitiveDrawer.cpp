@@ -306,12 +306,26 @@ void PrimitiveDrawer::DrawGrid() {
 }
 
 void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
-    Vector3 p[8] = {
-        {aabb.min.x, aabb.min.y, aabb.min.z}, {aabb.max.x, aabb.min.y, aabb.min.z},
-        {aabb.max.x, aabb.max.y, aabb.min.z}, {aabb.min.x, aabb.max.y, aabb.min.z},
-        {aabb.min.x, aabb.min.y, aabb.max.z}, {aabb.max.x, aabb.min.y, aabb.max.z},
-        {aabb.max.x, aabb.max.y, aabb.max.z}, {aabb.min.x, aabb.max.y, aabb.max.z}
-    };
+    //Vector3 p[8] = {
+    //    {aabb.min.x, aabb.min.y, aabb.min.z}, {aabb.max.x, aabb.min.y, aabb.min.z},
+    //    {aabb.max.x, aabb.max.y, aabb.min.z}, {aabb.min.x, aabb.max.y, aabb.min.z},
+    //    {aabb.min.x, aabb.min.y, aabb.max.z}, {aabb.max.x, aabb.min.y, aabb.max.z},
+    //    {aabb.max.x, aabb.max.y, aabb.max.z}, {aabb.min.x, aabb.max.y, aabb.max.z}
+    //};
+
+      if (vertices_.size() + 4 > kMaxVertices) return;//
+
+    DrawCommand cmd;
+    cmd.vertexStart = static_cast<uint32_t>(vertices_.size());
+    cmd.vertexCount = 0;
+    cmd.topology = D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    cmd.psoTopology = Toporogy::TriangleList;
+    cmd.fillMode = FillMode::kWireFrame; // 線は常にワイヤー
+    cmd.blendMode = BlendMode::Normal;
+
+  
+
+    commands_.push_back(cmd);
 
 }
 

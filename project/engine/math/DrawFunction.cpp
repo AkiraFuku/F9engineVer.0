@@ -307,3 +307,63 @@ bool IsCollision(const AABB& aabb, const Segment& segment)
 
 	return false;
 }
+
+bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistance, Vector3* outHitPoint) {
+    // 三角形の頂点
+    const Vector3& v0 = triangle.vertices[0];
+    const Vector3& v1 = triangle.vertices[1];
+    const Vector3& v2 = triangle.vertices[2];
+
+    // 三角形の辺を求める
+    Vector3 v01 = Subtract(v1, v0);
+    Vector3 v12 = Subtract(v2, v1);
+    Vector3 v20 = Subtract(v0, v2);
+
+    // 三角形の法線ベクトルを求める
+    Vector3 normal = Cross(v01, v12);
+    float normalLen = Length(normal);
+    if (normalLen == 0.0f) {
+        return false;
+    }
+    // 法線ベクトルを正規化
+    normal = Normalize(normal);
+
+    float d = Dot(v0, normal);
+    float dot = Dot(ray.diff, normal);
+    if (dot == 0.0f) {
+        return false;
+    }
+
+    float t = (d - Dot(ray.origin, normal)) / dot;
+    if (t <= 0.0f) {
+        return false;
+    }
+
+    // レイの射出点から交点までのベクトルを求める
+    Vector3 p = Add(ray.origin, Multiply(t, ray.diff));
+
+    // 三角形の各頂点から交点までのベクトルを求める
+    Vector3 v0p = Subtract(p, v0);
+    Vector3 v1p = Subtract(p, v1);
+    Vector3 v2p = Subtract(p, v2);
+
+    // 各辺の外積を求める
+    Vector3 cross01 = Cross(v01, v1p);
+    Vector3 cross12 = Cross(v12, v2p);
+    Vector3 cross20 = Cross(v20, v0p);
+
+    // すべての外積と法線の内積が同じ向き（>= 0.0f）なら交差している
+    if (Dot(cross01, normal) >= 0.0f &&
+        Dot(cross12, normal) >= 0.0f &&
+        Dot(cross20, normal) >= 0.0f) {
+        if (outDistance) {
+            *outDistance = t;
+        }
+        if (outHitPoint) {
+            *outHitPoint = p;
+        }
+        return true;
+    }
+    return false;
+}
+

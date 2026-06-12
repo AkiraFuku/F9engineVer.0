@@ -53,3 +53,7 @@ bool IsCollision(const AABB& a, const AABB& b);
 bool IsCollision(const AABB& aabb,const Sphere& sphere);
 bool IsCollision(const AABB& aabb,const Segment& segment);
 
+// レイと三角形の交差判定 (交点と距離を取得)
+bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistance, Vector3* outHitPoint);
+
+

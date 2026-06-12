@@ -1,7 +1,9 @@
 #pragma once
 #include"MathFunction.h"
+#include "DrawFunction.h"
 #include "Sprite.h"
 #include"Object3D.h"
+
 #include "Player.h"
 #include "Scene.h"
 #include <memory>
@@ -69,5 +71,11 @@ private:
     bool isCleared_=false;
      uint32_t handle_=0;
      std::vector<std::unique_ptr<Projectile>> projectiles_;
-};
 
+     // テスト用レイキャスト衝突判定メンバ変数
+     Triangle testTriangle_;
+     bool isRayHit_ = false;
+     Vector3 rayHitPoint_ = {};
+     float rayHitDistance_ = 0.0f;
+     Ray debugRay_ = {};
+};
