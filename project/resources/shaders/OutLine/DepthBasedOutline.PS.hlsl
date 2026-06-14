@@ -6,9 +6,7 @@ SamplerState gSampler : register(s0);
 SamplerState gSamplerPoint : register(s1);
 struct Material
 {
-    float4 Color;
-    int enableLighting;
-    float4x4 uvTransform; // UV変換行列
+    float4x4 ProjectionInverse; // UV変換行列
 };
 ConstantBuffer<Material> gMaterial : register(b0);
 
@@ -65,10 +63,10 @@ VertexShaderOutput input)
         {
             float2 texcoord = input.texcoord + kIndex3x3[x][y] * uvStepSize;
             float ndcDepth = gTextureDepth.Sample(gSamplerPoint, texcoord);
-            float4 viewSpace = mul(float4(0.0f, 0.0f, ndcDepth, 1.0f),);
-            
-            difference.x += luminance * kPrewittHorizontalKarnel[x][y];
-            difference.y += luminance * kPrewittVerticalKernel[x][y];
+            float4 viewSpace = mul(float4(0.0f, 0.0f, ndcDepth, 1.0f),gMaterial.ProjectionInverse);
+            float viewZ = -viewSpace.z * rcp(viewSpace.w);
+            difference.x += viewZ * kPrewittHorizontalKarnel[x][y];
+            difference.y += viewZ * kPrewittVerticalKernel[x][y];
         }
     }
  
