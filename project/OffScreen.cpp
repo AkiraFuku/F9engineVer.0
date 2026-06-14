@@ -130,7 +130,6 @@ void OffScreen::Initialize()
 
     psoConfig.shaderPaths.clear();  psoConfig.shaderPaths = {
         { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
-        //{ ShaderType::PS, L"resources/shaders/Smooth/BoxFilter.ps.hlsl", "main", L"ps_6_0" }
         { ShaderType::PS, L"resources/shaders/OutLine/DepthBasedOutline.ps.hlsl", "main", L"ps_6_0" }
     };
     
@@ -141,14 +140,28 @@ void OffScreen::Initialize()
         D3D12_STATIC_SAMPLER_DESC sampler = PSOManager::GetInstance()->StaticSamplers();
         staticSamplers.push_back(sampler);
 
+        sampler.ShaderRegister = 1; // 1番目のルートパラメータ用
+        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT; // ポイントフィルタに変更
+        staticSamplers.push_back(sampler);
+
         D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
         descRangeTexture[0].BaseShaderRegister = 0;
         descRangeTexture[0].NumDescriptors = 1;
         descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-        CD3DX12_ROOT_PARAMETER rootParameters[1]{};
+         // 深度SRV
+        D3D12_DESCRIPTOR_RANGE descRangeDepth[1]{};
+        descRangeDepth[0].BaseShaderRegister = 1;
+        descRangeDepth[0].NumDescriptors = 1;
+        descRangeDepth[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        descRangeDepth[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+        CD3DX12_ROOT_PARAMETER rootParameters[3]{};
         rootParameters[0].InitAsDescriptorTable(1, &descRangeTexture[0]);
+        rootParameters[1].InitAsDescriptorTable(1, &descRangeDepth[0]);
+        rootParameters[2].InitAsConstantBufferView(0);
 
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
         rootSignatureDesc.Init(_countof(rootParameters), rootParameters, (UINT)staticSamplers.size(), staticSamplers.data(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -199,6 +212,11 @@ void OffScreen::Draw()
     // 3. SRVのセット（第1引数はルートパラメータの番号: 今回は0番）
     uint32_t srvIndex = DXCommon::GetInstance()->GetRenderTextureSrvIndex();
     srvManager->SetGraphicsRootDescriptorTable(0, srvIndex);
+
+     srvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
+    srvManager->SetGraphicsRootDescriptorTable(1, srvIndex);
+
+    commandList->SetGraphicsRootConstantBufferView(2, materialConstantBuffer_->GetGPUVirtualAddress());
 
     // 4. 描画実行（頂点シェーダーで全画面生成している場合は3頂点）
     commandList->DrawInstanced(3, 1, 0, 0);

@@ -3,6 +3,7 @@
 #include <wrl/client.h>
 #include <memory>
 #include <vector>
+#include "Vector4.h"
 
 class OffScreen
 {
@@ -23,6 +24,12 @@ private:
 
     static std::unique_ptr<OffScreen> instance;
 
+    struct Material
+    {
+        Matrix4x4 projectionInverse;
+    };
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialConstantBuffer_;
+    
     // 前回のコードでこれらがエラーになっていた場合、ここに含まれる型が
     // <d3d12.h> を読み込むことで解決されます
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

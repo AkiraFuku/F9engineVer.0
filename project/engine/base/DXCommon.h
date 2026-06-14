@@ -114,8 +114,6 @@ private:
   RenderTexture renderTexture_;
   Microsoft::WRL::ComPtr<ID3D12Resource>
   CreateRenderTextureResource(DXGI_FORMAT format, const Vector4 &ClearColor);
-  // D3D12_CLEAR_VALUE renderTextureClearValue_{};
-  // Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_;
   // レンダーテクスチャリソースデスクリプション
   D3D12_RESOURCE_DESC renderTextureResourceDesc_{};
   D3D12_HEAP_PROPERTIES renderTextureHeapProperties_{};

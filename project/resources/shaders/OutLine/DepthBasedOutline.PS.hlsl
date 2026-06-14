@@ -11,7 +11,6 @@ struct Material
 ConstantBuffer<Material> gMaterial : register(b0);
 
 
-int kernelSize : register(b1);
 
 
 static const float kPrewittHorizontalKarnel[3][3] =
