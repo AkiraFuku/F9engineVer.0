@@ -16,8 +16,7 @@ DXCommon* DXCommon::GetInstance() {
     if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public DXCommon {
-            Helper() : DXCommon() {
-            }
+            Helper() : DXCommon() {}
         };
         instance = std::make_unique<Helper>();
     }
@@ -39,6 +38,7 @@ void DXCommon::Initialize()
     CreateDXCompiler();
     SrvManager::GetInstance()->Initialize();
     CreateRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    CreateDepthTexture(DXGI_FORMAT_R24G8_TYPELESS);
 
 }
 
@@ -76,6 +76,11 @@ void DXCommon::PreDraw()
 
 void DXCommon::PostDraw()
 {
+    // ─── 【追加】次のフレームのために状態を元（DEPTH_WRITE）に戻しておく ───
+    depthBarrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    depthBarrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+    
+    commandList_->ResourceBarrier(1, &depthBarrier_);
     //バックバッファのインデックス取得
     UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
@@ -145,11 +150,21 @@ void DXCommon::SwapChainDraw()
     //ビューポート・シザー矩形の設定
     commandList_->RSSetViewports(1, &viewport_);//ビューポートの設定
     commandList_->RSSetScissorRects(1, &scissorRect_);//シザー矩形の設定
+
+    
+    depthBarrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    depthBarrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    depthBarrier_.Transition.pResource = depthTexture_.resource.Get();
+    depthBarrier_.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    depthBarrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE; // 元の状態
+    depthBarrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE; // SRV読み込み状態へ
+
+    commandList_->ResourceBarrier(1, &depthBarrier_);
 }
 void DXCommon::RenderTextureDraw()
 {
     UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
-    
+
 
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvHeap_, descriptorSizeDSV_, 0);
     commandList_->OMSetRenderTargets(1, &renderTexture_.rtvHandle, FALSE, &dsvHandle);
@@ -362,6 +377,14 @@ void DXCommon::CreateRenderTexture(DXGI_FORMAT format, const Vector4& ClearColor
 
 }
 
+void DXCommon::CreateDepthTexture(DXGI_FORMAT format)
+{
+    depthTexture_.resource = CreateDepthTextureResource(format);
+    CreateDepthTextureDSV();
+    depthTexture_.srvIndex = SrvManager::GetInstance()->AllocateSRV();
+    SrvManager::GetInstance()->CreateSRVForTextureDepth(depthTexture_.srvIndex, depthTexture_.resource.Get());
+}
+
 
 
 void DXCommon::CreateDevice()
@@ -539,6 +562,57 @@ void DXCommon::CreateRenderTextureRTV()
     );
 }
 
+Microsoft::WRL::ComPtr<ID3D12Resource> DXCommon::CreateDepthTextureResource(DXGI_FORMAT format)
+{
+    D3D12_RESOURCE_DESC desc{};
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    desc.Width = WinApp::kClientWidth;
+    desc.Height = WinApp::kClientHeight;
+    desc.MipLevels = 1;
+    desc.DepthOrArraySize = 1;
+    // シェーダから読みたいので typeless で作成
+    desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    desc.SampleDesc.Count = 1;
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_CLEAR_VALUE clearValue{};
+    // DSV に使うフォーマットを指定（クリア値用）
+    clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    clearValue.DepthStencil.Depth = 1.0f;
+    clearValue.DepthStencil.Stencil = 0;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+    HRESULT hr = device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &clearValue,
+        IID_PPV_ARGS(&resource)
+    );
+    assert(SUCCEEDED(hr));
+    return resource;
+}
+
+void DXCommon::CreateDepthTextureDSV()
+{
+
+    // depthTexture_.resource は CreateDepthTextureResource で作ること
+ // DSV を作成（DSV フォーマットは D24_UNORM_S8_UINT）
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvHeap_, descriptorSizeDSV_, 1);
+    device_->CreateDepthStencilView(depthTexture_.resource.Get(), &dsvDesc, dsvHandle);
+    // SRV を作成（SRV フォーマットは R24_UNORM_X8_TYPELESS）
+    depthTexture_.srvIndex = SrvManager::GetInstance()->AllocateSRV();
+    SrvManager::GetInstance()->CreateSRVForTextureDepth(depthTexture_.srvIndex, depthTexture_.resource.Get());
+
+}
+
 void DXCommon::CreateSwapChain()
 {
 
@@ -608,7 +682,7 @@ void DXCommon::CreateDescriptorHeaps()
     //RTVヒープの作成
     rtvHeap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3, false);
     //DSVヒープの作成
-    dsvHeap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+    dsvHeap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 2, false);
 
 
 

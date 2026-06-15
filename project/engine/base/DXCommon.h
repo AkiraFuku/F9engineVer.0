@@ -129,6 +129,7 @@ private:
   Microsoft::WRL::ComPtr<ID3D12Resource>
   CreateDepthTextureResource(DXGI_FORMAT format);
   void CreateDepthTextureDSV();
+  D3D12_RESOURCE_BARRIER depthBarrier_{};
   // スワップチェーン
   void CreateSwapChain();
   Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
