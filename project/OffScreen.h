@@ -5,6 +5,7 @@
 #include <vector>
 #include "Vector4.h"
 
+class Camera;
 class OffScreen
 {
 public:
@@ -18,16 +19,23 @@ public:
     void Finalize();
     void Draw();
 
+    void SetCamera(Camera* camera) {
+        camera_ = camera;
+    }
+
 private:
     OffScreen() = default;
     ~OffScreen() = default;
 
     static std::unique_ptr<OffScreen> instance;
 
+    Camera* camera_;
+
     struct Material
     {
         Matrix4x4 projectionInverse;
     };
+    Material* materialData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> materialConstantBuffer_;
     
     // 前回のコードでこれらがエラーになっていた場合、ここに含まれる型が

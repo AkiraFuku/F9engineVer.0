@@ -4,7 +4,8 @@
 #include "Logger.h"
 #include "SrvManager.h"
 #include <cassert>
-
+#include "Camera.h"
+#include "mathfunction.h"
 // インスタンス定義
 std::unique_ptr<OffScreen> OffScreen::instance = nullptr;
 
@@ -192,7 +193,11 @@ void OffScreen::Initialize()
     };
     psoConfig.depthEnable = false;
 
-    PSOManager::GetInstance()->RegisterPsoGenerator("Vignette", psoConfig);
+    PSOManager::GetInstance()->RegisterPsoGenerator("DepthOutline", psoConfig);
+
+    // マテリアル定数バッファの生成とマップ
+    materialConstantBuffer_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+    materialConstantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 }
 
 void OffScreen::Draw()
@@ -200,9 +205,19 @@ void OffScreen::Draw()
     auto commandList = DXCommon::GetInstance()->GetCommandList();
     auto psoManager = PSOManager::GetInstance();
     auto srvManager = SrvManager::GetInstance();
+    if (!camera_)
+    {
+
+        Logger::Log("Camera is not set for OffScreen.");
+        return;
+
+    }
+    materialData_->projectionInverse = Inverse(
+        camera_->GetProjectionMatrix()
+    );
 
     // 1. PSOの取得とセット
-    PsoSet pso = psoManager->GetPso("Vignette");
+    PsoSet pso = psoManager->GetPso("DepthOutline");
     commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
     commandList->SetPipelineState(pso.pipelineState.Get());
 

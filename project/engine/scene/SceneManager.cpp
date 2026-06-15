@@ -3,6 +3,7 @@
 #include <memory>
 #include "LightManager.h"
 #include "PrimitiveDrawer.h"
+#include "OffScreen.h"
 
 // 静的メンバ変数の実体
 std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
@@ -42,6 +43,8 @@ void SceneManager::Update() {
         scene_ = std::move(nextScene_);
         scene_->SetSceneManager(this);
         scene_->Initialize();
+
+        OffScreen::GetInstance()->SetCamera(scene_->GetActiveCamera());
     }
     if (scene_) {
         scene_->Update();

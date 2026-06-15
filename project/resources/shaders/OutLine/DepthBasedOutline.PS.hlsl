@@ -1,7 +1,7 @@
 #include "../CopyImage/FullScreen.hlsli"
 
 Texture2D<float4> gTexture : register(t0);
-Texture2D<float4> gTextureDepth : register(t1);
+Texture2D<float> gTextureDepth : register(t1);
 SamplerState gSampler : register(s0);
 SamplerState gSamplerPoint : register(s1);
 struct Material
