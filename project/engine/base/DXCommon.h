@@ -137,8 +137,8 @@ private:
 
   /*WinApp* winApp_ = nullptr;*/
   // 深度バッファ
-  Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
-  void CreateDepthStencilTextureResource();
+  //Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
+  //void CreateDepthStencilTextureResource();
 
   // 各種ディスクプリプターヒープ
   void CreateDescriptorHeaps();
@@ -160,7 +160,7 @@ private:
       const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap,
       uint32_t descriptorSize, uint32_t index);
   // 深度ステンシルビュー
-  void CreateDepthStencilView();
+ /* void CreateDepthStencilView();*/
   // フェンス
   void CreateFence();
   Microsoft::WRL::ComPtr<ID3D12Fence> fence_ = nullptr;
