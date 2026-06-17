@@ -4,6 +4,16 @@
 #include <memory>
 #include <vector>
 #include "Vector4.h"
+#include "Vector2.h"
+
+
+struct BlurParam
+{
+    Vector2 center;
+    int32_t radius;
+    float blurWidth;
+
+};
 
 class Camera;
 class OffScreen
@@ -31,13 +41,16 @@ private:
 
     Camera* camera_;
 
+    BlurParam* blurParamData_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> blurConstantBuffer_;
+
     struct Material
     {
         Matrix4x4 projectionInverse;
     };
     Material* materialData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> materialConstantBuffer_;
-    
+
     // 前回のコードでこれらがエラーになっていた場合、ここに含まれる型が
     // <d3d12.h> を読み込むことで解決されます
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;

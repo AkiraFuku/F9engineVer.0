@@ -641,5 +641,6 @@
     </FxCompile>
     <FxCompile Include="resources\shaders\OutLine\LuminanceBasedOutline.PS.hlsl" />
     <FxCompile Include="resources\shaders\OutLine\DepthBasedOutline.PS.hlsl" />
+    <FxCompile Include="resources\shaders\RadialBlur\RadialBlur.PS.hlsl" />
   </ItemGroup>
 </Project>
