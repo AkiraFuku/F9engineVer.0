@@ -90,9 +90,9 @@ void GameScene::Initialize() {
     ParticleManager::ParticleUpdateFunc update = [](ParticleManager::Particle& particle, float deltaTime) {
 
         };
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
+    ParticleManager::GetInstance()->CreateParticleGroup("GameEffects", "Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Hit", "resources/gradationLine.png", ParticleManager::EffectType::Ring, initialize, update);
+    ParticleManager::GetInstance()->CreateParticleGroup("GameEffects", "Hit", "resources/gradationLine.png", ParticleManager::EffectType::Ring, initialize, update);
     /*EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
     emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 5, 5.0f, 0.0f);*/
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
@@ -206,14 +206,14 @@ void GameScene::Initialize() {
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
-    goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
+    goal_->SetRailPosition({ 3.0f, 0.0f }); // レールの終端付近に配置
 
 
     CollisionManager::GetInstance()->SetScene(this);
 }
 void GameScene::Finalize() {
 
-    ParticleManager::GetInstance()->ReleaseParticleGroup();
+    ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
 void GameScene::Update() {
     CheckClear();

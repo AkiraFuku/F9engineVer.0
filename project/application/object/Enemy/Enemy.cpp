@@ -28,7 +28,8 @@ void Enemy::Initialize()
     railMover_ = std::make_unique<RailMover>();
     ChangeBehavior(std::make_unique<EnemyBehaviorPatrol>());
     ChangeState(std::make_unique<StateEnemyNormal>());
-    hitParticle_ = std::make_unique<ParticleEmitter>("Hit", object_->GetTransform(), 5, 5.0f, 0.0f);
+    // セット名 "GameEffects"、グループ名は空（セット内のすべてのエフェクトを発生させる）
+    hitParticle_ = std::make_unique<ParticleEmitter>("GameEffects", "", object_->GetTransform(), 5, 5.0f, 0.0f);
 
 }
 

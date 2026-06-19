@@ -21,9 +21,11 @@ void GoalObject::SetRail(RailPath* rail) {
 }
 
 void GoalObject::SetRailPosition(const Vector2& position) {
-    if (railMover_) {
-        float progress = position.x; // 進捗をx成分から取得（例）
-        railMover_->BindProgress(&progress); // 進捗をRailMoverにバインド 
+    if (railMover_ && railMover_->GetRailPath()) {
+        // globalT は 0.0 〜 GetMaxT() の範囲（点数-1）
+        // position.x を 0.0〜1.0 の正規化値として受け取り、maxT にスケールする
+        float maxT = railMover_->GetRailPath()->GetMaxT();
+        railMover_->SetProgress(position.x * maxT);
         // 初期座標の更新
         Vector3 railPos = railMover_->GetCurrentPosition();
         object_->SetTranslate({ railPos.x, position.y, railPos.z });

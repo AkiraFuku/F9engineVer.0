@@ -254,12 +254,12 @@ void ParticleManager::Finalize() {
     instance.reset();
 }
 
-void ParticleManager::ReleaseParticleGroup()
-{
-    particleGroups.clear();
+//void ParticleManager::ReleaseParticleGroup()
+//{
+//    // 後方互換のため残す（全セットを解放する）
+//    ReleaseAllParticleGroupSets();
+//}
 
-
-}
 void ParticleManager::Update() {
     Matrix4x4 backFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
     //ビルボード行列計算
@@ -272,122 +272,154 @@ void ParticleManager::Update() {
     Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
     Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
     //
-    for (auto& [key, particleGroup] : particleGroups)
+    for (auto& [setKey, particleGroupSet] : particleGroupSets)
     {
-        uint32_t  numInstance = 0;
-        for (std::list<Particle>::iterator particleIterator = particleGroup.particles.begin();
-            particleIterator != particleGroup.particles.end();
-            )
+        if (!particleGroupSet.isActive) continue;
+
+        for (auto& [key, particleGroup] : particleGroupSet.groups)
         {
-            if ((*particleIterator).lifeTime <= (*particleIterator).currentTime)
+            uint32_t  numInstance = 0;
+            for (std::list<Particle>::iterator particleIterator = particleGroup.particles.begin();
+                particleIterator != particleGroup.particles.end();
+                )
             {
-                particleIterator = particleGroup.particles.erase(particleIterator);
-                continue;
-            }
-
-            float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
-            (*particleIterator).transform.translate += (*particleIterator).velocity * DXCommon::kDeltaTime;
-            (*particleIterator).currentTime += DXCommon::kDeltaTime;
-
-            if (numInstance < kMaxNumInstance)
-            {
-
-                particleGroup.instancingData[numInstance].color.w = alpha;
-                Matrix4x4 worldMatrix = {};
-
-                if (particleGroup.update) {
-                    particleGroup.update(*particleIterator, DXCommon::kDeltaTime);
+                if ((*particleIterator).lifeTime <= (*particleIterator).currentTime)
+                {
+                    particleIterator = particleGroup.particles.erase(particleIterator);
+                    continue;
                 }
 
-                if (particleGroup.effectType == EffectType::Plane)
-                {
-                    worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
+                float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
+                (*particleIterator).transform.translate += (*particleIterator).velocity * DXCommon::kDeltaTime;
+                (*particleIterator).currentTime += DXCommon::kDeltaTime;
 
-                } else
+                if (numInstance < kMaxNumInstance)
                 {
-                    worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 
+                    particleGroup.instancingData[numInstance].color.w = alpha;
+                    Matrix4x4 worldMatrix = {};
+
+                    if (particleGroup.update) {
+                        particleGroup.update(*particleIterator, DXCommon::kDeltaTime);
+                    }
+
+                    if (particleGroup.effectType == EffectType::Plane)
+                    {
+                        worldMatrix = MakeBillboardMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, billboardMatrix, (*particleIterator).transform.translate);
+
+                    } else
+                    {
+                        worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
+
+                    }
+
+                    particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
+                    particleGroup.instancingData[numInstance].color = (*particleIterator).color;
+                    Matrix4x4 uvMatrix = MakeAffineMatrix(
+                        Vector3{ particleIterator->uvTransform.scale.x, particleIterator->uvTransform.scale.y, 1.0f }, // Scale
+                        Vector3{ 0.0f, 0.0f, particleIterator->uvTransform.rotate },         // Rotate
+                        Vector3{ particleIterator->uvTransform.offset.x, particleIterator->uvTransform.offset.y, 0.0f } // Translate
+                    );
+                    particleGroup.instancingData[numInstance].uvTransform = uvMatrix;
+                    ++numInstance;
                 }
+                ++particleIterator;
 
-                particleGroup.instancingData[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
-                /*   particleGroup.instancingData[numInstance].color.x = (*particleIterator).color.x;
-                   particleGroup.instancingData[numInstance].color.y = (*particleIterator).color.y;
-                   particleGroup.instancingData[numInstance].color.z = (*particleIterator).color.z;*/
-                particleGroup.instancingData[numInstance].color = (*particleIterator).color;
-                Matrix4x4 uvMatrix = MakeAffineMatrix(
-                    Vector3{ particleIterator->uvTransform.scale.x, particleIterator->uvTransform.scale.y, 1.0f }, // Scale
-                    Vector3{ 0.0f, 0.0f, particleIterator->uvTransform.rotate },         // Rotate
-                    Vector3{ particleIterator->uvTransform.offset.x, particleIterator->uvTransform.offset.y, 0.0f } // Translate
-                );
-                particleGroup.instancingData[numInstance].uvTransform = uvMatrix;
-                ++numInstance;
             }
-            ++particleIterator;
-
+            particleGroup.kNumInstance = numInstance;
         }
-        particleGroup.kNumInstance = numInstance;
     }
 }
 void ParticleManager::Draw() {
     PsoSet psoSet{};
 
-    //VBVの設定
-    //DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    for (auto& [setKey, particleGroupSet] : particleGroupSets) {
+        if (!particleGroupSet.isActive) continue;
 
-    for (auto& [key, particleGroup] : particleGroups) {
-        if (particleGroup.kNumInstance > 0) {
+        for (auto& [key, particleGroup] : particleGroupSet.groups) {
+            if (particleGroup.kNumInstance > 0) {
 
-            const auto& primitive = primitiveResources_[particleGroup.effectType];
-            if (particleGroup.effectType == EffectType::Cylinder)
-            {
-                psoSet = PSOManager::GetInstance()->GetPso("ParticleCylinder", BlendMode::Normal);
-            } else
-            {
-                psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Add);
+                const auto& primitive = primitiveResources_[particleGroup.effectType];
+                if (particleGroup.effectType == EffectType::Cylinder)
+                {
+                    psoSet = PSOManager::GetInstance()->GetPso("ParticleCylinder", BlendMode::Normal);
+                } else
+                {
+                    psoSet = PSOManager::GetInstance()->GetPso("Particle", BlendMode::Add);
+                }
+
+                // RootSignatureの設定
+                DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(psoSet.rootSignature.Get());
+                //PSOの設定
+                DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
+                DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &primitive.vbv);
+
+                DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+
+                // [1] Descriptor Table (Instancing Data): インスタンシング用SRV
+                DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.instancingSrvIndex));
+
+                // [2] Descriptor Table (Texture): テクスチャ用SRV
+                DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.materialData.textureIndex));
+                // DrawCall
+                DXCommon::GetInstance()->GetCommandList()->DrawInstanced(primitive.vertexCount, particleGroup.kNumInstance, 0, 0);
             }
-
-            // RootSignatureの設定
-            DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(psoSet.rootSignature.Get());
-            //PSOの設定
-            DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
-            DXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &primitive.vbv);
-
-
-            // とりあえずコードの意図を汲んで修正すると：
-            DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
-
-            // [1] Descriptor Table (Instancing Data): インスタンシング用SRV
-            DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.instancingSrvIndex));
-
-            // [2] Descriptor Table (Texture): テクスチャ用SRV
-            DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, SrvManager::GetInstance()->GetGPUDescriptorHandle(particleGroup.materialData.textureIndex));
-            // DrawCall
-            // 後述するトポロジーの修正に合わせて頂点数を変更 (6 -> 4)
-            DXCommon::GetInstance()->GetCommandList()->DrawInstanced(primitive.vertexCount, particleGroup.kNumInstance, 0, 0);
         }
     }
 }
 
+// =====================================================
+// セットを新規作成する
+// =====================================================
+void ParticleManager::CreateParticleGroupSet(const std::string& setName)
+{
+    assert(!particleGroupSets.contains(setName));
+    ParticleGroupSet& newSet = particleGroupSets[setName];
+    newSet.name = setName;
+    newSet.isActive = true;
+}
+
+// =====================================================
+// セット内に ParticleGroup を追加する（内部ヘルパー経由）
+// =====================================================
 void ParticleManager::CreateParticleGroup(
-    const std::string name,
-    const std::string textureFilepath,
+    const std::string& setName,
+    const std::string& groupName,
+    const std::string& textureFilepath,
     EffectType type,
     ParticleEmitterFunc initialize,
     ParticleUpdateFunc update
 )
 {
+    // セットが無ければ自動生成する
+    if (!particleGroupSets.contains(setName)) {
+        CreateParticleGroupSet(setName);
+    }
+    ParticleGroupSet& targetSet = particleGroupSets[setName];
+    assert(!targetSet.groups.contains(groupName));
+    CreateParticleGroupInternal(targetSet, groupName, textureFilepath, type, initialize, update);
+}
 
-    assert(!particleGroups.contains(name));
-    //
-    ParticleGroup& newParticle = particleGroups[name];
+// =====================================================
+// 実際にGPUリソースを生成する内部ヘルパー
+// =====================================================
+void ParticleManager::CreateParticleGroupInternal(
+    ParticleGroupSet& set,
+    const std::string& groupName,
+    const std::string& textureFilepath,
+    EffectType type,
+    ParticleEmitterFunc initialize,
+    ParticleUpdateFunc update)
+{
+    ParticleGroup& newParticle = set.groups[groupName];
     newParticle.initialize = initialize;
     newParticle.update = update;
-    newParticle.name = name;
-    newParticle.effectType = type; // ★形状を保存
+    newParticle.name = groupName;
+    newParticle.effectType = type;
     newParticle.materialData.textureFilePath = textureFilepath;
     newParticle.kNumInstance = kMaxNumInstance;
-    newParticle.materialData.textureIndex = newParticle.materialData.textureIndex =
+    newParticle.materialData.textureIndex =
         TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilepath);
     newParticle.instancingResource = DXCommon::GetInstance()->CreateBufferResource(sizeof(ParticleForGPU) * newParticle.kNumInstance);
 
@@ -401,29 +433,60 @@ void ParticleManager::CreateParticleGroup(
     );
     newParticle.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newParticle.instancingData));
     for (uint32_t i = 0; i < newParticle.kNumInstance; ++i) {
-        newParticle.instancingData[i].WVP = Makeidentity4x4(); // 単位行列などで埋める
+        newParticle.instancingData[i].WVP = Makeidentity4x4();
         newParticle.instancingData[i].color = { 1.0f, 1.0f, 1.0f, 0.0f };
-        newParticle.instancingData[i].uvTransform = Makeidentity4x4(); // 単位行列などで埋める
+        newParticle.instancingData[i].uvTransform = Makeidentity4x4();
     }
 }
 
-void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
+void ParticleManager::Emit(const std::string& setName, const std::string& groupName, const Vector3& position, uint32_t count)
 {
-    assert(particleGroups.contains(name));
+    assert(particleGroupSets.contains(setName));
+    auto& set = particleGroupSets[setName];
 
-    auto& group = particleGroups[name];
+    if (groupName.empty()) {
+        for (auto& [name, group] : set.groups) {
+            for (uint32_t i = 0; i < count; ++i) {
+                if (group.initialize) {
+                    group.particles.push_back(group.initialize(position, randomEngine_));
+                } else {
+                    group.particles.push_back(MakeParticle(randomEngine_, position));
+                }
+            }
+        }
+        return;
+    }
+
+    assert(set.groups.contains(groupName));
+
+    auto& group = set.groups[groupName];
     for (uint32_t i = 0; i < count; ++i) {
-        //Particle p;
         if (group.initialize) {
-            // 関数が「値」を返すようになったので、そのまま push_back できる
             group.particles.push_back(group.initialize(position, randomEngine_));
         } else {
             group.particles.push_back(MakeParticle(randomEngine_, position));
         }
     }
+}
 
+// =====================================================
+// セット単位の解放・管理
+// =====================================================
+void ParticleManager::ReleaseParticleGroupSet(const std::string& setName)
+{
+    particleGroupSets.erase(setName);
+}
 
+void ParticleManager::ReleaseAllParticleGroupSets()
+{
+    particleGroupSets.clear();
+}
 
+void ParticleManager::SetParticleGroupSetActive(const std::string& setName, bool active)
+{
+    if (particleGroupSets.contains(setName)) {
+        particleGroupSets[setName].isActive = active;
+    }
 }
 std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexPlane()
 {
