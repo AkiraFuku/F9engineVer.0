@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <functional>
 #include <string>
-
+#include <variant>
 
 
 class ParticleManager
@@ -47,6 +47,32 @@ public:
         UVTransform uvTransform;
 
     };
+
+    struct CylinderData
+    {
+        Vector3 Offset = { 0.0f,0.0f,0.0f };//オフセット
+        int32_t pudding[1]; // パディングを追加してサイズを揃える
+        Vector2 TopRadius = { 0.0f,0.0f };//上の半径
+
+
+        Vector2 BottomRadius = { 0.0f,0.0f };//下の半径
+
+        float height = 1.0f;
+        // 上の半径と下の半径を統一するか（上下の形状を同期するかどうか）
+        bool isUniformTopBottom = false;
+
+        // 半径をXとYで統一するか（楕円ではなく、正円にするかどうか）
+        bool isCircularRadius = true;
+
+
+    };
+
+    // 空の状態を表すための型
+    struct EmptyData {};
+
+    // ★追加: いずれかの構造体を1つだけ持てる「可変型の設定データ」
+    using EffectSpecificData = std::variant<EmptyData, CylinderData>;
+
     using ParticleEmitterFunc = std::function<Particle(const Vector3&, std::mt19937&)>;
     using ParticleUpdateFunc = std::function<void(Particle&, float)>;
 
@@ -138,7 +164,9 @@ public:
     }
 
     // 後方互換のため残す（全セット削除）
-    void ReleaseParticleGroup() { ReleaseAllParticleGroupSets(); }
+    void ReleaseParticleGroup() {
+        ReleaseAllParticleGroupSets();
+    }
 
     // 最上位コンテナ（外部から参照したい場合に公開）
     std::unordered_map<std::string, ParticleGroupSet> particleGroupSets;

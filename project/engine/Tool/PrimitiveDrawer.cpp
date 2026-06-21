@@ -15,21 +15,20 @@ PrimitiveDrawer* PrimitiveDrawer::GetInstance() {
     if (instance_ == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public PrimitiveDrawer {
-            Helper() : PrimitiveDrawer() {
-            }
+            Helper() : PrimitiveDrawer() {}
         };
         instance_ = std::make_unique<Helper>();
     }
     return instance_.get();
 }
 
-void PrimitiveDrawer::Finalize() {
-}
+void PrimitiveDrawer::Finalize() {}
 
 
 
 void PrimitiveDrawer::AddPSO()
 {
+#ifdef USE_LINE
     PsoConfig config{};
     PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Primitive/Primitive.vs.hlsl", "main", L"vs_6_0" };
     PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Primitive/Primitive.ps.hlsl", "main", L"ps_6_0" };
@@ -102,22 +101,22 @@ void PrimitiveDrawer::AddPSO()
 
     config.cullMode = D3D12_CULL_MODE_NONE; // カリングなし
     PSOManager::GetInstance()->RegisterPsoGenerator("Primitive", config);
-
+#endif // USE_LINE
 }
 
 void PrimitiveDrawer::WVPResourceCreate()
 {
-
+#ifdef USE_LINE
     WVPResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(WVPMatrix));
 
     WVPResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 
     wvpData_->WVP = Makeidentity4x4();
-
-
+#endif // USE_LINE
 }
 
 void PrimitiveDrawer::Initialize() {
+#ifdef USE_LINE
     AddPSO();
     // 必要に応じて PointList 等を追加
     WVPResourceCreate();
@@ -130,10 +129,13 @@ void PrimitiveDrawer::Initialize() {
     vbv_.StrideInBytes = sizeof(VertexData);
 
     vertices_.reserve(kMaxVertices);
+#endif // USE_LINE
 }
 
 
 void PrimitiveDrawer::Draw() {
+#ifdef USE_LINE
+
     if (commands_.empty()) return;
 
     auto commandList = DXCommon::GetInstance()->GetCommandList();
@@ -178,9 +180,12 @@ void PrimitiveDrawer::Draw() {
     // 4. 次フレームのためにクリア
     vertices_.clear();
     commands_.clear();
+#endif // USE_LINE
+
 }
 
 void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vector4& color) {
+#ifdef USE_LINE
     if (vertices_.size() + 2 > kMaxVertices) return;
 
     DrawCommand cmd;
@@ -195,10 +200,11 @@ void PrimitiveDrawer::DrawLine(const Vector3& p1, const Vector3& p2, const Vecto
     vertices_.push_back({ {p2.x, p2.y, p2.z, 1.0f}, color });
 
     commands_.push_back(cmd);
-
+#endif // USE_LINE
 }
 void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const Vector3& p3, const Vector4& color, FillMode fillMode, BlendMode blendMode)
 {
+#ifdef USE_LINE
     // 1. バッファの空き容量チェック (3頂点分)
     if (vertices_.size() + 3 > kMaxVertices) {
         // ロガーなどがあれば警告を出すとデバッグしやすいです
@@ -222,10 +228,12 @@ void PrimitiveDrawer::DrawTriangle(const Vector3& p1, const Vector3& p2, const V
 
     // 4. コマンドリストに予約登録
     commands_.push_back(cmd);
+#endif // USE_LINE
 }
 // PrimitiveDrawer.cpp に実装を追加
 
 void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
+#ifdef USE_LINE
     const uint32_t kSubdivision = 16; // 分割数（高くすると滑らかになる）
     const uint32_t kNumVertices = (kSubdivision + 1) * (kSubdivision + 1);
     const uint32_t kNumIndices = kSubdivision * kSubdivision * 6;
@@ -291,8 +299,10 @@ void PrimitiveDrawer::DrawSphere(const Sphere& sphere, const Vector4& color) {
     }
 
     commands_.push_back(cmd);
+#endif // USE_LINE
 }
 void PrimitiveDrawer::DrawGrid() {
+#ifdef USE_LINE
     const float kGridHalfWidth = 2.0f;
     const uint32_t kSubdivision = 10;
     const float kGridEvery = (kGridHalfWidth * 2.0f) / static_cast<float>(kSubdivision);
@@ -303,18 +313,22 @@ void PrimitiveDrawer::DrawGrid() {
 
 
     }
+#endif // USE_LINE
 }
 
 void PrimitiveDrawer::DrawAABB(const AABB& aabb, const Vector4& color) {
+#ifdef USE_LINE
     Vector3 p[8] = {
         {aabb.min.x, aabb.min.y, aabb.min.z}, {aabb.max.x, aabb.min.y, aabb.min.z},
         {aabb.max.x, aabb.max.y, aabb.min.z}, {aabb.min.x, aabb.max.y, aabb.min.z},
         {aabb.min.x, aabb.min.y, aabb.max.z}, {aabb.max.x, aabb.min.y, aabb.max.z},
         {aabb.max.x, aabb.max.y, aabb.max.z}, {aabb.min.x, aabb.max.y, aabb.max.z}
     };
-
+#endif // USE_LINE
 }
 
 void PrimitiveDrawer::DrawSegment(const Segment& segment, const Vector4& color) {
+#ifdef USE_LINE
     DrawLine(segment.origin, Add(segment.origin, segment.diff), color);
+#endif // USE_LINE
 }

@@ -10,6 +10,17 @@ class ParticleEmitter
 public:
     // setName  : ParticleGroupSet の名前
     // groupName: そのセット内の ParticleGroup の名前
+    ///summary>
+    /// ParticleEmitter クラスのコンストラクタ
+    /// </summary>
+    /// <param name="setName">ParticleGroupSet の名前</param>
+    /// <param name="groupName">そのセット内の ParticleGroup の名前</param>
+    /// <param name="transform">エミッタのトランスフォーム</param>
+    /// <param name="count">1 回の発生数</param>
+    /// <param name="frequency">発生間隔（秒）</param>
+    /// <param name="frequencyTime">経過タイマー</param>
+    /// <returns>なし</returns>
+
     ParticleEmitter(
         const std::string& setName,
         const std::string& groupName,

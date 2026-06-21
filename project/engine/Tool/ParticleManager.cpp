@@ -240,8 +240,7 @@ ParticleManager* ParticleManager::GetInstance() {
     if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public ParticleManager {
-            Helper() : ParticleManager() {
-            }
+            Helper() : ParticleManager() {}
         };
         instance = std::make_unique<Helper>();
     }
@@ -492,10 +491,14 @@ std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexPlane()
 {
 
     return {
+         // 三角形1: 左上 -> 右上 -> 左下
          {{-1.0f,  1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
          {{ 1.0f,  1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
          {{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+         // 三角形2: 右上 -> 右下 -> 左下
+         {{ 1.0f,  1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
          {{ 1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+         {{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
     };
 }
 std::vector<ParticleManager::VertexData> ParticleManager::PrimitiveVertexRing()
