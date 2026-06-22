@@ -23,9 +23,14 @@ VertexShaderOutput input)
     {
         discard;
     }
+    
+    float edge = 1.0f - smoothstep(0.5f, 0.53f, mask);
         
     PixelShaderOutput output;
     output.color=gTexture.Sample(gSampler, input.texcoord);
+    
+    output.color.rgb += edge * float3(1.0f, 0.4f, 0.3f); // 边缘发光效果，可以根据需要调整颜色和强度
+    
     
     return output;
 }
