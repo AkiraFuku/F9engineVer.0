@@ -19,6 +19,13 @@ class Camera;
 class OffScreen
 {
 public:
+
+    struct MaskMaterial
+    {
+        std::string textureFilePath;
+        uint32_t maskTextureSrvIndex;
+    };
+
     static OffScreen* GetInstance();
 
     OffScreen(const OffScreen&) = delete;
@@ -32,6 +39,8 @@ public:
     void SetCamera(Camera* camera) {
         camera_ = camera;
     }
+
+    void SetMaskMaterial( std::string textureFilePath) ;
 
 private:
     OffScreen() = default;
@@ -50,6 +59,16 @@ private:
     };
     Material* materialData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> materialConstantBuffer_;
+
+    MaskMaterial MaskMaterial_;
+
+    struct DissolveParm
+    {
+        float threshold;
+        float padding[3]; // 16バイトアラインメントのためのパディング
+    };
+    DissolveParm* dissolveParamData_;
+    Microsoft::WRL::ComPtr<ID3D12Resource> dissolveConstantBuffer_;
 
     // 前回のコードでこれらがエラーになっていた場合、ここに含まれる型が
     // <d3d12.h> を読み込むことで解決されます
