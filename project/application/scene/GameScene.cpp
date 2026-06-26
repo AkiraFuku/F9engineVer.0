@@ -226,8 +226,8 @@ void GameScene::Initialize() {
     boxObject_->SetCamera(activeCamera_);
 
     // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
-    Vector3 railPoint1 = stageRail->GetPointPos(1);
-    boxObject_->SetTranslate({ railPoint1.x, -3.0f, railPoint1.z });
+    Vector3 railPoint1 = stageRail->GetPointPos(2);
+    boxObject_->SetTranslate({ railPoint1.x, 1.0f, railPoint1.z });
     boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
 }
 void GameScene::Finalize() {
