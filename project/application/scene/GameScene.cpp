@@ -208,8 +208,8 @@ void GameScene::Initialize() {
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
-   
-    goal_->SetRailPosition({  stageRail->GetMaxT(), 0.0f }); // レールの終端付近に配置
+
+    goal_->SetRailPosition({ stageRail->GetMaxT(), 0.0f }); // レールの終端付近に配置
 
 
 
@@ -229,6 +229,10 @@ void GameScene::Initialize() {
     Vector3 railPoint1 = stageRail->GetPointPos(2);
     boxObject_->SetTranslate({ railPoint1.x, 1.0f, railPoint1.z });
     boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
+
+
+    GameScene::AddTriangles(boxObject_->GetWorldTriangles());
+
 }
 void GameScene::Finalize() {
 
@@ -318,7 +322,7 @@ void GameScene::Update() {
 
 
 
-   // 死んだ敵を削除
+    // 死んだ敵を削除
     enemies_.erase(
         std::remove_if(enemies_.begin(), enemies_.end(),
             [](const std::unique_ptr<Enemy>& e) { return e->IsDead(); }),
@@ -435,6 +439,13 @@ void GameScene::Update() {
         boxObject_->Update();
     }
 
+    // Update() の boxObject_->Update() の直後に追加
+    triangles_.clear();
+    if (boxObject_) {
+        auto boxTris = boxObject_->GetWorldTriangles(); // ワールド変換済み三角形を取得する想定
+        triangles_.insert(triangles_.end(), boxTris.begin(), boxTris.end());
+    }
+
     // プレイヤーの位置から真下にレイキャスト (箱のメッシュとの判定)
     if (player && boxObject_) {
         debugRay_.origin = player->GetWorldPosition();
@@ -523,16 +534,16 @@ void GameScene::Draw() {
         PrimitiveDrawer::GetInstance()->DrawLine(hitTriangle_.vertices[2], hitTriangle_.vertices[0], { 1.0f, 1.0f, 1.0f, 1.0f });
     }
 
-    // プレイヤーから射出されるレイを描画 (当たっているなら赤、外れているなら緑)
-    Vector4 rayColor = isBoxHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f };
-    Vector3 rayEnd = Add(debugRay_.origin, debugRay_.diff);
-    PrimitiveDrawer::GetInstance()->DrawLine(debugRay_.origin, rayEnd, rayColor);
+    //// プレイヤーから射出されるレイを描画 (当たっているなら赤、外れているなら緑)
+    //Vector4 rayColor = isBoxHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f };
+    //Vector3 rayEnd = Add(debugRay_.origin, debugRay_.diff);
+    //PrimitiveDrawer::GetInstance()->DrawLine(debugRay_.origin, rayEnd, rayColor);
 
-    // 衝突点がある場合は、交点に球体を描画
-    if (isBoxHit_) {
-        Sphere hitSphere = { boxHitPoint_, 0.2f, { 0.0f, 0.0f, 0.0f, 1.0f } };
-        PrimitiveDrawer::GetInstance()->DrawSphere(hitSphere, { 0.0f, 0.0f, 1.0f, 1.0f }); // 青い球
-    }
+    //// 衝突点がある場合は、交点に球体を描画
+    //if (isBoxHit_) {
+    //    Sphere hitSphere = { boxHitPoint_, 0.2f, { 0.0f, 0.0f, 0.0f, 1.0f } };
+    //    PrimitiveDrawer::GetInstance()->DrawSphere(hitSphere, { 0.0f, 0.0f, 1.0f, 1.0f }); // 青い球
+    //}
 }
 GameScene::GameScene() = default;
 
@@ -572,6 +583,11 @@ void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param, Pro
 
         projectiles_.push_back(std::move(newProjectile));
     }
+}
+
+void GameScene::AddTriangles(std::vector<Triangle> triangles)
+{
+    triangles_.insert(triangles_.end(), triangles.begin(), triangles.end());
 }
 
 void GameScene::CheckClear()

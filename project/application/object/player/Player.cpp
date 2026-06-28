@@ -11,6 +11,7 @@
 #include "Scene.h"
 #include "PrimitiveDrawer.h"
 #include <numbers>
+#include "GameScene.h"
 Player::Player() = default;
 Player::~Player() = default;
 void Player::Initialize()
@@ -96,6 +97,17 @@ void Player::Draw()
     //進行方向
     ImGui::Text("DIR: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
 
+    //レイキャストによる地面判定の結果を表示
+    ImGui::Text("Raycast Hit: %s", isRayHit_ ? "True" : "False");
+    if (isRayHit_) {
+        ImGui::Text("Raycast Hit Distance: %.3f", rayHitDistance_);
+        ImGui::Text("Raycast Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
+    }
+    //レイキャストによる地面の高さを表示
+    ImGui::Text("Ground Y: %.3f", groundY_);
+
+
+
 
     ImGui::End();
 #endif // USE_IMGUI
@@ -142,8 +154,7 @@ void Player::Jump()
         isGrounded_ = false;
     }
 }
-void Player::Attack() {
-}
+void Player::Attack() {}
 float Player::GetRailProgress() const
 {
 
@@ -198,10 +209,64 @@ void Player::UpdateGravity()
     worldY_ += velocity_.y;
 
     // 地面判定 (Y=0を地面とする場合)
-    if (worldY_ <= 0.0f) {
-        worldY_ = 0.0f;
+
+
+    groundY_ = 0.0f;
+
+    if (isRayHit_) {
+        groundY_ = rayHitPoint_.y;
+
+    }
+
+
+    if (worldY_ <= groundY_) {
+        worldY_ = groundY_;
         velocity_.y = 0.0f;
         isGrounded_ = true;
+    }
+}
+void Player::RayCastUpdate()
+{
+    if (!scene_) return;
+    auto gs = dynamic_cast<GameScene*>(scene_);
+    if (!gs) return;
+
+    const std::vector<Triangle>& triangles = gs->GetTriangle();
+    if (triangles.empty()) {
+        isRayHit_ = false;
+        rayHitDistance_ = FLT_MAX;
+        return;
+    }
+
+    // レイ初期化（微小オフセットで自身の面を避ける）
+    ray_.origin = object_->GetTranslate();
+    ray_.origin.y += 0.05f;
+    ray_.diff = { 0.0f, -10.0f, 0.0f };
+
+    // 毎フレーム初期化
+    isRayHit_ = false;
+    rayHitDistance_ = FLT_MAX;
+
+
+    for (const auto& tri : triangles) {
+        Vector3 tmpHit = {};
+        float dist = 0.0f;
+        if (CheckRayTriangle(ray_, tri, &dist, &tmpHit)) {
+            // 最短距離で選択
+            if (dist < rayHitDistance_) {
+                rayHitDistance_ = dist;
+                rayHitTriangle_ = tri;
+                rayHitPoint_ = tmpHit;
+                isRayHit_ = true;
+            }
+        }
+    }
+
+    // デバッグ描画（任意）
+    PrimitiveDrawer::GetInstance()->DrawLine(ray_.origin, Add(ray_.origin, ray_.diff),
+        isRayHit_ ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
+    if (isRayHit_) {
+        PrimitiveDrawer::GetInstance()->DrawSphere({ rayHitPoint_, 0.05f, {} }, { 0,0,1,1 });
     }
 }
 void Player::HandleInput()

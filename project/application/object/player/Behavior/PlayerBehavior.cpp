@@ -12,6 +12,8 @@ void BehaviorRoot::Initialize(Player* player) {
 void BehaviorRoot::Update(Player* player) {
     // 毎フレームの処理（特に何もなければ空でもOK）
     player->GetState()->BehaviorUpdate(player);
+     player->RayCastUpdate();
+    player->UpdateGravity();
 }
 
 void BehaviorRoot::Finalize(Player* player)
@@ -29,6 +31,8 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
             moveAction->Execute(player);
         }
     }
+
+   
 
     if (dynamic_cast<JumpCommand*>(command)) {
         // ジャンプ状態へ遷移
@@ -108,6 +112,7 @@ void BehaviorJump::Update(Player* player) {
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
 
     }
+    player->RayCastUpdate();
     player->UpdateGravity();
 }
 

@@ -100,6 +100,9 @@ public:
     Vector3 GetDirection() const;
     int GetMoveDirection() const;
     void UpdateGravity();
+    void RayCastUpdate();
+    float groundY_=0.0f;
+
 
     //プレイヤーの状態を取得するための関数
     bool IsHit() const {
@@ -140,6 +143,14 @@ private:
     const float kGravity = -0.015f;           // 重力加速度（毎フレーム引く値）
     const float kJumpAcceleration = 0.4f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
+    //レイキャスト当たり判定用の変数
+    Ray ray_;
+    bool isRayHit_ = false;
+    Vector3 rayHitPoint_ = {};
+    float rayHitDistance_ = 0.0f;
+    Triangle rayHitTriangle_ = {};
+    // --- レール移動管理 ---
+
     std::unique_ptr<RailMover> railMover_;
 
     float playerAngle_ = 0.0f;

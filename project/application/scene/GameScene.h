@@ -33,6 +33,7 @@ public:
     RailPath* GetStageRaill(){return stageRail.get();}
    const std::vector<std::unique_ptr<Enemy>>& GetEnemies(){return enemies_;}
    const std::vector<std::unique_ptr<Projectile>>& GetProjectile(){return projectiles_;}
+   const std::vector<Triangle>& GetTriangle(){return triangles_;}
     GoalObject* GetGoal(){return goal_.get(); }
 
     GameScene() ;
@@ -40,6 +41,9 @@ public:
 
     void AddEnemy(Vector2 pos);
 void AddProjectile(const Projectile::ProjectileSpawnParam& param,Projectile::ProjectileOwner owner);
+
+
+void AddTriangles(std::vector<Triangle> triangles);
 
 private:
     /// <summary>
@@ -70,7 +74,10 @@ private:
  
     bool isCleared_=false;
     uint32_t handle_=0;
+    // 投射物リスト
     std::vector<std::unique_ptr<Projectile>> projectiles_;
+    //シーン内三角形リスト
+    std::vector<Triangle>triangles_;
 
     // テスト用レイキャスト衝突判定メンバ変数
     std::unique_ptr<Object3d> boxObject_;
