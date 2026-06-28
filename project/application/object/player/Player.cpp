@@ -104,8 +104,10 @@ void Player::Draw()
         ImGui::Text("Raycast Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
     }
     //レイキャストによる地面の高さを表示
-    ImGui::Text("Ground Y: %.3f", groundY_);
-
+    if (groundY_ != -FLT_MAX)
+    {
+        ImGui::Text("Ground Y: %.3f", groundY_);
+    } 
 
 
 
@@ -202,28 +204,65 @@ void Player::UpdateRailPath()
 }
 void Player::UpdateGravity()
 {
-    // 1. 重力の計算 (Y軸のみ独立して計算)
+
+
+    // レイ判定の結果から接地状態を決める
+    const float kGroundEpsilon = 0.1f; // 必要に応じて調整
+    if (isRayHit_) {
+        // レイが当たっていて十分近ければ接地
+        isGrounded_ = (rayHitDistance_ <= kGroundEpsilon);
+        groundY_ = rayHitPoint_.y;
+    } else {
+        // レイが当たっていなければ空中
+        isGrounded_ = false;
+        groundY_ = -FLT_MAX; // 明示的に地面無し
+    }
+
+    // 重力の適用（空中のときのみ）
     if (!isGrounded_) {
         velocity_.y += kGravity;
     }
+
+    // 位置更新
     worldY_ += velocity_.y;
 
-    // 地面判定 (Y=0を地面とする場合)
-
-
-    groundY_ = 0.0f;
-
+    // 地面にめり込んだら吸着して接地扱いにする
     if (isRayHit_) {
-        groundY_ = rayHitPoint_.y;
+        if (worldY_ <= groundY_) {
+            worldY_ = groundY_ + Radius;
+            velocity_.y = 0.0f;
+            isGrounded_ = true;
+        }
+    } else {
 
+        if (worldY_ <= 0.0f) {
+            worldY_ = 0.0f;
+            velocity_.y = 0.0f;
+            isGrounded_ = true;
+        }
     }
 
+    //// 1. 重力の計算 (Y軸のみ独立して計算)
+    //if (!isGrounded_) {
+    //    velocity_.y += kGravity;
+    //}
+    //worldY_ += velocity_.y;
 
-    if (worldY_ <= groundY_) {
-        worldY_ = groundY_;
-        velocity_.y = 0.0f;
-        isGrounded_ = true;
-    }
+    //// 地面判定 (Y=0を地面とする場合)
+
+
+    //groundY_ = 0.0f;
+
+    //if (isRayHit_) {
+    //    groundY_ = rayHitPoint_.y;
+    //}
+
+
+    //if (worldY_ <= groundY_) {
+    //    worldY_ = groundY_;
+    //    velocity_.y = 0.0f;
+    //    isGrounded_ = true;
+    //}
 }
 void Player::RayCastUpdate()
 {
@@ -240,7 +279,6 @@ void Player::RayCastUpdate()
 
     // レイ初期化（微小オフセットで自身の面を避ける）
     ray_.origin = object_->GetTranslate();
-    ray_.origin.y += 0.05f;
     ray_.diff = { 0.0f, -10.0f, 0.0f };
 
     // 毎フレーム初期化
