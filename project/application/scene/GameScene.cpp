@@ -227,8 +227,8 @@ void GameScene::Initialize() {
 
     // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
     Vector3 railPoint1 = stageRail->GetPointPos(2);
-    boxObject_->SetTranslate({ railPoint1.x, 1.0f, railPoint1.z });
-    boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
+    boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
+    boxObject_->SetScale({ 4.0f, 6.0f, 4.0f }); // 大きめの箱にする
 
 
     GameScene::AddTriangles(boxObject_->GetWorldTriangles());

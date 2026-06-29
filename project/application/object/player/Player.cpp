@@ -32,8 +32,10 @@ void Player::Update()
     HandleInput();
     if (baseState_) baseState_->Update(this);
     // if (behavior_) behavior_->Update(this);
+    RayCastUpdate();
+    UpdateGravity();
 
-    UpdateRailPath();
+        UpdateRailPath();
     // --- タイマーの更新 ---
     if (hitVisualTimer_ > 0.0f) {
         hitVisualTimer_ -= (1.0f / 60.0f); // フレームレートに合わせて減算
@@ -107,7 +109,7 @@ void Player::Draw()
     if (groundY_ != -FLT_MAX)
     {
         ImGui::Text("Ground Y: %.3f", groundY_);
-    } 
+    }
 
 
 
@@ -242,27 +244,7 @@ void Player::UpdateGravity()
         }
     }
 
-    //// 1. 重力の計算 (Y軸のみ独立して計算)
-    //if (!isGrounded_) {
-    //    velocity_.y += kGravity;
-    //}
-    //worldY_ += velocity_.y;
 
-    //// 地面判定 (Y=0を地面とする場合)
-
-
-    //groundY_ = 0.0f;
-
-    //if (isRayHit_) {
-    //    groundY_ = rayHitPoint_.y;
-    //}
-
-
-    //if (worldY_ <= groundY_) {
-    //    worldY_ = groundY_;
-    //    velocity_.y = 0.0f;
-    //    isGrounded_ = true;
-    //}
 }
 void Player::RayCastUpdate()
 {

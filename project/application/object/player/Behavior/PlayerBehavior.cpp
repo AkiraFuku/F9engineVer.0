@@ -12,8 +12,8 @@ void BehaviorRoot::Initialize(Player* player) {
 void BehaviorRoot::Update(Player* player) {
     // 毎フレームの処理（特に何もなければ空でもOK）
     player->GetState()->BehaviorUpdate(player);
-     player->RayCastUpdate();
-    player->UpdateGravity();
+    /* player->RayCastUpdate();
+    player->UpdateGravity();*/
 }
 
 void BehaviorRoot::Finalize(Player* player)
@@ -112,8 +112,8 @@ void BehaviorJump::Update(Player* player) {
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
 
     }
-    player->RayCastUpdate();
-    player->UpdateGravity();
+ /*   player->RayCastUpdate();
+    player->UpdateGravity();*/
 }
 
 void BehaviorJump::Finalize(Player* player)
