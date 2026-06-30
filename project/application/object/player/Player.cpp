@@ -229,15 +229,13 @@ void Player::UpdateRailPath()
 void Player::UpdateGravity()
 {
     // レイ判定の結果から接地状態を決める
-    // 足元から下方向にレイを飛ばしているため、
-    // 「プレイヤーの現在の世界Y座標（worldY_）」が「地面のY座標（groundY_）」以下になったらめり込んでいると判定する
     if (isRayHit_) {
         groundY_ = rayHitPoint_.y;
 
-        // レイが当たっている＝下に床がある
-        // 現在の高さが床の高さ以下、または床のすぐ近く（kGroundEpsilon以内）にいる場合
         const float kGroundEpsilon = 0.05f;
-        if (worldY_ <= groundY_ + kGroundEpsilon) {
+
+        // 【修正ポイント】上昇中（velocity_.y > 0.0f）は絶対に接地判定にしない
+        if (velocity_.y <= 0.0f && worldY_ <= groundY_ + kGroundEpsilon) {
             isGrounded_ = true;
         } else {
             isGrounded_ = false;
@@ -258,10 +256,8 @@ void Player::UpdateGravity()
     // 位置更新（速度を適用）
     worldY_ += velocity_.y;
 
-    // ★【重要】地面にめり込んでいたら、床の高さぴったりに補正する
+    // 地面にめり込んでいたら、床の高さぴったりに補正する
     if (isGrounded_ && isRayHit_) {
-        // お使いのモデルの原点に合わせて調整してください。
-        // 動画のログ（Y=0のときHitPointが-1.58）を見る限り、+Radiusは不要、または単純に groundY_ のみで合う可能性が高いです。
         worldY_ = groundY_;
     }
 
@@ -285,10 +281,12 @@ void Player::RayCastUpdate()
         return;
     }
 
-    // レイ初期化（微小オフセットで自身の面を避ける）
+    float rayOffset = 2.0f;
     ray_.origin = object_->GetTranslate();
-    ray_.diff = { 0.0f, -10.0f, 0.0f };
+    ray_.origin.y += rayOffset; // 始点を上に持ち上げる
 
+    // 持ち上げた分、レイの長さを伸ばす（あるいは床の下まで届く十分な長さに設定）
+    ray_.diff = { 0.0f, -10.0f - rayOffset, 0.0f };
     // 毎フレーム初期化
     isRayHit_ = false;
     rayHitDistance_ = FLT_MAX;
@@ -300,26 +298,24 @@ void Player::RayCastUpdate()
         RayTriangleCollisionResult result;
 
         if (CheckRayTriangle(ray_, tri, &dist, &tmpHit, &result)) {
-            // 最短距離で選択
-            if (dist < rayHitDistance_) {
-                rayHitDistance_ = dist;
-                rayHitTriangle_ = tri;
-                rayHitPoint_ = tmpHit;
+            // 【重要】表面（FrontFace）に当たったときだけを処理対象にする
+            // 裏面（BackFace）は立方体の内側などなので、接地用の床としては無視する
+            if (result == RayTriangleCollisionResult::FrontFace) {
 
-                result_ = result;
-                if (result_==RayTriangleCollisionResult::FrontFace)
-                {
-                isRayHit_ = true;
-                }
-                else
-                {
-                isRayHit_ = false;
+                // 表面に当たった中で、最も近い（最も高い位置にある）床を選択
+                if (dist < rayHitDistance_) {
+                    rayHitDistance_ = dist;
+                    rayHitTriangle_ = tri;
+                    rayHitPoint_ = tmpHit;
+
+                    isRayHit_ = true; // 表面に最短で当たっているので確実に true
                 }
             }
+            result_ = result;
         }
     }
 
-    // デバッグ描画（任意）
+    // デバッグ描画
     PrimitiveDrawer::GetInstance()->DrawLine(ray_.origin, Add(ray_.origin, ray_.diff),
         isRayHit_ ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
     if (isRayHit_) {
