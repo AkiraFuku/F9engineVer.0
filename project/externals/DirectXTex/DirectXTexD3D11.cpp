@@ -34,9 +34,9 @@ namespace
         _In_ ID3D11DeviceContext* pContext,
         _In_ ID3D11Resource* pSource,
         const TexMetadata& metadata,
-        const ScratchImage& result) noexcept
+        const ScratchImage& result_) noexcept
     {
-        if (!pContext || !pSource || !result.GetPixels())
+        if (!pContext || !pSource || !result_.GetPixels())
             return E_POINTER;
 
     #if defined(_XBOX_ONE) && defined(_TITLE)
@@ -99,7 +99,7 @@ namespace
 
                 for (size_t slice = 0; slice < depth; ++slice)
                 {
-                    const Image* img = result.GetImage(level, 0, slice);
+                    const Image* img = result_.GetImage(level, 0, slice);
                     if (!img)
                     {
                         pContext->Unmap(pSource, dindex);
@@ -151,7 +151,7 @@ namespace
                     if (FAILED(hr))
                         return hr;
 
-                    const Image* img = result.GetImage(level, item, 0);
+                    const Image* img = result_.GetImage(level, item, 0);
                     if (!img)
                     {
                         pContext->Unmap(pSource, dindex);
@@ -793,7 +793,7 @@ HRESULT DirectX::CaptureTexture(
     ID3D11Device* pDevice,
     ID3D11DeviceContext* pContext,
     ID3D11Resource* pSource,
-    ScratchImage& result) noexcept
+    ScratchImage& result_) noexcept
 {
     if (!pDevice || !pContext || !pSource)
         return E_INVALIDARG;
@@ -849,11 +849,11 @@ HRESULT DirectX::CaptureTexture(
             mdata.format = desc.Format;
             mdata.dimension = TEX_DIMENSION_TEXTURE1D;
 
-            hr = result.Initialize(mdata);
+            hr = result_.Initialize(mdata);
             if (FAILED(hr))
                 break;
 
-            hr = Capture(pContext, pStaging.Get(), mdata, result);
+            hr = Capture(pContext, pStaging.Get(), mdata, result_);
         }
         break;
 
@@ -955,11 +955,11 @@ HRESULT DirectX::CaptureTexture(
             mdata.format = desc.Format;
             mdata.dimension = TEX_DIMENSION_TEXTURE2D;
 
-            hr = result.Initialize(mdata);
+            hr = result_.Initialize(mdata);
             if (FAILED(hr))
                 break;
 
-            hr = Capture(pContext, pStaging.Get(), mdata, result);
+            hr = Capture(pContext, pStaging.Get(), mdata, result_);
         }
         break;
 
@@ -1008,11 +1008,11 @@ HRESULT DirectX::CaptureTexture(
             mdata.format = desc.Format;
             mdata.dimension = TEX_DIMENSION_TEXTURE3D;
 
-            hr = result.Initialize(mdata);
+            hr = result_.Initialize(mdata);
             if (FAILED(hr))
                 break;
 
-            hr = Capture(pContext, pStaging.Get(), mdata, result);
+            hr = Capture(pContext, pStaging.Get(), mdata, result_);
         }
         break;
 
@@ -1023,7 +1023,7 @@ HRESULT DirectX::CaptureTexture(
 
     if (FAILED(hr))
     {
-        result.Release();
+        result_.Release();
         return hr;
     }
 

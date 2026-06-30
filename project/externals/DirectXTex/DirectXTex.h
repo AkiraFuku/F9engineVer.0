@@ -195,7 +195,7 @@ namespace DirectX
         // Assume pitch is DWORD aligned instead of BYTE aligned (used by some legacy DDS files)
 
         DDS_FLAGS_NO_LEGACY_EXPANSION = 0x2,
-        // Do not implicitly convert legacy formats that result in larger pixel sizes (24 bpp, 3:3:2, A8L8, A4L4, P8, A8P8)
+        // Do not implicitly convert legacy formats that result_ in larger pixel sizes (24 bpp, 3:3:2, A8L8, A4L4, P8, A8P8)
 
         DDS_FLAGS_NO_R10B10G10A2_FIXUP = 0x4,
         // Do not use work-around for long-standing D3DX DDS file format issue which reversed the 10:10:10:2 color order masks
@@ -216,7 +216,7 @@ namespace DirectX
         // Always use the 'DX10' header extension for DDS writer (i.e. don't try to write DX9 compatible DDS files)
 
         DDS_FLAGS_FORCE_DX10_EXT_MISC2 = 0x20000,
-        // DDS_FLAGS_FORCE_DX10_EXT including miscFlags2 information (result may not be compatible with D3DX10 or D3DX11)
+        // DDS_FLAGS_FORCE_DX10_EXT including miscFlags2 information (result_ may not be compatible with D3DX10 or D3DX11)
 
         DDS_FLAGS_FORCE_DX9_LEGACY = 0x40000,
         // Force use of legacy header for DDS writer (will fail if unable to write as such)
@@ -548,7 +548,7 @@ namespace DirectX
     HRESULT __cdecl FlipRotate(_In_ const Image& srcImage, _In_ TEX_FR_FLAGS flags, _Out_ ScratchImage& image) noexcept;
     HRESULT __cdecl FlipRotate(
         _In_reads_(nimages) const Image* srcImages, _In_ size_t nimages, _In_ const TexMetadata& metadata,
-        _In_ TEX_FR_FLAGS flags, _Out_ ScratchImage& result) noexcept;
+        _In_ TEX_FR_FLAGS flags, _Out_ ScratchImage& result_) noexcept;
         // Flip and/or rotate image
 #endif
 
@@ -615,9 +615,9 @@ namespace DirectX
         _Out_ ScratchImage& image) noexcept;
     HRESULT __cdecl Resize(
         _In_reads_(nimages) const Image* srcImages, _In_ size_t nimages, _In_ const TexMetadata& metadata,
-        _In_ size_t width, _In_ size_t height, _In_ TEX_FILTER_FLAGS filter, _Out_ ScratchImage& result) noexcept;
+        _In_ size_t width, _In_ size_t height, _In_ TEX_FILTER_FLAGS filter, _Out_ ScratchImage& result_) noexcept;
         // Resize the image to width x height. Defaults to Fant filtering.
-        // Note for a complex resize, the result will always have mipLevels == 1
+        // Note for a complex resize, the result_ will always have mipLevels == 1
 
     constexpr float TEX_THRESHOLD_DEFAULT = 0.5f;
         // Default value for alpha threshold used when converting to 1-bit alpha
@@ -627,7 +627,7 @@ namespace DirectX
         _Out_ ScratchImage& image) noexcept;
     HRESULT __cdecl Convert(
         _In_reads_(nimages) const Image* srcImages, _In_ size_t nimages, _In_ const TexMetadata& metadata,
-        _In_ DXGI_FORMAT format, _In_ TEX_FILTER_FLAGS filter, _In_ float threshold, _Out_ ScratchImage& result) noexcept;
+        _In_ DXGI_FORMAT format, _In_ TEX_FILTER_FLAGS filter, _In_ float threshold, _Out_ ScratchImage& result_) noexcept;
         // Convert the image to a new format
 
     HRESULT __cdecl ConvertToSinglePlane(_In_ const Image& srcImage, _Out_ ScratchImage& image) noexcept;
@@ -679,7 +679,7 @@ namespace DirectX
     HRESULT __cdecl PremultiplyAlpha(_In_ const Image& srcImage, _In_ TEX_PMALPHA_FLAGS flags, _Out_ ScratchImage& image) noexcept;
     HRESULT __cdecl PremultiplyAlpha(
         _In_reads_(nimages) const Image* srcImages, _In_ size_t nimages, _In_ const TexMetadata& metadata,
-        _In_ TEX_PMALPHA_FLAGS flags, _Out_ ScratchImage& result) noexcept;
+        _In_ TEX_PMALPHA_FLAGS flags, _Out_ ScratchImage& result_) noexcept;
         // Converts to/from a premultiplied alpha version of the texture
 
     enum TEX_COMPRESS_FLAGS : unsigned long
@@ -821,12 +821,12 @@ namespace DirectX
         _In_ const Image& image,
         _In_ std::function<void __cdecl(_Out_writes_(width) XMVECTOR* outPixels,
             _In_reads_(width) const XMVECTOR* inPixels, size_t width, size_t y)> pixelFunc,
-        ScratchImage& result);
+        ScratchImage& result_);
     HRESULT __cdecl TransformImage(
         _In_reads_(nimages) const Image* srcImages, _In_ size_t nimages, _In_ const TexMetadata& metadata,
         _In_ std::function<void __cdecl(_Out_writes_(width) XMVECTOR* outPixels,
             _In_reads_(width) const XMVECTOR* inPixels, size_t width, size_t y)> pixelFunc,
-        ScratchImage& result);
+        ScratchImage& result_);
 
     //---------------------------------------------------------------------------------
     // WIC utility code
@@ -911,7 +911,7 @@ namespace DirectX
 
     HRESULT __cdecl CaptureTexture(
         _In_ ID3D12CommandQueue* pCommandQueue, _In_ ID3D12Resource* pSource, _In_ bool isCubeMap,
-        _Out_ ScratchImage& result,
+        _Out_ ScratchImage& result_,
         _In_ D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_RENDER_TARGET,
         _In_ D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_RENDER_TARGET) noexcept;
 #endif

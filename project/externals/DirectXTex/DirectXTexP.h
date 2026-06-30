@@ -411,7 +411,7 @@ namespace DirectX
             _In_ const Image& srcImage, _In_ DXGI_FORMAT format, _Inout_ ScratchImage& image) noexcept;
         HRESULT __cdecl ConvertFromR32G32B32A32(
             _In_reads_(nimages) const Image* srcImages, _In_ size_t nimages, _In_ const TexMetadata& metadata,
-            _In_ DXGI_FORMAT format, _Out_ ScratchImage& result) noexcept;
+            _In_ DXGI_FORMAT format, _Out_ ScratchImage& result_) noexcept;
 
         HRESULT __cdecl ConvertToR16G16B16A16(_In_ const Image& srcImage, _Inout_ ScratchImage& image) noexcept;
 

@@ -884,7 +884,7 @@ HRESULT DirectX::Resize(
 
     if (usewic && !wicpf)
     {
-        // Check to see if the source and/or result size is too big for WIC
+        // Check to see if the source and/or result_ size is too big for WIC
         const uint64_t expandedSize = uint64_t(width) * uint64_t(height) * sizeof(float) * 4;
         const uint64_t expandedSize2 = uint64_t(srcImage.width) * uint64_t(srcImage.height) * sizeof(float) * 4;
         if (expandedSize > UINT32_MAX || expandedSize2 > UINT32_MAX)
@@ -947,7 +947,7 @@ HRESULT DirectX::Resize(
     size_t width,
     size_t height,
     TEX_FILTER_FLAGS filter,
-    ScratchImage& result) noexcept
+    ScratchImage& result_) noexcept
 {
     if (!srcImages || !nimages || width == 0 || height == 0)
         return E_INVALIDARG;
@@ -959,7 +959,7 @@ HRESULT DirectX::Resize(
     mdata2.width = width;
     mdata2.height = height;
     mdata2.mipLevels = 1;
-    HRESULT hr = result.Initialize(mdata2);
+    HRESULT hr = result_.Initialize(mdata2);
     if (FAILED(hr))
         return hr;
 
@@ -971,7 +971,7 @@ HRESULT DirectX::Resize(
 
     if (usewic && !wicpf)
     {
-        // Check to see if the source and/or result size is too big for WIC
+        // Check to see if the source and/or result_ size is too big for WIC
         const uint64_t expandedSize = uint64_t(width) * uint64_t(height) * sizeof(float) * 4;
         const uint64_t expandedSize2 = uint64_t(metadata.width) * uint64_t(metadata.height) * sizeof(float) * 4;
         if (expandedSize > UINT32_MAX || expandedSize2 > UINT32_MAX)
@@ -995,27 +995,27 @@ HRESULT DirectX::Resize(
             const size_t srcIndex = metadata.ComputeIndex(0, item, 0);
             if (srcIndex >= nimages)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             const Image* srcimg = &srcImages[srcIndex];
-            const Image* destimg = result.GetImage(0, item, 0);
+            const Image* destimg = result_.GetImage(0, item, 0);
             if (!srcimg || !destimg)
             {
-                result.Release();
+                result_.Release();
                 return E_POINTER;
             }
 
             if (srcimg->format != metadata.format)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             if ((srcimg->width > UINT32_MAX) || (srcimg->height > UINT32_MAX))
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
@@ -1042,7 +1042,7 @@ HRESULT DirectX::Resize(
 
             if (FAILED(hr))
             {
-                result.Release();
+                result_.Release();
                 return hr;
             }
         }
@@ -1056,27 +1056,27 @@ HRESULT DirectX::Resize(
             const size_t srcIndex = metadata.ComputeIndex(0, 0, slice);
             if (srcIndex >= nimages)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             const Image* srcimg = &srcImages[srcIndex];
-            const Image* destimg = result.GetImage(0, 0, slice);
+            const Image* destimg = result_.GetImage(0, 0, slice);
             if (!srcimg || !destimg)
             {
-                result.Release();
+                result_.Release();
                 return E_POINTER;
             }
 
             if (srcimg->format != metadata.format)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             if ((srcimg->width > UINT32_MAX) || (srcimg->height > UINT32_MAX))
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
@@ -1103,14 +1103,14 @@ HRESULT DirectX::Resize(
 
             if (FAILED(hr))
             {
-                result.Release();
+                result_.Release();
                 return hr;
             }
         }
         break;
 
     default:
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 

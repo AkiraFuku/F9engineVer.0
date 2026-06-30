@@ -285,7 +285,7 @@ HRESULT DirectX::FlipRotate(
     size_t nimages,
     const TexMetadata& metadata,
     TEX_FR_FLAGS flags,
-    ScratchImage& result) noexcept
+    ScratchImage& result_) noexcept
 {
     if (!srcImages || !nimages)
         return E_INVALIDARG;
@@ -328,20 +328,20 @@ HRESULT DirectX::FlipRotate(
         mdata2.height = metadata.width;
     }
 
-    HRESULT hr = result.Initialize(mdata2);
+    HRESULT hr = result_.Initialize(mdata2);
     if (FAILED(hr))
         return hr;
 
-    if (nimages != result.GetImageCount())
+    if (nimages != result_.GetImageCount())
     {
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
-    const Image* dest = result.GetImages();
+    const Image* dest = result_.GetImages();
     if (!dest)
     {
-        result.Release();
+        result_.Release();
         return E_POINTER;
     }
 
@@ -353,7 +353,7 @@ HRESULT DirectX::FlipRotate(
         const Image& src = srcImages[index];
         if (src.format != metadata.format)
         {
-            result.Release();
+            result_.Release();
             return E_FAIL;
         }
 
@@ -367,7 +367,7 @@ HRESULT DirectX::FlipRotate(
         {
             if (src.width != dst.height || src.height != dst.width)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
         }
@@ -375,7 +375,7 @@ HRESULT DirectX::FlipRotate(
         {
             if (src.width != dst.width || src.height != dst.height)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
         }
@@ -402,7 +402,7 @@ HRESULT DirectX::FlipRotate(
 
         if (FAILED(hr))
         {
-            result.Release();
+            result_.Release();
             return hr;
         }
     }

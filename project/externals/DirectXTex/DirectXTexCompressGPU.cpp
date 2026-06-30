@@ -240,7 +240,7 @@ HRESULT DirectX::Compress(
     if (FAILED(hr))
         return hr;
 
-    // Create workspace for result
+    // Create workspace for result_
     hr = image.Initialize2D(format, srcImage.width, srcImage.height, 1, 1);
     if (FAILED(hr))
         return hr;
@@ -291,7 +291,7 @@ HRESULT DirectX::Compress(
     if (FAILED(hr))
         return hr;
 
-    // Create workspace for result
+    // Create workspace for result_
     TexMetadata mdata2 = metadata;
     mdata2.format = format;
     hr = cImages.Initialize(mdata2);

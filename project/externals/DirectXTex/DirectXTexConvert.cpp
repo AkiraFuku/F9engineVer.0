@@ -2580,31 +2580,31 @@ HRESULT DirectX::Internal::ConvertFromR32G32B32A32(
     size_t nimages,
     const TexMetadata& metadata,
     DXGI_FORMAT format,
-    ScratchImage& result) noexcept
+    ScratchImage& result_) noexcept
 {
     if (!srcImages)
         return E_POINTER;
 
-    result.Release();
+    result_.Release();
 
     assert(metadata.format == DXGI_FORMAT_R32G32B32A32_FLOAT);
 
     TexMetadata mdata2 = metadata;
     mdata2.format = format;
-    HRESULT hr = result.Initialize(mdata2);
+    HRESULT hr = result_.Initialize(mdata2);
     if (FAILED(hr))
         return hr;
 
-    if (nimages != result.GetImageCount())
+    if (nimages != result_.GetImageCount())
     {
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
-    const Image* dest = result.GetImages();
+    const Image* dest = result_.GetImages();
     if (!dest)
     {
-        result.Release();
+        result_.Release();
         return E_POINTER;
     }
 
@@ -2618,7 +2618,7 @@ HRESULT DirectX::Internal::ConvertFromR32G32B32A32(
 
         if (src.width != dst.width || src.height != dst.height)
         {
-            result.Release();
+            result_.Release();
             return E_FAIL;
         }
 
@@ -2626,7 +2626,7 @@ HRESULT DirectX::Internal::ConvertFromR32G32B32A32(
         uint8_t* pDest = dst.pixels;
         if (!pSrc || !pDest)
         {
-            result.Release();
+            result_.Release();
             return E_POINTER;
         }
 
@@ -2634,7 +2634,7 @@ HRESULT DirectX::Internal::ConvertFromR32G32B32A32(
         {
             if (!StoreScanline(pDest, dst.rowPitch, format, reinterpret_cast<const XMVECTOR*>(pSrc), src.width))
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
@@ -4465,7 +4465,7 @@ namespace
             case DXGI_FORMAT_R16G16B16A16_FLOAT:
             case DXGI_FORMAT_R16G16_FLOAT:
             case DXGI_FORMAT_R16_FLOAT:
-                // WIC conversions for FP32->FP16 can result in NaN values instead of clamping for min/max value
+                // WIC conversions for FP32->FP16 can result_ in NaN values instead of clamping for min/max value
                 return false;
 
             default:
@@ -4949,7 +4949,7 @@ HRESULT DirectX::Convert(
     DXGI_FORMAT format,
     TEX_FILTER_FLAGS filter,
     float threshold,
-    ScratchImage& result) noexcept
+    ScratchImage& result_) noexcept
 {
     if (!srcImages || !nimages || (metadata.format == format) || !IsValid(format))
         return E_INVALIDARG;
@@ -4965,20 +4965,20 @@ HRESULT DirectX::Convert(
 
     TexMetadata mdata2 = metadata;
     mdata2.format = format;
-    HRESULT hr = result.Initialize(mdata2);
+    HRESULT hr = result_.Initialize(mdata2);
     if (FAILED(hr))
         return hr;
 
-    if (nimages != result.GetImageCount())
+    if (nimages != result_.GetImageCount())
     {
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
-    const Image* dest = result.GetImages();
+    const Image* dest = result_.GetImages();
     if (!dest)
     {
-        result.Release();
+        result_.Release();
         return E_POINTER;
     }
 
@@ -4994,13 +4994,13 @@ HRESULT DirectX::Convert(
             const Image& src = srcImages[index];
             if (src.format != metadata.format)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             if ((src.width > UINT32_MAX) || (src.height > UINT32_MAX))
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
@@ -5009,7 +5009,7 @@ HRESULT DirectX::Convert(
 
             if (src.width != dst.width || src.height != dst.height)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
@@ -5024,7 +5024,7 @@ HRESULT DirectX::Convert(
 
             if (FAILED(hr))
             {
-                result.Release();
+                result_.Release();
                 return hr;
             }
         }
@@ -5040,20 +5040,20 @@ HRESULT DirectX::Convert(
                 {
                     if (index >= nimages)
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
                     const Image& src = srcImages[index];
                     if (src.format != metadata.format)
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
                     if ((src.width > UINT32_MAX) || (src.height > UINT32_MAX))
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
@@ -5062,7 +5062,7 @@ HRESULT DirectX::Convert(
 
                     if (src.width != dst.width || src.height != dst.height)
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
@@ -5077,7 +5077,7 @@ HRESULT DirectX::Convert(
 
                     if (FAILED(hr))
                     {
-                        result.Release();
+                        result_.Release();
                         return hr;
                     }
                 }
@@ -5089,7 +5089,7 @@ HRESULT DirectX::Convert(
         break;
 
     default:
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
@@ -5146,7 +5146,7 @@ HRESULT DirectX::ConvertToSinglePlane(
     const Image* srcImages,
     size_t nimages,
     const TexMetadata& metadata,
-    ScratchImage& result) noexcept
+    ScratchImage& result_) noexcept
 {
     if (!srcImages || !nimages)
         return E_INVALIDARG;
@@ -5166,20 +5166,20 @@ HRESULT DirectX::ConvertToSinglePlane(
 
     TexMetadata mdata2 = metadata;
     mdata2.format = format;
-    HRESULT hr = result.Initialize(mdata2);
+    HRESULT hr = result_.Initialize(mdata2);
     if (FAILED(hr))
         return hr;
 
-    if (nimages != result.GetImageCount())
+    if (nimages != result_.GetImageCount())
     {
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
-    const Image* dest = result.GetImages();
+    const Image* dest = result_.GetImages();
     if (!dest)
     {
-        result.Release();
+        result_.Release();
         return E_POINTER;
     }
 
@@ -5188,7 +5188,7 @@ HRESULT DirectX::ConvertToSinglePlane(
         const Image& src = srcImages[index];
         if (src.format != metadata.format)
         {
-            result.Release();
+            result_.Release();
             return E_FAIL;
         }
 
@@ -5200,14 +5200,14 @@ HRESULT DirectX::ConvertToSinglePlane(
 
         if (src.width != dst.width || src.height != dst.height)
         {
-            result.Release();
+            result_.Release();
             return E_FAIL;
         }
 
         hr = ConvertToSinglePlane_(src, dst);
         if (FAILED(hr))
         {
-            result.Release();
+            result_.Release();
             return hr;
         }
     }

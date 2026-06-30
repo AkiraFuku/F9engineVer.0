@@ -431,17 +431,17 @@ namespace
                 return STG_E_INVALIDFUNCTION;
             }
 
-            HRESULT result = S_OK;
+            HRESULT result_ = S_OK;
 
             if (newPosition > static_cast<LONGLONG>(m_streamEOF))
             {
                 m_streamPosition = m_streamEOF;
-                result = E_BOUNDS;
+                result_ = E_BOUNDS;
             }
             else if (newPosition < 0)
             {
                 m_streamPosition = 0;
-                result = E_BOUNDS;
+                result_ = E_BOUNDS;
             }
             else
             {
@@ -453,7 +453,7 @@ namespace
                 lpNewFilePointer->QuadPart = static_cast<ULONGLONG>(m_streamPosition);
             }
 
-            return result;
+            return result_;
         }
 
         HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg, DWORD) override

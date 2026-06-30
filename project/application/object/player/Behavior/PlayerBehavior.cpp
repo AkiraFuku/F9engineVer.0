@@ -56,7 +56,7 @@ void BehaviorAttack::Initialize(Player* player) {
     // Stateから攻撃アクションを取得して実行
     auto attackAction = player->GetState()->GetAttackAction_();
     if (attackAction) {
-        attackAction->Execute(player);
+    //    attackAction->Execute(player);
     }
 }
 

@@ -35,7 +35,7 @@ void Player::Update()
     RayCastUpdate();
     UpdateGravity();
 
-        UpdateRailPath();
+    UpdateRailPath();
     // --- タイマーの更新 ---
     if (hitVisualTimer_ > 0.0f) {
         hitVisualTimer_ -= (1.0f / 60.0f); // フレームレートに合わせて減算
@@ -105,8 +105,28 @@ void Player::Draw()
         ImGui::Text("Raycast Hit Distance: %.3f", rayHitDistance_);
         ImGui::Text("Raycast Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
         //表と裏デバッグ用表示
-        ImGui::Text("Raycast Hit Order: %s", result == RayTriangleCollisionResult::FrontFace ? "Front" : "Back");
     }
+    // レイキャストの結果を表示
+
+    std::string resultStr;
+
+    switch (result_)
+    {
+    case RayTriangleCollisionResult::NoCollision:
+    default:
+        resultStr = "NoCollision";
+
+        break;
+    case RayTriangleCollisionResult::FrontFace:
+        resultStr = "FrontFace";
+        break;
+    case RayTriangleCollisionResult::BackFace:
+        resultStr = "BackFace";
+        break;
+    }
+
+    ImGui::Text("Raycast Hit Order: %s", resultStr.c_str());
+
     //レイキャストによる地面の高さを表示
     if (groundY_ != -FLT_MAX)
     {
@@ -208,45 +228,49 @@ void Player::UpdateRailPath()
 }
 void Player::UpdateGravity()
 {
-
-
     // レイ判定の結果から接地状態を決める
-    const float kGroundEpsilon = 0.1f; // 必要に応じて調整
+    // 足元から下方向にレイを飛ばしているため、
+    // 「プレイヤーの現在の世界Y座標（worldY_）」が「地面のY座標（groundY_）」以下になったらめり込んでいると判定する
     if (isRayHit_) {
-        // レイが当たっていて十分近ければ接地
-        isGrounded_ = (rayHitDistance_ <= kGroundEpsilon);
         groundY_ = rayHitPoint_.y;
+
+        // レイが当たっている＝下に床がある
+        // 現在の高さが床の高さ以下、または床のすぐ近く（kGroundEpsilon以内）にいる場合
+        const float kGroundEpsilon = 0.05f;
+        if (worldY_ <= groundY_ + kGroundEpsilon) {
+            isGrounded_ = true;
+        } else {
+            isGrounded_ = false;
+        }
     } else {
         // レイが当たっていなければ空中
         isGrounded_ = false;
-        groundY_ = -FLT_MAX; // 明示的に地面無し
+        groundY_ = -FLT_MAX;
     }
 
     // 重力の適用（空中のときのみ）
     if (!isGrounded_) {
         velocity_.y += kGravity;
+    } else {
+        velocity_.y = 0.0f; // 接地しているなら下方向の速度はリセット
     }
 
-    // 位置更新
+    // 位置更新（速度を適用）
     worldY_ += velocity_.y;
 
-    // 地面にめり込んだら吸着して接地扱いにする
-    if (isRayHit_) {
-        if (worldY_ <= groundY_) {
-            worldY_ = groundY_ + Radius;
-            velocity_.y = 0.0f;
-            isGrounded_ = true;
-        }
-    } else {
-
-        if (worldY_ <= 0.0f) {
-            worldY_ = 0.0f;
-            velocity_.y = 0.0f;
-            isGrounded_ = true;
-        }
+    // ★【重要】地面にめり込んでいたら、床の高さぴったりに補正する
+    if (isGrounded_ && isRayHit_) {
+        // お使いのモデルの原点に合わせて調整してください。
+        // 動画のログ（Y=0のときHitPointが-1.58）を見る限り、+Radiusは不要、または単純に groundY_ のみで合う可能性が高いです。
+        worldY_ = groundY_;
     }
 
-
+    // レイすら当たらない完全な奈落の場合の最低保証
+    if (!isRayHit_ && worldY_ <= 0.0f) {
+        worldY_ = 0.0f;
+        velocity_.y = 0.0f;
+        isGrounded_ = true;
+    }
 }
 void Player::RayCastUpdate()
 {
@@ -268,19 +292,29 @@ void Player::RayCastUpdate()
     // 毎フレーム初期化
     isRayHit_ = false;
     rayHitDistance_ = FLT_MAX;
-
+    result_ = RayTriangleCollisionResult::NoCollision;
 
     for (const auto& tri : triangles) {
         Vector3 tmpHit = {};
         float dist = 0.0f;
-     
+        RayTriangleCollisionResult result;
+
         if (CheckRayTriangle(ray_, tri, &dist, &tmpHit, &result)) {
             // 最短距離で選択
             if (dist < rayHitDistance_) {
                 rayHitDistance_ = dist;
                 rayHitTriangle_ = tri;
                 rayHitPoint_ = tmpHit;
+
+                result_ = result;
+                if (result_==RayTriangleCollisionResult::FrontFace)
+                {
                 isRayHit_ = true;
+                }
+                else
+                {
+                isRayHit_ = false;
+                }
             }
         }
     }

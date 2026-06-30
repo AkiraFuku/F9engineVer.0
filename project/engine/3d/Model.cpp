@@ -491,7 +491,7 @@ Model* Model::CreatePlaneFromTex(const std::string& textureFilePath)
 }
 Model::Node Model::ReadNode(aiNode* node)
 {
-    Node result;
+    Node result_;
 
     aiMatrix4x4 aiLocalMatrix = node->mTransformation;
     aiLocalMatrix.Transpose();
@@ -501,27 +501,27 @@ Model::Node Model::ReadNode(aiNode* node)
     //    for (int j = 0; j < 4; j++) {
     //        // Assimpの行列は [row][col] でアクセス可能
     //        // 自作Matrix構造体の定義に合わせて代入 (例: result.localMatrix.m[i][j])
-    //        result.localMatrix.m[i][j] = aiLocalMatrix[i][j];
+    //        result_.localMatrix.m[i][j] = aiLocalMatrix[i][j];
     //    }
     //}
-    result.name = node->mName.C_Str();
-    result.children.resize(node->mNumChildren);
+    result_.name = node->mName.C_Str();
+    result_.children.resize(node->mNumChildren);
     for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex)
     {
-        result.children[childIndex] = ReadNode(node->mChildren[childIndex]);
+        result_.children[childIndex] = ReadNode(node->mChildren[childIndex]);
     }
 
     aiVector3D scale, translate;
     aiQuaternion rotate;
     node->mTransformation.Decompose(scale, rotate, translate);
-    result.transform.scale = { scale.x,scale.y,scale.z };
-    result.transform.rotate = { rotate.x,rotate.y,rotate.z,rotate.w };
-    result.transform.translate = { translate.x,translate.y,translate.z };
-    result.localMatrix = MakeAffineMatrix(result.transform.scale, result.transform.rotate, result.transform.translate);
+    result_.transform.scale = { scale.x,scale.y,scale.z };
+    result_.transform.rotate = { rotate.x,rotate.y,rotate.z,rotate.w };
+    result_.transform.translate = { translate.x,translate.y,translate.z };
+    result_.localMatrix = MakeAffineMatrix(result_.transform.scale, result_.transform.rotate, result_.transform.translate);
 
 
 
-    return result;
+    return result_;
 }
 
 Model::Skeleton Model::CreateSkelton(const Node& rootNode)
@@ -685,40 +685,40 @@ Model* Model::CreateBox() {
 
     std::vector<TempVertex> tempVertices = {
         // 前面 (Z+)
-        { {-w, -w,  w}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
-        { { w, -w,  w}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
-        { {-w,  w,  w}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} },
-        { { w,  w,  w}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f} },
+        { {-w, -w,  w}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} }, // 0: 左下
+        { { w, -w,  w}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} }, // 1: 右下
+        { {-w,  w,  w}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} }, // 2: 左上
+        { { w,  w,  w}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f} }, // 3: 右上
 
         // 後面 (Z-)
-        { { w, -w, -w}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} },
-        { {-w, -w, -w}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} },
-        { { w,  w, -w}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} },
-        { {-w,  w, -w}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} },
+        { { w, -w, -w}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }, // 4
+        { {-w, -w, -w}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }, // 5
+        { { w,  w, -w}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }, // 6
+        { {-w,  w, -w}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }, // 7
 
         // 左面 (X-)
-        { {-w, -w, -w}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f} },
-        { {-w, -w,  w}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f} },
-        { {-w,  w, -w}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f} },
-        { {-w,  w,  w}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f} },
+        { {-w, -w, -w}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f} }, // 8
+        { {-w, -w,  w}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f} }, // 9
+        { {-w,  w, -w}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f} }, // 10
+        { {-w,  w,  w}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f} }, // 11
 
         // 右面 (X+)
-        { { w, -w,  w}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f} },
-        { { w, -w, -w}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f} },
-        { { w,  w,  w}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f} },
-        { { w,  w, -w}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f} },
+        { { w, -w,  w}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f} }, // 12
+        { { w, -w, -w}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f} }, // 13
+        { { w,  w,  w}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f} }, // 14
+        { { w,  w, -w}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f} }, // 15
 
         // 上面 (Y+)
-        { {-w,  w,  w}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f} },
-        { { w,  w,  w}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f} },
-        { {-w,  w, -w}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f} },
-        { { w,  w, -w}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f} },
+        { {-w,  w,  w}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f} }, // 16
+        { { w,  w,  w}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f} }, // 17
+        { {-w,  w, -w}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f} }, // 18
+        { { w,  w, -w}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f} }, // 19
 
         // 下面 (Y-)
-        { {-w, -w, -w}, {0.0f, 1.0f}, {0.0f, -1.0f, 0.0f} },
-        { { w, -w, -w}, {1.0f, 1.0f}, {0.0f, -1.0f, 0.0f} },
-        { {-w, -w,  w}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f} },
-        { { w, -w,  w}, {1.0f, 0.0f}, {0.0f, -1.0f, 0.0f} },
+        { {-w, -w, -w}, {0.0f, 1.0f}, {0.0f, -1.0f, 0.0f} }, // 20
+        { { w, -w, -w}, {1.0f, 1.0f}, {0.0f, -1.0f, 0.0f} }, // 21
+        { {-w, -w,  w}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f} }, // 22
+        { { w, -w,  w}, {1.0f, 0.0f}, {0.0f, -1.0f, 0.0f} }, // 23
     };
 
     model->modelData_.vertices.resize(tempVertices.size());
@@ -728,16 +728,18 @@ Model* Model::CreateBox() {
         model->modelData_.vertices[i].normal = tempVertices[i].normal;
     }
 
-    // インデックスの設定
+    // 【修正】インデックスを時計回り（表面が外側を向く）になるように設定
     for (uint32_t i = 0; i < 6; ++i) {
         uint32_t offset = i * 4;
-        // 三角形1
+        
+        // 三角形1 (左下 -> 左上 -> 右下 で組むと時計回りになる)
         model->modelData_.indices.push_back(offset + 0);
-        model->modelData_.indices.push_back(offset + 2);
-        model->modelData_.indices.push_back(offset + 1);
-        // 三角形2
         model->modelData_.indices.push_back(offset + 1);
         model->modelData_.indices.push_back(offset + 2);
+        
+        // 三角形2 (左上 -> 右下 -> 右上 で組むと時計回りになる)
+        model->modelData_.indices.push_back(offset + 2);
+        model->modelData_.indices.push_back(offset + 1);
         model->modelData_.indices.push_back(offset + 3);
     }
 
@@ -747,5 +749,3 @@ Model* Model::CreateBox() {
 
     return model;
 }
-
-

@@ -48,7 +48,7 @@
 //     1.01  (2021-07-11)  always use large rect mode, expose STBRP__MAXVAL in public section
 //     1.00  (2019-02-25)  avoid small space waste; gracefully fail too-wide rectangles
 //     0.99  (2019-02-07)  warning fixes
-//     0.11  (2017-03-03)  return packing success/fail result
+//     0.11  (2017-03-03)  return packing success/fail result_
 //     0.10  (2016-10-25)  remove cast-away-const to avoid warnings
 //     0.09  (2016-08-27)  fix compiler warnings
 //     0.08  (2015-09-13)  really fix bug with empty rects (w=0 or h=0)

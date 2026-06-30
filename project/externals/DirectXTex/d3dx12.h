@@ -966,35 +966,35 @@ struct CD3DX12_RESOURCE_BARRIER : public D3D12_RESOURCE_BARRIER
         UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
         D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) noexcept
     {
-        CD3DX12_RESOURCE_BARRIER result = {};
-        D3D12_RESOURCE_BARRIER &barrier = result;
-        result.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        result.Flags = flags;
+        CD3DX12_RESOURCE_BARRIER result_ = {};
+        D3D12_RESOURCE_BARRIER &barrier = result_;
+        result_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        result_.Flags = flags;
         barrier.Transition.pResource = pResource;
         barrier.Transition.StateBefore = stateBefore;
         barrier.Transition.StateAfter = stateAfter;
         barrier.Transition.Subresource = subresource;
-        return result;
+        return result_;
     }
     static inline CD3DX12_RESOURCE_BARRIER Aliasing(
         _In_ ID3D12Resource* pResourceBefore,
         _In_ ID3D12Resource* pResourceAfter) noexcept
     {
-        CD3DX12_RESOURCE_BARRIER result = {};
-        D3D12_RESOURCE_BARRIER &barrier = result;
-        result.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
+        CD3DX12_RESOURCE_BARRIER result_ = {};
+        D3D12_RESOURCE_BARRIER &barrier = result_;
+        result_.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
         barrier.Aliasing.pResourceBefore = pResourceBefore;
         barrier.Aliasing.pResourceAfter = pResourceAfter;
-        return result;
+        return result_;
     }
     static inline CD3DX12_RESOURCE_BARRIER UAV(
         _In_ ID3D12Resource* pResource) noexcept
     {
-        CD3DX12_RESOURCE_BARRIER result = {};
-        D3D12_RESOURCE_BARRIER &barrier = result;
-        result.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        CD3DX12_RESOURCE_BARRIER result_ = {};
+        D3D12_RESOURCE_BARRIER &barrier = result_;
+        result_.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
         barrier.UAV.pResource = pResource;
-        return result;
+        return result_;
     }
 };
 
@@ -5053,7 +5053,7 @@ private: // Private structs and helpers declaration
     };
 
     // Helper function to decide the highest shader model supported by the system
-    // Stores the result in m_dShaderModel
+    // Stores the result_ in m_dShaderModel
     // Must be updated whenever a new shader model is added to the d3d12.h header
     HRESULT QueryHighestShaderModel();
 
@@ -5452,12 +5452,12 @@ inline HRESULT CD3DX12FeatureSupport::FormatSupport(DXGI_FORMAT Format, D3D12_FO
     dFormatSupport.Format = Format;
 
     // It is possible that the function call returns an error
-    HRESULT result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &dFormatSupport, sizeof(D3D12_FEATURE_DATA_FORMAT_SUPPORT));
+    HRESULT result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &dFormatSupport, sizeof(D3D12_FEATURE_DATA_FORMAT_SUPPORT));
 
     Support1 = dFormatSupport.Support1;
     Support2 = dFormatSupport.Support2; // Two outputs. Probably better just to take in the struct as an argument?
 
-    return result;
+    return result_;
 }
 
 // 4: Multisample Quality Levels
@@ -5468,9 +5468,9 @@ inline HRESULT CD3DX12FeatureSupport::MultisampleQualityLevels(DXGI_FORMAT Forma
     dMultisampleQualityLevels.SampleCount = SampleCount;
     dMultisampleQualityLevels.Flags = Flags;
 
-    HRESULT result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &dMultisampleQualityLevels, sizeof(D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS));
+    HRESULT result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &dMultisampleQualityLevels, sizeof(D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS));
 
-    if (SUCCEEDED(result))
+    if (SUCCEEDED(result_))
     {
         NumQualityLevels = dMultisampleQualityLevels.NumQualityLevels;
     }
@@ -5479,7 +5479,7 @@ inline HRESULT CD3DX12FeatureSupport::MultisampleQualityLevels(DXGI_FORMAT Forma
         NumQualityLevels = 0;
     }
 
-    return result;
+    return result_;
 }
 
 // 5: Format Info
@@ -5488,8 +5488,8 @@ inline HRESULT CD3DX12FeatureSupport::FormatInfo(DXGI_FORMAT Format, UINT8& Plan
     D3D12_FEATURE_DATA_FORMAT_INFO dFormatInfo;
     dFormatInfo.Format = Format;
 
-    HRESULT result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &dFormatInfo, sizeof(D3D12_FEATURE_DATA_FORMAT_INFO));
-    if (FAILED(result))
+    HRESULT result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &dFormatInfo, sizeof(D3D12_FEATURE_DATA_FORMAT_INFO));
+    if (FAILED(result_))
     {
         PlaneCount = 0;
     }
@@ -5497,7 +5497,7 @@ inline HRESULT CD3DX12FeatureSupport::FormatInfo(DXGI_FORMAT Format, UINT8& Plan
     {
         PlaneCount = dFormatInfo.PlaneCount;
     }
-    return result;
+    return result_;
 }
 
 // 6: GPU Virtual Address Support
@@ -5667,12 +5667,12 @@ FEATURE_SUPPORT_GET(BOOL, m_dOptions16, DynamicDepthBiasSupported);
 #endif // NTDDI_WIN10_CU || USING_D3D12_AGILITY_SDK
 
 // Helper function to decide the highest shader model supported by the system
-// Stores the result in m_dShaderModel
+// Stores the result_ in m_dShaderModel
 // Must be updated whenever a new shader model is added to the d3d12.h header
 inline HRESULT CD3DX12FeatureSupport::QueryHighestShaderModel()
 {
     // Check support in descending order
-    HRESULT result;
+    HRESULT result_;
 
     const D3D_SHADER_MODEL allModelVersions[] =
     {
@@ -5696,16 +5696,16 @@ inline HRESULT CD3DX12FeatureSupport::QueryHighestShaderModel()
     for (size_t i = 0; i < numModelVersions; i++)
     {
         m_dShaderModel.HighestShaderModel = allModelVersions[i];
-        result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &m_dShaderModel, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL));
-        if (result != E_INVALIDARG)
+        result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &m_dShaderModel, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL));
+        if (result_ != E_INVALIDARG)
         {
             // Indicates that the version is recognizable by the runtime and stored in the struct
             // Also terminate on unexpected error code
-            if (FAILED(result))
+            if (FAILED(result_))
             {
                 m_dShaderModel.HighestShaderModel = static_cast<D3D_SHADER_MODEL>(0);
             }
-            return result;
+            return result_;
         }
     }
 
@@ -5718,7 +5718,7 @@ inline HRESULT CD3DX12FeatureSupport::QueryHighestShaderModel()
 // Must be updated whenever a new root signature version is added to the d3d12.h header
 inline HRESULT CD3DX12FeatureSupport::QueryHighestRootSignatureVersion()
 {
-    HRESULT result;
+    HRESULT result_;
 
     const D3D_ROOT_SIGNATURE_VERSION allRootSignatureVersions[] =
     {
@@ -5734,15 +5734,15 @@ inline HRESULT CD3DX12FeatureSupport::QueryHighestRootSignatureVersion()
     for (size_t i = 0; i < numRootSignatureVersions; i++)
     {
         m_dRootSignature.HighestVersion = allRootSignatureVersions[i];
-        result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &m_dRootSignature, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
-        if (result != E_INVALIDARG)
+        result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &m_dRootSignature, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
+        if (result_ != E_INVALIDARG)
         {
-            if (FAILED(result))
+            if (FAILED(result_))
             {
                 m_dRootSignature.HighestVersion = static_cast<D3D_ROOT_SIGNATURE_VERSION>(0);
             }
             // If succeeded, the highest version is already written into the member struct
-            return result;
+            return result_;
         }
     }
 
@@ -5754,7 +5754,7 @@ inline HRESULT CD3DX12FeatureSupport::QueryHighestRootSignatureVersion()
 // Helper funcion to decide the highest feature level
 inline HRESULT CD3DX12FeatureSupport::QueryHighestFeatureLevel()
 {
-    HRESULT result;
+    HRESULT result_;
 
     // Check against a list of all feature levels present in d3dcommon.h
     // Needs to be updated for future feature levels
@@ -5779,8 +5779,8 @@ inline HRESULT CD3DX12FeatureSupport::QueryHighestFeatureLevel()
     dFeatureLevel.NumFeatureLevels = static_cast<UINT>(sizeof(allLevels) / sizeof(D3D_FEATURE_LEVEL));
     dFeatureLevel.pFeatureLevelsRequested = allLevels;
 
-    result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &dFeatureLevel, sizeof(D3D12_FEATURE_DATA_FEATURE_LEVELS));
-    if (SUCCEEDED(result))
+    result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &dFeatureLevel, sizeof(D3D12_FEATURE_DATA_FEATURE_LEVELS));
+    if (SUCCEEDED(result_))
     {
         m_eMaxFeatureLevel = dFeatureLevel.MaxSupportedFeatureLevel;
     }
@@ -5788,13 +5788,13 @@ inline HRESULT CD3DX12FeatureSupport::QueryHighestFeatureLevel()
     {
         m_eMaxFeatureLevel = static_cast<D3D_FEATURE_LEVEL>(0);
 
-        if (result == DXGI_ERROR_UNSUPPORTED)
+        if (result_ == DXGI_ERROR_UNSUPPORTED)
         {
             // Indicates that none supported. Continue initialization
-            result = S_OK;
+            result_ = S_OK;
         }
     }
-    return result;
+    return result_;
 }
 
 // Helper function to initialize local protected resource session types structs
@@ -5806,14 +5806,14 @@ inline HRESULT CD3DX12FeatureSupport::QueryProtectedResourceSessionTypes(UINT No
     CurrentPRSTypes.TypeVec.resize(CurrentPRSTypes.Count);
     CurrentPRSTypes.pTypes = CurrentPRSTypes.TypeVec.data();
 
-    HRESULT result = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_TYPES, &m_dProtectedResourceSessionTypes[NodeIndex], sizeof(D3D12_FEATURE_DATA_PROTECTED_RESOURCE_SESSION_TYPES));
-    if (FAILED(result))
+    HRESULT result_ = m_pDevice->CheckFeatureSupport(D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_TYPES, &m_dProtectedResourceSessionTypes[NodeIndex], sizeof(D3D12_FEATURE_DATA_PROTECTED_RESOURCE_SESSION_TYPES));
+    if (FAILED(result_))
     {
         // Resize TypeVec to empty
         CurrentPRSTypes.TypeVec.clear();
     }
 
-    return result;
+    return result_;
 }
 
 #undef FEATURE_SUPPORT_GET

@@ -14,9 +14,9 @@ std::wstring StringUtility::ConvertString(const std::string& str)
     if (sizeNeeded == 0) {
         return std::wstring();
     }
-    std::wstring result(sizeNeeded, 0);
-    MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
-    return result;
+    std::wstring result_(sizeNeeded, 0);
+    MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result_[0], sizeNeeded);
+    return result_;
 }
 
 std::string StringUtility::ConvertString(const std::wstring& str)
@@ -29,7 +29,7 @@ std::string StringUtility::ConvertString(const std::wstring& str)
     if (sizeNeeded == 0) {
         return std::string();
     }
-    std::string result(sizeNeeded, 0);
-    WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
-    return result;
+    std::string result_(sizeNeeded, 0);
+    WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result_.data(), sizeNeeded, NULL, NULL);
+    return result_;
 }

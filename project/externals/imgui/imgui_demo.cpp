@@ -101,7 +101,7 @@ Index of this file:
 #ifdef _MSC_VER
 #pragma warning (disable: 4127)     // condition expression is constant
 #pragma warning (disable: 4996)     // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
-#pragma warning (disable: 26451)    // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to an 8 byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
+#pragma warning (disable: 26451)    // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result_ to an 8 byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
 #endif
 
 // Clang/GCC warnings with -Weverything
@@ -3056,7 +3056,7 @@ static void ShowDemoWindowLayout()
         HelpMarker(
             "Use SetScrollHereX() or SetScrollFromPosX() to scroll to a given horizontal position.\n\n"
             "Because the clipping rectangle of most window hides half worth of WindowPadding on the "
-            "left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the "
+            "left/right, using SetScrollFromPosX(+1) will usually result_ in clipped text whereas the "
             "equivalent SetScrollFromPosY(+1) wouldn't.");
         ImGui::PushID("##HorizontalScrolling");
         for (int i = 0; i < 5; i++)
@@ -6971,8 +6971,8 @@ struct ExampleAppLog
             if (Filter.IsActive())
             {
                 // In this example we don't use the clipper when Filter is enabled.
-                // This is because we don't have random access to the result of our filter.
-                // A real application processing logs with ten of thousands of entries may want to store the result of
+                // This is because we don't have random access to the result_ of our filter.
+                // A real application processing logs with ten of thousands of entries may want to store the result_ of
                 // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
                 for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
                 {
@@ -6995,7 +6995,7 @@ struct ExampleAppLog
                 // - B) items all being the  same height,
                 // both of which we can handle since we have an array pointing to the beginning of each line of text.
                 // When using the filter (in the block of code above) we don't have random access into the data to display
-                // anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
+                // anymore, which is why we don't use the clipper. Storing or skimming through the search result_ would make
                 // it possible (and would be recommended if you want to search through tens of thousands of entries).
                 ImGuiListClipper clipper;
                 clipper.Begin(LineOffsets.Size);

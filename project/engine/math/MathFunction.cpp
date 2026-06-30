@@ -28,9 +28,9 @@ Matrix4x4 MakeBillboardMatrix(const Vector3& scale, const Vector3& rotate, Matri
     Matrix4x4 matSRB = Multiply(matScaleRot, billboardMatrix);
 
     // 全体 * Translate
-    Matrix4x4 result = Multiply(matSRB, translateMatrix);
+    Matrix4x4 result_ = Multiply(matSRB, translateMatrix);
 
-    return result;
+    return result_;
 }
 Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t) {
     float u = 1.0f - t;
@@ -39,25 +39,25 @@ Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Ve
     float uuu = uu * u;
     float ttt = tt * t;
 
-    Vector3 result = uuu * p0;      // (1-t)^3 * P0
-    result += 3.0f * uu * t * p1;   // 3 * (1-t)^2 * t * P1
-    result += 3.0f * u * tt * p2;   // 3 * (1-t) * t^2 * P2
-    result += ttt * p3;             // t^3 * P3
+    Vector3 result_ = uuu * p0;      // (1-t)^3 * P0
+    result_ += 3.0f * uu * t * p1;   // 3 * (1-t)^2 * t * P1
+    result_ += 3.0f * u * tt * p2;   // 3 * (1-t) * t^2 * P2
+    result_ += ttt * p3;             // t^3 * P3
 
-    return result;
+    return result_;
 }
 Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t)
 {
     float t2 = t * t;
     float t3 = t2 * t;
 
-    Vector3 result = 0.5f * (
+    Vector3 result_ = 0.5f * (
         (2.0f * p1) +
         (-p0 + p2) * t +
         (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t2 +
         (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3
         );
-    return result;
+    return result_;
 }
 Vector3 Cross(const Vector3& v1, const Vector3& v2)
 {
@@ -81,11 +81,11 @@ Vector3 operator+(const Vector3& v1, const Vector3& v2)
 {
 
 
-    Vector3 result;
-    result.x = v1.x + v2.x;
-    result.y = v1.y + v2.y;
-    result.z = v1.z + v2.z;
-    return result;
+    Vector3 result_;
+    result_.x = v1.x + v2.x;
+    result_.y = v1.y + v2.y;
+    result_.z = v1.z + v2.z;
+    return result_;
 }
 
 Vector3 operator+=(Vector3& v1, const Vector3& v2)
@@ -100,11 +100,11 @@ Vector3 operator+=(Vector3& v1, const Vector3& v2)
 Vector3 operator-(const Vector3& v1, const Vector3& v2)
 {
 
-    Vector3 result;
-    result.x = v1.x - v2.x;
-    result.y = v1.y - v2.y;
-    result.z = v1.z - v2.z;
-    return result;
+    Vector3 result_;
+    result_.x = v1.x - v2.x;
+    result_.y = v1.y - v2.y;
+    result_.z = v1.z - v2.z;
+    return result_;
 }
 
 Vector3 operator-=(Vector3& v1, const Vector3& v2)
@@ -125,11 +125,11 @@ Vector3 operator-(const Vector3& v)
 Vector3 operator*(float scalar, const Vector3& v)
 {
 
-    Vector3 result;
-    result.x = v.x * scalar;
-    result.y = v.y * scalar;
-    result.z = v.z * scalar;
-    return result;
+    Vector3 result_;
+    result_.x = v.x * scalar;
+    result_.y = v.y * scalar;
+    result_.z = v.z * scalar;
+    return result_;
 }
 
 Vector3 operator*(const Vector3& v, float scalar)
@@ -140,11 +140,11 @@ Vector3 operator*(const Vector3& v, float scalar)
 Vector3 operator/(const Vector3& v, float scalar)
 {
 
-    Vector3 result;
-    result.x = v.x / scalar;
-    result.y = v.y / scalar;
-    result.z = v.z / scalar;
-    return result;
+    Vector3 result_;
+    result_.x = v.x / scalar;
+    result_.y = v.y / scalar;
+    result_.z = v.z / scalar;
+    return result_;
 }
 
 Vector3 operator/=(Vector3& v, float scalar)
@@ -208,34 +208,34 @@ Matrix4x4 MakeUVTransformMatrix(const UVTransform& uvTransform)
     Matrix4x4 scaleMatrix = MakeScaleMatrix(uvTransform.scale);
     Matrix4x4 rotateMatrix = MakeUVRotateMatrix(uvTransform.rotate);
     Matrix4x4 translateMatrix = MakeTranslateMatrix(uvTransform.offset);
-    Matrix4x4 result = Multiply( translateMatrix,Multiply(scaleMatrix, rotateMatrix));
-    return result;
+    Matrix4x4 result_ = Multiply( translateMatrix,Multiply(scaleMatrix, rotateMatrix));
+    return result_;
 }
 
 Matrix4x4 MakeTranslateMatrix(const Vector2& translate)
 {
-    Matrix4x4 result = Makeidentity4x4();
-    result.m[3][0] = translate.x;
-    result.m[3][1] = translate.y;
-    return result;
+    Matrix4x4 result_ = Makeidentity4x4();
+    result_.m[3][0] = translate.x;
+    result_.m[3][1] = translate.y;
+    return result_;
 }
 
 Matrix4x4 MakeScaleMatrix(const Vector2& scale)
 {
-    Matrix4x4 result =Makeidentity4x4();
-    result.m[0][0] = scale.x;
-    result.m[1][1] = scale.y;
-    return result ;
+    Matrix4x4 result_ =Makeidentity4x4();
+    result_.m[0][0] = scale.x;
+    result_.m[1][1] = scale.y;
+    return result_ ;
 }
 
 Matrix4x4 MakeUVRotateMatrix(const float& rotate)
 {
-    Matrix4x4 result =Makeidentity4x4();
-    result.m[0][0] = std::cos(rotate);
-    result.m[0][1] = -std::sin(rotate);
-    result.m[1][0] = std::sin(rotate);
-    result.m[1][1] = std::cos(rotate);
-    return result;
+    Matrix4x4 result_ =Makeidentity4x4();
+    result_.m[0][0] = std::cos(rotate);
+    result_.m[0][1] = -std::sin(rotate);
+    result_.m[1][0] = std::sin(rotate);
+    result_.m[1][1] = std::cos(rotate);
+    return result_;
 }
 
 
@@ -245,8 +245,8 @@ Matrix4x4 MakeUVRotateMatrix(const float& rotate)
 		Matrix4x4 rotateMatrix=Multiply(MakeRotateXMatrix( rotate.x),Multiply(MakeRotateYMatrix( rotate.y),MakeRotateZMatrix( rotate.z)));
 		Matrix4x4 translateMatrix=MakeTranslateMatrix(translate);
 
-	    Matrix4x4 result=Multiply(Multiply(scaleMatrix,rotateMatrix),translateMatrix);
-		return result ;
+	    Matrix4x4 result_=Multiply(Multiply(scaleMatrix,rotateMatrix),translateMatrix);
+		return result_ ;
 	}
 
     Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate)
@@ -255,8 +255,8 @@ Matrix4x4 MakeUVRotateMatrix(const float& rotate)
        Matrix4x4 rotateMatrix = MakeRotateMatrix(rotate);
 		Matrix4x4 translateMatrix=MakeTranslateMatrix(translate);
 
-	    Matrix4x4 result=Multiply(Multiply(scaleMatrix,rotateMatrix),translateMatrix);
-		return result ;
+	    Matrix4x4 result_=Multiply(Multiply(scaleMatrix,rotateMatrix),translateMatrix);
+		return result_ ;
     }
 
 
@@ -303,16 +303,16 @@ Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 /// <param name="matrix"></param>
 /// <returns></returns>
 Vector3 vector3Transform(const Vector3& vector, const Matrix4x4& matrix) {
-    Vector3 result;
-    result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
-    result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + 1.0f * matrix.m[3][1];
-    result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + 1.0f * matrix.m[3][2];
+    Vector3 result_;
+    result_.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
+    result_.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + 1.0f * matrix.m[3][1];
+    result_.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + 1.0f * matrix.m[3][2];
     float  w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + 1.0f * matrix.m[3][3];
     assert(w != 0.0f);
-    result.x /= w;
-    result.y /= w;
-    result.z /= w;
-    return result;
+    result_.x /= w;
+    result_.y /= w;
+    result_.z /= w;
+    return result_;
 }
 /// <summary>
 /// 
@@ -355,34 +355,34 @@ Matrix4x4 MakeRotateZMatrix(float radian)
 }
 //
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
-    Matrix4x4 result = {};
+    Matrix4x4 result_ = {};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            result.m[i][j] = m1.m[i][j] + m2.m[i][j];
+            result_.m[i][j] = m1.m[i][j] + m2.m[i][j];
         }
     }
-    return result;
+    return result_;
 }
 Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
-    Matrix4x4 result = {};
+    Matrix4x4 result_ = {};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            result.m[i][j] = m1.m[i][j] - m2.m[i][j];
+            result_.m[i][j] = m1.m[i][j] - m2.m[i][j];
         }
     }
-    return result;
+    return result_;
 }
 Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
-    Matrix4x4 result = {};
+    Matrix4x4 result_ = {};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             for (int k = 0; k < 4; k++) {
-                result.m[i][j] += m1.m[i][k] * m2.m[k][j];
+                result_.m[i][j] += m1.m[i][k] * m2.m[k][j];
             }
         }
     }
 
-    return result;
+    return result_;
 }
 Matrix4x4 Inverse(const Matrix4x4& m) {
     float det =
@@ -395,7 +395,7 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
         - (m.m[0][1] * m.m[1][2] * m.m[2][3] * m.m[3][0]) - (m.m[0][2] * m.m[1][3] * m.m[2][1] * m.m[3][0]) - (m.m[0][3] * m.m[1][1] * m.m[2][2] * m.m[3][0])
         + (m.m[0][3] * m.m[1][2] * m.m[2][1] * m.m[3][0]) + (m.m[0][2] * m.m[1][1] * m.m[2][3] * m.m[3][0]) + (m.m[0][1] * m.m[1][3] * m.m[2][2] * m.m[3][0])
         ;
-    Matrix4x4 result =
+    Matrix4x4 result_ =
     {
         {
             //0
@@ -536,7 +536,7 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 
 
 
-		return result;
+		return result_;
 	}
 	Matrix4x4 Transpose(const Matrix4x4& m)
 	{
@@ -565,37 +565,37 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 
 //加算
 Vector3 Add(const Vector3& v1, const Vector3& v2) {
-    Vector3 result = {
+    Vector3 result_ = {
         v1.x + v2.x,
         v1.y + v2.y,
         v1.z + v2.z
 
     };
-    return result;
+    return result_;
 }
 //
 Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
-    Vector3 result = {
+    Vector3 result_ = {
         v1.x - v2.x,
         v1.y - v2.y,
         v1.z - v2.z
     };
-    return result;
+    return result_;
 }
 //
 Vector3 Multiply(float scalar, const Vector3& v) {
-    Vector3 result = {
+    Vector3 result_ = {
         scalar * v.x,
         scalar * v.y,
         scalar * v.z
     };
-    return result;
+    return result_;
 }
 //
 float Dot(const Vector3& v1, const Vector3& v2) {
 
-    float result = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-    return result;
+    float result_ = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+    return result_;
 }
 //
 float Length(const Vector3& v) {
@@ -609,15 +609,15 @@ float Length(const Vector3& v) {
 Vector3 Normalize(const Vector3& v) {
     float length = Length(v);
     if (length > 0.0f) {
-        Vector3 result = {
+        Vector3 result_ = {
             v.x / length,
             v.y / length,
             v.z / length
         };
-        return result;
+        return result_;
     }
-    Vector3 result = { 0.0f, 0.0f, 0.0f };
-    return result;
+    Vector3 result_ = { 0.0f, 0.0f, 0.0f };
+    return result_;
     //
 }
 
@@ -637,14 +637,14 @@ Vector2 Normalize(const Vector2& v)
 
     float length = sqrtf(v.x * v.x + v.y * v.y);
     if (length > 0.0f) {
-        Vector2 result = {
+        Vector2 result_ = {
             v.x / length,
             v.y / length
         };
-        return result;
+        return result_;
     }
-    Vector2 result = { 0.0f, 0.0f };
-    return result;
+    Vector2 result_ = { 0.0f, 0.0f };
+    return result_;
 }
 
 Vector2 Lerp(const Vector2& v1, const Vector2& v2, float t)

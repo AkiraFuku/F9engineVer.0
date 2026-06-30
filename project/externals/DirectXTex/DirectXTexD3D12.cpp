@@ -710,7 +710,7 @@ HRESULT DirectX::CaptureTexture(
     ID3D12CommandQueue* pCommandQueue,
     ID3D12Resource* pSource,
     bool isCubeMap,
-    ScratchImage& result,
+    ScratchImage& result_,
     D3D12_RESOURCE_STATES beforeState,
     D3D12_RESOURCE_STATES afterState) noexcept
 {
@@ -764,7 +764,7 @@ HRESULT DirectX::CaptureTexture(
             mdata.format = desc.Format;
             mdata.dimension = TEX_DIMENSION_TEXTURE1D;
 
-            hr = result.Initialize(mdata);
+            hr = result_.Initialize(mdata);
             if (FAILED(hr))
                 return hr;
         }
@@ -783,7 +783,7 @@ HRESULT DirectX::CaptureTexture(
             mdata.format = desc.Format;
             mdata.dimension = TEX_DIMENSION_TEXTURE2D;
 
-            hr = result.Initialize(mdata);
+            hr = result_.Initialize(mdata);
             if (FAILED(hr))
                 return hr;
         }
@@ -802,7 +802,7 @@ HRESULT DirectX::CaptureTexture(
             mdata.format = desc.Format;
             mdata.dimension = TEX_DIMENSION_TEXTURE3D;
 
-            hr = result.Initialize(mdata);
+            hr = result_.Initialize(mdata);
             if (FAILED(hr))
                 return hr;
         }
@@ -816,7 +816,7 @@ HRESULT DirectX::CaptureTexture(
     hr = pStaging->Map(0, nullptr, reinterpret_cast<void**>(&pData));
     if (FAILED(hr))
     {
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
@@ -833,18 +833,18 @@ HRESULT DirectX::CaptureTexture(
                 const UINT dindex = D3D12CalcSubresource(level, item, plane, desc.MipLevels, arraySize);
                 assert(dindex < numberOfResources);
 
-                const Image* img = result.GetImage(level, item, 0);
+                const Image* img = result_.GetImage(level, item, 0);
                 if (!img)
                 {
                     pStaging->Unmap(0, nullptr);
-                    result.Release();
+                    result_.Release();
                     return E_FAIL;
                 }
 
                 if (!img->pixels)
                 {
                     pStaging->Unmap(0, nullptr);
-                    result.Release();
+                    result_.Release();
                     return E_POINTER;
                 }
 
@@ -862,7 +862,7 @@ HRESULT DirectX::CaptureTexture(
                 if (pRowSizesInBytes[dindex] > SIZE_T(-1))
                 {
                     pStaging->Unmap(0, nullptr);
-                    result.Release();
+                    result_.Release();
                     return E_FAIL;
                 }
 

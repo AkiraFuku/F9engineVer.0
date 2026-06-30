@@ -98,10 +98,10 @@ void Input::Update()
 
         // 最新の状態を取得
         ZeroMemory(&state_[i], sizeof(XINPUT_STATE));
-        DWORD result = XInputGetState(i, &state_[i]);
+        DWORD result_ = XInputGetState(i, &state_[i]);
 
         // 接続されていない場合はパケット番号を0にしておくなどの処理
-        if (result != ERROR_SUCCESS) {
+        if (result_ != ERROR_SUCCESS) {
             ZeroMemory(&state_[i], sizeof(XINPUT_STATE));
         }
     }

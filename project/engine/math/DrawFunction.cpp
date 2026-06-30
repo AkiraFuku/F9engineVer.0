@@ -317,75 +317,79 @@ bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistan
 
     Vector3 v01 = Subtract(v1, v0);
     Vector3 v12 = Subtract(v2, v1);
+    Vector3 v20 = Subtract(v0, v2);
 
+    // 法線の計算（※Normalizeを外して高速化することも可能ですが、
+    // 後のd0, d1, d2のスケールを一定にするため、このアルゴリズムでは残しています）
     Vector3 normal = Cross(v01, v12);
     float normalLen = Length(normal);
     if (normalLen == 0.0f) {
+        if (outResult) *outResult = RayTriangleCollisionResult::NoCollision;
         return false;
     }
     normal = Normalize(normal);
-    if (outResult) {
-        *outResult = RayTriangleCollisionResult::NoCollision;
-    }
+
+    // 初期化
+    if (outResult) *outResult = RayTriangleCollisionResult::NoCollision;
+
     float dot = Dot(ray.diff, normal);
     if (dot == 0.0f) {
-
-        return false; // レイが平面と完全に平行な場合は当たらない
+        return false; // レイと三角形の平面が完全に平行
     }
 
     // -------------------------------------------------------------
-    // 【変更】裏面排除（カリング）の `if (dot > 0.0f)` を一時的にコメントアウト、
-    // または削除して、両面から当たるようにします。
+    // 【修正】裏表の判定と結果の保持
     // -------------------------------------------------------------
+    bool isBackFace = (dot > 0.0f);
+    
+    // もし完全に「表面しか当てたくない（裏面カリング）」という仕様なら、
+    // ここで false を返して終了してもOKです。
+    // 今回は「裏面ヒット」という結果を呼び出し側に正しく伝えるため、判定を最後まで通します。
 
+    // 平面との交差計算
     float d = Dot(v0, normal);
     float t = (d - Dot(ray.origin, normal)) / dot;
-    
-    // レイの進行方向とは逆、または遠すぎる判定を弾く (tは 0.0f 〜 1.0f の範囲)
-    // ray.diff が {0, -10, 0} なので、t=1.0 で長さ10。適正な範囲かチェック
-    if (t <= 0.0f || t > 1.0f) {
+
+    // 【修正】t > 1.0f の制限を撤去（前方であれば無限に届く仕様に）
+    if (t <= 0.0f) {
         return false;
     }
 
+    // 交点を計算
     Vector3 p = Add(ray.origin, Multiply(t, ray.diff));
 
+    // -------------------------------------------------------------
+    // 【修正】内外判定（始点を各頂点に正しく合わせる）
+    // -------------------------------------------------------------
     Vector3 v0p = Subtract(p, v0);
     Vector3 v1p = Subtract(p, v1);
     Vector3 v2p = Subtract(p, v2);
-    Vector3 v20 = Subtract(v0, v2);
 
-    Vector3 cross01 = Cross(v01, v1p);
-    Vector3 cross12 = Cross(v12, v2p);
-    Vector3 cross20 = Cross(v20, v0p);
+    // 各辺のベクトルと、頂点から交点へのベクトルの外積
+    Vector3 cross01 = Cross(v01, v0p); // 始点を v0 に統一
+    Vector3 cross12 = Cross(v12, v1p); // 始点を v1 に統一
+    Vector3 cross20 = Cross(v20, v2p); // 始点を v2 に統一
 
     float d0 = Dot(cross01, normal);
     float d1 = Dot(cross12, normal);
     float d2 = Dot(cross20, normal);
 
-    const float EPSILON = 0.001f; // 完全に0だと浮動小数点の誤差で漏れるため、僅かに余裕を持たせる
+    // 浮動小数点の誤差を考慮する微小値
+    const float EPSILON = 1e-5f; 
 
-    // -------------------------------------------------------------
-    // 【変更】d0, d1, d2 が「すべて正（表面）」または「すべて負（裏面）」
-    // のどちらでも、三角形の内側にあれば衝突とする判定に変えます。
-    // -------------------------------------------------------------
-    bool hitInsidePositive = (d0 >= -EPSILON && d1 >= -EPSILON && d2 >= -EPSILON);
-    bool hitInsideNegative = (d0 <= EPSILON && d1 <= EPSILON && d2 <= EPSILON);
+    // 【修正】表面から当たった場合と、裏面から当たった場合の両方に対応
+    bool hitFront = (d0 >= -EPSILON && d1 >= -EPSILON && d2 >= -EPSILON);
+    bool hitBack  = (d0 <=  EPSILON && d1 <=  EPSILON && d2 <=  EPSILON);
 
-    if (hitInsidePositive|| hitInsideNegative) {
-        if (outDistance) {
-            *outDistance = t;
-        }
-        if (outHitPoint) {
-            *outHitPoint = p;
-        }
+    if (hitFront || hitBack) {
+        if (outDistance) *outDistance = t;
+        if (outHitPoint) *outHitPoint = p;
         if (outResult) {
-            if (hitInsidePositive) {
-                *outResult = RayTriangleCollisionResult::FrontFace;
-            } else {
-                *outResult = RayTriangleCollisionResult::BackFace;
-            }
+            *outResult = isBackFace ? RayTriangleCollisionResult::BackFace 
+                                    : RayTriangleCollisionResult::FrontFace;
         }
-        return true;
+        return true; // 衝突したため true
     }
+
     return false;
 }

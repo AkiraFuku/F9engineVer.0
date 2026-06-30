@@ -227,9 +227,10 @@ void GameScene::Initialize() {
 
     // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
     Vector3 railPoint1 = stageRail->GetPointPos(2);
-    boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
+    //boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
     boxObject_->SetScale({ 4.0f, 8.0f, 4.0f }); // 大きめの箱にする
 
+    boxObject_->Update();   
 
     GameScene::AddTriangles(boxObject_->GetWorldTriangles());
 
@@ -446,41 +447,46 @@ void GameScene::Update() {
         triangles_.insert(triangles_.end(), boxTris.begin(), boxTris.end());
     }
 
-    // プレイヤーの位置から真下にレイキャスト (箱のメッシュとの判定)
-    if (player && boxObject_) {
-        debugRay_.origin = player->GetWorldPosition();
-        debugRay_.diff = { 0.0f, -10.0f, 0.0f }; // 長さ10の下向きレイ
-
-        isBoxHit_ = false;
-        boxHitDistance_ = FLT_MAX;
-
-        // 箱オブジェクトのワールド空間の三角形リストを取得
-        std::vector<Triangle> triangles = boxObject_->GetWorldTriangles();
-
-        for (const auto& tri : triangles) {
-            float dist = 0.0f;
-            Vector3 hitPt = {};
-            if (CheckRayTriangle(debugRay_, tri, &dist, &hitPt)) {
-                // 最も近い衝突面を選択
-                if (dist < boxHitDistance_) {
-                    boxHitDistance_ = dist;
-                    boxHitPoint_ = hitPt;
-                    hitTriangle_ = tri;
-                    isBoxHit_ = true;
-                }
-            }
-        }
-
+//    // プレイヤーの位置から真下にレイキャスト (箱のメッシュとの判定)
+//    if (player && boxObject_) {
+//        debugRay_.origin = player->GetWorldPosition();
+//        debugRay_.diff = { 0.0f, -10.0f, 0.0f }; // 長さ10の下向きレイ
+//
+//        isBoxHit_ = false;
+//        boxHitDistance_ = FLT_MAX;
+//
+//        // 箱オブジェクトのワールド空間の三角形リストを取得
+//        std::vector<Triangle> triangles = boxObject_->GetWorldTriangles();
+//
+//        for (const auto& tri : triangles) {
+//            float dist = 0.0f;
+//            Vector3 hitPt = {};
+//            if (CheckRayTriangle(debugRay_, tri, &dist, &hitPt)) {
+//                // 最も近い衝突面を選択
+//                if (dist < boxHitDistance_) {
+//                    boxHitDistance_ = dist;
+//                    boxHitPoint_ = hitPt;
+//                    hitTriangle_ = tri;
+//                    isBoxHit_ = true;
+//                }
+//            }
+//        }
+//
 #ifdef USE_IMGUI
         ImGui::Begin("Raycast Box Debug");
-        ImGui::Text("Box Hit: %s", isBoxHit_ ? "True" : "False");
-        if (isBoxHit_) {
-            ImGui::Text("Hit Distance: %.3f", boxHitDistance_);
-            ImGui::Text("Hit Point: (%.3f, %.3f, %.3f)", boxHitPoint_.x, boxHitPoint_.y, boxHitPoint_.z);
-        }
+        //ボックスの位置
+       boxPoint_ = boxObject_->GetTranslate();
+        ImGui::DragFloat3("Box Position", &(boxPoint_.x));
+        boxObject_->SetTranslate(boxPoint_);
+//        
+//        ImGui::Text("Box Hit: %s", isBoxHit_ ? "True" : "False");
+//        if (isBoxHit_) {
+//            ImGui::Text("Hit Distance: %.3f", boxHitDistance_);
+//            ImGui::Text("Hit Point: (%.3f, %.3f, %.3f)", boxHitPoint_.x, boxHitPoint_.y, boxHitPoint_.z);
+//        }
         ImGui::End();
 #endif
-    }
+//    }
 
     //  LightManager::GetInstance()->Update();
 

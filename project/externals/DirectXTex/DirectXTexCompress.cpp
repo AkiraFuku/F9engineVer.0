@@ -71,16 +71,16 @@ namespace
     //-------------------------------------------------------------------------------------
     HRESULT CompressBC(
         const Image& image,
-        const Image& result,
+        const Image& result_,
         uint32_t bcflags,
         TEX_FILTER_FLAGS srgb,
         float threshold) noexcept
     {
-        if (!image.pixels || !result.pixels)
+        if (!image.pixels || !result_.pixels)
             return E_POINTER;
 
-        assert(image.width == result.width);
-        assert(image.height == result.height);
+        assert(image.width == result_.width);
+        assert(image.height == result_.height);
 
         const DXGI_FORMAT format = image.format;
         size_t sbpp = BitsPerPixel(format);
@@ -96,13 +96,13 @@ namespace
         // Round to bytes
         sbpp = (sbpp + 7) / 8;
 
-        uint8_t *pDest = result.pixels;
+        uint8_t *pDest = result_.pixels;
 
         // Determine BC format encoder
         BC_ENCODE pfEncode;
         size_t blocksize;
         TEX_FILTER_FLAGS cflags;
-        if (!DetermineEncoderSettings(result.format, pfEncode, blocksize, cflags))
+        if (!DetermineEncoderSettings(result_.format, pfEncode, blocksize, cflags))
             return HRESULT_E_NOT_SUPPORTED;
 
         XM_ALIGNED_DATA(16) XMVECTOR temp[16];
@@ -115,7 +115,7 @@ namespace
             uint8_t* dptr = pDest;
             const size_t ph = std::min<size_t>(4, image.height - h);
             size_t w = 0;
-            for (size_t count = 0; (count < result.rowPitch) && (w < image.width); count += blocksize, w += 4)
+            for (size_t count = 0; (count < result_.rowPitch) && (w < image.width); count += blocksize, w += 4)
             {
                 const size_t pw = std::min<size_t>(4, image.width - w);
                 assert(pw > 0 && ph > 0);
@@ -177,7 +177,7 @@ namespace
                     }
                 }
 
-                ConvertScanline(temp, 16, result.format, format, cflags | srgb);
+                ConvertScanline(temp, 16, result_.format, format, cflags | srgb);
 
                 if (pfEncode)
                     pfEncode(dptr, temp, bcflags);
@@ -189,7 +189,7 @@ namespace
             }
 
             pSrc += rowPitch * 4;
-            pDest += result.rowPitch;
+            pDest += result_.rowPitch;
         }
 
         return S_OK;
@@ -200,16 +200,16 @@ namespace
 #ifdef _OPENMP
     HRESULT CompressBC_Parallel(
         const Image& image,
-        const Image& result,
+        const Image& result_,
         uint32_t bcflags,
         TEX_FILTER_FLAGS srgb,
         float threshold) noexcept
     {
-        if (!image.pixels || !result.pixels)
+        if (!image.pixels || !result_.pixels)
             return E_POINTER;
 
-        assert(image.width == result.width);
-        assert(image.height == result.height);
+        assert(image.width == result_.width);
+        assert(image.height == result_.height);
 
         const DXGI_FORMAT format = image.format;
         size_t sbpp = BitsPerPixel(format);
@@ -231,7 +231,7 @@ namespace
         BC_ENCODE pfEncode;
         size_t blocksize;
         TEX_FILTER_FLAGS cflags;
-        if (!DetermineEncoderSettings(result.format, pfEncode, blocksize, cflags))
+        if (!DetermineEncoderSettings(result_.format, pfEncode, blocksize, cflags))
             return HRESULT_E_NOT_SUPPORTED;
 
         // Refactored version of loop to support parallel independance
@@ -254,7 +254,7 @@ namespace
             const size_t rowPitch = image.rowPitch;
             const uint8_t *pSrc = image.pixels + (size_t(y)*rowPitch) + (size_t(x)*sbpp);
 
-            uint8_t *pDest = result.pixels + (size_t(nb)*blocksize);
+            uint8_t *pDest = result_.pixels + (size_t(nb)*blocksize);
 
             const size_t ph = std::min<size_t>(4, image.height - size_t(y));
             const size_t pw = std::min<size_t>(4, image.width - size_t(x));
@@ -317,7 +317,7 @@ namespace
                 }
             }
 
-            ConvertScanline(temp, 16, result.format, format, cflags | srgb);
+            ConvertScanline(temp, 16, result_.format, format, cflags | srgb);
 
             if (pfEncode)
                 pfEncode(pDest, temp, bcflags);
@@ -379,15 +379,15 @@ namespace
 
 
     //-------------------------------------------------------------------------------------
-    HRESULT DecompressBC(_In_ const Image& cImage, _In_ const Image& result) noexcept
+    HRESULT DecompressBC(_In_ const Image& cImage, _In_ const Image& result_) noexcept
     {
-        if (!cImage.pixels || !result.pixels)
+        if (!cImage.pixels || !result_.pixels)
             return E_POINTER;
 
-        assert(cImage.width == result.width);
-        assert(cImage.height == result.height);
+        assert(cImage.width == result_.width);
+        assert(cImage.height == result_.height);
 
-        const DXGI_FORMAT format = result.format;
+        const DXGI_FORMAT format = result_.format;
         size_t dbpp = BitsPerPixel(format);
         if (!dbpp)
             return E_FAIL;
@@ -401,7 +401,7 @@ namespace
         // Round to bytes
         dbpp = (dbpp + 7) / 8;
 
-        uint8_t *pDest = result.pixels;
+        uint8_t *pDest = result_.pixels;
         if (!pDest)
             return E_POINTER;
 
@@ -444,7 +444,7 @@ namespace
 
         XM_ALIGNED_DATA(16) XMVECTOR temp[16];
         const uint8_t *pSrc = cImage.pixels;
-        const size_t rowPitch = result.rowPitch;
+        const size_t rowPitch = result_.rowPitch;
         for (size_t h = 0; h < cImage.height; h += 4)
         {
             const uint8_t *sptr = pSrc;

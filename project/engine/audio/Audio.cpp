@@ -30,18 +30,18 @@ Audio* Audio::GetInstance()
 
 void Audio::Initialize()
 {
-    HRESULT result;
+    HRESULT result_;
     // MF初期化
-    result = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
-    assert(SUCCEEDED(result));
+    result_ = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
+    assert(SUCCEEDED(result_));
 
     // XAudio2初期化
-    result = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
-    assert(SUCCEEDED(result));
+    result_ = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
+    assert(SUCCEEDED(result_));
 
     // マスターボイス作成
-    result = xAudio2_->CreateMasteringVoice(&masteringVoice_);
-    assert(SUCCEEDED(result));
+    result_ = xAudio2_->CreateMasteringVoice(&masteringVoice_);
+    assert(SUCCEEDED(result_));
 }
 
 void Audio::Finalize()
@@ -92,12 +92,12 @@ void Audio::Update()
 Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
 {
     std::wstring filePathW = StringUtility::ConvertString(filename);
-    HRESULT result;
+    HRESULT result_;
 
     // 1. ソースリーダー作成
     ComPtr<IMFSourceReader> pReader;
-    result = MFCreateSourceReaderFromURL(filePathW.c_str(), nullptr, &pReader);
-    if (FAILED(result)) {
+    result_ = MFCreateSourceReaderFromURL(filePathW.c_str(), nullptr, &pReader);
+    if (FAILED(result_)) {
         assert(false && "Failed to load audio file.");
         return -1; // エラー時は最大値を返す等の処理
     }
@@ -107,8 +107,8 @@ Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
     MFCreateMediaType(&pPCMType);
     pPCMType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
     pPCMType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-    result = pReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pPCMType.Get());
-    assert(SUCCEEDED(result));
+    result_ = pReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pPCMType.Get());
+    assert(SUCCEEDED(result_));
 
     // 3. フォーマット取得
     ComPtr<IMFMediaType> pOutType;
@@ -125,7 +125,7 @@ Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
     {
         ComPtr<IMFSample> pSample;
         DWORD flags = 0;
-        result = pReader->ReadSample(
+        result_ = pReader->ReadSample(
             (DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM,
             0, nullptr, &flags, nullptr, &pSample);
 
@@ -168,8 +168,8 @@ void Audio::PlayAudio(SoundHandle soundHandle, bool loop, float volume)
 
     // --- ボイス作成 (既存コード) ---
     IXAudio2SourceVoice* pSourceVoice = nullptr;
-    HRESULT result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-    assert(SUCCEEDED(result));
+    HRESULT result_ = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+    assert(SUCCEEDED(result_));
 
     pSourceVoice->SetVolume(volume);
 
@@ -179,8 +179,8 @@ void Audio::PlayAudio(SoundHandle soundHandle, bool loop, float volume)
     buf.Flags = XAUDIO2_END_OF_STREAM;
     if (loop) buf.LoopCount = XAUDIO2_LOOP_INFINITE;
 
-    result = pSourceVoice->SubmitSourceBuffer(&buf);
-    result = pSourceVoice->Start();
+    result_ = pSourceVoice->SubmitSourceBuffer(&buf);
+    result_ = pSourceVoice->Start();
 
     // --- Voice登録 (修正箇所) ---
     Voice voice{};

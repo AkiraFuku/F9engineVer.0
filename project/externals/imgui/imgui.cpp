@@ -541,7 +541,7 @@ CODE
  - 2020/09/25 (1.79) - renamed ImGuiSliderFlags_ClampOnInput to ImGuiSliderFlags_AlwaysClamp. Kept redirection enum (will obsolete sooner because previous name was added recently).
  - 2020/09/25 (1.79) - renamed style.TabMinWidthForUnselectedCloseButton to style.TabMinWidthForCloseButton.
  - 2020/09/21 (1.79) - renamed OpenPopupContextItem() back to OpenPopupOnItemClick(), reverting the change from 1.77. For varieties of reason this is more self-explanatory.
- - 2020/09/21 (1.79) - removed return value from OpenPopupOnItemClick() - returned true on mouse release on an item - because it is inconsistent with other popup APIs and makes others misleading. It's also and unnecessary: you can use IsWindowAppearing() after BeginPopup() for a similar result.
+ - 2020/09/21 (1.79) - removed return value from OpenPopupOnItemClick() - returned true on mouse release on an item - because it is inconsistent with other popup APIs and makes others misleading. It's also and unnecessary: you can use IsWindowAppearing() after BeginPopup() for a similar result_.
  - 2020/09/17 (1.79) - removed ImFont::DisplayOffset in favor of ImFontConfig::GlyphOffset. DisplayOffset was applied after scaling and not very meaningful/useful outside of being needed by the default ProggyClean font. If you scaled this value after calling AddFontDefault(), this is now done automatically. It was also getting in the way of better font scaling, so let's get rid of it now!
  - 2020/08/17 (1.78) - obsoleted use of the trailing 'float power=1.0f' parameter for DragFloat(), DragFloat2(), DragFloat3(), DragFloat4(), DragFloatRange2(), DragScalar(), DragScalarN(), SliderFloat(), SliderFloat2(), SliderFloat3(), SliderFloat4(), SliderScalar(), SliderScalarN(), VSliderFloat() and VSliderScalar().
                        replaced the 'float power=1.0f' argument with integer-based flags defaulting to 0 (as with all our flags).
@@ -939,7 +939,7 @@ CODE
 #if defined(_MSC_VER) && _MSC_VER >= 1922   // MSVC 2019 16.2 or later
 #pragma warning (disable: 5054)             // operator '|': deprecated between enumerations of different types
 #endif
-#pragma warning (disable: 26451)            // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to an 8 byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
+#pragma warning (disable: 26451)            // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result_ to an 8 byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
 #pragma warning (disable: 26495)            // [Static Analyzer] Variable 'XXX' is uninitialized. Always initialize a member variable (type.6).
 #pragma warning (disable: 26812)            // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
 #endif
@@ -1025,8 +1025,8 @@ static float            NavUpdatePageUpPageDown();
 static inline void      NavUpdateAnyRequestFlag();
 static void             NavUpdateCreateWrappingRequest();
 static void             NavEndFrame();
-static bool             NavScoreItem(ImGuiNavItemData* result);
-static void             NavApplyItemToResult(ImGuiNavItemData* result);
+static bool             NavScoreItem(ImGuiNavItemData* result_);
+static void             NavApplyItemToResult(ImGuiNavItemData* result_);
 static void             NavProcessItem();
 static void             NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flags, ImGuiNavMoveFlags move_flags);
 static ImVec2           NavCalcPreferredRefPos();
@@ -2375,7 +2375,7 @@ void** ImGuiStorage::GetVoidPtrRef(ImGuiID key, void* default_val)
     return &it->val_p;
 }
 
-// FIXME-OPT: Need a way to reuse the result of lower_bound when doing GetInt()/SetInt() - not too bad because it only happens on explicit interaction (maximum one a frame)
+// FIXME-OPT: Need a way to reuse the result_ of lower_bound when doing GetInt()/SetInt() - not too bad because it only happens on explicit interaction (maximum one a frame)
 void ImGuiStorage::SetInt(ImGuiID key, int val)
 {
     ImGuiStoragePair* it = LowerBound(Data, key);
@@ -4440,7 +4440,7 @@ void ImGui::NewFrame()
 
     // Clear ActiveID if the item is not alive anymore.
     // In 1.87, the common most call to KeepAliveID() was moved from GetID() to ItemAdd().
-    // As a result, custom widget using ButtonBehavior() _without_ ItemAdd() need to call KeepAliveID() themselves.
+    // As a result_, custom widget using ButtonBehavior() _without_ ItemAdd() need to call KeepAliveID() themselves.
     if (g.ActiveId != 0 && g.ActiveIdIsAlive != g.ActiveId && g.ActiveIdPreviousFrame == g.ActiveId)
     {
         IMGUI_DEBUG_LOG_ACTIVEID("NewFrame(): ClearActiveID() because it isn't marked alive anymore!\n");
@@ -4746,7 +4746,7 @@ static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*
 
 // Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
 // - When using this function it is sane to ensure that float are perfectly rounded to integer values,
-//   so that e.g. (int)(max.x-min.x) in user's render produce correct result.
+//   so that e.g. (int)(max.x-min.x) in user's render produce correct result_.
 // - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
 //   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
 //   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
@@ -6513,7 +6513,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         // Inner clipping rectangle.
         // Will extend a little bit outside the normal work region.
         // This is to allow e.g. Selectable or CollapsingHeader or some separators to cover that space.
-        // Force round operator last to ensure that e.g. (int)(max.x-min.x) in user's render code produce correct result.
+        // Force round operator last to ensure that e.g. (int)(max.x-min.x) in user's render code produce correct result_.
         // Note that if our window is collapsed we will end up with an inverted (~null) clipping rectangle which is the correct behavior.
         // Affected by window/frame border size. Used by:
         // - Begin() initial clip rect
@@ -7154,12 +7154,12 @@ bool ImGui::IsWindowHovered(ImGuiHoveredFlags flags)
         if (flags & ImGuiHoveredFlags_RootWindow)
             cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy);
 
-        bool result;
+        bool result_;
         if (flags & ImGuiHoveredFlags_ChildWindows)
-            result = IsWindowChildOf(ref_window, cur_window, popup_hierarchy);
+            result_ = IsWindowChildOf(ref_window, cur_window, popup_hierarchy);
         else
-            result = (ref_window == cur_window);
-        if (!result)
+            result_ = (ref_window == cur_window);
+        if (!result_)
             return false;
     }
 
@@ -7829,7 +7829,7 @@ void ImGui::GetTypematicRepeatRate(ImGuiInputFlags flags, float* repeat_delay, f
 }
 
 // Return value representing the number of presses in the last time period, for the given repeat rate
-// (most often returns 0 or 1. The result is generally only >1 when RepeatRate is smaller than DeltaTime, aka large DeltaTime or fast RepeatRate)
+// (most often returns 0 or 1. The result_ is generally only >1 when RepeatRate is smaller than DeltaTime, aka large DeltaTime or fast RepeatRate)
 int ImGui::GetKeyPressedAmount(ImGuiKey key, float repeat_delay, float repeat_rate)
 {
     ImGuiContext& g = *GImGui;
@@ -7851,7 +7851,7 @@ ImVec2 ImGui::GetKeyMagnitude2d(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey 
 // Rewrite routing data buffers to strip old entries + sort by key to make queries not touch scattered data.
 //   Entries   D,A,B,B,A,C,B     --> A,A,B,B,B,C,D
 //   Index     A:1 B:2 C:5 D:0   --> A:0 B:2 C:5 D:6
-// See 'Metrics->Key Owners & Shortcut Routing' to visualize the result of that operation.
+// See 'Metrics->Key Owners & Shortcut Routing' to visualize the result_ of that operation.
 static void ImGui::UpdateKeyRoutingTable(ImGuiKeyRoutingTable* rt)
 {
     ImGuiContext& g = *GImGui;
@@ -10609,7 +10609,7 @@ static void inline NavClampRectToVisibleAreaForMoveDir(ImGuiDir move_dir, ImRect
 }
 
 // Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
-static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
+static bool ImGui::NavScoreItem(ImGuiNavItemData* result_)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -10701,21 +10701,21 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
     if (quadrant == move_dir)
     {
         // Does it beat the current best candidate?
-        if (dist_box < result->DistBox)
+        if (dist_box < result_->DistBox)
         {
-            result->DistBox = dist_box;
-            result->DistCenter = dist_center;
+            result_->DistBox = dist_box;
+            result_->DistCenter = dist_center;
             return true;
         }
-        if (dist_box == result->DistBox)
+        if (dist_box == result_->DistBox)
         {
             // Try using distance between center points to break ties
-            if (dist_center < result->DistCenter)
+            if (dist_center < result_->DistCenter)
             {
-                result->DistCenter = dist_center;
+                result_->DistCenter = dist_center;
                 new_best = true;
             }
-            else if (dist_center == result->DistCenter)
+            else if (dist_center == result_->DistCenter)
             {
                 // Still tied! we need to be extra-careful to make sure everything gets linked properly. We consistently break ties by symbolically moving "later" items
                 // (with higher index) to the right/downwards by an infinitesimal amount since we the current "best" button already (so it must have a lower index),
@@ -10731,26 +10731,26 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
     // This is just to avoid buttons having no links in a particular direction when there's a suitable neighbor. you get good graphs without this too.
     // 2017/09/29: FIXME: This now currently only enabled inside menu bars, ideally we'd disable it everywhere. Menus in particular need to catch failure. For general navigation it feels awkward.
     // Disabling it may lead to disconnected graphs when nodes are very spaced out on different axis. Perhaps consider offering this as an option?
-    if (result->DistBox == FLT_MAX && dist_axial < result->DistAxial)  // Check axial match
+    if (result_->DistBox == FLT_MAX && dist_axial < result_->DistAxial)  // Check axial match
         if (g.NavLayer == ImGuiNavLayer_Menu && !(g.NavWindow->Flags & ImGuiWindowFlags_ChildMenu))
             if ((move_dir == ImGuiDir_Left && dax < 0.0f) || (move_dir == ImGuiDir_Right && dax > 0.0f) || (move_dir == ImGuiDir_Up && day < 0.0f) || (move_dir == ImGuiDir_Down && day > 0.0f))
             {
-                result->DistAxial = dist_axial;
+                result_->DistAxial = dist_axial;
                 new_best = true;
             }
 
     return new_best;
 }
 
-static void ImGui::NavApplyItemToResult(ImGuiNavItemData* result)
+static void ImGui::NavApplyItemToResult(ImGuiNavItemData* result_)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
-    result->Window = window;
-    result->ID = g.LastItemData.ID;
-    result->FocusScopeId = g.CurrentFocusScopeId;
-    result->InFlags = g.LastItemData.InFlags;
-    result->RectRel = WindowRectAbsToRel(window, g.LastItemData.NavRect);
+    result_->Window = window;
+    result_->ID = g.LastItemData.ID;
+    result_->FocusScopeId = g.CurrentFocusScopeId;
+    result_->InFlags = g.LastItemData.InFlags;
+    result_->RectRel = WindowRectAbsToRel(window, g.LastItemData.NavRect);
 }
 
 // We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
@@ -10791,9 +10791,9 @@ static void ImGui::NavProcessItem()
         }
         else if (g.NavId != id || (g.NavMoveFlags & ImGuiNavMoveFlags_AllowCurrentNavId))
         {
-            ImGuiNavItemData* result = (window == g.NavWindow) ? &g.NavMoveResultLocal : &g.NavMoveResultOther;
-            if (NavScoreItem(result))
-                NavApplyItemToResult(result);
+            ImGuiNavItemData* result_ = (window == g.NavWindow) ? &g.NavMoveResultLocal : &g.NavMoveResultOther;
+            if (NavScoreItem(result_))
+                NavApplyItemToResult(result_);
 
             // Features like PageUp/PageDown need to maintain a separate score for the visible set of items.
             const float VISIBLE_RATIO = 0.70f;
@@ -10818,11 +10818,11 @@ static void ImGui::NavProcessItem()
 
 // Handle "scoring" of an item for a tabbing/focusing request initiated by NavUpdateCreateTabbingRequest().
 // Note that SetKeyboardFocusHere() API calls are considered tabbing requests!
-// - Case 1: no nav/active id:    set result to first eligible item, stop storing.
-// - Case 2: tab forward:         on ref id set counter, on counter elapse store result
-// - Case 3: tab forward wrap:    set result to first eligible item (preemptively), on ref id set counter, on next frame if counter hasn't elapsed store result. // FIXME-TABBING: Could be done as a next-frame forwarded request
+// - Case 1: no nav/active id:    set result_ to first eligible item, stop storing.
+// - Case 2: tab forward:         on ref id set counter, on counter elapse store result_
+// - Case 3: tab forward wrap:    set result_ to first eligible item (preemptively), on ref id set counter, on next frame if counter hasn't elapsed store result_. // FIXME-TABBING: Could be done as a next-frame forwarded request
 // - Case 4: tab backward:        store all results, on ref id pick prev, stop storing
-// - Case 5: tab backward wrap:   store all results, on ref id if no result keep storing until last // FIXME-TABBING: Could be done as next-frame forwarded requested
+// - Case 5: tab backward wrap:   store all results, on ref id if no result_ keep storing until last // FIXME-TABBING: Could be done as next-frame forwarded requested
 void ImGui::NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flags, ImGuiNavMoveFlags move_flags)
 {
     ImGuiContext& g = *GImGui;
@@ -10841,14 +10841,14 @@ void ImGui::NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flag
         can_stop = (item_flags & ImGuiItemFlags_NoTabStop) == 0 && ((g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) || (item_flags & ImGuiItemFlags_Inputable));
 
     // Always store in NavMoveResultLocal (unlike directional request which uses NavMoveResultOther on sibling/flattened windows)
-    ImGuiNavItemData* result = &g.NavMoveResultLocal;
+    ImGuiNavItemData* result_ = &g.NavMoveResultLocal;
     if (g.NavTabbingDir == +1)
     {
         // Tab Forward or SetKeyboardFocusHere() with >= 0
         if (can_stop && g.NavTabbingResultFirst.ID == 0)
             NavApplyItemToResult(&g.NavTabbingResultFirst);
         if (can_stop && g.NavTabbingCounter > 0 && --g.NavTabbingCounter == 0)
-            NavMoveRequestResolveWithLastItem(result);
+            NavMoveRequestResolveWithLastItem(result_);
         else if (g.NavId == id)
             g.NavTabbingCounter = 1;
     }
@@ -10857,7 +10857,7 @@ void ImGui::NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flag
         // Tab Backward
         if (g.NavId == id)
         {
-            if (result->ID)
+            if (result_->ID)
             {
                 g.NavMoveScoringItems = false;
                 NavUpdateAnyRequestFlag();
@@ -10866,13 +10866,13 @@ void ImGui::NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flag
         else if (can_stop)
         {
             // Keep applying until reaching NavId
-            NavApplyItemToResult(result);
+            NavApplyItemToResult(result_);
         }
     }
     else if (g.NavTabbingDir == 0)
     {
         if (can_stop && g.NavId == id)
-            NavMoveRequestResolveWithLastItem(result);
+            NavMoveRequestResolveWithLastItem(result_);
         if (can_stop && g.NavTabbingResultFirst.ID == 0) // Tab init
             NavApplyItemToResult(&g.NavTabbingResultFirst);
     }
@@ -10909,11 +10909,11 @@ void ImGui::NavMoveRequestSubmit(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavM
     NavUpdateAnyRequestFlag();
 }
 
-void ImGui::NavMoveRequestResolveWithLastItem(ImGuiNavItemData* result)
+void ImGui::NavMoveRequestResolveWithLastItem(ImGuiNavItemData* result_)
 {
     ImGuiContext& g = *GImGui;
     g.NavMoveScoringItems = false; // Ensure request doesn't need more processing
-    NavApplyItemToResult(result);
+    NavApplyItemToResult(result_);
     NavUpdateAnyRequestFlag();
 }
 
@@ -11062,7 +11062,7 @@ static ImVec2 ImGui::NavCalcPreferredRefPos()
         }
         ImVec2 pos = ImVec2(rect_rel.Min.x + ImMin(g.Style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.Max.y - ImMin(g.Style.FramePadding.y, rect_rel.GetHeight()));
         ImGuiViewport* viewport = GetMainViewport();
-        return ImFloor(ImClamp(pos, viewport->Pos, viewport->Pos + viewport->Size)); // ImFloor() is important because non-integer mouse position application in backend might be lossy and result in undesirable non-zero delta.
+        return ImFloor(ImClamp(pos, viewport->Pos, viewport->Pos + viewport->Size)); // ImFloor() is important because non-integer mouse position application in backend might be lossy and result_ in undesirable non-zero delta.
     }
 }
 
@@ -11258,11 +11258,11 @@ void ImGui::NavInitRequestApplyResult()
     if (!g.NavWindow)
         return;
 
-    // Apply result from previous navigation init request (will typically select the first item, unless SetItemDefaultFocus() has been called)
+    // Apply result_ from previous navigation init request (will typically select the first item, unless SetItemDefaultFocus() has been called)
     // FIXME-NAV: On _NavFlattened windows, g.NavWindow will only be updated during subsequent frame. Not a problem currently.
     IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: ApplyResult: NavID 0x%08X in Layer %d Window \"%s\"\n", g.NavInitResultId, g.NavLayer, g.NavWindow->Name);
     SetNavID(g.NavInitResultId, g.NavLayer, 0, g.NavInitResultRectRel);
-    g.NavIdIsAlive = true; // Mark as alive from previous frame as we got a result
+    g.NavIdIsAlive = true; // Mark as alive from previous frame as we got a result_
     if (g.NavInitRequestFromMove)
         NavRestoreHighlightAfterMove();
 }
@@ -11347,7 +11347,7 @@ void ImGui::NavUpdateCreateMoveRequest()
         ImRect inner_rect_rel = WindowRectAbsToRel(window, ImRect(window->InnerRect.Min - ImVec2(1, 1), window->InnerRect.Max + ImVec2(1, 1)));
 
         // Take account of changing scroll to handle triggering a new move request on a scrolling frame. (#6171)
-        // Otherwise 'inner_rect_rel' would be off on the move result frame.
+        // Otherwise 'inner_rect_rel' would be off on the move result_ frame.
         inner_rect_rel.Translate(CalcNextScrollFromScrollTargetAndClamp(window) - window->Scroll);
 
         if ((clamp_x || clamp_y) && !inner_rect_rel.Contains(window->NavRectRel[g.NavLayer]))
@@ -11408,7 +11408,7 @@ void ImGui::NavUpdateCreateTabbingRequest()
     g.NavTabbingCounter = -1;
 }
 
-// Apply result from previous frame navigation directional move request. Always called from NavUpdate()
+// Apply result_ from previous frame navigation directional move request. Always called from NavUpdate()
 void ImGui::NavMoveRequestApplyResult()
 {
     ImGuiContext& g = *GImGui;
@@ -11417,16 +11417,16 @@ void ImGui::NavMoveRequestApplyResult()
         return;
 #endif
 
-    // Select which result to use
-    ImGuiNavItemData* result = (g.NavMoveResultLocal.ID != 0) ? &g.NavMoveResultLocal : (g.NavMoveResultOther.ID != 0) ? &g.NavMoveResultOther : NULL;
+    // Select which result_ to use
+    ImGuiNavItemData* result_ = (g.NavMoveResultLocal.ID != 0) ? &g.NavMoveResultLocal : (g.NavMoveResultOther.ID != 0) ? &g.NavMoveResultOther : NULL;
 
     // Tabbing forward wrap
-    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && result == NULL)
+    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && result_ == NULL)
         if ((g.NavTabbingCounter == 1 || g.NavTabbingDir == 0) && g.NavTabbingResultFirst.ID)
-            result = &g.NavTabbingResultFirst;
+            result_ = &g.NavTabbingResultFirst;
 
-    // In a situation when there are no results but NavId != 0, re-enable the Navigation highlight (because g.NavId is not considered as a possible result)
-    if (result == NULL)
+    // In a situation when there are no results but NavId != 0, re-enable the Navigation highlight (because g.NavId is not considered as a possible result_)
+    if (result_ == NULL)
     {
         if (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing)
             g.NavMoveFlags |= ImGuiNavMoveFlags_DontSetNavHighlight;
@@ -11435,16 +11435,16 @@ void ImGui::NavMoveRequestApplyResult()
         return;
     }
 
-    // PageUp/PageDown behavior first jumps to the bottom/top mostly visible item, _otherwise_ use the result from the previous/next page.
+    // PageUp/PageDown behavior first jumps to the bottom/top mostly visible item, _otherwise_ use the result_ from the previous/next page.
     if (g.NavMoveFlags & ImGuiNavMoveFlags_AlsoScoreVisibleSet)
         if (g.NavMoveResultLocalVisible.ID != 0 && g.NavMoveResultLocalVisible.ID != g.NavId)
-            result = &g.NavMoveResultLocalVisible;
+            result_ = &g.NavMoveResultLocalVisible;
 
     // Maybe entering a flattened child from the outside? In this case solve the tie using the regular scoring rules.
-    if (result != &g.NavMoveResultOther && g.NavMoveResultOther.ID != 0 && g.NavMoveResultOther.Window->ParentWindow == g.NavWindow)
-        if ((g.NavMoveResultOther.DistBox < result->DistBox) || (g.NavMoveResultOther.DistBox == result->DistBox && g.NavMoveResultOther.DistCenter < result->DistCenter))
-            result = &g.NavMoveResultOther;
-    IM_ASSERT(g.NavWindow && result->Window);
+    if (result_ != &g.NavMoveResultOther && g.NavMoveResultOther.ID != 0 && g.NavMoveResultOther.Window->ParentWindow == g.NavWindow)
+        if ((g.NavMoveResultOther.DistBox < result_->DistBox) || (g.NavMoveResultOther.DistBox == result_->DistBox && g.NavMoveResultOther.DistCenter < result_->DistCenter))
+            result_ = &g.NavMoveResultOther;
+    IM_ASSERT(g.NavWindow && result_->Window);
 
     // Scroll to keep newly navigated item fully into view.
     if (g.NavLayer == ImGuiNavLayer_Main)
@@ -11452,39 +11452,39 @@ void ImGui::NavMoveRequestApplyResult()
         if (g.NavMoveFlags & ImGuiNavMoveFlags_ScrollToEdgeY)
         {
             // FIXME: Should remove this
-            float scroll_target = (g.NavMoveDir == ImGuiDir_Up) ? result->Window->ScrollMax.y : 0.0f;
-            SetScrollY(result->Window, scroll_target);
+            float scroll_target = (g.NavMoveDir == ImGuiDir_Up) ? result_->Window->ScrollMax.y : 0.0f;
+            SetScrollY(result_->Window, scroll_target);
         }
         else
         {
-            ImRect rect_abs = WindowRectRelToAbs(result->Window, result->RectRel);
-            ScrollToRectEx(result->Window, rect_abs, g.NavMoveScrollFlags);
+            ImRect rect_abs = WindowRectRelToAbs(result_->Window, result_->RectRel);
+            ScrollToRectEx(result_->Window, rect_abs, g.NavMoveScrollFlags);
         }
     }
 
-    if (g.NavWindow != result->Window)
+    if (g.NavWindow != result_->Window)
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] NavMoveRequest: SetNavWindow(\"%s\")\n", result->Window->Name);
-        g.NavWindow = result->Window;
+        IMGUI_DEBUG_LOG_FOCUS("[focus] NavMoveRequest: SetNavWindow(\"%s\")\n", result_->Window->Name);
+        g.NavWindow = result_->Window;
     }
-    if (g.ActiveId != result->ID)
+    if (g.ActiveId != result_->ID)
         ClearActiveID();
-    if (g.NavId != result->ID)
+    if (g.NavId != result_->ID)
     {
         // Don't set NavJustMovedToId if just landed on the same spot (which may happen with ImGuiNavMoveFlags_AllowCurrentNavId)
-        g.NavJustMovedToId = result->ID;
-        g.NavJustMovedToFocusScopeId = result->FocusScopeId;
+        g.NavJustMovedToId = result_->ID;
+        g.NavJustMovedToFocusScopeId = result_->FocusScopeId;
         g.NavJustMovedToKeyMods = g.NavMoveKeyMods;
     }
 
     // Focus
-    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result->ID, g.NavLayer, g.NavWindow->Name);
-    SetNavID(result->ID, g.NavLayer, result->FocusScopeId, result->RectRel);
+    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result_ NavID 0x%08X in Layer %d Window \"%s\"\n", result_->ID, g.NavLayer, g.NavWindow->Name);
+    SetNavID(result_->ID, g.NavLayer, result_->FocusScopeId, result_->RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
-    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result->InFlags & ImGuiItemFlags_Inputable))
+    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result_->InFlags & ImGuiItemFlags_Inputable))
     {
-        g.NavNextActivateId = result->ID;
+        g.NavNextActivateId = result_->ID;
         g.NavNextActivateFlags = ImGuiActivateFlags_PreferInput | ImGuiActivateFlags_TryToPreserveState;
         g.NavMoveFlags |= ImGuiNavMoveFlags_DontSetNavHighlight;
     }
@@ -11492,7 +11492,7 @@ void ImGui::NavMoveRequestApplyResult()
     // Activate
     if (g.NavMoveFlags & ImGuiNavMoveFlags_Activate)
     {
-        g.NavNextActivateId = result->ID;
+        g.NavNextActivateId = result_->ID;
         g.NavNextActivateFlags = ImGuiActivateFlags_None;
     }
 
@@ -11604,7 +11604,7 @@ static float ImGui::NavUpdatePageUpPageDown()
         else if (home_pressed)
         {
             // FIXME-NAV: handling of Home/End is assuming that the top/bottom most item will be visible with Scroll.y == 0/ScrollMax.y
-            // Scrolling will be handled via the ImGuiNavMoveFlags_ScrollToEdgeY flag, we don't scroll immediately to avoid scrolling happening before nav result.
+            // Scrolling will be handled via the ImGuiNavMoveFlags_ScrollToEdgeY flag, we don't scroll immediately to avoid scrolling happening before nav result_.
             // Preserve current horizontal position if we have any.
             nav_rect_rel.Min.y = nav_rect_rel.Max.y = 0.0f;
             if (nav_rect_rel.IsInverted())
@@ -14430,7 +14430,7 @@ void ImGui::UpdateDebugToolStackQueries()
     if (query_id == 0)
         return;
 
-    // Advance to next stack level when we got our result, or after 2 frames (in case we never get a result)
+    // Advance to next stack level when we got our result_, or after 2 frames (in case we never get a result_)
     int stack_level = tool->StackLevel;
     if (stack_level >= 0 && stack_level < tool->Results.Size)
         if (tool->Results[stack_level].QuerySuccess || tool->Results[stack_level].QueryFrameCount > 2)

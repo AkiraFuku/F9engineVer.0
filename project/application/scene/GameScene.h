@@ -82,6 +82,7 @@ private:
     // テスト用レイキャスト衝突判定メンバ変数
     std::unique_ptr<Object3d> boxObject_;
     bool isBoxHit_ = false;
+    Vector3 boxPoint_ = {0.0f,0.0f,0.0f};
     Vector3 boxHitPoint_ = {};
     float boxHitDistance_ = 0.0f;
     Triangle hitTriangle_ = {};

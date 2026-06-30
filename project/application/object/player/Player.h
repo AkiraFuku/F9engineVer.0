@@ -149,7 +149,7 @@ private:
     Vector3 rayHitPoint_ = {};
     float rayHitDistance_ = 0.0f;
     Triangle rayHitTriangle_ = {};
-    RayTriangleCollisionResult result = RayTriangleCollisionResult::NoCollision;
+    RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
     // --- レール移動管理 ---
 
     std::unique_ptr<RailMover> railMover_;

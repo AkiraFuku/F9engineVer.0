@@ -12,36 +12,36 @@ Quaternion operator*(const Quaternion& q1, const Quaternion& q2)
 }
 Quaternion Multiply(const Quaternion& lhs, const Quaternion& rhs)
 {
-    Quaternion result;
-    result.w = (lhs.w * rhs.w) - (lhs.x * rhs.x) - (lhs.y * rhs.y) - (lhs.z * rhs.z);
-    result.x = (lhs.y * rhs.z) - (lhs.z * rhs.y) + (lhs.x * rhs.w) + (lhs.w * rhs.x);
-    result.y = (lhs.z * rhs.x) - (lhs.x * rhs.z) + (lhs.y * rhs.w) + (lhs.w * rhs.y);
-    result.z = (lhs.x * rhs.y) - (lhs.y * rhs.x) + (lhs.z * rhs.w) + (lhs.w * rhs.z);
-    return result;
+    Quaternion result_;
+    result_.w = (lhs.w * rhs.w) - (lhs.x * rhs.x) - (lhs.y * rhs.y) - (lhs.z * rhs.z);
+    result_.x = (lhs.y * rhs.z) - (lhs.z * rhs.y) + (lhs.x * rhs.w) + (lhs.w * rhs.x);
+    result_.y = (lhs.z * rhs.x) - (lhs.x * rhs.z) + (lhs.y * rhs.w) + (lhs.w * rhs.y);
+    result_.z = (lhs.x * rhs.y) - (lhs.y * rhs.x) + (lhs.z * rhs.w) + (lhs.w * rhs.z);
+    return result_;
 }
 
 Quaternion identityQuaternion()
 {
-    Quaternion result;
+    Quaternion result_;
 
-    result.w = 1.0f;
-    result.x = 0.0f;
-    result.y = 0.0f;
-    result.z = 0.0f;
+    result_.w = 1.0f;
+    result_.x = 0.0f;
+    result_.y = 0.0f;
+    result_.z = 0.0f;
 
-    return result;
+    return result_;
 }
 
 Quaternion Conjugate(const Quaternion& quaternion)
 {
 
-    Quaternion result;
-    result.w = quaternion.w;
-    result.x = -quaternion.x;
-    result.y = -quaternion.y;
-    result.z = -quaternion.z;
+    Quaternion result_;
+    result_.w = quaternion.w;
+    result_.x = -quaternion.x;
+    result_.y = -quaternion.y;
+    result_.z = -quaternion.z;
 
-    return result;
+    return result_;
 }
 
 float Norm(const Quaternion& quaternion)
@@ -52,28 +52,28 @@ float Norm(const Quaternion& quaternion)
 Quaternion Normalize(const Quaternion& quaternion)
 {
     float norm = Norm(quaternion);
-    Quaternion result;
+    Quaternion result_;
     if (norm != 0.0f) {
-        result.w = quaternion.w / norm;
-        result.x = quaternion.x / norm;
-        result.y = quaternion.y / norm;
-        result.z = quaternion.z / norm;
+        result_.w = quaternion.w / norm;
+        result_.x = quaternion.x / norm;
+        result_.y = quaternion.y / norm;
+        result_.z = quaternion.z / norm;
     } else {
-        result = { 0.0f, 0.0f, 0.0f, 0.0f };
+        result_ = { 0.0f, 0.0f, 0.0f, 0.0f };
     }
-    return result;
+    return result_;
 }
 
 Quaternion Inverse(const Quaternion& quaternion)
 {
     float norm = Norm(quaternion);
     Quaternion conjugate = Conjugate(quaternion);
-    Quaternion result;
-    result.w = conjugate.w / std::powf(norm, 2.0f);
-    result.x = conjugate.x / std::powf(norm, 2.0f);
-    result.y = conjugate.y / std::powf(norm, 2.0f);
-    result.z = conjugate.z / std::powf(norm, 2.0f);
-    return result;
+    Quaternion result_;
+    result_.w = conjugate.w / std::powf(norm, 2.0f);
+    result_.x = conjugate.x / std::powf(norm, 2.0f);
+    result_.y = conjugate.y / std::powf(norm, 2.0f);
+    result_.z = conjugate.z / std::powf(norm, 2.0f);
+    return result_;
 }
 
 Quaternion EulerToQuaternion(const Vector3& euler)
@@ -85,12 +85,12 @@ Quaternion EulerToQuaternion(const Vector3& euler)
     float sp = sinf(euler.x * 0.5f);
     float cr = cosf(euler.z * 0.5f);
     float sr = sinf(euler.z * 0.5f);
-    Quaternion result;
-    result.w = cr * cp * cy + sr * sp * sy;
-    result.x = cr * sp * cy + sr * cp * sy; // Pitch成分
-    result.y = cr * cp * sy - sr * sp * cy; // Yaw成分
-    result.z = sr * cp * cy - cr * sp * sy; // Roll成分
-    return result;
+    Quaternion result_;
+    result_.w = cr * cp * cy + sr * sp * sy;
+    result_.x = cr * sp * cy + sr * cp * sy; // Pitch成分
+    result_.y = cr * cp * sy - sr * sp * cy; // Yaw成分
+    result_.z = sr * cp * cy - cr * sp * sy; // Roll成分
+    return result_;
 }
 
 Vector3 QuaternionToEuler(const Quaternion& quaternion)

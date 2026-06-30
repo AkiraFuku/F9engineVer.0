@@ -606,7 +606,7 @@ _Use_decl_annotations_
 HRESULT DirectX::TransformImage(
     const Image& image,
     std::function<void __cdecl(_Out_writes_(width) XMVECTOR* outPixels, _In_reads_(width) const XMVECTOR* inPixels, size_t width, size_t y)> pixelFunc,
-    ScratchImage& result)
+    ScratchImage& result_)
 {
     if (image.width > UINT32_MAX
         || image.height > UINT32_MAX)
@@ -615,21 +615,21 @@ HRESULT DirectX::TransformImage(
     if (IsPlanar(image.format) || IsPalettized(image.format) || IsCompressed(image.format) || IsTypeless(image.format))
         return HRESULT_E_NOT_SUPPORTED;
 
-    HRESULT hr = result.Initialize2D(image.format, image.width, image.height, 1, 1);
+    HRESULT hr = result_.Initialize2D(image.format, image.width, image.height, 1, 1);
     if (FAILED(hr))
         return hr;
 
-    const Image* dimg = result.GetImage(0, 0, 0);
+    const Image* dimg = result_.GetImage(0, 0, 0);
     if (!dimg)
     {
-        result.Release();
+        result_.Release();
         return E_POINTER;
     }
 
     hr = TransformImage_(image, pixelFunc, *dimg);
     if (FAILED(hr))
     {
-        result.Release();
+        result_.Release();
         return hr;
     }
 
@@ -641,7 +641,7 @@ HRESULT DirectX::TransformImage(
     const Image* srcImages,
     size_t nimages, const TexMetadata& metadata,
     std::function<void __cdecl(_Out_writes_(width) XMVECTOR* outPixels, _In_reads_(width) const XMVECTOR* inPixels, size_t width, size_t y)> pixelFunc,
-    ScratchImage& result)
+    ScratchImage& result_)
 {
     if (!srcImages || !nimages)
         return E_INVALIDARG;
@@ -656,20 +656,20 @@ HRESULT DirectX::TransformImage(
     if (metadata.IsVolumemap() && metadata.depth > UINT16_MAX)
         return E_INVALIDARG;
 
-    HRESULT hr = result.Initialize(metadata);
+    HRESULT hr = result_.Initialize(metadata);
     if (FAILED(hr))
         return hr;
 
-    if (nimages != result.GetImageCount())
+    if (nimages != result_.GetImageCount())
     {
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 
-    const Image* dest = result.GetImages();
+    const Image* dest = result_.GetImages();
     if (!dest)
     {
-        result.Release();
+        result_.Release();
         return E_POINTER;
     }
 
@@ -682,13 +682,13 @@ HRESULT DirectX::TransformImage(
             const Image& src = srcImages[index];
             if (src.format != metadata.format)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             if ((src.width > UINT32_MAX) || (src.height > UINT32_MAX))
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
@@ -696,14 +696,14 @@ HRESULT DirectX::TransformImage(
 
             if (src.width != dst.width || src.height != dst.height)
             {
-                result.Release();
+                result_.Release();
                 return E_FAIL;
             }
 
             hr = TransformImage_(src, pixelFunc, dst);
             if (FAILED(hr))
             {
-                result.Release();
+                result_.Release();
                 return hr;
             }
         }
@@ -719,20 +719,20 @@ HRESULT DirectX::TransformImage(
                 {
                     if (index >= nimages)
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
                     const Image& src = srcImages[index];
                     if (src.format != metadata.format)
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
                     if ((src.width > UINT32_MAX) || (src.height > UINT32_MAX))
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
@@ -740,14 +740,14 @@ HRESULT DirectX::TransformImage(
 
                     if (src.width != dst.width || src.height != dst.height)
                     {
-                        result.Release();
+                        result_.Release();
                         return E_FAIL;
                     }
 
                     hr = TransformImage_(src, pixelFunc, dst);
                     if (FAILED(hr))
                     {
-                        result.Release();
+                        result_.Release();
                         return hr;
                     }
                 }
@@ -759,7 +759,7 @@ HRESULT DirectX::TransformImage(
         break;
 
     default:
-        result.Release();
+        result_.Release();
         return E_FAIL;
     }
 

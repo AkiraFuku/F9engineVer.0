@@ -7,7 +7,7 @@
 
 Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle)
 {
-    Quaternion result;
+    Quaternion result_;
     Vector3 a = Normalize(axis);
 
 
@@ -19,14 +19,14 @@ Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle)
 
 
 
-    result.x = s * a.x;
-    result.y = s * a.y;
-    result.z = s * a.z;
+    result_.x = s * a.x;
+    result_.y = s * a.y;
+    result_.z = s * a.z;
 
 
-    result.w = c;
+    result_.w = c;
 
-    return result;
+    return result_;
 }
 
 Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion)
@@ -57,29 +57,29 @@ Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion)
 
 Matrix4x4 MakeRotateMatrix(const Quaternion& q)
 {
-    Matrix4x4 result;
+    Matrix4x4 result_;
 
-    result.m[0][0] = powf(q.w, 2) + powf(q.x, 2) - powf(q.y, 2) - powf(q.z, 2);
-    result.m[0][1] = 2 * (q.x * q.y + q.w * q.z);
-    result.m[0][2] = 2 * (q.x * q.z - q.w * q.y);
-    result.m[0][3] = 0;
+    result_.m[0][0] = powf(q.w, 2) + powf(q.x, 2) - powf(q.y, 2) - powf(q.z, 2);
+    result_.m[0][1] = 2 * (q.x * q.y + q.w * q.z);
+    result_.m[0][2] = 2 * (q.x * q.z - q.w * q.y);
+    result_.m[0][3] = 0;
 
-    result.m[1][0] = 2 * (q.x * q.y - q.w * q.z);
-    result.m[1][1] = powf(q.w, 2) - powf(q.x, 2) + powf(q.y, 2) - powf(q.z, 2);
-    result.m[1][2] = 2 * (q.y * q.z + q.w * q.x);
-    result.m[1][3] = 0;
+    result_.m[1][0] = 2 * (q.x * q.y - q.w * q.z);
+    result_.m[1][1] = powf(q.w, 2) - powf(q.x, 2) + powf(q.y, 2) - powf(q.z, 2);
+    result_.m[1][2] = 2 * (q.y * q.z + q.w * q.x);
+    result_.m[1][3] = 0;
 
-    result.m[2][0] = 2 * (q.x * q.z + q.w * q.y);
-    result.m[2][1] = 2 * (q.y * q.z - q.w * q.x);
-    result.m[2][2] = powf(q.w, 2) - powf(q.x, 2) - powf(q.y, 2) + powf(q.z, 2);
-    result.m[2][3] = 0;
+    result_.m[2][0] = 2 * (q.x * q.z + q.w * q.y);
+    result_.m[2][1] = 2 * (q.y * q.z - q.w * q.x);
+    result_.m[2][2] = powf(q.w, 2) - powf(q.x, 2) - powf(q.y, 2) + powf(q.z, 2);
+    result_.m[2][3] = 0;
 
-    result.m[3][0] = 0;
-    result.m[3][1] = 0;
-    result.m[3][2] = 0;
-    result.m[3][3] = 1;
+    result_.m[3][0] = 0;
+    result_.m[3][1] = 0;
+    result_.m[3][2] = 0;
+    result_.m[3][3] = 1;
 
-    return result;
+    return result_;
 }
 
 Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle)
@@ -162,25 +162,25 @@ Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t)
         dot = -dot;
     }
     float theta = std::acosf(dot);
-    Quaternion result{};
+    Quaternion result_{};
 
     if (std::abs(theta) < 1.0e-5f) {
-        result.x = (1.0f - t) * targetQ0.x + t * q1.x;
-        result.y = (1.0f - t) * targetQ0.y + t * q1.y;
-        result.z = (1.0f - t) * targetQ0.z + t * q1.z;
-        result.w = (1.0f - t) * targetQ0.w + t * q1.w;
+        result_.x = (1.0f - t) * targetQ0.x + t * q1.x;
+        result_.y = (1.0f - t) * targetQ0.y + t * q1.y;
+        result_.z = (1.0f - t) * targetQ0.z + t * q1.z;
+        result_.w = (1.0f - t) * targetQ0.w + t * q1.w;
     } else
     {
         float scale0 = std::sinf((1.0f - t) * theta) / std::sinf(theta);
         float scale1 = std::sinf(t * theta) / std::sinf(theta);
 
 
-        result.x = scale0 * targetQ0.x + scale1 * q1.x;
-        result.y = scale0 * targetQ0.y + scale1 * q1.y;
-        result.z = scale0 * targetQ0.z + scale1 * q1.z;
-        result.w = scale0 * targetQ0.w + scale1 * q1.w;
+        result_.x = scale0 * targetQ0.x + scale1 * q1.x;
+        result_.y = scale0 * targetQ0.y + scale1 * q1.y;
+        result_.z = scale0 * targetQ0.z + scale1 * q1.z;
+        result_.w = scale0 * targetQ0.w + scale1 * q1.w;
     }
-    return result;
+    return result_;
 }
 /*Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion)
 {
