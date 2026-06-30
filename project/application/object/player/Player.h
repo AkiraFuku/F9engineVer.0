@@ -101,7 +101,7 @@ public:
     int GetMoveDirection() const;
     void UpdateGravity();
     void RayCastUpdate();
-    float groundY_=0.0f;
+    float groundY_ = 0.0f;
 
 
     //プレイヤーの状態を取得するための関数
@@ -149,6 +149,7 @@ private:
     Vector3 rayHitPoint_ = {};
     float rayHitDistance_ = 0.0f;
     Triangle rayHitTriangle_ = {};
+    RayTriangleCollisionResult result = RayTriangleCollisionResult::NoCollision;
     // --- レール移動管理 ---
 
     std::unique_ptr<RailMover> railMover_;

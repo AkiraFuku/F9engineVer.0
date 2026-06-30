@@ -310,7 +310,7 @@ bool IsCollision(const AABB& aabb, const Segment& segment)
     return false;
 }
 
-bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistance, Vector3* outHitPoint) {
+bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistance, Vector3* outHitPoint, RayTriangleCollisionResult* outResult) {
     const Vector3& v0 = triangle.vertices[0];
     const Vector3& v1 = triangle.vertices[1];
     const Vector3& v2 = triangle.vertices[2];
@@ -324,9 +324,12 @@ bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistan
         return false;
     }
     normal = Normalize(normal);
-
+    if (outResult) {
+        *outResult = RayTriangleCollisionResult::NoCollision;
+    }
     float dot = Dot(ray.diff, normal);
     if (dot == 0.0f) {
+
         return false; // レイが平面と完全に平行な場合は当たらない
     }
 
@@ -368,15 +371,21 @@ bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistan
     bool hitInsidePositive = (d0 >= -EPSILON && d1 >= -EPSILON && d2 >= -EPSILON);
     bool hitInsideNegative = (d0 <= EPSILON && d1 <= EPSILON && d2 <= EPSILON);
 
-    if (hitInsidePositive || hitInsideNegative) {
+    if (hitInsidePositive|| hitInsideNegative) {
         if (outDistance) {
             *outDistance = t;
         }
         if (outHitPoint) {
             *outHitPoint = p;
         }
+        if (outResult) {
+            if (hitInsidePositive) {
+                *outResult = RayTriangleCollisionResult::FrontFace;
+            } else {
+                *outResult = RayTriangleCollisionResult::BackFace;
+            }
+        }
         return true;
     }
-    
     return false;
 }

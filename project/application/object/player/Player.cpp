@@ -104,6 +104,8 @@ void Player::Draw()
     if (isRayHit_) {
         ImGui::Text("Raycast Hit Distance: %.3f", rayHitDistance_);
         ImGui::Text("Raycast Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
+        //表と裏デバッグ用表示
+        ImGui::Text("Raycast Hit Order: %s", result == RayTriangleCollisionResult::FrontFace ? "Front" : "Back");
     }
     //レイキャストによる地面の高さを表示
     if (groundY_ != -FLT_MAX)
@@ -271,7 +273,8 @@ void Player::RayCastUpdate()
     for (const auto& tri : triangles) {
         Vector3 tmpHit = {};
         float dist = 0.0f;
-        if (CheckRayTriangle(ray_, tri, &dist, &tmpHit)) {
+     
+        if (CheckRayTriangle(ray_, tri, &dist, &tmpHit, &result)) {
             // 最短距離で選択
             if (dist < rayHitDistance_) {
                 rayHitDistance_ = dist;

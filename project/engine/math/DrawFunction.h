@@ -36,6 +36,14 @@ struct AABB{
 	Vector3 min;
 	Vector3 max;
 };
+// レイと三角形の交差判定結果を表す列挙型
+enum class RayTriangleCollisionResult
+{
+    NoCollision,
+    FrontFace,
+    BackFace
+};
+
 
 
 Vector3 Project(const Vector3& v1,const Vector3& v2);
@@ -54,6 +62,6 @@ bool IsCollision(const AABB& aabb,const Sphere& sphere);
 bool IsCollision(const AABB& aabb,const Segment& segment);
 
 // レイと三角形の交差判定 (交点と距離を取得)
-bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistance, Vector3* outHitPoint);
+bool CheckRayTriangle(const Ray& ray, const Triangle& triangle, float* outDistance, Vector3* outHitPoint, RayTriangleCollisionResult* outResult=nullptr);
 
 
