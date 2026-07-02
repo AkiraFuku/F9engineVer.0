@@ -228,14 +228,16 @@ void Player::UpdateRailPath()
 }
 void Player::UpdateGravity()
 {
+    const float kHeightOffset = Radius;
     // レイ判定の結果から接地状態を決める
     if (isRayHit_) {
         groundY_ = rayHitPoint_.y;
 
         const float kGroundEpsilon = 0.05f;
+        float playerBottomY = worldY_ - kHeightOffset;
 
         // 【修正ポイント】上昇中（velocity_.y > 0.0f）は絶対に接地判定にしない
-        if (velocity_.y <= 0.0f && worldY_ <= groundY_ + kGroundEpsilon) {
+        if (velocity_.y <= 0.0f && playerBottomY <= groundY_ + kGroundEpsilon) {
             isGrounded_ = true;
         } else {
             isGrounded_ = false;
@@ -258,12 +260,12 @@ void Player::UpdateGravity()
 
     // 地面にめり込んでいたら、床の高さぴったりに補正する
     if (isGrounded_ && isRayHit_) {
-        worldY_ = groundY_;
+        worldY_ = groundY_+kHeightOffset; // 例: 床の上にプレイヤーを配置
     }
 
     // レイすら当たらない完全な奈落の場合の最低保証
     if (!isRayHit_ && worldY_ <= 0.0f) {
-        worldY_ = 0.0f;
+        worldY_ = 0.0f+kHeightOffset;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }

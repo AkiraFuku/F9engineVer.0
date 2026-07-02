@@ -87,5 +87,10 @@ private:
     float boxHitDistance_ = 0.0f;
     Triangle hitTriangle_ = {};
     Ray debugRay_ = {};
+
+    //テスト用地面
+     std::unique_ptr<Object3d> TestGround_;
+
+
 };
 

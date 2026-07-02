@@ -70,7 +70,7 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
     }
 
     if (input->TriggerMouseDown(0) || input->TriggerPadDown(0, XINPUT_GAMEPAD_B)) { // 例としてスペース
-        //commands.push_back(std::make_unique<AttackCommand>());
+        commands.push_back(std::make_unique<AttackCommand>());
     }
 
     // 射出コマンド (Zキーまたはゲームパッドの特定ボタン)

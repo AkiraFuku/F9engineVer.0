@@ -234,6 +234,19 @@ void GameScene::Initialize() {
 
     GameScene::AddTriangles(boxObject_->GetWorldTriangles());
 
+
+    ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
+    TestGround_ =std::make_unique<Object3d>();
+    TestGround_->Initialize();
+   
+    TestGround_->SetModel("TentativeStage.obj");
+    TestGround_->SetCamera(activeCamera_);
+    TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
+    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });    
+
+
+    GameScene::AddTriangles(TestGround_->GetWorldTriangles());
+
 }
 void GameScene::Finalize() {
 
@@ -439,12 +452,19 @@ void GameScene::Update() {
         boxObject_->SetCamera(activeCamera_);
         boxObject_->Update();
     }
-
+    if (TestGround_)
+    {
+        TestGround_->Update();
+    }
     // Update() の boxObject_->Update() の直後に追加
     triangles_.clear();
     if (boxObject_) {
         auto boxTris = boxObject_->GetWorldTriangles(); // ワールド変換済み三角形を取得する想定
         triangles_.insert(triangles_.end(), boxTris.begin(), boxTris.end());
+    }
+    if (TestGround_) {
+        auto testGroundTris = TestGround_->GetWorldTriangles(); // ワールド変換済み三角形を取得する想定
+        triangles_.insert(triangles_.end(), testGroundTris.begin(), testGroundTris.end());
     }
 
 //    // プレイヤーの位置から真下にレイキャスト (箱のメッシュとの判定)
@@ -522,6 +542,10 @@ void GameScene::Draw() {
     // 箱オブジェクトの描画
     if (boxObject_) {
         boxObject_->Draw();
+    }
+    if (TestGround_)
+    {
+        TestGround_->Draw();
     }
 
     // --- レイキャストのデバッグ描画 ---

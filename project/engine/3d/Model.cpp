@@ -16,7 +16,7 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 
     name_ = filename;
     modelData_ = LoadModelFile(directoryPath, filename);
-    if (modelData_.material.textureFilePath.empty()) {
+    if (modelData_.material.textureFilePath.empty()||modelData_.material.textureFilePath == (directoryPath + "/")) {
         modelData_.material.textureFilePath = "resources/uvChecker.png"; // 確実に存在する画像を指定
         TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilePath);
 
@@ -305,7 +305,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
     Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile(filePath.c_str(),
-        aiProcess_FlipWindingOrder |              // 三角形化されていないポリゴンを三角形にする
+        /*aiProcess_FlipWindingOrder |  */            // 三角形化されていないポリゴンを三角形にする
         aiProcess_FlipUVs      // 法線がない場合、自動計算する
        // aiProcess_CalcTangentSpace//UV座標を反転させる
     );
