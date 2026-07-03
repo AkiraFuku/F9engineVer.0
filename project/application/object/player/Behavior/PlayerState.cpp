@@ -6,11 +6,11 @@
 #include "PlayerBehavior.h"
 
 
- void IPlayerState::Update(Player* player){
-        if (currentBehavior_) {
-            currentBehavior_->Update(player);
-        }
+void IPlayerState::Update(Player* player) {
+    if (currentBehavior_) {
+        currentBehavior_->Update(player);
     }
+}
 
 void IPlayerState::HandleInput(Player* player, ICommand* command) {
     // デフォルト実装（必要に応じて派生クラスでオーバーライド）
@@ -33,14 +33,14 @@ void StateNormal::Initialize(Player* player)
 
 void StateNormal::Update(Player* player)
 {
-     if (player->GetBehavior()) {
-         player->GetBehavior()->Update(player);
-     }
-   //  player->UpdateGravity();
+    if (player->GetBehavior()) {
+        player->GetBehavior()->Update(player);
+    }
+    //  player->UpdateGravity();
 }
 void StateNormal::BehaviorUpdate(Player* player)
 {
-   player->UpdateGravity();
+    player->UpdateGravity();
 }
 
 void StateNormal::Finalize(Player* player)
@@ -59,10 +59,9 @@ void StateNormal::HandleInput(Player* player, ICommand* command)
 
 
 
-IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move,std::unique_ptr<IPlayerAction> jump,std::unique_ptr<IPlayerAction> attack,
-        std::unique_ptr<IPlayerAction> shoot)
-    : moveAction_(std::move(move)), jumpAction_(std::move(jump)), attackAction_(std::move(attack)), shootAction_(std::move(shoot)) {
-}
+IStateRideOn::IStateRideOn(std::unique_ptr<IPlayerAction> move, std::unique_ptr<IPlayerAction> jump, std::unique_ptr<IPlayerAction> attack,
+    std::unique_ptr<IPlayerAction> shoot)
+    : moveAction_(std::move(move)), jumpAction_(std::move(jump)), attackAction_(std::move(attack)), shootAction_(std::move(shoot)) {}
 
 void IStateRideOn::Update(Player* player)
 {
@@ -71,7 +70,7 @@ void IStateRideOn::Update(Player* player)
     }
 }
 void IStateRideOn::Finalize(Player* player) {
-    
+
 }
 void IStateRideOn::HandleInput(Player* player, ICommand* command)
 {
@@ -112,7 +111,7 @@ void StateRideOnTest::Initialize(Player* player) {
 }
 
 void StateRideOnTest::BehaviorUpdate(Player* player) {
-   player->UpdateGravity();
+    player->UpdateGravity();
 }
 
 void StateRideOnTest::HandleInput(Player* player, ICommand* command) {
@@ -123,3 +122,25 @@ void StateRideOnTest::HandleInput(Player* player, ICommand* command) {
         player->GetBehavior()->HandleInput(player, command);
     }
 }
+
+void StateDead::Initialize(Player* player)
+{}
+
+void StateDead::Update(Player* player)
+{
+    // 死亡時の演出をここに追加。
+    // 演出が終わったら、非アクティブ状態にするなどの処理を行う。
+ //   player->SetActive(false); // プレイヤーを非アクティブにする    
+
+}
+
+void StateDead::BehaviorUpdate(Player* player)
+{}
+
+void StateDead::Finalize(Player* player)
+{}
+
+void StateDead::HandleInput(Player* player, ICommand* command)
+{}
+
+

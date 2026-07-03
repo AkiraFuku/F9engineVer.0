@@ -122,3 +122,29 @@ public:
         return attackAction_.get();
     }
 };
+
+//死亡状態
+class StateDead : public IPlayerState {
+public:
+    StateDead() = default;
+    ~StateDead() = default;
+
+    void Initialize(Player* player) override;
+    void Update(Player* player) override;
+    void BehaviorUpdate(Player* player) override;
+    void Finalize(Player* player) override;
+    void HandleInput(Player* player, ICommand* command) override;
+    const char* GetName() const override {
+        return "Dead";
+    }
+
+    IPlayerAction* GetMoveAction() override {
+        return nullptr;
+    }
+    IPlayerAction* GetJumpAction() override {
+        return nullptr;
+    }
+    IPlayerAction* GetAttackAction_() override {
+        return nullptr;
+    }
+};

@@ -70,9 +70,17 @@ public:
         velocity_ = velocity;
     }
     IPlayerBehavior* GetBehavior() {
+        if (!baseState_->GetBehavior())
+        {
+            return nullptr;
+        }
         return baseState_->GetBehavior();
     };
     IPlayerState* GetState() {
+        if (!baseState_)
+        {
+            return nullptr;
+        }
         return baseState_.get();
     }
     void SetAngle(float angle) {
@@ -96,20 +104,22 @@ public:
         return isGrounded_;
     }
 
-    // 現在のレールの進行方向ベクトルを返す
+    // ワールド方向ベクトルを返す
     Vector3 GetDirection() const;
+    // レール上の進行方向を返す
     int GetMoveDirection() const;
+    //重力の更新処理
     void UpdateGravity();
+    //レイキャスト判定処理
     void RayCastUpdate();
-    float groundY_ = 0.0f;
 
 
     //プレイヤーの状態を取得するための関数
     bool IsHit() const {
-        return isHit_;
+        return isDamaged_;
     }
     float GetHitVisualTimer() const {
-        return hitVisualTimer_;
+        return hitInvincibilityTimer_;
     }
 
     InputHandler* GetInputHandler() {
@@ -126,17 +136,43 @@ public:
     float GetWorldY() const {
         return worldY_;
     }
+
+    bool IsAlive() const {
+        return isAlive_;
+    }
+
+    bool IsActive() const {
+        return isActive_;
+    }
+    bool SetActive(bool active) {
+        isActive_ = active;
+        return isActive_;
+    }
+    bool IsGrounded() const {
+        return isGrounded_;
+    }
+    bool IsRayHit() const {
+        return isRayHit_;
+    }
+
 private:
 
     // --- 状態管理 ---
-    std::unique_ptr<IPlayerState> baseState_; // 現在の状態
-    Scene* scene_;   // 「通常・攻撃・ジャンプ」
+    std::unique_ptr<IPlayerState> baseState_; // 現在のプレイヤーの状態管理のためのポインタ
+    Scene* scene_;
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
     const float kMoveSpeed_ = 0.2f; // 好みの速度に調整
     void UpdateRailPath();
     void HandleInput();
+    //無敵・被弾処理
+    void HandleDamage();
+    //生存管理
+    void HandleAlive();
+    //--- カメラ ---
     Camera* camera_ = nullptr;
+
+    void ImGuiDrawDebugInfo();
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 現在の速度
     float worldY_ = 0.0f;
@@ -150,20 +186,38 @@ private:
     float rayHitDistance_ = 0.0f;
     Triangle rayHitTriangle_ = {};
     RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
+    float groundY_ = 0.0f;
+
+    const float kRayOffset = 2.0f; // レイの始点を上に持ち上げるオフセット
+    const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
+
     // --- レール移動管理 ---
 
     std::unique_ptr<RailMover> railMover_;
 
     float playerAngle_ = 0.0f;
 
-    // --- 被弾表示用 ---
+    // --- 被弾処理用 ---
 
     float Radius = 1.0f;// 当たり判定の半径
-    bool isHit_ = false;       // 今当たっているか
-    float hitVisualTimer_ = 0.0f;   // 当たった後の表示持続タイマー
-    const float kHitVisualDuration = 10.0f; // 何フレーム表示するか
+    bool isDamaged_ = false;      //被弾フラグ
+    int32_t hitPoints_ = 3; // プレイヤーの体力
+    float hitInvincibilityTimer_ = 0.0f;   // 無敵時間のタイマー
+    const float kHitInvincibilityDuration_ = 10.0f; // 無敵時間
+    const float kKnockbackForce_ = 0.5f; // ノックバックの強さ
+    int knockbackDirection_ = 0; // ノックバックの方向（1:前方、-1:後方）
+
+
+
+    //無敵フラグ
+    bool isInvincible_ = false;
     // --- その他必要なメンバ変数や関数をここに追加 ---
-    //playerの当たり判定用の変数
+    //プレイヤーの生存フラグ
+    bool isAlive_ = true;
+    //プレイヤーの有効フラグ
+    bool isActive_ = true;
+
+
 
 };
 

@@ -35,12 +35,12 @@ void Enemy::Initialize()
 void Enemy::Update()
 {
 
-    if (hitVisualTimer_ > 0.0f) {
-        hitVisualTimer_ -= (1.0f / 60.0f); // 60FPSを想定した減算
+    if (hitInvincibilityTimer_ > 0.0f) {
+        hitInvincibilityTimer_ -= (1.0f / 60.0f); // 60FPSを想定した減算
 
-        if (hitVisualTimer_ <= 0.0f) {
-            hitVisualTimer_ = 0.0f;
-            isHit_ = false; // クールダウン終了
+        if (hitInvincibilityTimer_ <= 0.0f) {
+            hitInvincibilityTimer_ = 0.0f;
+            isDamaged_ = false; // クールダウン終了
         }
     }
 
@@ -100,12 +100,12 @@ void Enemy::Draw()
     ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
 
     ImGui::Separator();
-    if (isHit_) {
+    if (isDamaged_) {
         ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Status: CoolDown (Hit!)");
     } else {
         ImGui::Text("Status: Ready");
     }
-    ImGui::ProgressBar(hitVisualTimer_ / kHitVisualDuration, ImVec2(0, 0), "CD Timer");
+    ImGui::ProgressBar(hitInvincibilityTimer_ / kHitInvincibilityDuration_, ImVec2(0, 0), "CD Timer");
 
     ImGui::End();
 #endif // USE_IMGUI
@@ -169,7 +169,7 @@ void Enemy::UpdatePhysics() {
 void Enemy::OnCollision(ICollider* other) {
 
     // ぶつかった相手がPlayerかどうかを確認
-    if (!other || isHit_ || IsDead()) return;
+    if (!other || isDamaged_ || IsDead()) return;
 
     if (other->GetCategory() == CollisionCategory::Player) {
         Player* player = dynamic_cast<Player*>(other);
@@ -182,8 +182,8 @@ void Enemy::OnCollision(ICollider* other) {
             //攻撃中ならエネミーの状態遷移
             if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
                 PlayHitEffect();
-                isHit_ = true;
-                hitVisualTimer_ = kHitVisualDuration;
+                isDamaged_ = true;
+                hitInvincibilityTimer_ = kHitInvincibilityDuration_;
 
                 if (strcmp(GetStateName(), "Normal") == 0) {
                     ChangeState(std::make_unique<StateEnemyStan>());
@@ -203,14 +203,14 @@ void Enemy::OnCollision(ICollider* other) {
     //　弾カテゴリの判定
     if (other->GetCategory()==CollisionCategory::PlayerProjectile)
     {
-         isHit_ = true;
+         isDamaged_ = true;
     PlayHitEffect();
     ChangeState(std::make_unique<StateEnemyDead>());
     }
 }
 //void Enemy::OnCollision() {
-//    if (isHit_ || IsDead()) return;
-//    isHit_ = true;
+//    if (isDamaged_ || IsDead()) return;
+//    isDamaged_ = true;
 //    PlayHitEffect();
 //    ChangeState(std::make_unique<StateEnemyDead>());
 //}

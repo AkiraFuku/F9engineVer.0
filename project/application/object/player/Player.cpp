@@ -29,6 +29,24 @@ void Player::Initialize()
 
 void Player::Update()
 {
+    // プレイヤーが非アクティブ状態の場合、更新処理をスキップ
+    if (!isActive_)
+    {
+        return;
+    }
+
+
+    //生存
+    HandleAlive();
+
+    if (!isAlive_)
+    {// 死亡フラグが立っているなら
+        ChangeState(std::make_unique<StateDead>()); // 死亡状態に遷移
+    }
+
+    // ダメージ処理の更新
+    HandleDamage();
+
     HandleInput();
     if (baseState_) baseState_->Update(this);
     // if (behavior_) behavior_->Update(this);
@@ -36,111 +54,24 @@ void Player::Update()
     UpdateGravity();
 
     UpdateRailPath();
-    // --- タイマーの更新 ---
-    if (hitVisualTimer_ > 0.0f) {
-        hitVisualTimer_ -= (1.0f / 60.0f); // フレームレートに合わせて減算
 
-        // タイマーが 0 以下になったら、フラグをリセットして次の被弾を許可する
-        if (hitVisualTimer_ <= 0.0f) {
-            hitVisualTimer_ = 0.0f;
-            isHit_ = false;
-        }
-    }
+    // デバッグ情報の描画
+    ImGuiDrawDebugInfo();
 
 }
 
 void Player::Draw()
 {
+
+    if (!isActive_)
+    {
+        return;
+    }
+
     object_->Draw();
-
-
-#ifdef USE_IMGUI
-    ImGui::Begin("Debug/Player");
-    // ここにプレイヤーのデバッグ情報を表示
-    //レールの進捗を表示
-    ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
-    Vector3 pos = object_->GetTranslate();
-    ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
-    ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
-    Vector3 rot = object_->GetRotate();
-    ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", rot.x, rot.y, rot.z);
-    Vector3 scale = object_->GetScale();
-    ImGui::Text("Scale: (%.2f, %.2f, %.2f)", scale.x, scale.y, scale.z);
-
-    ImGui::Separator(); // 区切り線
-    ImGui::Text("--- Player States ---");
-
-    // 搭乗ステートの表示
-    if (baseState_) {
-        ImGui::Text("Base State: %s", baseState_->GetName());
-    } else {
-        ImGui::Text("Base State: None");
-    }
-
-    // ビヘイビア（アクション）ステートの表示
-    if (baseState_ && baseState_->GetBehavior()) {
-        ImGui::Text("Behavior: %s", baseState_->GetBehavior()->GetName());
-    } else {
-        ImGui::Text("Behavior: None");
-    }
-    ImGui::Separator(); // 区切り線
-    // --- 被弾状態の表示 ---
-    if (isHit_) {
-        // 赤文字で大きく表示
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "STATUS: COLLIDING / DAMAGED!");
-    } else {
-        ImGui::Text("STATUS: Normal");
-    }
-
-    // タイマーの残りも出しておくと便利
-    ImGui::ProgressBar((float)hitVisualTimer_ / kHitVisualDuration, ImVec2(0, 0), "Hit Timer");
-
-    Vector3 dir = railMover_->GetCurrentDirection();
-    //進行方向
-    ImGui::Text("DIR: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
-
-    //レイキャストによる地面判定の結果を表示
-    ImGui::Text("Raycast Hit: %s", isRayHit_ ? "True" : "False");
-    if (isRayHit_) {
-        ImGui::Text("Raycast Hit Distance: %.3f", rayHitDistance_);
-        ImGui::Text("Raycast Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
-        //表と裏デバッグ用表示
-    }
-    // レイキャストの結果を表示
-
-    std::string resultStr;
-
-    switch (result_)
-    {
-    case RayTriangleCollisionResult::NoCollision:
-    default:
-        resultStr = "NoCollision";
-
-        break;
-    case RayTriangleCollisionResult::FrontFace:
-        resultStr = "FrontFace";
-        break;
-    case RayTriangleCollisionResult::BackFace:
-        resultStr = "BackFace";
-        break;
-    }
-
-    ImGui::Text("Raycast Hit Order: %s", resultStr.c_str());
-
-    //レイキャストによる地面の高さを表示
-    if (groundY_ != -FLT_MAX)
-    {
-        ImGui::Text("Ground Y: %.3f", groundY_);
-    }
-
-
-
-    ImGui::End();
-#endif // USE_IMGUI
-
     // --- 当たり判定 ---
     Sphere collisionSphere = { object_->GetTranslate(), Radius ,EulerToQuaternion(object_->GetRotate()) };
-    PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, isHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f });
+    // PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, isDamaged_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f });
 }
 void Player::SetRailPosition(const Vector2& position)
 {
@@ -162,10 +93,8 @@ void Player::SetRail(RailPath* rail)
 {
 
 
-    if (!rail || !railMover_)
-    {
-        return;
-    }
+    if (!rail || !railMover_)return;
+
     railMover_->SetPath(rail);
 
 }
@@ -260,12 +189,12 @@ void Player::UpdateGravity()
 
     // 地面にめり込んでいたら、床の高さぴったりに補正する
     if (isGrounded_ && isRayHit_) {
-        worldY_ = groundY_+kHeightOffset; // 例: 床の上にプレイヤーを配置
+        worldY_ = groundY_ + kHeightOffset; // 例: 床の上にプレイヤーを配置
     }
 
     // レイすら当たらない完全な奈落の場合の最低保証
     if (!isRayHit_ && worldY_ <= 0.0f) {
-        worldY_ = 0.0f+kHeightOffset;
+        worldY_ = 0.0f + kHeightOffset;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }
@@ -334,6 +263,134 @@ void Player::HandleInput()
         }
     }
 }
+void Player::HandleDamage()
+{
+    // --- 無敵タイマーの更新 ---
+    if (hitInvincibilityTimer_ > 0.0f) {
+        hitInvincibilityTimer_ -= (1.0f / 60.0f); // フレームレートに合わせて減算
+
+        // タイマーが 0 以下になったら、フラグをリセットして次の被弾を許可する
+        if (hitInvincibilityTimer_ <= 0.0f) {
+            hitInvincibilityTimer_ = 0.0f;
+            isDamaged_ = false;
+        }
+    }
+
+    // 無敵状態
+    if (isInvincible_)  return;
+    // 被弾処理
+    if (isDamaged_)
+    {
+
+        isDamaged_ = true;
+        hitInvincibilityTimer_ = kHitInvincibilityDuration_;
+        isDamaged_ = false; // 被弾フラグをリセット
+        // 体力を減らす
+        hitPoints_--;
+
+    }
+}
+void Player::HandleAlive()
+{
+    if (hitPoints_ <= 0) {
+        isAlive_ = false;
+    }
+}
+void Player::ImGuiDrawDebugInfo() {
+
+
+#ifdef USE_IMGUI
+    ImGui::Begin("Debug/Player");
+    // ここにプレイヤーのデバッグ情報を表示
+    //レールの進捗を表示
+    ImGui::Text("Rail Progress: %.2f", railMover_->GetProgress());
+    Vector3 pos = object_->GetTranslate();
+    ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", velocity_.x, velocity_.y, velocity_.z);
+    Vector3 rot = object_->GetRotate();
+    ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", rot.x, rot.y, rot.z);
+    Vector3 scale = object_->GetScale();
+    ImGui::Text("Scale: (%.2f, %.2f, %.2f)", scale.x, scale.y, scale.z);
+
+    ImGui::Separator(); // 区切り線
+    ImGui::Text("--- Player States ---");
+
+    // 搭乗ステートの表示
+    if (baseState_) {
+        ImGui::Text("Base State: %s", baseState_->GetName());
+    } else {
+        ImGui::Text("Base State: None");
+    }
+
+    // ビヘイビア（アクション）ステートの表示
+    if (baseState_ && baseState_->GetBehavior()) {
+        ImGui::Text("Behavior: %s", baseState_->GetBehavior()->GetName());
+    } else {
+        ImGui::Text("Behavior: None");
+    }
+    ImGui::Separator(); // 区切り線
+    // --- 被弾状態の表示 ---
+    if (isDamaged_) {
+        // 赤文字で大きく表示
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "STATUS: COLLIDING / DAMAGED!");
+    } else {
+        ImGui::Text("STATUS: Normal");
+    }
+
+    ImGui::Text("Hit Points: %d", hitPoints_);
+
+
+    // タイマーの残りも出しておくと便利
+    ImGui::ProgressBar((float)hitInvincibilityTimer_ / kHitInvincibilityDuration_, ImVec2(0, 0), "Hit Timer");
+
+    ImGui::Text("--- Player States ---");
+
+    Vector3 dir = railMover_->GetCurrentDirection();
+    //進行方向
+    ImGui::Text("DIR: (%.2f, %.2f, %.2f)", dir.x, dir.y, dir.z);
+
+    ImGui::Text("---  ---");
+
+    //レイキャストによる地面判定の結果を表示
+    ImGui::Text("Raycast Hit: %s", isRayHit_ ? "True" : "False");
+    if (isRayHit_) {
+        ImGui::Text("Raycast Hit Distance: %.3f", rayHitDistance_);
+        ImGui::Text("Raycast Hit Point: (%.3f, %.3f, %.3f)", rayHitPoint_.x, rayHitPoint_.y, rayHitPoint_.z);
+        //表と裏デバッグ用表示
+    }
+    // レイキャストの結果を表示
+
+    std::string resultStr;
+
+    switch (result_)
+    {
+    case RayTriangleCollisionResult::NoCollision:
+    default:
+        resultStr = "NoCollision";
+
+        break;
+    case RayTriangleCollisionResult::FrontFace:
+        resultStr = "FrontFace";
+        break;
+    case RayTriangleCollisionResult::BackFace:
+        resultStr = "BackFace";
+        break;
+    }
+
+    ImGui::Text("Raycast Hit Order: %s", resultStr.c_str());
+
+    //レイキャストによる地面の高さを表示
+    if (groundY_ != -FLT_MAX)
+    {
+        ImGui::Text("Ground Y: %.3f", groundY_);
+    }
+
+
+
+    ImGui::End();
+#endif // USE_IMGUI
+
+}
 void Player::ChangeState(std::unique_ptr<IPlayerState> newState) {
     if (baseState_) baseState_->Finalize(this);
     baseState_ = std::move(newState);
@@ -349,7 +406,7 @@ void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
 }
 void Player::OnCollision([[maybe_unused]] ICollider* other) {
 
-    if (!other) return;
+    if (!other || isInvincible_) return;
 
     // カテゴリで判定（これが ICollider 設計の肝です）
     if (other->GetCategory() == CollisionCategory::Enemy) {
@@ -371,11 +428,11 @@ void Player::OnCollision([[maybe_unused]] ICollider* other) {
 
             if (enemyState && strcmp(enemyState, "Normal") == 0)
             {
-                if (hitVisualTimer_ <= 0.0f)
+                if (hitInvincibilityTimer_ <= 0.0f)
                 {
-                    isHit_ = true;
-                    hitVisualTimer_ = kHitVisualDuration;
-                    // (必要であれば) ノックバックなどの物理挙動をここに書く
+                    isDamaged_ = true;
+                    //  hitInvincibilityTimer_ = kHitInvincibilityDuration_;
+                      // (必要であれば) ノックバックなどの物理挙動をここに書く
 
 
 

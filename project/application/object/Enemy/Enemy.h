@@ -119,9 +119,9 @@ protected:
 
     void UpdatePhysics(); // 重力やレール座標の合成処理
 
-    bool isHit_ = false;              // クールダウン中かどうかのフラグ
-    float hitVisualTimer_ = 0.0f;     // クールダウンタイマー
-    const float kHitVisualDuration = 1.0f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
+    bool isDamaged_ = false;              // クールダウン中かどうかのフラグ
+    float hitInvincibilityTimer_ = 0.0f;     // クールダウンタイマー
+    const float kHitInvincibilityDuration_ = 1.0f; // クールダウン時間（秒単位にする場合はUpdateの計算に合わせる）
     // 基底クラスで保持するように変更
     std::unique_ptr<Robot> robot_ = nullptr;
 
