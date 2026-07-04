@@ -192,9 +192,9 @@ void Player::UpdateGravity()
         worldY_ = groundY_ + kHeightOffset; // 例: 床の上にプレイヤーを配置
     }
 
-    // レイすら当たらない完全な奈落の場合の最低保証
-    if (!isRayHit_ && worldY_ <= 0.0f) {
-        worldY_ = 0.0f + kHeightOffset;
+    //// レイすら当たらない完全な奈落の場合の最低保証
+    if (!isRayHit_ && worldY_ <= -10.0f + kHeightOffset) {
+        worldY_ = -10.0f + kHeightOffset ;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }
