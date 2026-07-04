@@ -10,7 +10,10 @@
 #include "Camera.h"
 #include "Transform.h"
 #include <map>
-
+#include <unordered_map>
+#include <functional>
+#include <string>
+#include <variant>
 
 
 class ParticleManager
@@ -44,6 +47,32 @@ public:
         UVTransform uvTransform;
 
     };
+
+    struct CylinderData
+    {
+        Vector3 Offset = { 0.0f,0.0f,0.0f };//オフセット
+        int32_t pudding[1]; // パディングを追加してサイズを揃える
+        Vector2 TopRadius = { 0.0f,0.0f };//上の半径
+
+
+        Vector2 BottomRadius = { 0.0f,0.0f };//下の半径
+
+        float height = 1.0f;
+        // 上の半径と下の半径を統一するか（上下の形状を同期するかどうか）
+        bool isUniformTopBottom = false;
+
+        // 半径をXとYで統一するか（楕円ではなく、正円にするかどうか）
+        bool isCircularRadius = true;
+
+
+    };
+
+    // 空の状態を表すための型
+    struct EmptyData {};
+
+    // ★追加: いずれかの構造体を1つだけ持てる「可変型の設定データ」
+    using EffectSpecificData = std::variant<EmptyData, CylinderData>;
+
     using ParticleEmitterFunc = std::function<Particle(const Vector3&, std::mt19937&)>;
     using ParticleUpdateFunc = std::function<void(Particle&, float)>;
 
@@ -80,6 +109,15 @@ public:
         EffectType effectType;
     };
 
+    // =====================================================
+    // ParticleGroupSet: 複数の ParticleGroup をまとめる構造体
+    // =====================================================
+    struct ParticleGroupSet {
+        std::string name;
+        std::unordered_map<std::string, ParticleGroup> groups; // グループ名 -> ParticleGroup
+        bool isActive = true; // false にするとセット全体が更新・描画されない
+    };
+
     struct PrimitiveResource {
         Microsoft::WRL::ComPtr<ID3D12Resource> resource;
         D3D12_VERTEX_BUFFER_VIEW vbv;
@@ -91,21 +129,48 @@ public:
     void Initialize();
     void Update();
     void Draw();
+
+    // ---- セット単位の操作 ----
+    // セットを作成する（空のセット）
+    void CreateParticleGroupSet(const std::string& setName);
+
+    // セット内にパーティクルグループを追加する
     void CreateParticleGroup(
-        const std::string name,
-        const std::string textureFilepath,
+        const std::string& setName,
+        const std::string& groupName,
+        const std::string& textureFilepath,
         EffectType type = EffectType::Plane,
         ParticleEmitterFunc initialize = nullptr,
         ParticleUpdateFunc update = nullptr
     );
+
+    // セット全体を解放する
+    void ReleaseParticleGroupSet(const std::string& setName);
+
+    // 全セットを解放する
+    void ReleaseAllParticleGroupSets();
+
+    // セットのisActiveを設定する
+    void SetParticleGroupSetActive(const std::string& setName, bool active);
+
     static ParticleManager* GetInstance();
-    void Emit(const std::string name, const Vector3& postion, uint32_t count);
+
+    // setName のセット内の groupName グループにパーティクルを発生させる
+    void Emit(const std::string& setName, const std::string& groupName, const Vector3& position, uint32_t count);
+
     void Finalize();
     void SetCamera(Camera* camera) {
         camera_ = camera;
     }
-    void ReleaseParticleGroup();
-    std::unordered_map<std::string, ParticleGroup> particleGroups;
+
+    // 後方互換のため残す（全セット削除）
+    void ReleaseParticleGroup() {
+        ReleaseAllParticleGroupSets();
+    }
+
+    // 最上位コンテナ（外部から参照したい場合に公開）
+    std::unordered_map<std::string, ParticleGroupSet> particleGroupSets;
+
     friend struct std::default_delete<ParticleManager>;
     static std::unique_ptr<ParticleManager> instance;
 
@@ -122,6 +187,13 @@ private:
 
     static uint32_t kMaxNumInstance;
 
+    // 実際にGPUリソースを生成する内部ヘルパー
+    void CreateParticleGroupInternal(ParticleGroupSet& set,
+        const std::string& groupName,
+        const std::string& textureFilepath,
+        EffectType type,
+        ParticleEmitterFunc initialize,
+        ParticleUpdateFunc update);
 
     std::random_device seedGen_;
     std::mt19937 randomEngine_;

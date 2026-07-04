@@ -372,6 +372,9 @@
     <ClCompile Include="engine\Tool\SkyBox.cpp">
       <Filter>engine\base</Filter>
     </ClCompile>
+    <ClCompile Include="Efect.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -595,6 +598,9 @@
     </ClInclude>
     <ClInclude Include="engine\base\OffScreen.h">
       <Filter>engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="Efect.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -45,10 +45,11 @@ void GameScene::Initialize() {
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_, true);
+   // Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
+    TextureManager::GetInstance()->LoadTexture("resources/Efect.png");
 
     //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
     ParticleManager::ParticleEmitterFunc initializeFunc = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
@@ -91,10 +92,33 @@ void GameScene::Initialize() {
         };
     ParticleManager::ParticleUpdateFunc update = [](ParticleManager::Particle& particle, float deltaTime) {
 
-        };
-    ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/gradationLine.png", ParticleManager::EffectType::Cylinder, initializeFunc, updateFunc);
+        float progress = particle.currentTime / particle.lifeTime;
+        if (progress > 1.0f) progress = 1.0f;
 
-    ParticleManager::GetInstance()->CreateParticleGroup("Hit", "resources/gradationLine.png", ParticleManager::EffectType::Ring, initialize, update);
+        // 5. イージング（Ease Out）を使って、最初はものすごい勢いで広がり、後半に少し減速させる
+        // これにより「ドンッ」と弾けるような勢いが表現できます
+        // (1 - (1 - t)^3) は Cubic Ease Out の式です
+        float easeOut = 1.0f - std::pow(1.0f - progress, 3.0f);
+
+        // 目標とする最大サイズ
+        float maxScale = 2.5f;
+        float currentScale = maxScale * easeOut;
+
+        particle.transform.scale = { currentScale, currentScale, currentScale };
+
+        particle.uvTransform.offset.y -= deltaTime * 0.08f; // UVを縦にスクロールさせる
+        particle.uvTransform.offset.x -= deltaTime * 0.08f; // UVを縦にスクロールさせる
+
+
+        // 6. 消え方もイージング（Ease In）をかけるか、後半に一気に消すとキレが出ます
+        // 最初はくっきり、後半急激に消えるようにする例（(1 - progress)^2）
+        particle.color.w = 1.0f - (progress * progress);
+
+
+        };
+    // ParticleManager::GetInstance()->CreateParticleGroup("GameEffects", "Test", "resources/gradationLine.png", ParticleManager::EffectType::Plane, initializeFunc, updateFunc);
+
+    ParticleManager::GetInstance()->CreateParticleGroup("GameEffects", "Hit", "resources/Efect.png", ParticleManager::EffectType::Ring, initialize, update);
     /*EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
     emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 5, 5.0f, 0.0f);*/
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
@@ -203,11 +227,14 @@ void GameScene::Initialize() {
     // テスト用に敵を生成する場合
     AddEnemy({ 0.1f, 0.0f });
     AddEnemy({ 0.2f, 0.0f });
+    AddEnemy({ 0.3f, 0.0f });
+    AddEnemy({ 0.4f, 0.0f });
 
     goal_ = std::make_unique<GoalObject>();
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
+    goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
 
     goal_->SetRailPosition({ stageRail->GetMaxT(), 0.0f }); // レールの終端付近に配置
 
@@ -250,7 +277,7 @@ void GameScene::Initialize() {
 }
 void GameScene::Finalize() {
 
-    ParticleManager::GetInstance()->ReleaseParticleGroup();
+    ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
 void GameScene::Update() {
     CheckClear();
