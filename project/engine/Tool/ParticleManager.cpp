@@ -226,7 +226,7 @@ void ParticleManager::Initialize() {
         };
     // 深度設定
     config.depthEnable = true;
-    config.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    config.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     config.cullMode = D3D12_CULL_MODE_NONE; // パーティクルは両面描画することが多いので、カリングなしに設定
 
     // PSOManagerに名前を付けて登録

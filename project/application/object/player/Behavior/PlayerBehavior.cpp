@@ -56,7 +56,7 @@ void BehaviorAttack::Initialize(Player* player) {
     // Stateから攻撃アクションを取得して実行
     auto attackAction = player->GetState()->GetAttackAction_();
     if (attackAction) {
-    //    attackAction->Execute(player);
+       attackAction->Execute(player);
     }
 }
 
@@ -112,8 +112,8 @@ void BehaviorJump::Update(Player* player) {
         player->ChangeBehavior(std::make_unique<BehaviorRoot>());
 
     }
- /*   player->RayCastUpdate();
-    player->UpdateGravity();*/
+    player->RayCastUpdate();
+    player->UpdateGravity();
 }
 
 void BehaviorJump::Finalize(Player* player)
@@ -156,8 +156,7 @@ void BehaviorAim::Update(Player* player) {
     // 滞空中に照準を定める場合、ゆっくり降下させる
 }
 void BehaviorAim::Finalize(Player* player)
-{
-}
+{}
 void BehaviorAim::HandleInput(Player* player, ICommand* command) {
     // 1. AimCommand で方向を更新
     if (auto aimCmd = dynamic_cast<AimCommand*>(command)) {
@@ -173,7 +172,6 @@ void BehaviorAim::HandleInput(Player* player, ICommand* command) {
             auto shootAction = state->GetShootAction();
             if (shootAction) {
                 // ShootAction側にターゲット方向を渡す仕組みが必要
-                // 例: static_cast<ShootRobotAction*>(shootAction)->SetDirection(aimX_, aimY_);
                 static_cast<ShootRobotAction*>(shootAction)->SetAimVector(aimX_, aimY_);
                 shootAction->Execute(player);
             }
@@ -181,5 +179,4 @@ void BehaviorAim::HandleInput(Player* player, ICommand* command) {
     
     }
 
-    // 3. プレシュートボタンを離した時にキャンセルしてRootに戻る実装もアリ
 }
