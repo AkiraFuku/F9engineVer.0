@@ -48,10 +48,11 @@ void Player::Update()
     HandleDamage();
 
     HandleInput();
+    RayCastUpdate();
     if (baseState_) baseState_->Update(this);
     // if (behavior_) behavior_->Update(this);
-    RayCastUpdate();
-    UpdateGravity();
+   
+    //UpdateGravity();*/
 
     UpdateRailPath();
 
