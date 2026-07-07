@@ -3,180 +3,187 @@
 #include "Vector2.h"
 #include <wrl.h>
 #include <d3d12.h>
-#include<string>
+#include <string>
 #include "Transform.h"
 #include "PSOManager.h"
+
+/**
+ * @brief 2Dスプライトの描画・制御を行うクラス
+ * @details 描画位置、サイズ、アンカーポイント、UVの切り出し、反転（フリップ）などの基本機能を備えています。
+ */
 class Sprite
 {
 public:
+    /// @brief 頂点データ構造体
     struct VertexData {
-        Vector4 position; // 4D position vector
-        Vector2 texcord; // 2D texture coordinate vector
-        Vector3 normal;
+        Vector4 position; //!< 3D座標（w要素含む）
+        Vector2 texcord;  //!< テクスチャUV座標
+        Vector3 normal;   //!< 法線ベクトル
     };
+
+    /// @brief 定数バッファ用マテリアル構造体
     struct Material
     {
-        Vector4 color;
-        int32_t enableLighting;
-        float padding[3]; // パディングを追加してサイズを揃える
-        Matrix4x4 uvTransform; // UV変換行列
-
+        Vector4 color;          //!< スプライトの色（RGBA）
+        int32_t enableLighting; //!< ライティングの有効フラグ（0:無効, 1:有効）
+        float padding[3];       //!< パディング（16バイトアライメント用）
+        Matrix4x4 uvTransform;  //!< UV変換行列
     };
+
+    /// @brief 定数バッファ用座標変換行列構造体
     struct TransformationMatrix
     {
-        Matrix4x4 WVP;
-        Matrix4x4 World;
-
+        Matrix4x4 WVP;   //!< ワールド・ビュー・プロジェクション合成行列
+        Matrix4x4 World; //!< ワールド変換行列
     };
 
-    void Initialize( std::string textureFilePath);
+    /**
+     * @brief スプライトの初期化
+     * @param textureFilePath 読み込むテクスチャのファイルパス
+     */
+    void Initialize(std::string textureFilePath);
+
+    /**
+     * @brief 毎フレームの更新処理
+     * @details 頂点座標の計算（アンカーポイントやフリップの適用）および各種行列の計算を行います。
+     */
     void Update();
+
+    /**
+     * @brief 描画コマンドの積み込み
+     */
     void Draw();
 
-    const Vector2& GetPosition() const {
-        return position_;
-    }
-    void SetPosition(const Vector2& position) {
-        position_ = position;
-    }
+    // ==========================================
+    // ゲッター / セッター (アクセサ)
+    // ==========================================
 
-    float GetRotation() const {
-        return rotation_;
-    }
-    void SetRotation(const float rotation) {
-        rotation_ = rotation;
-    }
+    /// @brief 表示位置（スクリーン座標系）を取得
+    const Vector2& GetPosition() const { return position_; }
+    /// @brief 表示位置（スクリーン座標系）を設定
+    void SetPosition(const Vector2& position) { position_ = position; }
 
-    Vector4& GetColor() const {
-        return materialData_->color;
-    }
-    void SetColor(const Vector4& color) {
-        materialData_->color = color;
-    }
+    /// @brief 回転角（ラジアン）を取得
+    float GetRotation() const { return rotation_; }
+    /// @brief 回転角（ラジアン）を設定
+    void SetRotation(const float rotation) { rotation_ = rotation; }
 
-    Matrix4x4& GetUV()const {
-        return materialData_->uvTransform;
-    }
-    void SetUV(Matrix4x4& uvTransform) {
-        materialData_->uvTransform = uvTransform;
-    }
+    /// @brief スプライトのカラー（RGBA）を取得
+    Vector4& GetColor() const { return materialData_->color; }
+    /// @brief スプライトのカラー（RGBA）を設定
+    void SetColor(const Vector4& color) { materialData_->color = color; }
 
-    const Vector2& GetSize()const {
-        return size_;
-    }
-    void SetSize(const Vector2& Size) {
-        this->size_ = Size;
-    }
+    /// @brief 定数バッファに書き込まれている現在のUV変換行列を取得
+    Matrix4x4& GetUV() const { return materialData_->uvTransform; }
+    /// @brief UV変換行列を直接設定
+    void SetUV(Matrix4x4& uvTransform) { materialData_->uvTransform = uvTransform; }
 
-    const Vector2& GetAnchorPoint()const {
-        return anchorPoint_;
-    }
-    void SetAnchorPoint(const Vector2& anchorPoint) {
-        anchorPoint_ = anchorPoint;
-    }
+    /// @brief 描画サイズ（ピクセル）を取得
+    const Vector2& GetSize() const { return size_; }
+    /// @brief 描画サイズ（ピクセル）を設定
+    void SetSize(const Vector2& Size) { this->size_ = Size; }
 
-    bool GetIsFlipX()const {
-        return isFlipX_;
-    }
-    void SetIsFlipX(bool isFlipX) {
-        isFlipX_ = isFlipX;
-    }
-    bool GetIsFlipY()const {
-        return isFlipY_;
-    }
-    void SetIsFlipY(bool isFlipY) {
-        isFlipY_ = isFlipY;
-    }
+    /// @brief アンカーポイント（基準点。左上[0,0]〜右下[1,1]）を取得
+    const Vector2& GetAnchorPoint() const { return anchorPoint_; }
+    /// @brief アンカーポイント（基準点。左上[0,0]〜右下[1,1]）を設定
+    void SetAnchorPoint(const Vector2& anchorPoint) { anchorPoint_ = anchorPoint; }
 
-    Vector2 GetTextureLeftTop()const {
-        return textureLeftTop;
-    }
-    void SetTextureLeftTop(const Vector2& textureLeftTop) {
-        this->textureLeftTop = textureLeftTop;
-    }
-    Vector2 GetTextureSize()const {
-        return textureSize;
-    }
-    void SetTextureSize(const Vector2& textureSize) {
-        this->textureSize = textureSize;
-    }
-    void SetBlendMode(BlendMode blendMode) {
-        blendMode_ = blendMode;
-    }
-    BlendMode GetBlendMode() const {
-        return blendMode_;
-    }
+    /// @brief X軸方向の反転フラグを取得
+    bool GetIsFlipX() const { return isFlipX_; }
+    /// @brief X軸方向の反転フラグを設定
+    void SetIsFlipX(bool isFlipX) { isFlipX_ = isFlipX; }
+
+    /// @brief Y軸方向の反転フラグを取得
+    bool GetIsFlipY() const { return isFlipY_; }
+    /// @brief Y軸方向の反転フラグを設定
+    void SetIsFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
+
+    /// @brief テクスチャの切り出し開始左上座標を取得
+    Vector2 GetTextureLeftTop() const { return textureLeftTop; }
+    /// @brief テクスチャの切り出し開始左上座標を設定
+    void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
+
+    /// @brief テクスチャの切り出しサイズを取得
+    Vector2 GetTextureSize() const { return textureSize; }
+    /// @brief テクスチャの切り出しサイズを設定
+    void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
+
+    /// @brief ブレンドモード（Alpha, Addなど）を設定
+    void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
+    /// @brief ブレンドモードを取得
+    BlendMode GetBlendMode() const { return blendMode_; }
+
+    /// @brief フィルモード（Solid, Wireframe）を設定
     void SetFillMode(FillMode fillMode) { fillMode_ = fillMode; }
-    //テクスチャ変更
+
+    /**
+     * @brief 使用するテクスチャを変更
+     * @param textureFilePath 新しいテクスチャのファイルパス
+     */
     void SetTextureByFilePath(const std::string& textureFilePath);
 
-    UVTransform GetUVTransform() const {
-        return uvTransform_;
-    }
+    /// @brief UVトランスフォーム構造体（Scale, Rotate, Offset）を取得
+    UVTransform GetUVTransform() const { return uvTransform_; }
+    /// @brief UVトランスフォーム構造体をまとめて設定
+    void SetUVTransform(const UVTransform& uvTransform) { uvTransform_ = uvTransform; }
 
-    void SetUVTransform(const UVTransform& uvTransform) {
-        uvTransform_ = uvTransform;
-    }
+    /// @brief UVのスケール（反復率）を設定
+    void SetUVScale(const Vector2& scale) { uvTransform_.scale = scale; }
+    /// @brief UVのスケールを取得
+    Vector2 GetUVScale() const { return uvTransform_.scale; }
 
-    void SetUVScale(const Vector2& scale) {
-        uvTransform_.scale = scale;
-    }
-    Vector2 GetUVScale() const {
-        return uvTransform_.scale;
-    }
-    void SetUVRotate(float rotate) {
-        uvTransform_.rotate = rotate;
-    }
-    float GetUVRotate() const {
-        return uvTransform_.rotate;
-    }
+    /// @brief UVの回転角を設定
+    void SetUVRotate(float rotate) { uvTransform_.rotate = rotate; }
+    /// @brief UVの回転角を取得
+    float GetUVRotate() const { return uvTransform_.rotate; }
 
-    void SetUVOffset(const Vector2& offset) {
-        uvTransform_.offset = offset;
-    }
-    Vector2 GetUVOffset() const {
-        return uvTransform_.offset;
-    }
-
+    /// @brief UVのオフセット（シフト移動）を設定
+    void SetUVOffset(const Vector2& offset) { uvTransform_.offset = offset; }
+    /// @brief UVのオフセットを取得
+    Vector2 GetUVOffset() const { return uvTransform_.offset; }
 
 private:
+    /**
+     * @brief テクスチャの元サイズに合わせてスプライトサイズを自動調整する
+     */
     void AdjustTextureSize();
-    BlendMode blendMode_ = BlendMode::Normal;
+
 private:
-    
-    UVTransform uvTransform_ ;
+    BlendMode blendMode_ = BlendMode::Normal; //!< ブレンドモード（デフォルトは通常アルファ）
+    FillMode fillMode_ = FillMode::kSolid;    //!< フィルモード（デフォルトは塗りつぶし）
 
-    Vector2 position_ = { 0.0f,0.0f };
-    float rotation_ = 0.0f;
+    UVTransform uvTransform_; //!< UVの変形パラメータ
 
-    Vector2 size_ = { 10.0f,10.0f };
+    Vector2 position_ = { 0.0f, 0.0f }; //!< 描画中心（またはアンカー）のスクリーン座標
+    float rotation_ = 0.0f;             //!< 回転角（ラジアン）
+    Vector2 size_ = { 10.0f, 10.0f };   //!< 描画サイズ（ピクセル）
 
-    Vector2 anchorPoint_ = { 0.0f,0.0f };
+    /**
+     * @brief アンカーポイント
+     * @details 原点を頂点のどこに置くか。(0.0, 0.0)で左上、(0.5, 0.5)で中央、(1.0, 1.0)で右下になります。
+     */
+    Vector2 anchorPoint_ = { 0.0f, 0.0f };
 
-    bool isFlipX_ = false;
-    bool isFlipY_ = false;
+    bool isFlipX_ = false; //!< 左右反転フラグ
+    bool isFlipY_ = false; //!< 上下反転フラグ
 
-    //テクスチャ左上
-    Vector2 textureLeftTop = { 0.0f,0.0f };
-    //テクスチャ切り出しサイズ
-    Vector2 textureSize{ 100.0f,100.0f };
+    Vector2 textureLeftTop = { 0.0f, 0.0f }; //!< テクスチャ切り出しの左上座標（ピクセル単位）
+    Vector2 textureSize{ 100.0f, 100.0f };   //!< テクスチャ切り出しサイズ（ピクセル単位）
 
+    // Direct3D12 関連のリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> vertexRecourse_; //!< 頂点バッファリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;  //!< インデックスバッファリソース
+    VertexData* vertexData_ = nullptr;                      //!< 頂点バッファのマッピングポインタ
+    uint32_t* indexData_ = nullptr;                         //!< インデックスバッファのマッピングポインタ
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;             //!< 頂点バッファビュー
+    D3D12_INDEX_BUFFER_VIEW indexBufferView_;               //!< インデックスバッファビュー
 
-    //buffer
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexRecourse_;
-    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
-    VertexData* vertexData_ = nullptr;
-    uint32_t* indexData_ = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
-    D3D12_INDEX_BUFFER_VIEW indexBufferView_;
-    //マテリアル
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-    Material* materialData_ = nullptr;
-    //座標変換
-    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourse_;
-    TransformationMatrix* transformationMatrixData_ = nullptr;
-    uint32_t textureIndex_ = 0;
-    std::string textureFilePath_;
-    FillMode fillMode_ = FillMode::kSolid;
+    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_; //!< マテリアル用定数バッファリソース
+    Material* materialData_ = nullptr;                        //!< マテリアルのマッピングポインタ
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourse_; //!< 行列用定数バッファリソース
+    TransformationMatrix* transformationMatrixData_ = nullptr;           //!< 行列のマッピングポインタ
+
+    uint32_t textureIndex_ = 0;        //!< テクスチャマネージャーが管理する固有ID
+    std::string textureFilePath_;      //!< 読み込んでいるテクスチャのパス
 };
-

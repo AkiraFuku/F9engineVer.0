@@ -15,3 +15,7 @@ struct Vector2{
     bool operator==(const Vector2& target);
     bool operator!=(const Vector2& target);
 };
+struct Gauge {
+    int32_t value;  
+    int32_t max;
+};
