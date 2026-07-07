@@ -3,6 +3,7 @@
 #include<cstdint>
 #pragma comment(lib,"winmm.lib")
 #include <memory>
+#include "Vector2.h"
 class WinApp
 {
 
@@ -25,6 +26,14 @@ public:
     // //ウィンドウのサイズ
     static const int32_t kClientWidth = 1280;
     static const int32_t kClientHeight = 720;
+
+    //ウィンドウの中央を取得
+    Vector2 GetWindowCenter()const {
+        return { kClientWidth / 2.0f, kClientHeight / 2.0f };
+    }
+
+
+
 
     HWND GetHwnd()const {
         return hwnd;

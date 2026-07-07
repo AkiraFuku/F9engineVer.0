@@ -28,6 +28,13 @@ public:
     void Update()override;
     void Draw()override;
 
+    /// <summary>
+    /// フェーズの切り替え条件を満たしているかチェックする
+    /// </summary>
+    void CheckPhaseTransition();
+
+    void ChangePhase(std::unique_ptr<Phase> nextPhase);
+
     Player* GetPlayer(){return player.get();}
     CameraController* GetCamera(){return cameraController.get();}
     RailPath* GetStageRaill(){return stageRail.get();}

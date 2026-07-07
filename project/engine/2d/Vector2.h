@@ -15,3 +15,23 @@ struct Vector2{
     bool operator==(const Vector2& target);
     bool operator!=(const Vector2& target);
 };
+
+struct int2
+{
+    int x, y;
+
+
+    int2 operator+(const int2& target);
+    int2 operator-(const int2& target);
+    int2 operator*(const int2& target);
+    int2 operator/(const int2& target);
+    int2 operator+=(const int2& target);
+    int2 operator-=(const int2& target);
+    int2 operator*=(const int2& target);
+    int2 operator/=(const int2& target);
+    int2 operator*(const int& target);
+    int2 operator*=(const int& target);
+    bool operator==(const int2& target);
+    bool operator!=(const int2& target);
+
+};

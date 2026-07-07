@@ -26,6 +26,7 @@
 #include "GoalObject.h"
 #include "Phase.h"
 #include "PlayPhase.h"
+#include "ClearPhase.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -45,7 +46,7 @@ void GameScene::Initialize() {
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-   // Audio::GetInstance()->PlayAudio(handle_, true);
+    // Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
@@ -257,19 +258,19 @@ void GameScene::Initialize() {
     boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
     boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
 
-    boxObject_->Update();   
+    boxObject_->Update();
 
     GameScene::AddTriangles(boxObject_->GetWorldTriangles());
 
 
     ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
-    TestGround_ =std::make_unique<Object3d>();
+    TestGround_ = std::make_unique<Object3d>();
     TestGround_->Initialize();
-   
+
     TestGround_->SetModel("TentativeStage.obj");
     TestGround_->SetCamera(activeCamera_);
     TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });    
+    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
 
 
     GameScene::AddTriangles(TestGround_->GetWorldTriangles());
@@ -280,7 +281,10 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
 void GameScene::Update() {
-    CheckClear();
+   // CheckClear();
+
+    CheckPhaseTransition();
+
     XINPUT_STATE state;
 
     // 現在のジョイスティックを取得
@@ -299,23 +303,8 @@ void GameScene::Update() {
 
     Input::GetInstance()->GetJoyStick(0, state);
 
-    // Aボタンを押していたら
 
-    if (Input::GetInstance()->TriggerKeyDown(DIK_E)) {
 
-        //   emitter_->Emit();
-
-           // Aボタンを押したときの処理
-   /*
-           if (Audio::GetInstance()->IsPlaying(handle_))
-           {
-
-               Audio::GetInstance()->StopAudio(handle_);
-           }*/
-
-           //  GetSceneManager()->ChangeScene("GameScene");
-
-    }
     if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
     {
         Vector3 cameraTranslate = activeCamera_->GetRotate();
@@ -494,48 +483,6 @@ void GameScene::Update() {
         triangles_.insert(triangles_.end(), testGroundTris.begin(), testGroundTris.end());
     }
 
-//    // プレイヤーの位置から真下にレイキャスト (箱のメッシュとの判定)
-//    if (player && boxObject_) {
-//        debugRay_.origin = player->GetWorldPosition();
-//        debugRay_.diff = { 0.0f, -10.0f, 0.0f }; // 長さ10の下向きレイ
-//
-//        isBoxHit_ = false;
-//        boxHitDistance_ = FLT_MAX;
-//
-//        // 箱オブジェクトのワールド空間の三角形リストを取得
-//        std::vector<Triangle> triangles = boxObject_->GetWorldTriangles();
-//
-//        for (const auto& tri : triangles) {
-//            float dist = 0.0f;
-//            Vector3 hitPt = {};
-//            if (CheckRayTriangle(debugRay_, tri, &dist, &hitPt)) {
-//                // 最も近い衝突面を選択
-//                if (dist < boxHitDistance_) {
-//                    boxHitDistance_ = dist;
-//                    boxHitPoint_ = hitPt;
-//                    hitTriangle_ = tri;
-//                    isBoxHit_ = true;
-//                }
-//            }
-//        }
-//
-#ifdef USE_IMGUI
-        ImGui::Begin("Raycast Box Debug");
-        //ボックスの位置
-       boxPoint_ = boxObject_->GetTranslate();
-        ImGui::DragFloat3("Box Position", &(boxPoint_.x));
-        boxObject_->SetTranslate(boxPoint_);
-//        
-//        ImGui::Text("Box Hit: %s", isBoxHit_ ? "True" : "False");
-//        if (isBoxHit_) {
-//            ImGui::Text("Hit Distance: %.3f", boxHitDistance_);
-//            ImGui::Text("Hit Point: (%.3f, %.3f, %.3f)", boxHitPoint_.x, boxHitPoint_.y, boxHitPoint_.z);
-//        }
-        ImGui::End();
-#endif
-//    }
-
-    //  LightManager::GetInstance()->Update();
 
 }
 void GameScene::Draw() {
@@ -591,16 +538,42 @@ void GameScene::Draw() {
         PrimitiveDrawer::GetInstance()->DrawLine(hitTriangle_.vertices[2], hitTriangle_.vertices[0], { 1.0f, 1.0f, 1.0f, 1.0f });
     }
 
-    //// プレイヤーから射出されるレイを描画 (当たっているなら赤、外れているなら緑)
-    //Vector4 rayColor = isBoxHit_ ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 0.0f, 1.0f };
-    //Vector3 rayEnd = Add(debugRay_.origin, debugRay_.diff);
-    //PrimitiveDrawer::GetInstance()->DrawLine(debugRay_.origin, rayEnd, rayColor);
 
-    //// 衝突点がある場合は、交点に球体を描画
-    //if (isBoxHit_) {
-    //    Sphere hitSphere = { boxHitPoint_, 0.2f, { 0.0f, 0.0f, 0.0f, 1.0f } };
-    //    PrimitiveDrawer::GetInstance()->DrawSphere(hitSphere, { 0.0f, 0.0f, 1.0f, 1.0f }); // 青い球
-    //}
+    if (currentPhase_)
+    {
+        currentPhase_->Draw(this);
+    }
+
+   
+}
+void GameScene::CheckPhaseTransition()
+{
+    if (goal_)
+    {
+        if (goal_->IsCleared()) {
+            isCleared_ = goal_->IsCleared();
+
+            ChangePhase(std::make_unique<ClearPhase>()); // 次のフェーズに遷移
+
+        }
+    }
+
+
+
+
+}
+void GameScene::ChangePhase(std::unique_ptr<Phase> nextPhase)
+{
+
+    nextPhase_ = std::move(nextPhase);
+    if (currentPhase_) {
+        currentPhase_->Finalize(this);
+    }
+    currentPhase_ = std::move(nextPhase_);
+    if (currentPhase_) {
+        currentPhase_->Initialize(this);
+    }
+
 }
 GameScene::GameScene() = default;
 
