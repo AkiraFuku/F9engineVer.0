@@ -15,7 +15,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClearPhase.cpp" />
+    <ClCompile Include="application\Phase\ClearPhase.cpp" />
+    <ClCompile Include="defeatPhase.cpp" />
     <ClCompile Include="Efect.cpp" />
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
@@ -102,11 +103,12 @@
     <ClCompile Include="application\object\Robot\Base\Robot.cpp" />
     <ClCompile Include="application\object\Bullet\Projectile.cpp" />
     <ClCompile Include="engine\Tool\SkyBox.cpp" />
-    <ClCompile Include="Phase.cpp" />
-    <ClCompile Include="PlayPhase.cpp" />
+    <ClCompile Include="application\Phase\Phase.cpp" />
+    <ClCompile Include="application\Phase\PlayPhase.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClearPhase.h" />
+    <ClInclude Include="application\Phase\ClearPhase.h" />
+    <ClInclude Include="defeatPhase.h" />
     <ClInclude Include="Efect.h" />
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
@@ -180,8 +182,8 @@
     <ClInclude Include="application\object\Bullet\Projectile.h" />
     <ClInclude Include="engine\Tool\SkyBox.h" />
     <ClInclude Include="ICollider.h" />
-    <ClInclude Include="Phase.h" />
-    <ClInclude Include="PlayPhase.h" />
+    <ClInclude Include="application\Phase\Phase.h" />
+    <ClInclude Include="application\Phase\PlayPhase.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

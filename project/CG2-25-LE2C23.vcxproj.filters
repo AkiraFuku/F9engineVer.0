@@ -357,10 +357,10 @@
     <ClCompile Include="application\scene\GameScene.cpp">
       <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
-    <ClCompile Include="Phase.cpp">
+    <ClCompile Include="application\Phase\Phase.cpp">
       <Filter>App\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="PlayPhase.cpp">
+    <ClCompile Include="application\Phase\PlayPhase.cpp">
       <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
     <ClCompile Include="engine\math\Quaternion.cpp">
@@ -375,7 +375,10 @@
     <ClCompile Include="Efect.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="ClearPhase.cpp">
+    <ClCompile Include="application\Phase\ClearPhase.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="defeatPhase.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -587,10 +590,10 @@
     <ClInclude Include="application\scene\GameScene.h">
       <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
-    <ClInclude Include="Phase.h">
+    <ClInclude Include="application\Phase\Phase.h">
       <Filter>App\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="PlayPhase.h">
+    <ClInclude Include="application\Phase\PlayPhase.h">
       <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\Quaternion.h">
@@ -605,7 +608,10 @@
     <ClInclude Include="Efect.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="ClearPhase.h">
+    <ClInclude Include="application\Phase\ClearPhase.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="defeatPhase.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
