@@ -11,7 +11,9 @@
 
 
 // 追加：シェーダーの種類を定義
-enum class ShaderType { VS, PS, GS, HS, DS, CS };
+enum class ShaderType {
+    VS, PS, GS, HS, DS, CS
+};
 
 struct ShaderSet {
     // vectorで管理する場合。インデックス = ShaderType とすると扱いやすいです。
@@ -25,19 +27,19 @@ struct InputLayout
     std::vector<D3D12_INPUT_ELEMENT_DESC>inputElement{};
 };
 struct PsoConfig {
-  /// <summary>
-  /// 
-  /// </summary>
-  struct ShaderPath {
+    /// <summary>
+    /// 
+    /// </summary>
+    struct ShaderPath {
         ShaderType type;
         std::wstring path;
         std::string entryPoint = "main"; // 必要に応じて
         std::wstring profile;           // L"vs_6_0" など
     };
     std::vector<ShaderPath> shaderPaths;
-    
+
     using RootSignatureGenerator = std::function<Microsoft::WRL::ComPtr<ID3D12RootSignature>()>;
-    RootSignatureGenerator rootSignatureGenerator;   
+    RootSignatureGenerator rootSignatureGenerator;
 
     using InputLayoutGenerator = std::function<InputLayout()>;
     InputLayoutGenerator inputLayoutGenerator;
@@ -49,9 +51,15 @@ struct PsoConfig {
     D3D12_COMPARISON_FUNC depthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 };
-enum class Toporogy{ PointList,LineList,TriangleList,};
-enum class BlendMode { None, Normal, Add, Subtract, Multiply, Screen };
-enum class FillMode { kSolid, kWireFrame };
+enum class Toporogy {
+    PointList, LineList, TriangleList,
+};
+enum class BlendMode {
+    None, Normal, Add, Subtract, Multiply, Screen
+};
+enum class FillMode {
+    kSolid, kWireFrame
+};
 
 
 
@@ -63,12 +71,12 @@ struct PsoSet {
 class PSOManager {
 public:
     static PSOManager* GetInstance();
-      friend struct std::default_delete<PSOManager>;
+    friend struct std::default_delete<PSOManager>;
     void Initialize();
     void Finalize();
 
     void RegisterPsoGenerator(const std::string& name, const PsoConfig& psoConfig);
-    const PsoSet& GetPso(const std::string& name, BlendMode blendMode = BlendMode::None, FillMode fillMode = FillMode::kSolid,Toporogy type=Toporogy::TriangleList);
+    const PsoSet& GetPso(const std::string& name, BlendMode blendMode = BlendMode::None, FillMode fillMode = FillMode::kSolid, Toporogy type = Toporogy::TriangleList);
 
     D3D12_STATIC_SAMPLER_DESC StaticSamplers();
 
@@ -76,9 +84,9 @@ private:
     PSOManager() = default;
     ~PSOManager() = default;
 
-    void CreatePso(const std::string& name, BlendMode blend, FillMode fill,Toporogy type);
+    void CreatePso(const std::string& name, BlendMode blend, FillMode fill, Toporogy type);
     D3D12_BLEND_DESC CreateBlendDesc(BlendMode mode);
-    void EnsureShaders(const std::string& name,ShaderSet& outSet);
+    void EnsureShaders(const std::string& name, ShaderSet& outSet);
     D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveTopologyType(Toporogy type);
 
     struct CacheKey {
@@ -87,18 +95,23 @@ private:
         FillMode fill;
         Toporogy type;
         bool operator==(const CacheKey& o) const {
-            return name == o.name && blend == o.blend && fill == o.fill&& type==o.type;
+            return name == o.name && blend == o.blend && fill == o.fill && type == o.type;
         }
     };
 
     struct KeyHasher {
         std::size_t operator()(const CacheKey& k) const {
-            // 全ての要素をハッシュ計算に含める
-            size_t h1 = std::hash<std::string>()(k.name);
-            size_t h2 = std::hash<int>()((int)k.blend);
-            size_t h3 = std::hash<int>()((int)k.fill);
-            size_t h4 = std::hash<int>()((int)k.type);
-            return h1 ^ (h2 << 1) ^ (h3 << 2)^(h4<<3);
+            size_t seed = std::hash<std::string>()(k.name);
+
+            // 一般的なハッシュ結合アルゴリズム
+            auto hash_combine = [&seed](size_t value) {
+                seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+                };
+
+            hash_combine(std::hash<int>()((int)k.blend));
+            hash_combine(std::hash<int>()((int)k.fill));
+            hash_combine(std::hash<int>()((int)k.type));
+            return seed;
         }
     };
 
