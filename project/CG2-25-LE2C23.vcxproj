@@ -16,8 +16,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="application\Phase\ClearPhase.cpp" />
-    <ClCompile Include="defeatPhase.cpp" />
-    <ClCompile Include="Efect.cpp" />
+    <ClCompile Include="application\Phase\defeatPhase.cpp" />
+    <ClCompile Include="Efect.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
     <ClCompile Include="application\object\Enemy\TestEnemy.cpp" />
@@ -72,7 +74,7 @@
     <ClCompile Include="engine\Tool\LightManager.cpp" />
     <ClCompile Include="application\object\player\Command.cpp" />
     <ClCompile Include="application\object\player\InputHandler.cpp" />
-    <ClCompile Include="ICollider.cpp" />
+    <ClCompile Include="application\Collision\ICollider.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -108,8 +110,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\Phase\ClearPhase.h" />
-    <ClInclude Include="defeatPhase.h" />
-    <ClInclude Include="Efect.h" />
+    <ClInclude Include="application\Phase\defeatPhase.h" />
+    <ClInclude Include="Efect.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
     <ClInclude Include="application\object\Enemy\TestEnemy.h" />
@@ -181,7 +185,7 @@
     <ClInclude Include="application\object\Robot\Base\Robot.h" />
     <ClInclude Include="application\object\Bullet\Projectile.h" />
     <ClInclude Include="engine\Tool\SkyBox.h" />
-    <ClInclude Include="ICollider.h" />
+    <ClInclude Include="application\Collision\ICollider.h" />
     <ClInclude Include="application\Phase\Phase.h" />
     <ClInclude Include="application\Phase\PlayPhase.h" />
   </ItemGroup>
