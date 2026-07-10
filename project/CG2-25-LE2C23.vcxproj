@@ -17,9 +17,6 @@
   <ItemGroup>
     <ClCompile Include="application\Phase\ClearPhase.cpp" />
     <ClCompile Include="application\Phase\defeatPhase.cpp" />
-    <ClCompile Include="Efect.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
     <ClCompile Include="application\object\Enemy\TestEnemy.cpp" />
@@ -111,9 +108,6 @@
   <ItemGroup>
     <ClInclude Include="application\Phase\ClearPhase.h" />
     <ClInclude Include="application\Phase\defeatPhase.h" />
-    <ClInclude Include="Efect.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
     <ClInclude Include="application\object\Enemy\TestEnemy.h" />
@@ -203,11 +197,6 @@
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\Primitive\Primitive.hlsli" />
     <None Include="resources\shaders\Sprite\Sprite.hlsli" />
-    <None Include="StateRideOnTest_Usage.md">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl">

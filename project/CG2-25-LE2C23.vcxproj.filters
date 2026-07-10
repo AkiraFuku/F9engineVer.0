@@ -160,6 +160,9 @@
     <Filter Include="App\Scene\GameScene">
       <UniqueIdentifier>{a05eb41e-6709-40b0-ad9d-b4bfc8eff064}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Phase">
+      <UniqueIdentifier>{2ceedbd6-f563-4f6c-b3aa-8a4deba61565}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -357,9 +360,6 @@
     <ClCompile Include="application\scene\GameScene.cpp">
       <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
-    <ClCompile Include="application\Phase\Phase.cpp">
-      <Filter>App\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="application\Phase\PlayPhase.cpp">
       <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
@@ -372,14 +372,14 @@
     <ClCompile Include="engine\Tool\SkyBox.cpp">
       <Filter>engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="Efect.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\Phase\ClearPhase.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="application\Phase\Phase.cpp">
+      <Filter>App\Phase</Filter>
     </ClCompile>
     <ClCompile Include="application\Phase\defeatPhase.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>App\Phase</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Phase\ClearPhase.cpp">
+      <Filter>App\Phase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -590,9 +590,6 @@
     <ClInclude Include="application\scene\GameScene.h">
       <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
-    <ClInclude Include="application\Phase\Phase.h">
-      <Filter>App\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="application\Phase\PlayPhase.h">
       <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
@@ -605,14 +602,14 @@
     <ClInclude Include="engine\base\OffScreen.h">
       <Filter>engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="Efect.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\Phase\ClearPhase.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="application\Phase\Phase.h">
+      <Filter>App\Phase</Filter>
     </ClInclude>
     <ClInclude Include="application\Phase\defeatPhase.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>App\Phase</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Phase\ClearPhase.h">
+      <Filter>App\Phase</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -633,7 +630,6 @@
     <None Include="resources\shaders\Primitive\Primitive.hlsli">
       <Filter>シェーダー ファイル\Primitive</Filter>
     </None>
-    <None Include="StateRideOnTest_Usage.md" />
     <None Include="resources\shaders\CopyImage\CopyImage.hlsli">
       <Filter>シェーダー ファイル\ofScrene</Filter>
     </None>
