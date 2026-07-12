@@ -158,7 +158,7 @@ void Player::UpdateRailPath()
 }
 void Player::UpdateGravity()
 {
-    const float kHeightOffset = Radius;
+    
     // レイ判定の結果から接地状態を決める
     if (isRayHit_) {
         groundY_ = rayHitPoint_.y;
@@ -194,8 +194,8 @@ void Player::UpdateGravity()
     }
 
     //// レイすら当たらない完全な奈落の場合の最低保証
-    if (!isRayHit_ && worldY_ <= -10.0f + kHeightOffset) {
-        worldY_ = -10.0f + kHeightOffset ;
+    if (!isRayHit_ && worldY_ <= minY + kHeightOffset) {
+        worldY_ = minY + kHeightOffset ;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }
@@ -213,7 +213,6 @@ void Player::RayCastUpdate()
         return;
     }
 
-    float rayOffset = 2.0f;
     ray_.origin = object_->GetTranslate();
     ray_.origin.y += rayOffset; // 始点を上に持ち上げる
 

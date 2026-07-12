@@ -27,6 +27,7 @@
 #include "Phase.h"
 #include "PlayPhase.h"
 #include "ClearPhase.h"
+#include "defeatPhase.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -281,7 +282,7 @@ void GameScene::Finalize() {
     ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
 void GameScene::Update() {
-   // CheckClear();
+    // CheckClear();
 
     CheckPhaseTransition();
 
@@ -462,25 +463,23 @@ void GameScene::Update() {
     ImGui::End();
 #endif // USE_IMGUI
 
+    triangles_.clear();
 
     // 四角いオブジェクトの更新
     if (boxObject_) {
+        //プレハブクラスを作るとき更新はここを参考にする
         boxObject_->SetCamera(activeCamera_);
         boxObject_->Update();
-    }
-    if (TestGround_)
-    {
-        TestGround_->Update();
-    }
-    // Update() の boxObject_->Update() の直後に追加
-    triangles_.clear();
-    if (boxObject_) {
         auto boxTris = boxObject_->GetWorldTriangles(); // ワールド変換済み三角形を取得する想定
         triangles_.insert(triangles_.end(), boxTris.begin(), boxTris.end());
     }
-    if (TestGround_) {
+    if (TestGround_)
+    {
+
+        TestGround_->Update();
         auto testGroundTris = TestGround_->GetWorldTriangles(); // ワールド変換済み三角形を取得する想定
         triangles_.insert(triangles_.end(), testGroundTris.begin(), testGroundTris.end());
+
     }
 
 
@@ -544,7 +543,7 @@ void GameScene::Draw() {
         currentPhase_->Draw(this);
     }
 
-   
+
 }
 void GameScene::CheckPhaseTransition()
 {
@@ -557,6 +556,17 @@ void GameScene::CheckPhaseTransition()
 
         }
     }
+    CheckPlayerFall();
+    //プレイヤーが死亡した場合のフェーズ遷移もここでチェックすることができます。
+    if (player)
+    {
+        if (player->IsDead())
+        {
+              ChangePhase(std::make_unique<defeatPhase>()); // 次のフェーズに遷移
+
+        }
+    }
+
 
 
 
@@ -572,6 +582,21 @@ void GameScene::ChangePhase(std::unique_ptr<Phase> nextPhase)
     currentPhase_ = std::move(nextPhase_);
     if (currentPhase_) {
         currentPhase_->Initialize(this);
+    }
+
+}
+void GameScene::CheckPlayerFall()
+{
+
+    if (player)
+    {
+        Vector3 playerPos = player->GetWorldPosition();
+        if (playerPos.y < fallLimit_)
+        {
+            // プレイヤーが落下限界を下回った場合の処理
+            player->Die(); // プレイヤーを死亡状態にする
+            ChangePhase(std::make_unique<defeatPhase>()); // 次のフェーズに遷移
+        }
     }
 
 }

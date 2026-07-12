@@ -140,6 +140,15 @@ public:
     bool IsAlive() const {
         return isAlive_;
     }
+    bool IsDead() const {
+        return !isAlive_;
+    }
+    void SetAlive(bool alive) {
+        isAlive_ = alive;
+    }
+    void Die() {
+        isAlive_ = false;
+    }
 
     bool IsActive() const {
         return isActive_;
@@ -190,6 +199,8 @@ private:
     Triangle rayHitTriangle_ = {};
     RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
     float groundY_ = 0.0f;
+    float rayOffset = 1.0f;
+    const float minY = -10.0f; // 地面の最低Y座標
 
     const float kRayOffset = 2.0f; // レイの始点を上に持ち上げるオフセット
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
@@ -198,7 +209,7 @@ private:
 
     std::unique_ptr<RailMover> railMover_;
 
-    float playerAngle_ = 0.0f;
+    float playerAngle_ = -10.0f;
 
     // --- 被弾処理用 ---
 
@@ -208,7 +219,7 @@ private:
     float hitInvincibilityTimer_ = 0.0f;   // 無敵時間のタイマー
     const float kHitInvincibilityDuration_ = 10.0f; // 無敵時間
     const float kKnockbackForce_ = 0.5f; // ノックバックの強さ
-    int knockbackDirection_ = 0; // ノックバックの方向（1:前方、-1:後方）
+    int knockbackDirection_ = 0; // ノックバックの方向（1:前方、-1:後方)
 
 
 

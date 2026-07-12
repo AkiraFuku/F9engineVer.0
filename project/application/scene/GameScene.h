@@ -32,8 +32,16 @@ public:
     /// フェーズの切り替え条件を満たしているかチェックする
     /// </summary>
     void CheckPhaseTransition();
-
+    /// <summary>
+    /// フェーズを変更する
+    /// </summary>
+    /// <param name="nextPhase"></param>
     void ChangePhase(std::unique_ptr<Phase> nextPhase);
+
+
+    //プレイヤーが落下下かの判定
+    void CheckPlayerFall();
+
 
     Player* GetPlayer(){return player.get();}
     CameraController* GetCamera(){return cameraController.get();}
@@ -97,6 +105,8 @@ private:
 
     //テスト用地面
      std::unique_ptr<Object3d> TestGround_;
+     //生存限界
+     float fallLimit_ = -8.5f;
 
 
 };

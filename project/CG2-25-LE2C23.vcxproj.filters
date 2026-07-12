@@ -360,9 +360,6 @@
     <ClCompile Include="application\scene\GameScene.cpp">
       <Filter>App\Scene\GameScene</Filter>
     </ClCompile>
-    <ClCompile Include="application\Phase\PlayPhase.cpp">
-      <Filter>App\Scene\GameScene</Filter>
-    </ClCompile>
     <ClCompile Include="engine\math\Quaternion.cpp">
       <Filter>engine\math</Filter>
     </ClCompile>
@@ -379,6 +376,9 @@
       <Filter>App\Phase</Filter>
     </ClCompile>
     <ClCompile Include="application\Phase\ClearPhase.cpp">
+      <Filter>App\Phase</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Phase\PlayPhase.cpp">
       <Filter>App\Phase</Filter>
     </ClCompile>
   </ItemGroup>
@@ -590,9 +590,6 @@
     <ClInclude Include="application\scene\GameScene.h">
       <Filter>App\Scene\GameScene</Filter>
     </ClInclude>
-    <ClInclude Include="application\Phase\PlayPhase.h">
-      <Filter>App\Scene\GameScene</Filter>
-    </ClInclude>
     <ClInclude Include="engine\math\Quaternion.h">
       <Filter>engine\math</Filter>
     </ClInclude>
@@ -609,6 +606,9 @@
       <Filter>App\Phase</Filter>
     </ClInclude>
     <ClInclude Include="application\Phase\ClearPhase.h">
+      <Filter>App\Phase</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Phase\PlayPhase.h">
       <Filter>App\Phase</Filter>
     </ClInclude>
   </ItemGroup>
