@@ -100,6 +100,10 @@ public:
     float GetRailProgress() const;
     float GetCurrentDistance() const;
     const RailPath* GetRailPath()const;
+
+    const RailMover* GetRailMover() const {
+        return railMover_.get();
+    }
     bool IsGround()const {
         return isGrounded_;
     }

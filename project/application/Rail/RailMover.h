@@ -47,6 +47,11 @@ public:
 
         return path_;
     }
+
+    // 他の RailMover と進行度（割合）を同期させる関数
+    void SyncWith(const RailMover* otherMover);
+
+    // 現在の走行距離（メートル）を取得
     float GetCurrentDistance() const;
     MoveDirection GetMoveDirection() const {
         return currentDir_;

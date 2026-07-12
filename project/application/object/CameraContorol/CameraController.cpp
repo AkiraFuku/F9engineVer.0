@@ -24,7 +24,7 @@ void CameraController::Update() {
     const EulerTransform& targetWorldTransform = target_->GetTransform();
 
 
-  
+
 
 #ifdef USE_IMGUI
     ImGui::Begin("Debug/camera");
@@ -97,26 +97,8 @@ void CameraController::RotateCamera() {
 
 void CameraController::RailCamera()
 {
- if (!target_ || !railMover_ || !railMover_->isRailSet()) return;
-
-    // 1. プレイヤー側のレール情報を取得
-    const RailPath* playerPath = target_->GetRailPath(); // PlayerにGetRailPath()を追加してください
-    if (!playerPath) return;
-
-    // 2. プレイヤーが「全行程の何％」にいるかを算出 (0.0f ～ 1.0f)
-    float playerDist = target_->GetCurrentDistance();
-    float playerTotalLen = playerPath->GetTotalLength();
-    float progressRate = playerDist / playerTotalLen;
-
-    // 3. カメラ側のレールの「同じ％」にあたる距離を算出
-    const RailPath* cameraPath = railMover_->GetRailPath();
-    float cameraTotalLen = cameraPath->GetTotalLength();
-    float targetCameraDist = cameraTotalLen * progressRate;
-
-    // 4. その距離に対応する T を取得して適用
-    float cameraT = cameraPath->GetTFromDistance(targetCameraDist);
-    railMover_->SetProgress(cameraT);
-
+    if (!target_ || !railMover_ || !railMover_->isRailSet()) return;
+    railMover_->SyncWith(target_->GetRailMover());
     // 座標更新
     camera_->SetTranslate(railMover_->GetCurrentPosition());
 }
