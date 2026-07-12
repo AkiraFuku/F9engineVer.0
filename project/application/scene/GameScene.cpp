@@ -255,7 +255,7 @@ void GameScene::Initialize() {
     boxObject_->SetCamera(activeCamera_);
 
     // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
-    Vector3 railPoint1 = stageRail->GetPointPos(2);
+    Vector3 railPoint1 = stageRail->GetPointPos(1);
     boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
     boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
 
@@ -265,16 +265,16 @@ void GameScene::Initialize() {
 
 
     ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
-    TestGround_ = std::make_unique<Object3d>();
-    TestGround_->Initialize();
+    /*  TestGround_ = std::make_unique<Object3d>();
+      TestGround_->Initialize();
 
-    TestGround_->SetModel("TentativeStage.obj");
-    TestGround_->SetCamera(activeCamera_);
-    TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
+      TestGround_->SetModel("TentativeStage.obj");
+      TestGround_->SetCamera(activeCamera_);
+      TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
+      TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
 
 
-    GameScene::AddTriangles(TestGround_->GetWorldTriangles());
+      GameScene::AddTriangles(TestGround_->GetWorldTriangles());*/
 
 }
 void GameScene::Finalize() {
@@ -523,7 +523,8 @@ void GameScene::Draw() {
 
     // --- レイキャストのデバッグ描画 ---
     // 衝突した三角形があれば赤色で強調描画する
-    if (isBoxHit_) {
+    if (player && player->IsRayHit()) {
+        hitTriangle_ = player->GetRayHitTriangle();
         PrimitiveDrawer::GetInstance()->DrawTriangle(
             hitTriangle_.vertices[0],
             hitTriangle_.vertices[1],
@@ -562,7 +563,7 @@ void GameScene::CheckPhaseTransition()
     {
         if (player->IsDead())
         {
-              ChangePhase(std::make_unique<defeatPhase>()); // 次のフェーズに遷移
+            ChangePhase(std::make_unique<defeatPhase>()); // 次のフェーズに遷移
 
         }
     }
