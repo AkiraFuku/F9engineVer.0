@@ -51,7 +51,7 @@ void Player::Update()
     RayCastUpdate();
     if (baseState_) baseState_->Update(this);
     // if (behavior_) behavior_->Update(this);
-   
+
     //UpdateGravity();*/
 
     UpdateRailPath();
@@ -158,7 +158,7 @@ void Player::UpdateRailPath()
 }
 void Player::UpdateGravity()
 {
-    
+
     // レイ判定の結果から接地状態を決める
     if (isRayHit_) {
         groundY_ = rayHitPoint_.y;
@@ -195,7 +195,7 @@ void Player::UpdateGravity()
 
     //// レイすら当たらない完全な奈落の場合の最低保証
     if (!isRayHit_ && worldY_ <= minY + kHeightOffset) {
-        worldY_ = minY + kHeightOffset ;
+        worldY_ = minY + kHeightOffset;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }
@@ -222,6 +222,10 @@ void Player::RayCastUpdate()
     isRayHit_ = false;
     rayHitDistance_ = FLT_MAX;
     result_ = RayTriangleCollisionResult::NoCollision;
+
+    rayHitPoint_ = { 0.0f, 0.0f, 0.0f };
+    rayHitTriangle_ = Triangle{}; 
+
 
     for (const auto& tri : triangles) {
         Vector3 tmpHit = {};

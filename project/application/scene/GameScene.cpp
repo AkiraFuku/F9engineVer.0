@@ -47,7 +47,6 @@ void GameScene::Initialize() {
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    // Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
@@ -232,7 +231,7 @@ void GameScene::Initialize() {
     AddEnemy({ 0.3f, 0.0f });
     AddEnemy({ 0.4f, 0.0f });
 
-    goal_ = std::make_unique<GoalObject>();
+        goal_ = std::make_unique<GoalObject>();
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
@@ -264,17 +263,17 @@ void GameScene::Initialize() {
     GameScene::AddTriangles(boxObject_->GetWorldTriangles());
 
 
-    ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
-    /*  TestGround_ = std::make_unique<Object3d>();
-      TestGround_->Initialize();
+      ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
+        TestGround_ = std::make_unique<Object3d>();
+        TestGround_->Initialize();
 
-      TestGround_->SetModel("TentativeStage.obj");
-      TestGround_->SetCamera(activeCamera_);
-      TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-      TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
+        TestGround_->SetModel("TentativeStage.obj");
+        TestGround_->SetCamera(activeCamera_);
+        TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
+        TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
 
 
-      GameScene::AddTriangles(TestGround_->GetWorldTriangles());*/
+        GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
 }
 void GameScene::Finalize() {

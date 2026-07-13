@@ -207,7 +207,7 @@ private:
     RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
     float groundY_ = 0.0f;
     float rayOffset = 1.0f;
-    const float minY = 0.0f; // 地面の最低Y座標
+    const float minY =-10.0f; // 地面の最低Y座標
 
     const float kRayOffset = 2.0f; // レイの始点を上に持ち上げるオフセット
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
