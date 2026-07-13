@@ -290,13 +290,13 @@ void Player::HandleDamage()
         hitInvincibilityTimer_ = kHitInvincibilityDuration_;
         isDamaged_ = false; // 被弾フラグをリセット
         // 体力を減らす
-        hitPoints_--;
+        hitPoints_.value--;
 
     }
 }
 void Player::HandleAlive()
 {
-    if (hitPoints_ <= 0) {
+    if (hitPoints_.value <= 0) {
         isAlive_ = false;
     }
 }

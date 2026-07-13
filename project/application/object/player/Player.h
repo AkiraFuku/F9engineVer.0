@@ -171,6 +171,13 @@ public:
     const Triangle& GetRayHitTriangle() const {
         return rayHitTriangle_;
     }
+    int GetHitPoints() const {
+        return hitPoints_.value;
+    }
+    int GetMaxHitPoints() const {
+        return hitPoints_.max;
+    }
+
 private:
 
     // --- 状態管理 ---
@@ -222,7 +229,7 @@ private:
 
     float Radius = 1.0f;// 当たり判定の半径
     bool isDamaged_ = false;      //被弾フラグ
-    int32_t hitPoints_ = 3; // プレイヤーの体力
+    Gauge hitPoints_ = { 3, 3 }; // プレイヤーの体力
     float hitInvincibilityTimer_ = 0.0f;   // 無敵時間のタイマー
     const float kHitInvincibilityDuration_ = 10.0f; // 無敵時間
     const float kKnockbackForce_ = 0.5f; // ノックバックの強さ

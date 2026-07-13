@@ -35,3 +35,8 @@ struct int2
     bool operator!=(const int2& target);
 
 };
+};
+struct Gauge {
+    int32_t value;  
+    int32_t max;
+};
