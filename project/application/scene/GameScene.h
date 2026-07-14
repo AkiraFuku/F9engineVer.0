@@ -11,14 +11,15 @@
 #include "CameraController.h"
 #include "Vector2.h"
 #include "Projectile.h"
+#include "Animation.h"
+
 
 class ParticleEmitter;
 class RailPath;
 class Enemy;
 class GoalObject;
 class Phase;
-
-#include "Animation.h"
+class PlayerHPUI;
 
 class GameScene :public Scene
 {
@@ -107,6 +108,9 @@ private:
      std::unique_ptr<Object3d> TestGround_;
      //生存限界
      float fallLimit_ = -8.5f;
+
+     //UI
+     std::unique_ptr<PlayerHPUI> playerHPUI_;
 
 
 };

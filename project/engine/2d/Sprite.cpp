@@ -43,11 +43,7 @@ void Sprite::Initialize(std::string textureFilePath) {
     transformationMatrixData_->WVP = Makeidentity4x4();
     transformationMatrixData_->World = Makeidentity4x4();
 
-    // 4. テクスチャの紐付けとサイズ自動調整
-    //textureFilePath_ = textureFilePath;
-    //textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
-    //AdjustTextureSize();
     RegisterTexture(textureFilePath);
 }
 
@@ -153,6 +149,14 @@ void Sprite::SetTextureByFilePath(const std::string& textureFilePath) {
 
 size_t Sprite::RegisterTexture(const std::string& textureFilePath)
 {
+
+    // すでに同じファイルパスが登録されているかチェック
+    for (size_t i = 0; i < registeredTextures_.size(); ++i) {
+        if (registeredTextures_[i].filePath == textureFilePath) {
+            return i; // 登録済みならそのインデックスを返して終了
+        }
+    }
+
     // TextureManagerを介してGPU側のテクスチャインデックスを取得（未ロードならロードされる）
     uint32_t managerIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
@@ -170,6 +174,19 @@ size_t Sprite::RegisterTexture(const std::string& textureFilePath)
     return registeredTextures_.size() - 1;
 }
 
+void Sprite::RegisterTextures(const std::vector<std::string>& filePaths)
+{
+    for (const auto& filePath : filePaths) {
+        RegisterTexture(filePath);
+    }
+}
+void Sprite::RegisterTextures(std::initializer_list<std::string> filePaths)
+{
+    for (const auto& filePath : filePaths) {
+        RegisterTexture(filePath);
+    }
+}
+
 void Sprite::SetTextureByIndex(size_t index)
 {
     // 範囲チェック
@@ -183,9 +200,60 @@ void Sprite::SetTextureByIndex(size_t index)
     textureIndex_ = registeredTextures_[index].managerIndex;
 
     // サイズを新しいテクスチャに合わせる
-    AdjustTextureSize();
+    //AdjustTextureSize();
+    FitUVScaleToSpriteSize();
+    uvTransform_.scale = { 1.0f, 1.0f };
+    uvTransform_.offset = { 0.0f, 0.0f };
+    uvTransform_.rotate = 0.0f;
 }
 
+std::unique_ptr<Sprite> Sprite::Clone() const {
+    // 1. 新しいインスタンスを生成
+    auto newSprite = std::make_unique<Sprite>();
+
+    // 2. バッファ生成とテクスチャの初期化
+    // 登録されているテクスチャがあるか安全にチェックする
+    if (!this->registeredTextures_.empty()) {
+        // 最初のテクスチャで Initialize を呼び出してバッファを構築[cite: 16]
+        newSprite->Initialize(this->registeredTextures_[0].filePath);
+
+        // 2枚目以降があれば追加登録[cite: 16]
+        for (size_t i = 1; i < this->registeredTextures_.size(); ++i) {
+            newSprite->RegisterTexture(this->registeredTextures_[i].filePath);
+        }
+    } else {
+        // 万が一 registeredTextures_ が空の場合の安全策（フォールバック）
+        // カレントのテクスチャパスを利用して最低限の初期化を試みる
+        newSprite->Initialize(this->textureFilePath_);
+    }
+
+    // 3. トランスフォームや各種設定パラメータのコピー
+    newSprite->position_ = this->position_;
+    newSprite->rotation_ = this->rotation_;
+    newSprite->size_ = this->size_;
+    newSprite->anchorPoint_ = this->anchorPoint_;
+    newSprite->isFlipX_ = this->isFlipX_;
+    newSprite->isFlipY_ = this->isFlipY_;
+    newSprite->blendMode_ = this->blendMode_;
+    newSprite->fillMode_ = this->fillMode_;
+
+    // 4. テクスチャの切り出し位置・サイズ・UVアニメーションのコピー
+    newSprite->textureLeftTop = this->textureLeftTop;
+    newSprite->textureSize = this->textureSize;
+    newSprite->uvTransform_ = this->uvTransform_;
+
+    // 5. 現在選択されているテクスチャ状態の同期
+    newSprite->textureFilePath_ = this->textureFilePath_;
+    newSprite->textureIndex_ = this->textureIndex_;
+
+    // 6. 色（マテリアル）のコピー
+    if (this->materialData_ && newSprite->materialData_) {
+        newSprite->materialData_->color = this->materialData_->color;
+    }
+
+
+    return newSprite;
+}
 void Sprite::AdjustTextureSize() {
     // テクスチャのメタデータを取得して、スプライト全体のサイズを画像本来のサイズに合わせる
     const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureFilePath_);
@@ -193,4 +261,33 @@ void Sprite::AdjustTextureSize() {
     textureSize.x = static_cast<float>(metadata.width);
     textureSize.y = static_cast<float>(metadata.height);
     size_ = textureSize;
+}
+
+void Sprite::AdjustSpriteSize()
+{
+    textureSize = size_;
+}
+void Sprite::FitUVScaleToSpriteSize() {
+
+    // UVトランスフォーム（行列）は余計な変形をしないよう等倍にリセットする
+    uvTransform_.scale = { 1.0f, 1.0f };
+    uvTransform_.offset = { 0.0f, 0.0f };
+    uvTransform_.rotate = 0.0f;
+    // 1. テクスチャの元の解像度を取得
+
+    const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureFilePath_);
+
+
+    if (metadata.width == 0 || metadata.height == 0 || size_.x == 0.0f || size_.y == 0.0f) {
+        return; // ゼロ除算防止
+    }
+    // 1. 頂点UVを「画像全体(0.0〜1.0)」にするため、テクスチャ本来のサイズを設定
+    textureSize.x = static_cast<float>(metadata.width);
+    textureSize.y = static_cast<float>(metadata.height);
+
+    // 2. UV行列（シェーダー側）でスプライトのサイズに合わせるため、逆数を設定する
+    // ※一般的なUVトランスフォーム行列は、1.0を基準に「大きくするとテクスチャが縮小（タイリング）」します。
+    // スプライトサイズにぴったり収めるには、テクスチャサイズに対するスプライトの比率を設定します。
+    uvTransform_.scale.x = static_cast<float>(metadata.width) / size_.x;
+    uvTransform_.scale.y = static_cast<float>(metadata.height) / size_.y;
 }

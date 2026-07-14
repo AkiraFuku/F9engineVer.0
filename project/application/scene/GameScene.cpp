@@ -28,6 +28,7 @@
 #include "PlayPhase.h"
 #include "ClearPhase.h"
 #include "defeatPhase.h"
+#include "PlayerHPUI.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -168,6 +169,8 @@ void GameScene::Initialize() {
 
     player->SetPosition({ 0.0f,0.0f,0.0f });
 
+    playerHPUI_ = std::make_unique<PlayerHPUI>();
+    playerHPUI_->Initialize(player.get());
 
     cameraController = std::make_unique<CameraController>();
     cameraController->Initialize(cameraMap_["Main"].get());
@@ -200,7 +203,7 @@ void GameScene::Initialize() {
 
     // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
-    stageRail->SetLoop(false); // ループを有効化
+    stageRail->SetLoop(true); // ループを有効化
 
     float radius = 20.0f;       // 円の半径
     float h = radius * 0.5522f; // ハンドルの長さ
@@ -237,7 +240,7 @@ void GameScene::Initialize() {
     goal_->SetRail(stageRail.get());
     goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
 
-    goal_->SetRailPosition({ stageRail->GetMaxT(), 0.0f }); // レールの終端付近に配置
+    goal_->SetRailPosition({ stageRail->GetMaxT()-1.0f, 0.0f }); // レールの終端付近に配置
 
 
 
@@ -480,6 +483,7 @@ void GameScene::Update() {
         triangles_.insert(triangles_.end(), testGroundTris.begin(), testGroundTris.end());
 
     }
+    playerHPUI_->Update();  
 
 
 }
@@ -542,7 +546,7 @@ void GameScene::Draw() {
     {
         currentPhase_->Draw(this);
     }
-
+    playerHPUI_->Draw();
 
 }
 void GameScene::CheckPhaseTransition()

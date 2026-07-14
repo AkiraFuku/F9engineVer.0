@@ -6,6 +6,20 @@
 #include <string>
 #include "Transform.h"
 #include "PSOManager.h"
+#include <initializer_list> 
+
+
+namespace Anchor {
+    static constexpr Vector2 TopLeft = { 0.0f, 0.0f };// 左上
+    static constexpr Vector2 TopMin = { 0.5f, 0.0f };// 上中央
+    static constexpr Vector2 TopRight = { 1.0f, 0.0f };// 右上
+    static constexpr Vector2 CenterLeft = { 0.0f, 0.5f };// 左中央
+    static constexpr Vector2 Center = { 0.5f, 0.5f };// 中央
+    static constexpr Vector2 CenterRight = { 1.0f, 0.5f };//右中央
+    static constexpr Vector2 BottomLeft = { 0.0f, 1.0f };// 左下
+    static constexpr Vector2 BottomMin = { 0.5f, 1.0f };// 下中央
+    static constexpr Vector2 BottomRight = { 1.0f, 1.0f };// 右下
+}
 
 /**
  * @brief 2Dスプライトの描画・制御を行うクラス
@@ -175,6 +189,22 @@ public:
      */
     size_t RegisterTexture(const std::string& textureFilePath);
 
+    // ==========================================
+    // 追加: まとめて登録できる配列版の登録関数
+    // ==========================================
+    
+    /**
+     * @brief 複数のテクスチャパスをまとめて登録する（vector版）
+     * @param filePaths 追加するテクスチャパスの配列
+     */
+    void RegisterTextures(const std::vector<std::string>& filePaths);
+
+    /**
+     * @brief 複数のテクスチャパスをまとめて登録する（初期化子リスト版: {"a.png", "b.png"} と書けるようにするため）
+     * @param filePaths 追加するテクスチャパスのリスト
+     */
+    void RegisterTextures(std::initializer_list<std::string> filePaths);
+
     /**
      * @brief 登録済みのテクスチャリストから、指定した番号のテクスチャに切り替える
      * @param index 登録されたインデックス
@@ -225,11 +255,26 @@ public:
         return uvTransform_.offset;
     }
 
+    /**
+     * @brief 自身と同じ設定を持つ新しいスプライトを生成（複製）する
+     * @return 複製されたスプライトのユニークポインタ
+     */
+    std::unique_ptr<Sprite> Clone() const;
+
+    /**
+     * @brief スプライトのサイズに合わせてUVのスケール（反復率）を自動調整する
+     */
+    void FitUVScaleToSpriteSize();
+
 private:
     /**
      * @brief テクスチャの元サイズに合わせてスプライトサイズを自動調整する
      */
     void AdjustTextureSize();
+    /**
+     * @brief スプライトのサイズに合わせてテクスチャの切り出しサイズを自動調整する
+     */
+    void AdjustSpriteSize();
 
 private:
     BlendMode blendMode_ = BlendMode::Normal; //!< ブレンドモード（デフォルトは通常アルファ）
