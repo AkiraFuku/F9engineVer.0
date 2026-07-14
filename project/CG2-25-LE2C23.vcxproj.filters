@@ -381,8 +381,8 @@
     <ClCompile Include="application\Phase\PlayPhase.cpp">
       <Filter>App\Phase</Filter>
     </ClCompile>
-    <ClCompile Include="PlayerHPUI.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="application\UI\PlayerHPUI.cpp">
+      <Filter>ヘッダー ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -614,7 +614,7 @@
     <ClInclude Include="application\Phase\PlayPhase.h">
       <Filter>App\Phase</Filter>
     </ClInclude>
-    <ClInclude Include="PlayerHPUI.h">
+    <ClInclude Include="application\UI\PlayerHPUI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
