@@ -30,7 +30,7 @@ void Sprite::Initialize(std::string textureFilePath) {
     // 2. マテリアルバッファの作成と初期設定
     materialResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
     materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-    
+
     materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f); // デフォルトは白
     materialData_->enableLighting = false;                 // スプライトなのでライティングは原則OFF
 
@@ -44,10 +44,11 @@ void Sprite::Initialize(std::string textureFilePath) {
     transformationMatrixData_->World = Makeidentity4x4();
 
     // 4. テクスチャの紐付けとサイズ自動調整
-    textureFilePath_ = textureFilePath;
-    textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+    //textureFilePath_ = textureFilePath;
+    //textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
-    AdjustTextureSize();
+    //AdjustTextureSize();
+    RegisterTexture(textureFilePath);
 }
 
 void Sprite::Update() {
@@ -102,7 +103,7 @@ void Sprite::Update() {
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
     Matrix4x4 viewMatrix = Makeidentity4x4(); // スプライト用のカメラは恒等行列
     Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(WinApp::kClientWidth), static_cast<float>(WinApp::kClientHeight), 0.0f, 100.0f);
-    
+
     // 行列を乗算して定数バッファへ転送 (World -> View -> Projection)
     Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
     transformationMatrixData_->WVP = worldViewProjectionMatrix;
@@ -116,17 +117,17 @@ void Sprite::Update() {
 void Sprite::Draw() {
     // 共通の描画前準備処理を呼び出し
     SpriteCommon::GetInstance()->SpriteCommonDraw();
-    
+
     // 各種ブレンド・フィルモードに対応したPSO（パイプラインステート）の取得
     auto psoSet = PSOManager::GetInstance()->GetPso("Sprite", blendMode_, fillMode_);
 
     // パイプラインステートの設定
     DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
-    
+
     // 各種バッファビューの割り当て
     DXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
     DXCommon::GetInstance()->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
-    
+
     // 【ルートパラメータのバインド順の備忘録】
     // RootRegister[0]: マテリアル用 constantBuffer
     // RootRegister[1]: 座標変換行列用 constantBuffer
@@ -134,7 +135,7 @@ void Sprite::Draw() {
 
     // マテリアルバッファの設定 (ルートパラメータIndex: 0)
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
-    
+
     // 座標変換行列バッファの設定 (ルートパラメータIndex: 1)
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourse_->GetGPUVirtualAddress());
 
@@ -148,6 +149,41 @@ void Sprite::Draw() {
 void Sprite::SetTextureByFilePath(const std::string& textureFilePath) {
     textureFilePath_ = textureFilePath; // パスを更新
     textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+}
+
+size_t Sprite::RegisterTexture(const std::string& textureFilePath)
+{
+    // TextureManagerを介してGPU側のテクスチャインデックスを取得（未ロードならロードされる）
+    uint32_t managerIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+
+    // 情報を格納
+    registeredTextures_.push_back({ textureFilePath, managerIndex });
+
+    // 最初に登録されたテクスチャをデフォルトとして適用
+    if (registeredTextures_.size() == 1) {
+        textureFilePath_ = textureFilePath;
+        textureIndex_ = managerIndex;
+        AdjustTextureSize();
+    }
+
+    // 登録された番号（配列のインデックス）を返す
+    return registeredTextures_.size() - 1;
+}
+
+void Sprite::SetTextureByIndex(size_t index)
+{
+    // 範囲チェック
+    if (index >= registeredTextures_.size()) {
+        assert(false && "指定されたテクスチャインデックスは登録されていません。");
+        return;
+    }
+
+    // カレントのテクスチャ情報を更新
+    textureFilePath_ = registeredTextures_[index].filePath;
+    textureIndex_ = registeredTextures_[index].managerIndex;
+
+    // サイズを新しいテクスチャに合わせる
+    AdjustTextureSize();
 }
 
 void Sprite::AdjustTextureSize() {

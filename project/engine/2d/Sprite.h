@@ -59,62 +59,108 @@ public:
     // ==========================================
 
     /// @brief 表示位置（スクリーン座標系）を取得
-    const Vector2& GetPosition() const { return position_; }
+    const Vector2& GetPosition() const {
+        return position_;
+    }
     /// @brief 表示位置（スクリーン座標系）を設定
-    void SetPosition(const Vector2& position) { position_ = position; }
+    void SetPosition(const Vector2& position) {
+        position_ = position;
+    }
 
     /// @brief 回転角（ラジアン）を取得
-    float GetRotation() const { return rotation_; }
+    float GetRotation() const {
+        return rotation_;
+    }
     /// @brief 回転角（ラジアン）を設定
-    void SetRotation(const float rotation) { rotation_ = rotation; }
+    void SetRotation(const float rotation) {
+        rotation_ = rotation;
+    }
 
     /// @brief スプライトのカラー（RGBA）を取得
-    Vector4& GetColor() const { return materialData_->color; }
+    Vector4& GetColor() const {
+        return materialData_->color;
+    }
     /// @brief スプライトのカラー（RGBA）を設定
-    void SetColor(const Vector4& color) { materialData_->color = color; }
+    void SetColor(const Vector4& color) {
+        materialData_->color = color;
+    }
 
     /// @brief 定数バッファに書き込まれている現在のUV変換行列を取得
-    Matrix4x4& GetUV() const { return materialData_->uvTransform; }
+    Matrix4x4& GetUV() const {
+        return materialData_->uvTransform;
+    }
     /// @brief UV変換行列を直接設定
-    void SetUV(Matrix4x4& uvTransform) { materialData_->uvTransform = uvTransform; }
+    void SetUV(Matrix4x4& uvTransform) {
+        materialData_->uvTransform = uvTransform;
+    }
 
     /// @brief 描画サイズ（ピクセル）を取得
-    const Vector2& GetSize() const { return size_; }
+    const Vector2& GetSize() const {
+        return size_;
+    }
     /// @brief 描画サイズ（ピクセル）を設定
-    void SetSize(const Vector2& Size) { this->size_ = Size; }
+    void SetSize(const Vector2& Size) {
+        this->size_ = Size;
+    }
 
     /// @brief アンカーポイント（基準点。左上[0,0]〜右下[1,1]）を取得
-    const Vector2& GetAnchorPoint() const { return anchorPoint_; }
+    const Vector2& GetAnchorPoint() const {
+        return anchorPoint_;
+    }
     /// @brief アンカーポイント（基準点。左上[0,0]〜右下[1,1]）を設定
-    void SetAnchorPoint(const Vector2& anchorPoint) { anchorPoint_ = anchorPoint; }
+    void SetAnchorPoint(const Vector2& anchorPoint) {
+        anchorPoint_ = anchorPoint;
+    }
 
     /// @brief X軸方向の反転フラグを取得
-    bool GetIsFlipX() const { return isFlipX_; }
+    bool GetIsFlipX() const {
+        return isFlipX_;
+    }
     /// @brief X軸方向の反転フラグを設定
-    void SetIsFlipX(bool isFlipX) { isFlipX_ = isFlipX; }
+    void SetIsFlipX(bool isFlipX) {
+        isFlipX_ = isFlipX;
+    }
 
     /// @brief Y軸方向の反転フラグを取得
-    bool GetIsFlipY() const { return isFlipY_; }
+    bool GetIsFlipY() const {
+        return isFlipY_;
+    }
     /// @brief Y軸方向の反転フラグを設定
-    void SetIsFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
+    void SetIsFlipY(bool isFlipY) {
+        isFlipY_ = isFlipY;
+    }
 
     /// @brief テクスチャの切り出し開始左上座標を取得
-    Vector2 GetTextureLeftTop() const { return textureLeftTop; }
+    Vector2 GetTextureLeftTop() const {
+        return textureLeftTop;
+    }
     /// @brief テクスチャの切り出し開始左上座標を設定
-    void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
+    void SetTextureLeftTop(const Vector2& textureLeftTop) {
+        this->textureLeftTop = textureLeftTop;
+    }
 
     /// @brief テクスチャの切り出しサイズを取得
-    Vector2 GetTextureSize() const { return textureSize; }
+    Vector2 GetTextureSize() const {
+        return textureSize;
+    }
     /// @brief テクスチャの切り出しサイズを設定
-    void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
+    void SetTextureSize(const Vector2& textureSize) {
+        this->textureSize = textureSize;
+    }
 
     /// @brief ブレンドモード（Alpha, Addなど）を設定
-    void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
+    void SetBlendMode(BlendMode blendMode) {
+        blendMode_ = blendMode;
+    }
     /// @brief ブレンドモードを取得
-    BlendMode GetBlendMode() const { return blendMode_; }
+    BlendMode GetBlendMode() const {
+        return blendMode_;
+    }
 
     /// @brief フィルモード（Solid, Wireframe）を設定
-    void SetFillMode(FillMode fillMode) { fillMode_ = fillMode; }
+    void SetFillMode(FillMode fillMode) {
+        fillMode_ = fillMode;
+    }
 
     /**
      * @brief 使用するテクスチャを変更
@@ -122,25 +168,62 @@ public:
      */
     void SetTextureByFilePath(const std::string& textureFilePath);
 
+    /**
+     * @brief 切り替え用のテクスチャリスト（配列）にテクスチャを追加登録する
+     * @param textureFilePath 追加するテクスチャのパス
+     * @return 登録されたインデックス番号
+     */
+    size_t RegisterTexture(const std::string& textureFilePath);
+
+    /**
+     * @brief 登録済みのテクスチャリストから、指定した番号のテクスチャに切り替える
+     * @param index 登録されたインデックス
+     */
+    void SetTextureByIndex(size_t index);
+
+    /**
+     * @brief 登録されているテクスチャの総数を取得する
+     */
+    size_t GetRegisteredTextureCount() const {
+        return registeredTextures_.size();
+    }
+
+
     /// @brief UVトランスフォーム構造体（Scale, Rotate, Offset）を取得
-    UVTransform GetUVTransform() const { return uvTransform_; }
+    UVTransform GetUVTransform() const {
+        return uvTransform_;
+    }
     /// @brief UVトランスフォーム構造体をまとめて設定
-    void SetUVTransform(const UVTransform& uvTransform) { uvTransform_ = uvTransform; }
+    void SetUVTransform(const UVTransform& uvTransform) {
+        uvTransform_ = uvTransform;
+    }
 
     /// @brief UVのスケール（反復率）を設定
-    void SetUVScale(const Vector2& scale) { uvTransform_.scale = scale; }
+    void SetUVScale(const Vector2& scale) {
+        uvTransform_.scale = scale;
+    }
     /// @brief UVのスケールを取得
-    Vector2 GetUVScale() const { return uvTransform_.scale; }
+    Vector2 GetUVScale() const {
+        return uvTransform_.scale;
+    }
 
     /// @brief UVの回転角を設定
-    void SetUVRotate(float rotate) { uvTransform_.rotate = rotate; }
+    void SetUVRotate(float rotate) {
+        uvTransform_.rotate = rotate;
+    }
     /// @brief UVの回転角を取得
-    float GetUVRotate() const { return uvTransform_.rotate; }
+    float GetUVRotate() const {
+        return uvTransform_.rotate;
+    }
 
     /// @brief UVのオフセット（シフト移動）を設定
-    void SetUVOffset(const Vector2& offset) { uvTransform_.offset = offset; }
+    void SetUVOffset(const Vector2& offset) {
+        uvTransform_.offset = offset;
+    }
     /// @brief UVのオフセットを取得
-    Vector2 GetUVOffset() const { return uvTransform_.offset; }
+    Vector2 GetUVOffset() const {
+        return uvTransform_.offset;
+    }
 
 private:
     /**
@@ -186,4 +269,15 @@ private:
 
     uint32_t textureIndex_ = 0;        //!< テクスチャマネージャーが管理する固有ID
     std::string textureFilePath_;      //!< 読み込んでいるテクスチャのパス
+
+
+    // ==========================================
+    // 追加: 登録用テクスチャ情報構造体とリスト
+    // ==========================================
+    struct RegisteredTextureInfo {
+        std::string filePath;
+        uint32_t managerIndex;
+    };
+    std::vector<RegisteredTextureInfo> registeredTextures_;
+
 };

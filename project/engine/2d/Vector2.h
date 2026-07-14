@@ -1,4 +1,7 @@
 #pragma once
+
+#include <cstdint>
+
 struct Vector2{
     float x, y;
 
@@ -15,7 +18,6 @@ struct Vector2{
     bool operator==(const Vector2& target);
     bool operator!=(const Vector2& target);
 };
-
 struct int2
 {
     int x, y;
@@ -35,7 +37,7 @@ struct int2
     bool operator!=(const int2& target);
 
 };
-};
+
 struct Gauge {
     int32_t value;  
     int32_t max;
