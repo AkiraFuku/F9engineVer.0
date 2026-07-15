@@ -40,7 +40,7 @@ public:
     void Initialize();
     static TextureManager* GetInstance();
     void Finalize();
-    //テクスチャロード
+    //テクスチャ読込・登録
     void LoadTexture(const std::string& filePath);
     //中間リソース解放
     void ReleaseIntermediateResources();

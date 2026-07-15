@@ -20,6 +20,7 @@ class Enemy;
 class GoalObject;
 class Phase;
 class PlayerHPUI;
+class ScoreUI;
 
 class GameScene :public Scene
 {
@@ -111,6 +112,7 @@ private:
 
      //UI
      std::unique_ptr<PlayerHPUI> playerHPUI_;
+     std::unique_ptr<ScoreUI> scoreUI_;
 
 
 };

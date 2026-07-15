@@ -105,6 +105,8 @@
     <ClCompile Include="application\Phase\Phase.cpp" />
     <ClCompile Include="application\Phase\PlayPhase.cpp" />
     <ClCompile Include="application\UI\PlayerHPUI.cpp" />
+    <ClCompile Include="NumberTex.cpp" />
+    <ClCompile Include="ScoreUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\Phase\ClearPhase.h" />
@@ -184,6 +186,8 @@
     <ClInclude Include="application\Phase\Phase.h" />
     <ClInclude Include="application\Phase\PlayPhase.h" />
     <ClInclude Include="application\UI\PlayerHPUI.h" />
+    <ClInclude Include="ScoreUI.h" />
+    <ClInclude Include="NumberTex.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

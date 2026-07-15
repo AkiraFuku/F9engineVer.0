@@ -29,6 +29,7 @@
 #include "ClearPhase.h"
 #include "defeatPhase.h"
 #include "PlayerHPUI.h"
+#include "ScoreUI.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -171,6 +172,9 @@ void GameScene::Initialize() {
 
     playerHPUI_ = std::make_unique<PlayerHPUI>();
     playerHPUI_->Initialize(player.get());
+
+    scoreUI_ = std::make_unique<ScoreUI>();
+    scoreUI_->Initialize(player.get());
 
     cameraController = std::make_unique<CameraController>();
     cameraController->Initialize(cameraMap_["Main"].get());
@@ -484,6 +488,7 @@ void GameScene::Update() {
 
     }
     playerHPUI_->Update();  
+    scoreUI_->Update();
 
 
 }
@@ -547,6 +552,7 @@ void GameScene::Draw() {
         currentPhase_->Draw(this);
     }
     playerHPUI_->Draw();
+    scoreUI_->Draw();
 
 }
 void GameScene::CheckPhaseTransition()

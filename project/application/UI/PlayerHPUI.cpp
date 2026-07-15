@@ -11,7 +11,7 @@ void PlayerHPUI::Initialize(Player* player)
     player_ = player;
     hpSprite_ = std::make_unique<Sprite>();
     hpSprite_->Initialize("resources/uvChecker.png");
-    hpSprite_->SetAnchorPoint({ 0.0f, 0.0f });
+    hpSprite_->SetAnchorPoint({ Anchor::TopLeft });
     hpSprite_->SetPosition({ position_.x, position_.y });
     hpSprite_->SetSize({ hpSpriteWidth_ * scale_, 20.0f * scale_ });
     // 
