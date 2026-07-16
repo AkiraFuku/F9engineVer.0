@@ -25,7 +25,7 @@ void NormalAttackAction::Execute(Player* player) {
     // 単純なMoveではなく、攻撃用の「瞬間的な移動量」を計算する
     // dashSpeed_ を現在の 0.5f から大幅に上げ（例: 2.0f）、
     // BehaviorAttack のタイマーに合わせて減衰させる処理を Behavior 側で行うのが理想です
-    float moveAmount = float(attackDir) * dashSpeed_;
+    float moveAmount = float(attackDir) * dashSpeed_*DXCommon::kDeltaTime;
     
     player->Move(moveAmount);
 }

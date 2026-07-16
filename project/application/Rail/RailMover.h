@@ -21,6 +21,7 @@ public:
         pProgress_ = externalProgress;
     }
 
+    //
     void Advance(float speed);
 
     float GetProgress() const {

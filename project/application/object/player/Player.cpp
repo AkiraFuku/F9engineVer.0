@@ -50,9 +50,6 @@ void Player::Update()
     HandleInput();
     RayCastUpdate();
     if (baseState_) baseState_->Update(this);
-    // if (behavior_) behavior_->Update(this);
-
-    //UpdateGravity();*/
 
     UpdateRailPath();
 
@@ -101,12 +98,12 @@ void Player::SetRail(RailPath* rail)
 }
 void Player::Move(float ratio)
 {
-    railMover_->Advance(ratio * (kMoveSpeed_));
+    railMover_->Advance(ratio * (kMoveSpeed_*deltaTime_));
 }
 void Player::Jump()
 {
     if (isGrounded_) {
-        velocity_.y = kJumpAcceleration;
+        velocity_.y += kJumpAcceleration*deltaTime_;
         isGrounded_ = false;
     }
 }
@@ -180,7 +177,7 @@ void Player::UpdateGravity()
 
     // 重力の適用（空中のときのみ）
     if (!isGrounded_) {
-        velocity_.y += kGravity;
+        velocity_.y +=( kGravity * gravityScale_) * deltaTime_;
     } else {
         velocity_.y = 0.0f; // 接地しているなら下方向の速度はリセット
     }

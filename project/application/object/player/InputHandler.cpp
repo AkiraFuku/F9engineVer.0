@@ -74,10 +74,10 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
     }
 
     // 射出コマンド (Zキーまたはゲームパッドの特定ボタン)
-    if (input->TriggerKeyDown(DIK_Z) || input->TriggerPadDown(0, XINPUT_GAMEPAD_X)) {
+    if (input->PushedKeyDown(DIK_Z)|| input->PushMouseDown(1)|| input->PushPadDown(0, XINPUT_GAMEPAD_X)) {
         commands.push_back(std::make_unique<PreShootCommand>());
     }
-    if (input->TriggerKeyUp(DIK_Z) || input->TriggerPadUp(0, XINPUT_GAMEPAD_X)) {
+    if (input->TriggerKeyUp(DIK_Z) || input->TriggerMouseUP(1)|| input->TriggerPadUp(0, XINPUT_GAMEPAD_X)) {
         commands.push_back(std::make_unique<ShootCommand>());
     }
 

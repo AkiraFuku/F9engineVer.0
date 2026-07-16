@@ -93,6 +93,8 @@ public:
     void ChangeState(std::unique_ptr<IPlayerState> newState);
     void ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior);
 
+    // レール上の移動を進めるメソッド
+    // ratio: 進行量の比率（0.0f～1.0f）
     void Move(float ratio);
     void Jump();
     void Attack();
@@ -178,14 +180,24 @@ public:
         return hitPoints_.max;
     }
 
+    void SetDeltaTime(float deltaTime= DXCommon::kDeltaTime) {
+        deltaTime_ = deltaTime;
+    }
+
+    void SetGravityScale(float scale) {
+        gravityScale_ = scale;
+    }
+
+
 private:
+    float deltaTime_ = DXCommon::kDeltaTime; // フレームレートに合わせたデルタタイム
 
     // --- 状態管理 ---
     std::unique_ptr<IPlayerState> baseState_; // 現在のプレイヤーの状態管理のためのポインタ
     Scene* scene_;
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
-    const float kMoveSpeed_ = 0.2f; // 好みの速度に調整
+    const float kMoveSpeed_ =12.0f; // 好みの速度に調整
     void UpdateRailPath();
     void HandleInput();
     //無敵・被弾処理
@@ -202,8 +214,9 @@ private:
 
 
 
-    const float kGravity = -0.015f;           // 重力加速度（毎フレーム引く値）
-    const float kJumpAcceleration = 0.4f;     // ジャンプした瞬間の上昇速度
+    float gravityScale_ = 1.0f; // 重力のスケール
+    const float kGravity = -0.9f;           // 重力加速度（毎フレーム引く値）
+    const float kJumpAcceleration = 24.0f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
     //レイキャスト当たり判定用の変数
     Ray ray_;

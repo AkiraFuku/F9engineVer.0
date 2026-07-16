@@ -40,20 +40,20 @@ public:
 
     // --- マウス用 ---
     /// <summary>
-    /// マウスボタンが押されているか
+    /// マウスボタンが押されているか 0:左 1:右 2:中
     /// </summary>
     bool PushMouseDown(int32_t button);
     /// <summary>
-    /// マウスボタンが押されないか
+    /// マウスボタンが押されないか 0:左 1:右 2:中
     /// </summary>
     bool PushMouseUP(int32_t button);
 
     /// <summary>
-    /// マウスボタンがトリガーされたか（押した瞬間）
+    /// マウスボタンがトリガーされたか（押した瞬間）0:左 1:右 2:中
     /// </summary>
     bool TriggerMouseDown(int32_t button);
     /// <summary>
-    /// マウスボタンがトリガーされたか（離した瞬間）
+    /// マウスボタンがトリガーされたか（離した瞬間）0:左 1:右 2:中
     /// </summary>
     bool TriggerMouseUP(int32_t button);
 
