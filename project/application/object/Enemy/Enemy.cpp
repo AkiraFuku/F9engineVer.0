@@ -186,10 +186,10 @@ void Enemy::OnCollision(ICollider* other) {
                 isDamaged_ = true;
                 hitInvincibilityTimer_ = kHitInvincibilityDuration_;
 
-                if (strcmp(GetStateName(), "Normal") == 0) {
+                /*if (strcmp(GetStateName(), "Normal") == 0) {
                     ChangeState(std::make_unique<StateEnemyStan>());
-                } else if (strcmp(GetStateName(), "Stan") == 0) {
-                    // ★ここがポイント：ロボットを持っていればプレイヤーを強制変身させる
+                } else if (strcmp(GetStateName(), "Stan") == 0) {*/
+                    // ★ここがポイント：ロボットを持っていればプレイヤーを変身させる
                     if (robot_ && robot_->CreateRideOnState()) {
                         // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
                         // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
@@ -197,7 +197,7 @@ void Enemy::OnCollision(ICollider* other) {
                     }
 
                     ChangeState(std::make_unique<StateEnemyDead>());
-                }
+                //}
             }
         }
     }
@@ -209,12 +209,6 @@ void Enemy::OnCollision(ICollider* other) {
     ChangeState(std::make_unique<StateEnemyDead>());
     }
 }
-//void Enemy::OnCollision() {
-//    if (isDamaged_ || IsDead()) return;
-//    isDamaged_ = true;
-//    PlayHitEffect();
-//    ChangeState(std::make_unique<StateEnemyDead>());
-//}
 
 void Enemy::UpdateGravity()
 {
