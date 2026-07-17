@@ -27,5 +27,5 @@ void ClearPhase::Draw(Scene * scene)
 
 void ClearPhase::Finalize(Scene * scene)
 {
-//今後何か処理を実装する
+       clearSprite_.reset();
 }

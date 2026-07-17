@@ -72,8 +72,6 @@ public:
 
     void AddEnemy(Vector2 pos);
     void AddProjectile(const Projectile::ProjectileSpawnParam& param, Projectile::ProjectileOwner owner);
-
-
     void AddTriangles(std::vector<Triangle> triangles);
 
 private:
@@ -83,7 +81,6 @@ private:
     void CheckClear();
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Phase> currentPhase_;
-    std::unique_ptr<Phase> nextPhase_;
 
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;

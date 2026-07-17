@@ -20,4 +20,7 @@ void defeatPhase::Draw(Scene* scene)
 }
 
 void defeatPhase::Finalize(Scene* scene)
-{}
+{
+
+       Sprite_.reset();
+}

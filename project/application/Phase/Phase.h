@@ -4,10 +4,13 @@ class Scene;
 class Phase
 {
 public:
-  virtual  void Initialize(Scene* scene )=0;
-  virtual  void Update(Scene* scene )=0;
-  virtual  void Draw(Scene* scene )=0;
-  virtual  void Finalize(Scene* scene )=0;
+
+    virtual ~Phase() = default;  // ← 仮想デストラクタを追加
+
+    virtual  void Initialize(Scene* scene) = 0;
+    virtual  void Update(Scene* scene) = 0;
+    virtual  void Draw(Scene* scene) = 0;
+    virtual  void Finalize(Scene* scene) = 0;
 
 };
 

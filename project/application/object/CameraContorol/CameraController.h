@@ -62,11 +62,22 @@ private:
 	static inline const float kVelocityBias = 30.0f;                     //
 	static inline const Rect targetMargin_ = {-9.0f, 9.0f, -5.0f, 5.0f}; // ターゲットのマージン
 
-	float shakeTimer_ = 0.0f;
-	float shakePower_ = 0.0f;
+	
 
     void RotateCamera();
     void RailCamera();
+    // シェイク用変数
+    float shakeTimer_ = 0.0f;
+	float shakePower_ = 0.0f;
+    Vector3 shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+    // シェイクの更新処理 タイマーとオフセットを更新する
+    void UpdateShake();
+public:
+    void ShakeCamera(float duration=0.1f, float power=1.0f) {
+        shakeTimer_ = duration;
+        shakePower_ = power;
+    }
+
 };
 
 

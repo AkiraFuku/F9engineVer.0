@@ -25,7 +25,7 @@ void GameEngine::Update() {
     Framework::Update();
 
     SceneManager::GetInstance()->Update();
-    ParticleManager::GetInstance()->Update();
+   // ParticleManager::GetInstance()->Update();
 
 
 

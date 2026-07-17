@@ -3,6 +3,7 @@
 #include <memory>
 #include "LightManager.h"
 #include "PrimitiveDrawer.h"
+#include "ParticleManager.h"
 
 // 静的メンバ変数の実体
 std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
@@ -11,8 +12,7 @@ SceneManager* SceneManager::GetInstance() {
     if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public SceneManager {
-            Helper() : SceneManager() {
-            }
+            Helper() : SceneManager() {}
         };
         instance = std::make_unique<Helper>();
     }
@@ -37,16 +37,18 @@ void SceneManager::Update() {
     if (nextScene_) {
         if (scene_) {
             scene_->Finalize();
+            ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
             scene_ = nullptr;
         }
         scene_ = std::move(nextScene_);
         scene_->SetSceneManager(this);
+
         scene_->Initialize();
     }
     if (scene_) {
         scene_->Update();
         LightManager::GetInstance()->Update();
-
+        ParticleManager::GetInstance()->Update();
     }
 }
 

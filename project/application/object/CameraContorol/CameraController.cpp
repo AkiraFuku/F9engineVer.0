@@ -7,6 +7,7 @@
 #include "RailMover.h"
 #include "RailPath.h"
 #include "Imgui.h"
+#include <cstdlib>
 using namespace std;
 CameraController::CameraController() = default;
 CameraController::~CameraController() = default;
@@ -42,6 +43,8 @@ void CameraController::Update() {
 
 
     RailCamera();
+
+    UpdateShake();
 
     RotateCamera();
 
@@ -101,4 +104,33 @@ void CameraController::RailCamera()
     railMover_->SyncWith(target_->GetRailMover());
     // 座標更新
     camera_->SetTranslate(railMover_->GetCurrentPosition());
+}
+
+void CameraController::UpdateShake()
+{
+    if (shakeTimer_ > 0.0f)
+    {
+        // -1.0f 〜 1.0f のランダムな値を生成し、パワーを掛ける
+        float rx = (((float)std::rand() / RAND_MAX) * 2.0f - 1.0f) * shakePower_;
+        float ry = (((float)std::rand() / RAND_MAX) * 2.0f - 1.0f) * shakePower_;
+
+        // 上下左右（XとY）に揺らすオフセットを設定
+        shakeOffset_ = { rx, ry, 0.0f };
+
+        // 現在のカメラ座標にシェイクのズレを加算して再設定
+        Vector3 currentPos = camera_->GetTranslate();
+        camera_->SetTranslate(currentPos + shakeOffset_);
+
+        // タイマーを減らす (1フレームあたりの時間。60FPS想定で 1/60 秒。デルタタイムが取得できる場合は置き換えてください)
+        shakeTimer_ -= DXCommon::kDeltaTime;
+        if (shakeTimer_ <= 0.0f)
+        {
+            shakeTimer_ = 0.0f;
+            shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+        }
+    }
+    else
+    {
+        shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+    }
 }

@@ -283,65 +283,17 @@ void GameScene::Initialize() {
     GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
 }
-void GameScene::Finalize() {
-
-    ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
+void GameScene::Finalize() {    
+    // パーティクルマネージャーのクリア
+   // ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
+
 void GameScene::Update() {
     // CheckClear();
 
     CheckPhaseTransition();
 
-    //XINPUT_STATE state;
-
-    //// 現在のジョイスティックを取得
-    //if (Input::GetInstance()->TriggerMouseDown(0))
-    //{
-    //    if (Audio::GetInstance()->IsPlaying(handle_))
-    //    {
-    //        Audio::GetInstance()->PauseAudio(handle_);
-    //    } else
-    //    {
-    //        Audio::GetInstance()->ResumeAudio(handle_);
-
-    //    }
-    //}
-
-
-    //Input::GetInstance()->GetJoyStick(0, state);
-
-
-
-    //if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
-    //{
-    //    Vector3 cameraTranslate = activeCamera_->GetRotate();
-    //    cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
-    //    activeCamera_->SetRotate(cameraTranslate);
-
-    //}
-
-    ////マウスホイールの入力取得
-
-    //if (Input::GetInstance()->GetMouseMove().z)
-    //{
-    //    Vector3 cameraTranslate = cameraMap_["Main"]->GetTranslate();
-    //    cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-    //    cameraMap_["Main"]->SetTranslate(cameraTranslate);
-
-    //}
-    //if (Input::GetInstance()->GetJoyStick(0, state))
-    //{
-    //    // 左スティックの値を取得
-    //    float x = (float)state.Gamepad.sThumbLX;
-    //    float y = (float)state.Gamepad.sThumbLY;
-
-    //    // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
-    //    float normalizedX = x / 32767.0f;
-    //    float normalizedY = y / 32767.0f;
-    //    Vector3 cameraTranslate = activeCamera_->GetRotate();
-    //    cameraTranslate = Add(cameraTranslate, Vector3{ normalizedY / 60.0f,normalizedX / 60.0f,0.0f });
-    //    activeCamera_->SetRotate(cameraTranslate);
-    //}
+   
 
     debugCameraC->Update();
 
@@ -607,16 +559,17 @@ void GameScene::CheckPhaseTransition()
 }
 void GameScene::ChangePhase(std::unique_ptr<Phase> nextPhase)
 {
-
-    nextPhase_ = std::move(nextPhase);
+    // 現在のフェーズをクリア
     if (currentPhase_) {
         currentPhase_->Finalize(this);
+        currentPhase_.reset();
     }
-    currentPhase_ = std::move(nextPhase_);
+    
+    // 新しいフェーズを設定して初期化
+    currentPhase_ = std::move(nextPhase);
     if (currentPhase_) {
         currentPhase_->Initialize(this);
     }
-
 }
 void GameScene::CheckPlayerFall()
 {
