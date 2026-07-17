@@ -1,6 +1,7 @@
 #pragma once
 #include "Vector2.h"
 #include "Vector3.h"
+#include <functional>
 #include <memory>
 class Object3d;
 struct Move {
@@ -40,7 +41,15 @@ public:
     
 
 	void Reset();
-	void RequestShake(float duration, float power);
+	// シェイクを要求する関数（デフォルトで二次関数的な減衰イージングを指定）
+    void RequestShake(
+        float duration, 
+        float power, 
+        std::function<float(float)> easingFunc = [](float t) { return (1.0f - t) * (1.0f - t); } // EaseOutQuad のような減衰
+    );
+    void ShakeCamera(float duration = 0.1f, float power = 1.0f) {
+        RequestShake(duration, power);
+    }
 	void SetClearOffset() { 
         // プレイヤーに近づける（Zを近づけ、少し見上げるような座標にする例）
         targetOffsetGoal_ = {0.0f, 0.0f, -6.0f}; 
@@ -67,16 +76,16 @@ private:
     void RotateCamera();
     void RailCamera();
     // シェイク用変数
-    float shakeTimer_ = 0.0f;
-	float shakePower_ = 0.0f;
+   float shakeTimer_ = 0.0f;
+    float shakeDuration_ = 0.0f; // 追加: シェイク開始時のトータル時間を記録
+    float shakePower_ = 0.0f;
     Vector3 shakeOffset_ = { 0.0f, 0.0f, 0.0f };
-    // シェイクの更新処理 タイマーとオフセットを更新する
+
+    // 追加: イージング関数を保存する変数
+    std::function<float(float)> shakeEasing_ = nullptr;
     void UpdateShake();
-public:
-    void ShakeCamera(float duration=0.1f, float power=1.0f) {
-        shakeTimer_ = duration;
-        shakePower_ = power;
-    }
+
+
 
 };
 

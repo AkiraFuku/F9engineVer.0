@@ -43,11 +43,9 @@ void CameraController::Update() {
 
 
     RailCamera();
-
-    UpdateShake();
-
     RotateCamera();
-
+    // シェイクの更新
+     UpdateShake();
     camera_->Update();
 }
 
@@ -74,10 +72,7 @@ void CameraController::Reset() {
 
 }
 
-void CameraController::RequestShake(float duration, float power) {
-    shakeTimer_ = duration;
-    shakePower_ = power;
-}
+
 
 void CameraController::RotateCamera() {
     if (!target_ || !camera_) return;
@@ -106,27 +101,46 @@ void CameraController::RailCamera()
     camera_->SetTranslate(railMover_->GetCurrentPosition());
 }
 
+void CameraController::RequestShake(float duration, float power, std::function<float(float)> easingFunc) {
+    if (duration <= 0.0f) return;
+    
+    shakeTimer_ = duration;
+    shakeDuration_ = duration; // 最大時間を保存
+    shakePower_ = power;
+    shakeEasing_ = easingFunc; // イージング関数を登録
+}
+
 void CameraController::UpdateShake()
 {
     if (shakeTimer_ > 0.0f)
     {
-        // -1.0f 〜 1.0f のランダムな値を生成し、パワーを掛ける
-        float rx = (((float)std::rand() / RAND_MAX) * 2.0f - 1.0f) * shakePower_;
-        float ry = (((float)std::rand() / RAND_MAX) * 2.0f - 1.0f) * shakePower_;
+        // 残り時間の割合 (1.0 から始まって 0.0 に近づく)
+        float progress = shakeTimer_ / shakeDuration_;
 
-        // 上下左右（XとY）に揺らすオフセットを設定
+        // イージングを適用して現在のパワーを計算
+        float currentPower = shakePower_;
+        if (shakeEasing_) {
+            currentPower = shakePower_ * shakeEasing_(progress);
+        }
+
+        // 減衰したパワーでランダムなズレを計算
+        float rx = (((float)std::rand() / RAND_MAX) * 2.0f - 1.0f) * currentPower;
+        float ry = (((float)std::rand() / RAND_MAX) * 2.0f - 1.0f) * currentPower;
+
         shakeOffset_ = { rx, ry, 0.0f };
 
-        // 現在のカメラ座標にシェイクのズレを加算して再設定
+        // 現在のカメラ座標にシェイクを足す
         Vector3 currentPos = camera_->GetTranslate();
         camera_->SetTranslate(currentPos + shakeOffset_);
 
-        // タイマーを減らす (1フレームあたりの時間。60FPS想定で 1/60 秒。デルタタイムが取得できる場合は置き換えてください)
+        // タイマー更新
         shakeTimer_ -= DXCommon::kDeltaTime;
         if (shakeTimer_ <= 0.0f)
         {
             shakeTimer_ = 0.0f;
+            shakeDuration_ = 0.0f;
             shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+            shakeEasing_ = nullptr;
         }
     }
     else

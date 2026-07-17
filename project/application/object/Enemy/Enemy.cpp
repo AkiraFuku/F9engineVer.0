@@ -12,6 +12,7 @@
 #include "Robot.h"
 #include "ParticleEmitter.h"
 #include "GameScene.h"
+#include "CameraController.h"
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
 void Enemy::SetRobot(std::unique_ptr<Robot> robot) {
@@ -186,29 +187,34 @@ void Enemy::OnCollision(ICollider* other) {
 
                 //　ゲームシーンを持っているならヒットストップを起こす
 
-                dynamic_cast<GameScene*>(scene_)->TriggerHitStop(); // 0.1秒のヒットストップ
+                dynamic_cast<GameScene*>(scene_)->TriggerHitStop(0.1f); // 0.1秒のヒットストップ
+                dynamic_cast<GameScene*>(scene_)->GetCamera()->RequestShake(0.09f, 3.0f, [](float t) {
+                    float inv = 1.0f - t;
+                    return inv * inv * inv; // float型を返す
+                    }); // 0.1秒のシェイク
+
 
                 PlayHitEffect();
                 isDamaged_ = true;
                 hitInvincibilityTimer_ = kHitInvincibilityDuration_;
-                    // ★ここがポイント：ロボットを持っていればプレイヤーを変身させる
-                    if (robot_ && robot_->CreateRideOnState()) {
-                        // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
-                        // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
-                        player->ChangeState(robot_->CreateRideOnState());
-                    }
+                // ★ここがポイント：ロボットを持っていればプレイヤーを変身させる
+                if (robot_ && robot_->CreateRideOnState()) {
+                    // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
+                    // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
+                    player->ChangeState(robot_->CreateRideOnState());
+                }
 
-                    ChangeState(std::make_unique<StateEnemyDead>());
-               
+                ChangeState(std::make_unique<StateEnemyDead>());
+
             }
         }
     }
     //　弾カテゴリの判定
-    if (other->GetCategory()==CollisionCategory::PlayerProjectile)
+    if (other->GetCategory() == CollisionCategory::PlayerProjectile)
     {
-         isDamaged_ = true;
-    PlayHitEffect();
-    ChangeState(std::make_unique<StateEnemyDead>());
+        isDamaged_ = true;
+        PlayHitEffect();
+        ChangeState(std::make_unique<StateEnemyDead>());
     }
 }
 
