@@ -43,6 +43,8 @@ private:
 
     Player* player_ = nullptr;
     std::vector<Enemy*> enemies_;
+    // 衝突判定の実装（球体判定）
+    // A優先で衝突判定を行う
     void CheckCollision(ICollider* a, ICollider* b);
 
     //// 2点間の球判定（必要に応じて引数を調整してください）

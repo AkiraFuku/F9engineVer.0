@@ -9,8 +9,7 @@
 #include "Enemy.h"
 
 void PlayPhase::Initialize(Scene* scene)
-{
-}
+{}
 
 void PlayPhase::Update(Scene* scene)
 {
@@ -19,9 +18,17 @@ void PlayPhase::Update(Scene* scene)
     gameScene->GetGoal()->Update();
     gameScene->GetCamera()->Update();
     gameScene->GetStageRaill()->Update();
+
+   
+
+    // 2. ヒットストップ中はキャラクターや物理演算、衝突判定の更新をスキップする
+    if (gameScene->IsHitStopActive()) {
+        return; // ここから下の更新・衝突判定は一切行わない
+    }
+
     gameScene->GetPlayer()->Update();
 
-  // --- 修正箇所: auto& (参照) で受け取る ---
+    // --- 修正箇所: auto& (参照) で受け取る ---
     const auto& projectiles = gameScene->GetProjectile();
     for (auto& projectile : projectiles) {
         if (projectile) {
@@ -37,19 +44,15 @@ void PlayPhase::Update(Scene* scene)
         enemy->Update();
     }
     // ※同様にここでの erase も削除します。
-
-    // --- 衝突判定の実行 ---
+     // --- 衝突判定の実行 ---
     CollisionManager* colManager = CollisionManager::GetInstance();
-
-
     colManager->CheckAllCollisions();
+
 
 }
 
 void PlayPhase::Draw(Scene* scene)
-{
-}
+{}
 
 void PlayPhase::Finalize(Scene* scene)
-{
-}
+{}

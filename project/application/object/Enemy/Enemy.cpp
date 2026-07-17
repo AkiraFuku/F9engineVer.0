@@ -11,6 +11,7 @@
 #include "imgui.h"
 #include "Robot.h"
 #include "ParticleEmitter.h"
+#include "GameScene.h"
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
 void Enemy::SetRobot(std::unique_ptr<Robot> robot) {
@@ -182,13 +183,14 @@ void Enemy::OnCollision(ICollider* other) {
         if (playerState && strcmp(playerState, "Normal") == 0) {
             //攻撃中ならエネミーの状態遷移
             if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+
+                //　ゲームシーンを持っているならヒットストップを起こす
+
+                dynamic_cast<GameScene*>(scene_)->TriggerHitStop(); // 0.1秒のヒットストップ
+
                 PlayHitEffect();
                 isDamaged_ = true;
                 hitInvincibilityTimer_ = kHitInvincibilityDuration_;
-
-                /*if (strcmp(GetStateName(), "Normal") == 0) {
-                    ChangeState(std::make_unique<StateEnemyStan>());
-                } else if (strcmp(GetStateName(), "Stan") == 0) {*/
                     // ★ここがポイント：ロボットを持っていればプレイヤーを変身させる
                     if (robot_ && robot_->CreateRideOnState()) {
                         // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
@@ -197,7 +199,7 @@ void Enemy::OnCollision(ICollider* other) {
                     }
 
                     ChangeState(std::make_unique<StateEnemyDead>());
-                //}
+               
             }
         }
     }

@@ -35,12 +35,6 @@ void CollisionManager::CheckCollision(ICollider* a, ICollider* b) {
     }
 }
 
-
-
-
-
-
-
 void CollisionManager::SetScene(GameScene* scene)
 {
     scene_ = scene;
@@ -51,23 +45,6 @@ void CollisionManager::SetScene(GameScene* scene)
 void CollisionManager::Finalize() {
     instance.reset();
 }
-
-//
-//void CollisionManager::CheckPlayerEnemyCollision(Player* p, Enemy* e) {
-//    Vector3 posP = p->GetTransform().translate;
-//    Vector3 posE = e->GetTransform().translate;
-//
-//    float distanceSq = Length(Subtract(posP, posE));
-//
-//    // 半径を仮に 1.0f ずつとして、距離の2乗で判定 (1.0 + 1.0)^2 = 4.0
-//    float radiusSum = p->GetRadius() + e->GetRadius();
-//    if (distanceSq <= radiusSum) {
-//        // --- ここでプレイヤーとエネミーに通知する ---
-//
-//        e->OnCollision(p);
-//        p->OnCollision(e);
-//    }
-//}
 void CollisionManager::CheckAllCollisions() {
     Clear();
     if (scene_)

@@ -238,13 +238,13 @@ void GameScene::Initialize() {
     AddEnemy({ 0.3f, 0.0f });
     AddEnemy({ 0.4f, 0.0f });
 
-        goal_ = std::make_unique<GoalObject>();
+    goal_ = std::make_unique<GoalObject>();
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
     goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
 
-    goal_->SetRailPosition({ stageRail->GetMaxT()-1.0f, 0.0f }); // レールの終端付近に配置
+    goal_->SetRailPosition({ stageRail->GetMaxT() - 1.0f, 0.0f }); // レールの終端付近に配置
 
 
 
@@ -270,17 +270,17 @@ void GameScene::Initialize() {
     GameScene::AddTriangles(boxObject_->GetWorldTriangles());
 
 
-      ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
-        TestGround_ = std::make_unique<Object3d>();
-        TestGround_->Initialize();
+    ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
+    TestGround_ = std::make_unique<Object3d>();
+    TestGround_->Initialize();
 
-        TestGround_->SetModel("TentativeStage.obj");
-        TestGround_->SetCamera(activeCamera_);
-        TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-        TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
+    TestGround_->SetModel("TentativeStage.obj");
+    TestGround_->SetCamera(activeCamera_);
+    TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
+    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
 
 
-        GameScene::AddTriangles(TestGround_->GetWorldTriangles());
+    GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
 }
 void GameScene::Finalize() {
@@ -292,60 +292,62 @@ void GameScene::Update() {
 
     CheckPhaseTransition();
 
-    XINPUT_STATE state;
+    //XINPUT_STATE state;
 
-    // 現在のジョイスティックを取得
-    if (Input::GetInstance()->TriggerMouseDown(0))
-    {
-        if (Audio::GetInstance()->IsPlaying(handle_))
-        {
-            Audio::GetInstance()->PauseAudio(handle_);
-        } else
-        {
-            Audio::GetInstance()->ResumeAudio(handle_);
+    //// 現在のジョイスティックを取得
+    //if (Input::GetInstance()->TriggerMouseDown(0))
+    //{
+    //    if (Audio::GetInstance()->IsPlaying(handle_))
+    //    {
+    //        Audio::GetInstance()->PauseAudio(handle_);
+    //    } else
+    //    {
+    //        Audio::GetInstance()->ResumeAudio(handle_);
 
-        }
-    }
-
-
-    Input::GetInstance()->GetJoyStick(0, state);
+    //    }
+    //}
 
 
+    //Input::GetInstance()->GetJoyStick(0, state);
 
-    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
-    {
-        Vector3 cameraTranslate = activeCamera_->GetRotate();
-        cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
-        activeCamera_->SetRotate(cameraTranslate);
 
-    }
 
-    //マウスホイールの入力取得
+    //if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_DPAD_RIGHT))
+    //{
+    //    Vector3 cameraTranslate = activeCamera_->GetRotate();
+    //    cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,1 / 60.0f,0.0f });
+    //    activeCamera_->SetRotate(cameraTranslate);
 
-    if (Input::GetInstance()->GetMouseMove().z)
-    {
-        Vector3 cameraTranslate = cameraMap_["Main"]->GetTranslate();
-        cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-        cameraMap_["Main"]->SetTranslate(cameraTranslate);
+    //}
 
-    }
-    if (Input::GetInstance()->GetJoyStick(0, state))
-    {
-        // 左スティックの値を取得
-        float x = (float)state.Gamepad.sThumbLX;
-        float y = (float)state.Gamepad.sThumbLY;
+    ////マウスホイールの入力取得
 
-        // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
-        float normalizedX = x / 32767.0f;
-        float normalizedY = y / 32767.0f;
-        Vector3 cameraTranslate = activeCamera_->GetRotate();
-        cameraTranslate = Add(cameraTranslate, Vector3{ normalizedY / 60.0f,normalizedX / 60.0f,0.0f });
-        activeCamera_->SetRotate(cameraTranslate);
-    }
+    //if (Input::GetInstance()->GetMouseMove().z)
+    //{
+    //    Vector3 cameraTranslate = cameraMap_["Main"]->GetTranslate();
+    //    cameraTranslate = Add(cameraTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
+    //    cameraMap_["Main"]->SetTranslate(cameraTranslate);
+
+    //}
+    //if (Input::GetInstance()->GetJoyStick(0, state))
+    //{
+    //    // 左スティックの値を取得
+    //    float x = (float)state.Gamepad.sThumbLX;
+    //    float y = (float)state.Gamepad.sThumbLY;
+
+    //    // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
+    //    float normalizedX = x / 32767.0f;
+    //    float normalizedY = y / 32767.0f;
+    //    Vector3 cameraTranslate = activeCamera_->GetRotate();
+    //    cameraTranslate = Add(cameraTranslate, Vector3{ normalizedY / 60.0f,normalizedX / 60.0f,0.0f });
+    //    activeCamera_->SetRotate(cameraTranslate);
+    //}
 
     debugCameraC->Update();
 
     activeCamera_->Update();
+
+    UpdateHitStop();
     if (currentPhase_)
     {
         currentPhase_->Update(this);
@@ -467,6 +469,27 @@ void GameScene::Update() {
         stageRail->Update();
     }
     ImGui::End();
+
+
+    if (IsHitStopActive())
+    {
+        ImGui::Begin("Hit Stop Debug");
+
+        // HitStopの残り時間を表示
+        ImGui::Text("Hit Stop Remaining Time: %.2f seconds", stopTimer_);
+        // HitStopの残り時間をゲージで表示
+        ImGui::ProgressBar(stopTimer_ / 0.1f, ImVec2(0, 0), "Hit Stop Progress");
+
+        ImGui::End();
+
+
+
+
+    }
+
+
+
+
 #endif // USE_IMGUI
 
     triangles_.clear();
@@ -487,7 +510,7 @@ void GameScene::Update() {
         triangles_.insert(triangles_.end(), testGroundTris.begin(), testGroundTris.end());
 
     }
-    playerHPUI_->Update();  
+    playerHPUI_->Update();
     scoreUI_->Update();
 
 
@@ -625,6 +648,7 @@ void GameScene::AddEnemy(Vector2 pos)
         newEnemy->SetCamera(cameraMap_["Main"].get());
         newEnemy->SetRail(stageRail.get());
         newEnemy->SetRailPosition(pos);
+        newEnemy->SetScene(this); // GameSceneのポインタを渡す
 
         // ベクターに追加
         enemies_.push_back(std::move(newEnemy));
@@ -667,5 +691,12 @@ void GameScene::CheckClear()
         // 次のシーン（例: TitleScene や ResultScene）へ遷移（仮）
         GetSceneManager()->ChangeScene("TitleScene");
         return; // 遷移が決まったら以降の更新は不要
+    }
+}
+
+void GameScene::UpdateHitStop()
+{
+    if (stopTimer_ > 0) {
+        stopTimer_ -= DXCommon::kDeltaTime;
     }
 }

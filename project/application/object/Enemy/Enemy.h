@@ -3,6 +3,7 @@
 #include "Transform.h"
 #include "Object3d.h"
 #include "ICollider.h"
+#include "Scene.h"
 class Camera;
 class RailMover;
 class RailPath;
@@ -11,6 +12,7 @@ class IEnemyState; // 前方宣言
 class Player; // Enemy.h の場合
 class Robot; // Enemy.h の場合
 class ParticleEmitter; // Enemy.h の場合
+
 class Enemy : public ICollider
 {
 public:
@@ -100,6 +102,9 @@ public:
         return robot_.get();
     }
 
+    void SetScene(Scene* scene) {
+        scene_ = scene;
+    }
 
 protected:
     std::unique_ptr<Object3d> object_;
@@ -133,4 +138,6 @@ protected:
     //enemyの当たり判定
 
     float radius_ = 1.0f; // 当たり判定の半径
+
+    Scene* scene_ = nullptr; // Enemyが所属するシーンへのポインタ
 };
