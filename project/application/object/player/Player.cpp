@@ -158,13 +158,13 @@ void Player::UpdateGravity()
 
     // レイ判定の結果から接地状態を決める
     if (isRayHit_) {
-        groundY_ = rayHitPoint_.y;
+        rayHitPalamata_.groundY = rayHitPoint_.y;
 
         const float kGroundEpsilon = 0.05f;
         float playerBottomY = worldY_ - kHeightOffset;
 
         // 【修正ポイント】上昇中（velocity_.y > 0.0f）は絶対に接地判定にしない
-        if (velocity_.y <= 0.0f && playerBottomY <= groundY_ + kGroundEpsilon) {
+        if (velocity_.y <= 0.0f && playerBottomY <= rayHitPalamata_.groundY + kGroundEpsilon) {
             isGrounded_ = true;
         } else {
             isGrounded_ = false;
@@ -172,7 +172,7 @@ void Player::UpdateGravity()
     } else {
         // レイが当たっていなければ空中
         isGrounded_ = false;
-        groundY_ = -FLT_MAX;
+        rayHitPalamata_.groundY = -FLT_MAX;
     }
 
     // 重力の適用（空中のときのみ）
@@ -187,12 +187,12 @@ void Player::UpdateGravity()
 
     // 地面にめり込んでいたら、床の高さぴったりに補正する
     if (isGrounded_ && isRayHit_) {
-        worldY_ = groundY_ + kHeightOffset; // 例: 床の上にプレイヤーを配置
+        worldY_ =rayHitPalamata_.groundY + kHeightOffset; // 例: 床の上にプレイヤーを配置
     }
 
     //// レイすら当たらない完全な奈落の場合の最低保証
-    if (!isRayHit_ && worldY_ <= minY + kHeightOffset) {
-        worldY_ = minY + kHeightOffset;
+    if (!isRayHit_ && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
+        worldY_ = rayHitPalamata_.minY + kHeightOffset;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }
@@ -211,10 +211,10 @@ void Player::RayCastUpdate()
     }
 
     ray_.origin = object_->GetTranslate();
-    ray_.origin.y += rayOffset; // 始点を上に持ち上げる
+    ray_.origin.y +=rayHitPalamata_. rayOffset; // 始点を上に持ち上げる
 
     // 持ち上げた分、レイの長さを伸ばす（あるいは床の下まで届く十分な長さに設定）
-    ray_.diff = { 0.0f, -10.0f - rayOffset, 0.0f };
+    ray_.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
     // 毎フレーム初期化
     isRayHit_ = false;
     rayHitDistance_ = FLT_MAX;
@@ -381,9 +381,9 @@ void Player::ImGuiDrawDebugInfo() {
     ImGui::Text("Raycast Hit Order: %s", resultStr.c_str());
 
     //レイキャストによる地面の高さを表示
-    if (groundY_ != -FLT_MAX)
+    if (rayHitPalamata_.groundY != -FLT_MAX)
     {
-        ImGui::Text("Ground Y: %.3f", groundY_);
+        ImGui::Text("Ground Y: %.3f", rayHitPalamata_.groundY);
     }
 
 

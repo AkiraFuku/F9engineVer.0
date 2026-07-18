@@ -14,7 +14,7 @@ enum class CollisionCategory {
 };
 class ICollider
 {
-    public:
+public:
     virtual ~ICollider() = default;
 
     // 衝突時に呼ばれる通知関数
@@ -29,16 +29,30 @@ class ICollider
     /// <returns></returns>
     virtual CollisionCategory GetCategory() const = 0;
 
-    //virtual const AABB& GetBoundingBox() const {
-    //    return boundingBox_;
-    //}
-    //virtual void UpdateBoundingBox() = 0; // AABBを更新するための関数
-    //virtual bool TestCollision(const ICollider* other) const = 0; // 他のコライダーとの衝突判定
- 
+    /// <summary>
+    /// レイキャスト（接地判定など）の更新処理
+    /// デフォルトでは何もしないため、不要なオブジェクトは実装しなくてOK
+    /// </summary>
+    virtual void RayCastUpdate() {};
 
+    //
+    struct GroundRayPalamata
+    {
+        //レイキャスト当たり判定用の変数
+        float groundY = 0.0f;
+        float rayOffset = 1.0f;
+        const float minY = -10.0f; // 地面の最低Y座標
+        const float kRayOffset = 2.0f; // レイの始点を上に持ち上げるオフセット
+
+    };
 
 protected:
-        AABB boundingBox_; // 衝突判定用のAABB
+    Ray ray_;
+    bool isRayHit_ = false;
+    Vector3 rayHitPoint_ = {};
+    float rayHitDistance_ = 0.0f;
+    Triangle rayHitTriangle_ = {};
+    RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
 
 };
 

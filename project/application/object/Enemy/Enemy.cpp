@@ -13,6 +13,7 @@
 #include "ParticleEmitter.h"
 #include "GameScene.h"
 #include "CameraController.h"
+#include "PrimitiveDrawer.h"
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
 void Enemy::SetRobot(std::unique_ptr<Robot> robot) {
@@ -46,7 +47,7 @@ void Enemy::Update()
             isDamaged_ = false; // クールダウン終了
         }
     }
-
+    RayCastUpdate();
     // 1. 現在の状態を更新
     if (state_) {
         state_->Update(this);
@@ -154,9 +155,6 @@ void Enemy::ChangeState(std::unique_ptr<IEnemyState> newState) {
 }
 
 void Enemy::UpdatePhysics() {
-    // Player::UpdateRailPath() と同様のロジック
-
-
     Vector3 railPos = railMover_->GetCurrentPosition();
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
     object_->SetTranslate(finalPos);
@@ -218,15 +216,103 @@ void Enemy::OnCollision(ICollider* other) {
     }
 }
 
+void Enemy::RayCastUpdate()
+{
+    if (!scene_) return;
+    auto gs = dynamic_cast<GameScene*>(scene_);
+    if (!gs) return;
+
+    const std::vector<Triangle>& triangles = gs->GetTriangle();
+    if (triangles.empty()) {
+        isRayHit_ = false;
+        rayHitDistance_ = FLT_MAX;
+        return;
+    }
+
+    ray_.origin = object_->GetTranslate();
+    ray_.origin.y += rayHitPalamata_.rayOffset; // 始点を上に持ち上げる
+
+    // 持ち上げた分、レイの長さを伸ばす（あるいは床の下まで届く十分な長さに設定）
+    ray_.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
+    // 毎フレーム初期化
+    isRayHit_ = false;
+    rayHitDistance_ = FLT_MAX;
+    result_ = RayTriangleCollisionResult::NoCollision;
+
+    rayHitPoint_ = { 0.0f, 0.0f, 0.0f };
+    rayHitTriangle_ = Triangle{};
+
+
+    for (const auto& tri : triangles) {
+        Vector3 tmpHit = {};
+        float dist = 0.0f;
+        RayTriangleCollisionResult result;
+
+        if (CheckRayTriangle(ray_, tri, &dist, &tmpHit, &result)) {
+            // 【重要】表面（FrontFace）に当たったときだけを処理対象にする
+            // 裏面（BackFace）は立方体の内側などなので、接地用の床としては無視する
+            if (result == RayTriangleCollisionResult::FrontFace) {
+
+                // 表面に当たった中で、最も近い（最も高い位置にある）床を選択
+                if (dist < rayHitDistance_) {
+                    rayHitDistance_ = dist;
+                    rayHitTriangle_ = tri;
+                    rayHitPoint_ = tmpHit;
+
+                    isRayHit_ = true; // 表面に最短で当たっているので確実に true
+                }
+            }
+            result_ = result;
+        }
+    }
+
+    // デバッグ描画
+    PrimitiveDrawer::GetInstance()->DrawLine(ray_.origin, Add(ray_.origin, ray_.diff),
+        isRayHit_ ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
+    if (isRayHit_) {
+        PrimitiveDrawer::GetInstance()->DrawSphere({ rayHitPoint_, 0.05f, {} }, { 0,0,1,1 });
+    }
+}
+
 void Enemy::UpdateGravity()
 {
-    if (!isGrounded_) {
-        velocity_.y += kGravity;
+    // レイ判定の結果から接地状態を決める
+    if (isRayHit_) {
+        rayHitPalamata_.groundY = rayHitPoint_.y;
+
+        const float kGroundEpsilon = 0.05f;
+        float playerBottomY = worldY_ - kHeightOffset;
+
+        // 【修正ポイント】上昇中（velocity_.y > 0.0f）は絶対に接地判定にしない
+        if (velocity_.y <= 0.0f && playerBottomY <= rayHitPalamata_.groundY + kGroundEpsilon) {
+            isGrounded_ = true;
+        } else {
+            isGrounded_ = false;
+        }
+    } else {
+        // レイが当たっていなければ空中
+        isGrounded_ = false;
+        rayHitPalamata_.groundY = -FLT_MAX;
     }
+
+    // 重力の適用（空中のときのみ）
+    if (!isGrounded_) {
+        velocity_.y += (kGravity * gravityScale_) * deltaTime_;
+    } else {
+        velocity_.y = 0.0f; // 接地しているなら下方向の速度はリセット
+    }
+
+    // 位置更新（速度を適用）
     worldY_ += velocity_.y;
 
-    if (worldY_ <= 0.0f) {
-        worldY_ = 0.0f;
+    // 地面にめり込んでいたら、床の高さぴったりに補正する
+    if (isGrounded_ && isRayHit_) {
+        worldY_ = rayHitPalamata_.groundY + kHeightOffset; // 例: 床の上にプレイヤーを配置
+    }
+
+    //// レイすら当たらない完全な奈落の場合の最低保証
+    if (!isRayHit_ && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
+        worldY_ = rayHitPalamata_.minY + kHeightOffset;
         velocity_.y = 0.0f;
         isGrounded_ = true;
     }

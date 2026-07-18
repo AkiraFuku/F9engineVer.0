@@ -80,6 +80,8 @@ public:
         return isGrounded_;
     }
 
+     //レイキャスト判定処理
+    void RayCastUpdate()override;
     void UpdateGravity(); // 重力の更新処理
     // enemy状態取得
     IEnemyState* GetState() {
@@ -107,6 +109,8 @@ public:
     }
 
 protected:
+    float deltaTime_ = DXCommon::kDeltaTime; // フレームレートに合わせたデルタタイム
+
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
     Camera* camera_ = nullptr;
@@ -119,7 +123,8 @@ protected:
     bool isGrounded_ = true;
     float worldY_ = 0.0f;
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
-    const float kGravity = -0.015f;
+  float gravityScale_ = 1.0f; // 重力のスケール
+    const float kGravity = -0.9f;           // 重力加速度（毎フレーム引く値）
 
 
     void UpdatePhysics(); // 重力やレール座標の合成処理
@@ -140,4 +145,8 @@ protected:
     float radius_ = 1.0f; // 当たり判定の半径
 
     Scene* scene_ = nullptr; // Enemyが所属するシーンへのポインタ
+
+     ICollider::GroundRayPalamata rayHitPalamata_;
+    const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
+
 };

@@ -117,7 +117,7 @@ public:
     //重力の更新処理
     void UpdateGravity();
     //レイキャスト判定処理
-    void RayCastUpdate();
+    void RayCastUpdate()override;
 
 
     //プレイヤーの状態を取得するための関数
@@ -218,28 +218,15 @@ private:
     const float kGravity = -0.9f;           // 重力加速度（毎フレーム引く値）
     const float kJumpAcceleration = 24.0f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
+
+
     //レイキャスト当たり判定用の変数
-    Ray ray_;
-    bool isRayHit_ = false;
-    Vector3 rayHitPoint_ = {};
-    float rayHitDistance_ = 0.0f;
-    Triangle rayHitTriangle_ = {};
-    RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
-    float groundY_ = 0.0f;
-    float rayOffset = 1.0f;
-    const float minY =-10.0f; // 地面の最低Y座標
-
-    const float kRayOffset = 2.0f; // レイの始点を上に持ち上げるオフセット
+    ICollider::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
-
     // --- レール移動管理 ---
-
     std::unique_ptr<RailMover> railMover_;
-
     float playerAngle_ = -10.0f;
-
     // --- 被弾処理用 ---
-
     float Radius = 1.0f;// 当たり判定の半径
     bool isDamaged_ = false;      //被弾フラグ
     Gauge hitPoints_ = { 3, 3 }; // プレイヤーの体力
@@ -247,9 +234,6 @@ private:
     const float kHitInvincibilityDuration_ = 10.0f; // 無敵時間
     const float kKnockbackForce_ = 0.5f; // ノックバックの強さ
     int knockbackDirection_ = 0; // ノックバックの方向（1:前方、-1:後方)
-
-
-
     //無敵フラグ
     bool isInvincible_ = false;
     // --- その他必要なメンバ変数や関数をここに追加 ---

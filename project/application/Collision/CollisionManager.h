@@ -51,9 +51,4 @@ private:
     //void CheckPlayerEnemyCollision(Player* p, Enemy* e);
 
     std::vector<Projectile*> projectiles_;
-    
-    //// 弾と敵の衝突判定
-    //void CheckProjectileEnemyCollision(Projectile* p, Enemy* e);
-    //// 弾とプレイヤーの衝突判定（敵の弾用）
-    //void CheckProjectilePlayerCollision(Projectile* p, Player* player);
 };
