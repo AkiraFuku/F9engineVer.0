@@ -215,7 +215,7 @@ private:
 
 
     float gravityScale_ = 1.0f; // 重力のスケール
-    const float kGravity = -0.9f;           // 重力加速度（毎フレーム引く値）
+    const float kGravity = -50.0f;           // 重力加速度（毎フレーム引く値）
     const float kJumpAcceleration = 24.0f;     // ジャンプした瞬間の上昇速度
     bool isGrounded_ = true;
 

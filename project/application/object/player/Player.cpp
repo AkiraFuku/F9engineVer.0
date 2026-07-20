@@ -98,12 +98,12 @@ void Player::SetRail(RailPath* rail)
 }
 void Player::Move(float ratio)
 {
-    railMover_->Advance(ratio * (kMoveSpeed_*deltaTime_));
+    railMover_->Advance(ratio * (kMoveSpeed_ * deltaTime_));
 }
 void Player::Jump()
 {
     if (isGrounded_) {
-        velocity_.y += kJumpAcceleration*deltaTime_;
+        velocity_.y = kJumpAcceleration;
         isGrounded_ = false;
     }
 }
@@ -155,42 +155,43 @@ void Player::UpdateRailPath()
 }
 void Player::UpdateGravity()
 {
-
-    // レイ判定の結果から接地状態を決める
-    if (isRayHit_) {
+    // 1. レイ判定の結果から「前回のフレームで接地していたか」を仮定するが、
+    //    「今ジャンプしようとして上に向かっている（velocity_.y > 0）」なら強制的に接地を解除する
+    if (isRayHit_ && velocity_.y <= 0.0f) {
         rayHitPalamata_.groundY = rayHitPoint_.y;
 
         const float kGroundEpsilon = 0.05f;
         float playerBottomY = worldY_ - kHeightOffset;
 
-        // 【修正ポイント】上昇中（velocity_.y > 0.0f）は絶対に接地判定にしない
-        if (velocity_.y <= 0.0f && playerBottomY <= rayHitPalamata_.groundY + kGroundEpsilon) {
+        if (playerBottomY <= rayHitPalamata_.groundY + kGroundEpsilon) {
             isGrounded_ = true;
         } else {
             isGrounded_ = false;
         }
     } else {
-        // レイが当たっていなければ空中
         isGrounded_ = false;
         rayHitPalamata_.groundY = -FLT_MAX;
     }
 
-    // 重力の適用（空中のときのみ）
+    // 2. 速度の更新（デルタタイムを掛ける）
     if (!isGrounded_) {
-        velocity_.y +=( kGravity * gravityScale_) * deltaTime_;
+        velocity_.y += (kGravity * gravityScale_) * deltaTime_;
     } else {
-        velocity_.y = 0.0f; // 接地しているなら下方向の速度はリセット
+        // 接地しているなら下方向の速度はリセット（ただし上向きの力が働いていないときだけ）
+        if (velocity_.y < 0.0f) {
+            velocity_.y = 0.0f;
+        }
     }
 
-    // 位置更新（速度を適用）
-    worldY_ += velocity_.y;
+    // 3. 位置の更新（デルタタイムを掛ける）
+    worldY_ += velocity_.y * deltaTime_;
 
-    // 地面にめり込んでいたら、床の高さぴったりに補正する
+    // 4. めり込み補正（位置を動かした後に、確定した地面の高さに合わせる）
     if (isGrounded_ && isRayHit_) {
-        worldY_ =rayHitPalamata_.groundY + kHeightOffset; // 例: 床の上にプレイヤーを配置
+        worldY_ = rayHitPalamata_.groundY + kHeightOffset;
     }
 
-    //// レイすら当たらない完全な奈落の場合の最低保証
+    // 5. 奈落の最低保証
     if (!isRayHit_ && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
         worldY_ = rayHitPalamata_.minY + kHeightOffset;
         velocity_.y = 0.0f;
@@ -211,7 +212,7 @@ void Player::RayCastUpdate()
     }
 
     ray_.origin = object_->GetTranslate();
-    ray_.origin.y +=rayHitPalamata_. rayOffset; // 始点を上に持ち上げる
+    ray_.origin.y += rayHitPalamata_.rayOffset; // 始点を上に持ち上げる
 
     // 持ち上げた分、レイの長さを伸ばす（あるいは床の下まで届く十分な長さに設定）
     ray_.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
@@ -221,7 +222,7 @@ void Player::RayCastUpdate()
     result_ = RayTriangleCollisionResult::NoCollision;
 
     rayHitPoint_ = { 0.0f, 0.0f, 0.0f };
-    rayHitTriangle_ = Triangle{}; 
+    rayHitTriangle_ = Triangle{};
 
 
     for (const auto& tri : triangles) {

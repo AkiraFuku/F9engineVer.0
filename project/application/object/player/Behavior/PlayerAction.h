@@ -2,7 +2,7 @@
 #include "Vector2.h"
 class Player;
 class GameScene;
-enum ActionType
+enum PlayerActionType
 {
     kJump,
     kMove,
@@ -29,7 +29,7 @@ public:
     }
 private:
     float speed_;
-    ActionType Type = kMove;
+    PlayerActionType Type = kMove;
 };
 
 // ジャンプアクション
@@ -37,7 +37,7 @@ class NormalJumpAction : public IPlayerAction {
 public:
     void Execute(Player* player) override;
 public:
-    ActionType Type = kJump;
+    PlayerActionType Type = kJump;
 };
 class NormalAttackAction : public IPlayerAction {
 public:

@@ -1,6 +1,6 @@
 #pragma once
 class Enemy;
-enum ActionType
+enum EnemyActionType
 {
     Jump,
     move,
@@ -15,7 +15,7 @@ public:
     virtual ~IEnemyAction() = default;
     virtual void Execute(Enemy* enemy) = 0;
 private:
-   // ActionType Type;
+   // EnemyActionType Type;
 };
 class MoveAction : public IEnemyAction {
 public:

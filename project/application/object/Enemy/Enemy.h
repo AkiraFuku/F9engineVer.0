@@ -107,7 +107,10 @@ public:
     void SetScene(Scene* scene) {
         scene_ = scene;
     }
-
+    // 外部（GameSceneのUpdate等）から毎フレームのdeltaTimeを受け取るためのセッター
+    void SetDeltaTime(float deltaTime) {
+        deltaTime_ = deltaTime;
+    }
 protected:
     float deltaTime_ = DXCommon::kDeltaTime; // フレームレートに合わせたデルタタイム
 
@@ -115,7 +118,7 @@ protected:
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
     Camera* camera_ = nullptr;
 
-    const float kMoveSpeed_ = 0.05f;
+    const float kMoveSpeed_ = 6.0f;
     std::unique_ptr<IEnemyBehavior> behavior_; // 現在の行動状態
     std::unique_ptr<IEnemyState> state_; // 現在の状態
 
@@ -124,7 +127,7 @@ protected:
     float worldY_ = 0.0f;
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
   float gravityScale_ = 1.0f; // 重力のスケール
-    const float kGravity = -0.9f;           // 重力加速度（毎フレーム引く値）
+    const float kGravity = -50.0f;           // 重力加速度（毎フレーム引く値）
 
 
     void UpdatePhysics(); // 重力やレール座標の合成処理
