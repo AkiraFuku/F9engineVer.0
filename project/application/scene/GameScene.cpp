@@ -18,6 +18,7 @@
 #include "RailPath.h"
 #include "Enemy.h"
 #include "TestEnemy.h"
+#include "BoundEnemy.h"
 #include "CollisionManager.h"
 #include "Projectile.h"
 #include "PlayerState.h"
@@ -233,7 +234,7 @@ void GameScene::Initialize() {
 
 
     // テスト用に敵を生成する場合
-    AddEnemy({ 0.1f, 0.0f });
+    AddEnemy({ 0.1f, 0.0f },Enemy::EnemyType::Bound);
     AddEnemy({ 0.2f, 0.0f });
     AddEnemy({ 0.3f, 0.0f });
     AddEnemy({ 0.4f, 0.0f });
@@ -590,11 +591,28 @@ GameScene::GameScene() = default;
 
 GameScene::~GameScene() = default;
 
-void GameScene::AddEnemy(Vector2 pos)
+void GameScene::AddEnemy(Vector2 pos,Enemy::EnemyType enemyType )
 {
     if (stageRail)
     {// 新しい敵を生成（テスト用敵）
-        std::unique_ptr<TestEnemy> newEnemy = std::make_unique<TestEnemy>();
+     std::unique_ptr<Enemy> newEnemy = nullptr;
+
+        // 1. タイプに応じて生成する派生クラスを切り替える (ファクトリー処理)
+        switch (enemyType)
+        {
+        case Enemy::EnemyType::Normal:
+            newEnemy = std::make_unique<TestEnemy>();
+            break;
+
+        case Enemy::EnemyType::Bound:
+            newEnemy = std::make_unique<BoundEnemy>();
+            break;
+
+        default:
+            newEnemy = std::make_unique<TestEnemy>();
+            break;
+        }
+
         newEnemy->Initialize();
 
         // 共通の設定

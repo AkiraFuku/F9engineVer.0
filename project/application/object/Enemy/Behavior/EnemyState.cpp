@@ -12,7 +12,7 @@ void StateEnemyNormal::Update(Enemy* enemy) {
         enemy->GetBehavior()->Update(enemy); // 現在の行動状態の更新を呼び出す
 
     }
-    enemy->UpdateGravity(); // 重力の更新を行う
+ //   enemy->UpdateGravity(); // 重力の更新を行う
     // 通常状態の毎フレーム処理
 }
 

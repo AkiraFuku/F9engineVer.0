@@ -16,6 +16,14 @@ class ParticleEmitter; // Enemy.h の場合
 class Enemy : public ICollider
 {
 public:
+
+    enum class EnemyType
+    {
+        Normal,
+        Bound,
+    };
+
+
     Enemy();
     virtual ~Enemy();
     //コリジョン
@@ -80,7 +88,7 @@ public:
         return isGrounded_;
     }
 
-     //レイキャスト判定処理
+    //レイキャスト判定処理
     void RayCastUpdate()override;
     void UpdateGravity(); // 重力の更新処理
     // enemy状態取得
@@ -111,6 +119,31 @@ public:
     void SetDeltaTime(float deltaTime) {
         deltaTime_ = deltaTime;
     }
+
+    void SetVelocity(Vector3 velocity) {
+
+        velocity_ = velocity;
+    }
+    void AddVelocity(Vector3 velocity) {
+
+        velocity_ += velocity;
+    }
+    Vector3 GetVelocity() {
+        return velocity_;
+    }
+
+    //重力の落下スケール
+    void SetGravityScale(float Scale = 1.0f) {
+
+        gravityScale_ = Scale;
+    };
+    float GetDeltaTime(){   return deltaTime_;}
+
+      float GetGroundY(){
+    
+        return rayHitPalamata_.groundY;
+    }
+
 protected:
     float deltaTime_ = DXCommon::kDeltaTime; // フレームレートに合わせたデルタタイム
 
@@ -126,7 +159,7 @@ protected:
     bool isGrounded_ = true;
     float worldY_ = 0.0f;
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
-  float gravityScale_ = 1.0f; // 重力のスケール
+    float gravityScale_ = 1.0f; // 重力のスケール
     const float kGravity = -50.0f;           // 重力加速度（毎フレーム引く値）
 
 
@@ -149,7 +182,7 @@ protected:
 
     Scene* scene_ = nullptr; // Enemyが所属するシーンへのポインタ
 
-     ICollider::GroundRayPalamata rayHitPalamata_;
+    ICollider::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
-
+    EnemyType enemyType;
 };

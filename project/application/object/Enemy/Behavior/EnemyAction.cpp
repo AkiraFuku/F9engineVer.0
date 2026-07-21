@@ -6,7 +6,11 @@ void MoveAction::Execute(Enemy* enemy){
 }
 
 void JumpAction::Execute(Enemy* enemy){
-    enemy;
+    if (enemy&&enemy->IsGround())
+    {
+        enemy->SetVelocity({0.0f,acceleration_,0.0f});
+
+    }
 
 }
 //攻撃

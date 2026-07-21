@@ -12,11 +12,10 @@
 #include "Vector2.h"
 #include "Projectile.h"
 #include "Animation.h"
-
+#include "Enemy.h"
 
 class ParticleEmitter;
 class RailPath;
-class Enemy;
 class GoalObject;
 class Phase;
 class PlayerHPUI;
@@ -70,7 +69,7 @@ public:
     GameScene();
     ~GameScene() override;
 
-    void AddEnemy(Vector2 pos);
+    void AddEnemy(Vector2 pos,Enemy::EnemyType enemyType =Enemy::EnemyType::Normal);
     void AddProjectile(const Projectile::ProjectileSpawnParam& param, Projectile::ProjectileOwner owner);
     void AddTriangles(std::vector<Triangle> triangles);
 

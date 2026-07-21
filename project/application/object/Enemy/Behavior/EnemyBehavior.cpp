@@ -10,6 +10,8 @@ void EnemyBehaviorPatrol::Update(Enemy* enemy)
 {// 1. Actionを生成して実行する
     // 例: 毎フレーム速度 1.0f で移動するアクションを実行
     currentAction_->Execute(enemy);
+
+    enemy->UpdateGravity();
 }
 
 void EnemyBehaviorPatrol::Finalize(Enemy* enemy)
