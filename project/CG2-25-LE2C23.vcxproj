@@ -18,6 +18,9 @@
     <ClCompile Include="application\Phase\ClearPhase.cpp" />
     <ClCompile Include="application\Phase\defeatPhase.cpp" />
     <ClCompile Include="application\object\Enemy\BoundEnemy.cpp" />
+    <ClCompile Include="BoundRobot.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
     <ClCompile Include="application\object\Enemy\TestEnemy.cpp" />
@@ -113,6 +116,9 @@
     <ClInclude Include="application\Phase\ClearPhase.h" />
     <ClInclude Include="application\Phase\defeatPhase.h" />
     <ClInclude Include="application\object\Enemy\BoundEnemy.h" />
+    <ClInclude Include="BoundRobot.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
     <ClInclude Include="application\object\Enemy\TestEnemy.h" />
