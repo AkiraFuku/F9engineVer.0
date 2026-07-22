@@ -5,6 +5,7 @@
 #include <vector>
 #include "Vector4.h"
 #include "Vector2.h"
+#include "PSOManager.h"
 
 
 struct BlurParam

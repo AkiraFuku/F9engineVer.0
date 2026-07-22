@@ -121,3 +121,62 @@ private:
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12RootSignature>> rootSigCache_;
     std::unordered_map<std::string, ShaderSet> shaderCache_;
 };
+
+class RootSignatureBuilder {
+public:
+    RootSignatureBuilder() = default;
+    ~RootSignatureBuilder() = default;
+
+    // --- ルートパラメータ追加用メソッド (メソッドチェーン対応) ---
+
+    /// CBV (定数バッファ) を追加
+    RootSignatureBuilder& AddCBV(
+        UINT shaderRegister,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL,
+        UINT registerSpace = 0);
+
+    /// SRV (シェーダーリソース) を追加
+    RootSignatureBuilder& AddSRV(
+        UINT shaderRegister,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL,
+        UINT registerSpace = 0);
+
+    /// UAV (アンオーダードアクセス) を追加
+    RootSignatureBuilder& AddUAV(
+        UINT shaderRegister,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL,
+        UINT registerSpace = 0);
+
+    /// ディスクリプタテーブルを追加 (単一レンジ)
+    RootSignatureBuilder& AddDescriptorTable(
+        D3D12_DESCRIPTOR_RANGE_TYPE rangeType,
+        UINT numDescriptors,
+        UINT baseShaderRegister,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL,
+        UINT registerSpace = 0);
+
+    /// ディスクリプタテーブルを追加 (複数レンジ指定)
+    RootSignatureBuilder& AddDescriptorTable(
+        const std::vector<D3D12_DESCRIPTOR_RANGE>& ranges,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
+
+    // --- サンプラー追加用メソッド ---
+
+    /// スタティックサンプラーを追加
+    RootSignatureBuilder& AddStaticSampler(const D3D12_STATIC_SAMPLER_DESC& sampler);
+
+    /// フラグ設定
+    RootSignatureBuilder& SetFlags(D3D12_ROOT_SIGNATURE_FLAGS flags);
+
+    // --- ビルド処理 ---
+
+    /// RootSignature をビルドして ComPtr として返却
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> Build(ID3D12Device* device);
+
+private:
+    std::vector<D3D12_ROOT_PARAMETER> rootParameters_;
+    // ディスクリプタテーブル参照用にポインタが破棄されないよう実体を保持
+    std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> descriptorRangesList_;
+    std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers_;
+    D3D12_ROOT_SIGNATURE_FLAGS flags_ = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+};

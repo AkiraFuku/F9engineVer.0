@@ -27,6 +27,7 @@
     <ClCompile Include="application\object\Enemy\Behavior\EnemyBehavior.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyState.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
+    <ClCompile Include="IPostEffect.cpp" />
     <ClCompile Include="OffScreen.cpp" />
     <ClCompile Include="engine\base\PSOManager.cpp" />
     <ClCompile Include="engine\math\DrawFunction.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="application\object\Enemy\Behavior\EnemyBehavior.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyState.h" />
     <ClInclude Include="CollisionManager.h" />
+    <ClInclude Include="IPostEffect.h" />
     <ClInclude Include="OffScreen.h" />
     <ClInclude Include="engine\base\PSOManager.h" />
     <ClInclude Include="engine\math\Mass.h" />
@@ -478,7 +480,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collsion;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collsion;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)\resources\shaders\Dissolve;$(ProjectDir)\resources\shaders\GaussianFilter;$(ProjectDir)\resources\shaders\GlayScale</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

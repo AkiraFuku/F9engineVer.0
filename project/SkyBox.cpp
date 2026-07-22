@@ -15,61 +15,21 @@ void SkyBox::Initialize()
     PSO.shaderPaths.push_back(psPath);
 
     PSO.rootSignatureGenerator = []() {
-        D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-        rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        D3D12_ROOT_PARAMETER rootParameter[3]{};
-        D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
-        descRangeTexture[0].BaseShaderRegister = 0; // t0
-        descRangeTexture[0].NumDescriptors = 1;
-        descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+       return RootSignatureBuilder()
+    // [Param 0] Material (CBV b0, Pixel)
+    .AddCBV(0, D3D12_SHADER_VISIBILITY_PIXEL)
 
-        rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        rootParameter[0].Descriptor.ShaderRegister = 0; // b0
-        // 1. Transform (CBV b0, Vertex)
-        rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-        rootParameter[1].Descriptor.ShaderRegister = 1; // b1
-        // 2. Texture (Table t0, Pixel)
-        rootParameter[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        rootParameter[2].DescriptorTable.pDescriptorRanges = descRangeTexture;
-        rootParameter[2].DescriptorTable.NumDescriptorRanges = 1;
-        rootSignatureDesc.pParameters = rootParameter;
-        rootSignatureDesc.NumParameters = _countof(rootParameter);
+    // [Param 1] Transform (CBV b1, Vertex)
+    .AddCBV(1, D3D12_SHADER_VISIBILITY_VERTEX)
 
-        std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
-        D3D12_STATIC_SAMPLER_DESC sampler{};
-        sampler = PSOManager::GetInstance()->StaticSamplers();
+    // [Param 2] Texture (DescriptorTable t0, Pixel)
+    .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
 
-        staticSamplers.push_back(sampler);
+    // スタティックサンプラー追加
+    .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
 
-        // シリアライズ
-        D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
-        descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        descriptionRootSignature.pParameters = rootParameter;
-        descriptionRootSignature.NumParameters = _countof(rootParameter);
-        descriptionRootSignature.pStaticSamplers = staticSamplers.data();
-        descriptionRootSignature.NumStaticSamplers = (UINT)staticSamplers.size();
-
-
-        Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
-        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-
-        HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-        if (FAILED(hr)) {
-            Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
-            assert(false);
-        }
-
-        Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-        hr = DXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-        assert(SUCCEEDED(hr));
-
-
-
-        return rootSignature;
+    // ビルド＆生成
+    .Build(DXCommon::GetInstance()->GetDevice().Get());
         };
 
     PSO.inputLayoutGenerator = []() {
