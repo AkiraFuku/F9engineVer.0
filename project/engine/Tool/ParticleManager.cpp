@@ -31,78 +31,29 @@ void ParticleManager::Initialize() {
 
 
     configCylinder.rootSignatureGenerator = []() {
-        std::vector<D3D12_ROOT_PARAMETER> rootParameters;
-        std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
-        D3D12_STATIC_SAMPLER_DESC sampler{};
-        sampler = PSOManager::GetInstance()->StaticSamplers();
+        // サンプラーの設定取得と一部変更
+    auto sampler = PSOManager::GetInstance()->StaticSamplers();
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 
-        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-
-        staticSamplers.push_back(sampler);
-        D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
-        descRangeTexture[0].BaseShaderRegister = 0; // t0
-        descRangeTexture[0].NumDescriptors = 1;
-        descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-
-        // パーティクル用インスタンシングレンジ (VS t0)
-            // ※ staticにしないとスコープを抜けてデータが壊れる可能性があるため注意
-            //   ここでは関数内完結させるため、vector等で管理するか、static配列にする
-        static D3D12_DESCRIPTOR_RANGE descRangeInstancing[1]{};
-        descRangeInstancing[0].BaseShaderRegister = 0; // t0 (VS)
-        descRangeInstancing[0].NumDescriptors = 1;
-        descRangeInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        descRangeInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-        rootParameters.resize(4);
-
+    return RootSignatureBuilder()
         // [Param 0] Material (CBV b0, Pixel)
-        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        rootParameters[0].Descriptor.ShaderRegister = 0;
+        .AddCBV(0, D3D12_SHADER_VISIBILITY_PIXEL)
 
-        // [Param 1] Instancing Data (DescriptorTable t0, Vertex) ★ここが重要
-        rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-        rootParameters[1].DescriptorTable.pDescriptorRanges = descRangeInstancing;
-        rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
+        // [Param 1] Instancing Data (DescriptorTable t0, Vertex)
+        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX)
 
         // [Param 2] Texture (DescriptorTable t0, Pixel)
-        rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        rootParameters[2].DescriptorTable.pDescriptorRanges = descRangeTexture;
-        rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
+        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
 
         // [Param 3] DirectionalLight (CBV b1, Pixel)
-        rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-        rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-        rootParameters[3].Descriptor.ShaderRegister = 1;
-        // シリアライズ
-        D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
-        descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        descriptionRootSignature.pParameters = rootParameters.data();
-        descriptionRootSignature.NumParameters = (UINT)rootParameters.size();
-        descriptionRootSignature.pStaticSamplers = staticSamplers.data();
-        descriptionRootSignature.NumStaticSamplers = (UINT)staticSamplers.size();
+        .AddCBV(1, D3D12_SHADER_VISIBILITY_PIXEL)
 
+        // サンプラー追加
+        .AddStaticSampler(sampler)
 
-        Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
-        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-
-        HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-        if (FAILED(hr)) {
-            Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
-            assert(false);
-        }
-
-        Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-        hr = DXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-        assert(SUCCEEDED(hr));
-
-
-
-        return rootSignature;
+        // ビルド＆生成
+        .Build(DXCommon::GetInstance()->GetDevice().Get());
+       
         };
     configCylinder.inputLayoutGenerator = []() {
         InputLayout inputLayout = {};

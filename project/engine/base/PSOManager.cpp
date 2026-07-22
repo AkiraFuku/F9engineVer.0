@@ -17,8 +17,7 @@ PSOManager* PSOManager::GetInstance() {
     if (instance_ == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public PSOManager {
-            Helper() : PSOManager() {
-            }
+            Helper() : PSOManager() {}
         };
         instance_ = std::make_unique<Helper>();
     }
@@ -123,12 +122,6 @@ void PSOManager::CreatePso(const std::string& name, BlendMode blend, FillMode fi
         rootSigCache_[name] = config.rootSignatureGenerator();
     }
     auto rootSignature = rootSigCache_[name];
-
-    // 2. InputLayout の取得
-    /*std::vector<D3D12_INPUT_ELEMENT_DESC> inputElements;
-    if (config.inputLayoutGenerator) {
-        inputElements = config.inputLayoutGenerator();
-    }*/
 
     // 3. Shader の取得
     ShaderSet shaders;
@@ -256,4 +249,103 @@ D3D12_BLEND_DESC PSOManager::CreateBlendDesc(BlendMode mode) {
         break;
     }
     return blendDesc;
+}
+
+RootSignatureBuilder& RootSignatureBuilder::AddCBV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility, UINT registerSpace) {
+    D3D12_ROOT_PARAMETER param{};
+    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    param.ShaderVisibility = visibility;
+    param.Descriptor.ShaderRegister = shaderRegister;
+    param.Descriptor.RegisterSpace = registerSpace;
+    rootParameters_.push_back(param);
+    return *this;
+}
+
+RootSignatureBuilder& RootSignatureBuilder::AddSRV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility, UINT registerSpace) {
+    D3D12_ROOT_PARAMETER param{};
+    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+    param.ShaderVisibility = visibility;
+    param.Descriptor.ShaderRegister = shaderRegister;
+    param.Descriptor.RegisterSpace = registerSpace;
+    rootParameters_.push_back(param);
+    return *this;
+}
+
+RootSignatureBuilder& RootSignatureBuilder::AddUAV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility, UINT registerSpace) {
+    D3D12_ROOT_PARAMETER param{};
+    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+    param.ShaderVisibility = visibility;
+    param.Descriptor.ShaderRegister = shaderRegister;
+    param.Descriptor.RegisterSpace = registerSpace;
+    rootParameters_.push_back(param);
+    return *this;
+}
+
+RootSignatureBuilder& RootSignatureBuilder::AddDescriptorTable(
+    D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors, UINT baseShaderRegister, D3D12_SHADER_VISIBILITY visibility, UINT registerSpace) 
+{
+    D3D12_DESCRIPTOR_RANGE range{};
+    range.RangeType = rangeType;
+    range.NumDescriptors = numDescriptors;
+    range.BaseShaderRegister = baseShaderRegister;
+    range.RegisterSpace = registerSpace;
+    range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    return AddDescriptorTable({ range }, visibility);
+}
+
+RootSignatureBuilder& RootSignatureBuilder::AddDescriptorTable(
+    const std::vector<D3D12_DESCRIPTOR_RANGE>& ranges, D3D12_SHADER_VISIBILITY visibility) 
+{
+    // レンジの実体を保持（生成中のメモリ破棄防止）
+    descriptorRangesList_.push_back(ranges);
+    const auto& storedRanges = descriptorRangesList_.back();
+
+    D3D12_ROOT_PARAMETER param{};
+    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    param.ShaderVisibility = visibility;
+    param.DescriptorTable.pDescriptorRanges = storedRanges.data();
+    param.DescriptorTable.NumDescriptorRanges = static_cast<UINT>(storedRanges.size());
+
+    rootParameters_.push_back(param);
+    return *this;
+}
+
+RootSignatureBuilder& RootSignatureBuilder::AddStaticSampler(const D3D12_STATIC_SAMPLER_DESC& sampler) {
+    staticSamplers_.push_back(sampler);
+    return *this;
+}
+
+RootSignatureBuilder& RootSignatureBuilder::SetFlags(D3D12_ROOT_SIGNATURE_FLAGS flags) {
+    flags_ = flags;
+    return *this;
+}
+
+Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureBuilder::Build(ID3D12Device* device) {
+    assert(device != nullptr);
+
+    D3D12_ROOT_SIGNATURE_DESC desc{};
+    desc.Flags = flags_;
+    desc.pParameters = rootParameters_.data();
+    desc.NumParameters = static_cast<UINT>(rootParameters_.size());
+    desc.pStaticSamplers = staticSamplers_.data();
+    desc.NumStaticSamplers = static_cast<UINT>(staticSamplers_.size());
+
+    Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+
+    HRESULT hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+    if (FAILED(hr)) {
+        if (errorBlob) {
+            Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+        }
+        assert(false && "Failed to serialize RootSignature.");
+        return nullptr;
+    }
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+    hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+    assert(SUCCEEDED(hr));
+
+    return rootSignature;
 }

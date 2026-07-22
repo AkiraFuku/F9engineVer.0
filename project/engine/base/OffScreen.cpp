@@ -1,10 +1,11 @@
 #include "OffScreen.h"
 #include "DXCommon.h"
-#include "PSOManager.h"
 #include "Logger.h"
 #include "SrvManager.h"
 #include <cassert>
-
+#include "Camera.h"
+#include "mathfunction.h"
+#include "TextureManager.h"
 // インスタンス定義
 std::unique_ptr<OffScreen> OffScreen::instance = nullptr;
 
@@ -18,69 +19,275 @@ OffScreen* OffScreen::GetInstance() {
     return instance.get();
 }
 
-void OffScreen::Initialize()
-{
+void OffScreen::Initialize() {
+
+
+    MaskMaterial_.textureFilePath = "resources/Mask/noise0.png";
+    TextureManager::GetInstance()->LoadTexture(MaskMaterial_.textureFilePath);
+    MaskMaterial_.maskTextureSrvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(MaskMaterial_.textureFilePath);
+
     PsoConfig psoConfig = {};
     psoConfig.shaderPaths = {
-        { ShaderType::VS, L"resources/shaders/CopyImage/CopyImage.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
         { ShaderType::PS, L"resources/shaders/CopyImage/CopyImage.ps.hlsl", "main", L"ps_6_0" }
     };
-    
+
     psoConfig.rootSignatureGenerator = []() {
-        // ラムダ式内での初期化
-        HRESULT hr; 
-        std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
-        D3D12_STATIC_SAMPLER_DESC sampler = PSOManager::GetInstance()->StaticSamplers();
-        staticSamplers.push_back(sampler);
+        // ラムダ式内での記述
+        return RootSignatureBuilder()
+            // [Param 0] Texture (DescriptorTable t0, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_ALL)
 
-        D3D12_DESCRIPTOR_RANGE descRangeTexture[1]{};
-        descRangeTexture[0].BaseShaderRegister = 0;
-        descRangeTexture[0].NumDescriptors = 1;
-        descRangeTexture[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        descRangeTexture[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+            // スタティックサンプラー追加
+            .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
 
-        CD3DX12_ROOT_PARAMETER rootParameters[1]{};
-        rootParameters[0].InitAsDescriptorTable(1, &descRangeTexture[0]);
-
-        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, (UINT)staticSamplers.size(), staticSamplers.data(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-        Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
-        Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-
-        hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-        if (FAILED(hr)) {
-            if (errorBlob) Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
-            assert(false);
-        }
-
-        Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-        // hr = ... (ここでは auto を付けない)
-        hr = DXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-        assert(SUCCEEDED(hr));
-        return rootSignature;
-    };
+            // ビルド＆生成
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
 
     psoConfig.inputLayoutGenerator = []() {
 
-         
-        InputLayout inputLayout={};
-        inputLayout.inputLayout= D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
+
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
         return inputLayout;
 
-    };
+        };
     psoConfig.depthEnable = false;
 
     PSOManager::GetInstance()->RegisterPsoGenerator("OffScreen", psoConfig);
+    //ランダム
+    psoConfig = {};
+    psoConfig.shaderPaths.clear();
+    psoConfig.shaderPaths = {
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::PS, L"resources/shaders/Random/Random.ps.hlsl", "main", L"ps_6_0" }
+    };
+
+    psoConfig.rootSignatureGenerator = []() {
+        return RootSignatureBuilder()
+            // [Param 0] Texture (DescriptorTable t0, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // [Param 1] Material/Transform (CBV b0, ALL)
+            .AddCBV(0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // スタティックサンプラー追加
+            .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
+
+            // ビルド＆生成
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
+
+    psoConfig.inputLayoutGenerator = []() {
+
+
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
+        return inputLayout;
+
+        };
+    psoConfig.depthEnable = false;
+
+    PSOManager::GetInstance()->RegisterPsoGenerator("random", psoConfig);
+    psoConfig = {};
+
+    psoConfig.shaderPaths.clear();  psoConfig.shaderPaths = {
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::PS, L"resources/shaders/OutLine/LuminanceBasedOutline.ps.hlsl", "main", L"ps_6_0" }
+    };
+
+    psoConfig.rootSignatureGenerator = []() {
+        // ラムダ式内での記述
+        return RootSignatureBuilder()
+            // [Param 0] Texture (DescriptorTable t0, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // スタティックサンプラー追加
+            .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
+
+            // ビルド＆生成
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
+
+    psoConfig.inputLayoutGenerator = []() {
+
+
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
+        return inputLayout;
+
+        };
+    psoConfig.depthEnable = false;
+
+    PSOManager::GetInstance()->RegisterPsoGenerator("Vignette", psoConfig);
+    //ぶらー
+    psoConfig = {};
+
+    psoConfig.shaderPaths.clear();  psoConfig.shaderPaths = {
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::PS, L"resources/shaders/RadialBlur/RadialBlur.ps.hlsl", "main", L"ps_6_0" }
+    };
+
+    psoConfig.rootSignatureGenerator = []() {
+        // ラムダ式内での記述
+        return RootSignatureBuilder()
+            // スタティックサンプラー追加
+            .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
+            // [Param 0] Texture (DescriptorTable t0, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // [Param 1] CBV (b0, ALL)
+            .AddCBV(0, D3D12_SHADER_VISIBILITY_ALL)
+
+ 
+
+            // ビルド＆生成
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
+
+    psoConfig.inputLayoutGenerator = []() {
+
+
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
+        return inputLayout;
+
+        };
+    psoConfig.depthEnable = false;
+
+    PSOManager::GetInstance()->RegisterPsoGenerator("RadialBlur", psoConfig);
+    psoConfig = {};
+
+    psoConfig.shaderPaths.clear();  psoConfig.shaderPaths = {
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::PS, L"resources/shaders/OutLine/DepthBasedOutline.ps.hlsl", "main", L"ps_6_0" }
+    };
+
+    psoConfig.rootSignatureGenerator = []() {
+        // ラムダ式内での記述
+        auto sampler0 = PSOManager::GetInstance()->StaticSamplers(); // s0 (リニアフィルタ等)
+
+        auto sampler1 = sampler0;
+        sampler1.ShaderRegister = 1;                        // s1
+        sampler1.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;   // ポイントフィルタ
+
+        return RootSignatureBuilder()
+            // [Param 0] Color Texture (DescriptorTable t0, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // [Param 1] Depth Texture (DescriptorTable t1, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_SHADER_VISIBILITY_ALL)
+
+            // [Param 2] CBV (b0, ALL)
+            .AddCBV(0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // スタティックサンプラー追加 (s0, s1)
+            .AddStaticSampler(sampler0)
+            .AddStaticSampler(sampler1)
+
+            // ビルド＆生成
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+                };
+
+    psoConfig.inputLayoutGenerator = []() {
+
+
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
+        return inputLayout;
+
+        };
+    psoConfig.depthEnable = false;
+
+    PSOManager::GetInstance()->RegisterPsoGenerator("DepthOutline", psoConfig);
+    //ディゾルブ
+    psoConfig = {};
+
+    psoConfig.shaderPaths.clear();  psoConfig.shaderPaths = {
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::PS, L"resources/shaders/Dissolve/Dissolve.ps.hlsl", "main", L"ps_6_0" }
+    };
+
+    psoConfig.rootSignatureGenerator = []() {
+        // ラムダ式内での記述
+        return RootSignatureBuilder()
+            // [Param 0] Main Texture (DescriptorTable t0, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // [Param 1] Mask Texture (DescriptorTable t1, ALL)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_SHADER_VISIBILITY_ALL)
+
+            // [Param 2] CBV (b0, ALL)
+            .AddCBV(0, D3D12_SHADER_VISIBILITY_ALL)
+
+            // スタティックサンプラー追加
+            .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
+
+            // ビルド＆生成
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
+
+    psoConfig.inputLayoutGenerator = []() {
+
+
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };;
+        return inputLayout;
+
+        };
+    psoConfig.depthEnable = false;
+
+    PSOManager::GetInstance()->RegisterPsoGenerator("Dissolve", psoConfig);
+
+    // マテリアル定数バッファの生成とマップ
+    materialConstantBuffer_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+    materialConstantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+
+
+    // Initializeの末尾などで生成（materialConstantBuffer_ と同様の処理）
+    blurConstantBuffer_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(BlurParam));
+    blurConstantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&blurParamData_));
+
+    // 初期値をセットしておく
+    blurParamData_->center = Vector2(0.5f, 0.5f);
+    blurParamData_->radius = 16; // HLSL側の int samples に対応
+    blurParamData_->blurWidth = 0.01f;
+
+    // ディゾルブ定数バッファの生成とマップ
+    dissolveConstantBuffer_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(DissolveParm));
+    dissolveConstantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&dissolveParamData_));
+
+
+    dissolveParamData_->threshold = 0.5f; // 初期値
 }
 
 void OffScreen::Draw()
 {
+
+
     auto commandList = DXCommon::GetInstance()->GetCommandList();
     auto psoManager = PSOManager::GetInstance();
     auto srvManager = SrvManager::GetInstance();
+    if (!camera_)
+    {
 
-    // 1. PSOの取得とセット
+        Logger::Log("Camera is not set for OffScreen.");
+        return;
+
+    }
+
+    //if (materialData_)
+    //{
+    //    // 毎フレームの経過時間を加算する
+    //    materialData_->time += DXCommon::GetInstance()->kDeltaTime;
+    //}
+
+    /* materialData_->projectionInverse = Inverse(
+         camera_->GetProjectionMatrix()
+     );*/
+
+     // 1. PSOの取得とセット
     PsoSet pso = psoManager->GetPso("OffScreen");
     commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
     commandList->SetPipelineState(pso.pipelineState.Get());
@@ -92,6 +299,19 @@ void OffScreen::Draw()
     uint32_t srvIndex = DXCommon::GetInstance()->GetRenderTextureSrvIndex();
     srvManager->SetGraphicsRootDescriptorTable(0, srvIndex);
 
+    //
+    //srvManager->SetGraphicsRootDescriptorTable(1, MaskMaterial_.maskTextureSrvIndex);
+
+    //commandList->SetGraphicsRootConstantBufferView(1, blurConstantBuffer_->GetGPUVirtualAddress());
+    // srvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
+    //srvManager->SetGraphicsRootDescriptorTable(1, srvIndex);
+
+    //commandList->SetGraphicsRootConstantBufferView(1, materialConstantBuffer_->GetGPUVirtualAddress());
+    //commandList->SetGraphicsRootConstantBufferView(2, dissolveConstantBuffer_->GetGPUVirtualAddress());
+
     // 4. 描画実行（頂点シェーダーで全画面生成している場合は3頂点）
     commandList->DrawInstanced(3, 1, 0, 0);
 }
+
+void OffScreen::SetMaskMaterial(std::string textureFilePath)
+{}

@@ -23,6 +23,10 @@ public:
 
     void ChangeActiveCamera(Camera* targetCamera);
 
+    Camera* GetActiveCamera() const {
+        return activeCamera_;
+    }
+
 private:
     SceneManager* sceneManager_ = nullptr;
 
