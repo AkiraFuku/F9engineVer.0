@@ -199,11 +199,17 @@ void Enemy::OnCollision(ICollider* other) {
                 PlayHitEffect();
                 isDamaged_ = true;
                 hitInvincibilityTimer_ = kHitInvincibilityDuration_;
-                // ★ここがポイント：ロボットを持っていればプレイヤーを変身させる
-                if (robot_ && robot_->CreateRideOnState()) {
-                    // Robotが持っているステートをクローン、あるいは特定のステートを生成して渡す
-                    // 現在の設計なら、StateRideOnTestなどの具体的な型をRobot側で定義しておく
-                    player->ChangeState(robot_->CreateRideOnState());
+                if (robot_) {
+                    // 1. ロボットからプレイヤー用 Factory を取得
+                    auto factory = robot_->CreatePlayerFactory();
+
+                    if (factory) {
+                        // 2. Factory を使って State を生成 (Factoryが自動で State に自身をセットしてくれる)
+                        auto rideOnState = factory->CreateState();
+
+                        // 3. プレイヤーの State を切り替える
+                        player->ChangeState(std::move(rideOnState));
+                    }
                 }
 
                 ChangeState(std::make_unique<StateEnemyDead>());

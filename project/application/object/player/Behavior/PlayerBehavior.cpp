@@ -3,6 +3,13 @@
 #include "Command.h"
 #include "PlayerAction.h"
 #include "PlayerState.h"
+#include "IPlayerFactory.h" // ★ Factory のヘッダーをインクルード
+
+// --- Helper 関数（State から Factory を安全に取得） ---
+static IPlayerFactory* GetFactoryFromPlayer(Player* player) {
+    auto state = player->GetState();
+    return state ? state->GetFactory() : nullptr;
+}
 
 // --- BehaviorRoot ---
 void BehaviorRoot::Initialize(Player* player) {}
@@ -27,15 +34,19 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
         }
     }
 
+    // ★ Factory を取得して生成するように変更
+    auto factory = state->GetFactory();
+    if (!factory) return;
+
     if (dynamic_cast<JumpCommand*>(command)) {
-        state->ChangeBehavior(player, std::make_unique<BehaviorJump>());
+        state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Jump));
     }
     if (dynamic_cast<AttackCommand*>(command)) {
-        state->ChangeBehavior(player, std::make_unique<BehaviorAttack>());
+        state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Attack));
     }
     if (dynamic_cast<PreShootCommand*>(command)) {
         if (dynamic_cast<IStateRideOn*>(state)) {
-            state->ChangeBehavior(player, std::make_unique<BehaviorAim>());
+            state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Aim));
         }
     }
 }
@@ -66,7 +77,10 @@ void BehaviorAttack::Update(Player* player) {
     timer_ += player->GetDeltaTime();
     if (timer_ >= kAttackDuration) {
         if (state) {
-            state->ChangeBehavior(player, std::make_unique<BehaviorRoot>());
+            // ★ Factory 経由で Root に戻る
+            if (auto factory = state->GetFactory()) {
+                state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Root));
+            }
         }
     }
 }
@@ -88,7 +102,10 @@ void BehaviorJump::Initialize(Player* player) {
 void BehaviorJump::Update(Player* player) {
     if (player->IsGround()) {
         if (auto state = player->GetState()) {
-            state->ChangeBehavior(player, std::make_unique<BehaviorRoot>());
+            // ★ Factory 経由で Root に戻る
+            if (auto factory = state->GetFactory()) {
+                state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Root));
+            }
         }
     }
     player->UpdateGravity();
@@ -108,12 +125,17 @@ void BehaviorJump::HandleInput(Player* player, ICommand* command) {
             moveAction->Execute(player);
         }
     }
+
+    // ★ Factory を取得して生成
+    auto factory = state->GetFactory();
+    if (!factory) return;
+
     if (dynamic_cast<AttackCommand*>(command)) {
-        state->ChangeBehavior(player, std::make_unique<BehaviorAttack>());
+        state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Attack));
     }
     if (dynamic_cast<PreShootCommand*>(command)) {
         if (dynamic_cast<IStateRideOn*>(state)) {
-            state->ChangeBehavior(player, std::make_unique<BehaviorAim>());
+            state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Aim));
         }
     }
 }

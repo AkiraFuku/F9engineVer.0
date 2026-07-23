@@ -26,7 +26,7 @@ void Player::Initialize()
     railMover_ = std::make_unique<RailMover>();
 
     // Stateの初期化のみ行い、Behaviorの初期化はState内部で行う
-    ChangeState(std::make_unique<StateNormal>());
+    ChangeState(PlayerStateFactory::CreateState(PlayerFormType::Normal));
 }
 
 void Player::Update()
@@ -64,7 +64,9 @@ void Player::SetRailPosition(const Vector2& position)
     }
 }
 
-void Player::AddVelocity(Vector3 v) { velocity_ += v; }
+void Player::AddVelocity(Vector3 v) {
+    velocity_ += v;
+}
 
 void Player::SetRail(RailPath* rail)
 {
@@ -87,9 +89,15 @@ void Player::Jump()
 
 void Player::Attack() {}
 
-float Player::GetRailProgress() const { return railMover_->GetProgress(); }
-float Player::GetCurrentDistance() const { return railMover_->GetCurrentDistance(); }
-const RailPath* Player::GetRailPath() const { return railMover_->GetRailPath(); }
+float Player::GetRailProgress() const {
+    return railMover_->GetProgress();
+}
+float Player::GetCurrentDistance() const {
+    return railMover_->GetCurrentDistance();
+}
+const RailPath* Player::GetRailPath() const {
+    return railMover_->GetRailPath();
+}
 
 void Player::UpdateRailPath()
 {
@@ -320,8 +328,12 @@ void Player::OnCollision([[maybe_unused]] ICollider* other) {
     }
 }
 
-Vector3 Player::GetDirection() const { return railMover_->GetCurrentDirection(); }
-int Player::GetMoveDirection() const { return int(railMover_->GetMoveDirection()); }
+Vector3 Player::GetDirection() const {
+    return railMover_->GetCurrentDirection();
+}
+int Player::GetMoveDirection() const {
+    return int(railMover_->GetMoveDirection());
+}
 
 const char* Player::GetStateName() const {
     return baseState_ ? baseState_->GetName() : "NoState";
@@ -331,4 +343,6 @@ const char* Player::GetBehaviorName() const {
     return (baseState_ && baseState_->GetBehavior()) ? baseState_->GetBehavior()->GetName() : "NoBehavior";
 }
 
-void Player::SetScene(Scene* scene) { scene_ = scene; }
+void Player::SetScene(Scene* scene) {
+    scene_ = scene;
+}

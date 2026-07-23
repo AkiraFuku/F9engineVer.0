@@ -1,13 +1,13 @@
 #include "TestRobot.h"
-#include "PlayerState.h"
-
+#include "IPlayerFactory.h" // RideOnPlayerFactory の定義
 TestRobot::TestRobot() {
     
 }
 
 TestRobot::~TestRobot() = default;
 
-std::unique_ptr<IStateRideOn> TestRobot::CreateRideOnState()
+std::shared_ptr<IPlayerFactory> TestRobot::CreatePlayerFactory()
 {
-    return std::make_unique<StateRideOnTest>();
+    // このロボットに対応する RideOnPlayerFactory を生成して渡す
+    return std::make_shared<RideOnPlayerFactory>();
 }

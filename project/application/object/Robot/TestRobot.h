@@ -1,10 +1,9 @@
 #pragma once
-#include "../Base/Robot.h"
+#include "Robot.h"
 #include <memory>
 #include <string>
 
-class IStateRideOn;
-class StateRideOnTest;
+class IPlayerFactory;
 
 /// <summary>
 /// テスト用ロボットクラス
@@ -14,7 +13,7 @@ class TestRobot : public Robot {
 public:
     TestRobot();
     ~TestRobot();
-    std::unique_ptr<IStateRideOn> CreateRideOnState()override;
+   std::shared_ptr<IPlayerFactory>CreatePlayerFactory()override;
 
     std::string GetName() const override { return "TestRobot"; }
 

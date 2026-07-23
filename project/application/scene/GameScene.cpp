@@ -234,7 +234,7 @@ void GameScene::Initialize() {
 
 
     // テスト用に敵を生成する場合
-    AddEnemy({ 0.1f, 0.0f },Enemy::EnemyType::Bound);
+    AddEnemy({ 0.1f, 0.0f }, Enemy::EnemyType::Bound);
     AddEnemy({ 0.2f, 0.0f });
     AddEnemy({ 0.3f, 0.0f });
     AddEnemy({ 0.4f, 0.0f });
@@ -284,7 +284,7 @@ void GameScene::Initialize() {
     GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
 }
-void GameScene::Finalize() {    
+void GameScene::Finalize() {
     // パーティクルマネージャーのクリア
    // ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
@@ -294,7 +294,7 @@ void GameScene::Update() {
 
     CheckPhaseTransition();
 
-   
+
 
     debugCameraC->Update();
 
@@ -362,12 +362,12 @@ void GameScene::Update() {
 
     // StateRideOnTestへ切り替えボタン（テスト用）
     if (ImGui::Button("Switch to RideOnTest State")) {
-        player->ChangeState(std::make_unique<StateRideOnTest>());
+        player->ChangeState(PlayerStateFactory::CreateState(PlayerFormType::Normal));
     }
 
     // 通常状態へ戻すボタン
     if (ImGui::Button("Switch to Normal State")) {
-        player->ChangeState(std::make_unique<StateNormal>());
+        player->ChangeState(PlayerStateFactory::CreateState(PlayerFormType::RideOnTest));
     }
 
     // テスト用：ステートが保持しているアクション情報を表示
@@ -565,7 +565,7 @@ void GameScene::ChangePhase(std::unique_ptr<Phase> nextPhase)
         currentPhase_->Finalize(this);
         currentPhase_.reset();
     }
-    
+
     // 新しいフェーズを設定して初期化
     currentPhase_ = std::move(nextPhase);
     if (currentPhase_) {
@@ -591,11 +591,11 @@ GameScene::GameScene() = default;
 
 GameScene::~GameScene() = default;
 
-void GameScene::AddEnemy(Vector2 pos,Enemy::EnemyType enemyType )
+void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
 {
     if (stageRail)
     {// 新しい敵を生成（テスト用敵）
-     std::unique_ptr<Enemy> newEnemy = nullptr;
+        std::unique_ptr<Enemy> newEnemy = nullptr;
 
         // 1. タイプに応じて生成する派生クラスを切り替える (ファクトリー処理)
         switch (enemyType)
