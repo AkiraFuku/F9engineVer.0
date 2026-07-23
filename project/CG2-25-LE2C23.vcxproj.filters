@@ -393,10 +393,10 @@
     <ClCompile Include="application\object\Enemy\BoundEnemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="BoundRobot.cpp">
+    <ClCompile Include="application\object\player\Behavior\IPlayerFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="IPlayerFactory.cpp">
+    <ClCompile Include="BoundRobot.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -641,10 +641,10 @@
     <ClInclude Include="application\object\Enemy\BoundEnemy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="BoundRobot.h">
+    <ClInclude Include="application\object\player\Behavior\IPlayerFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="IPlayerFactory.h">
+    <ClInclude Include="BoundRobot.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

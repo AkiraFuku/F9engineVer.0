@@ -4,7 +4,6 @@
 BoundRobot::BoundRobot() {}
 BoundRobot::~BoundRobot() = default;
 
-std::unique_ptr<IStateRideOn> BoundRobot::CreateRideOnState() {
-    return std::make_unique<StateRideOnBounce>();
+std::shared_ptr<IPlayerFactory> BoundRobot::CreatePlayerFactory() {
+    return std::make_shared<BoundPlayerFactory>();
 }
-

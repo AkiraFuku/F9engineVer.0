@@ -56,3 +56,13 @@ private:
     float aimY_ = 0.0f;
     const float kAimFallSpeed = 0.02f;
 };
+
+// 常に跳ね続けるビヘイビア
+class BehaviorBound : public IPlayerBehavior {
+public:
+    void Initialize(Player* player) override;
+    void Update(Player* player) override;
+    void Finalize(Player* player) override;
+    void HandleInput(Player* player, ICommand* command) override;
+    const char* GetName() const override { return "Bound"; }
+};

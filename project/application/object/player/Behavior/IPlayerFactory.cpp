@@ -76,3 +76,32 @@ std::unique_ptr<IPlayerAction> IPlayerFactory::CreateShootAction()
 {
     return nullptr;
 }
+// --- BoundFactory ---
+std::unique_ptr<IPlayerState> BoundPlayerFactory::CreateState() {
+    // 乗り物用の StateRideOnTest（または専用の StateRideOnBound）を返す
+    return std::make_unique<StateRideOnTest>(shared_from_this());
+}
+
+std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateMoveAction() {
+    return std::make_unique<NormalMoveAction>(1.2f); // バウンド中の横移動速度
+}
+
+std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateJumpAction() {
+    return std::make_unique<NormalJumpAction>(); // 跳ねる高さ（専用Actionに差し替えも可能）
+}
+
+std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateAttackAction() {
+    return std::make_unique<NormalAttackAction>();
+}
+std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateShootAction() {
+    return std::make_unique<ShootRobotAction>();
+}
+
+std::unique_ptr<IPlayerBehavior> BoundPlayerFactory::CreateBehavior(BehaviorType type) {
+    switch (type) {
+        case BehaviorType::Root:
+        default:
+            // ★ Root(デフォルト状態) を「自動跳躍ビヘイビア」にする！
+            return std::make_unique<BehaviorBound>();
+    }
+}

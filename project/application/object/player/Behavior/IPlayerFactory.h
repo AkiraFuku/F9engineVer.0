@@ -8,7 +8,7 @@ class IPlayerBehavior;
 enum class PlayerFormType {
     Normal,
     RideOnTest,
-    Hopping,
+    Bound,
 };
 
 enum class BehaviorType {
@@ -27,8 +27,8 @@ public:
     virtual std::unique_ptr<IPlayerAction> CreateMoveAction() = 0;
     virtual std::unique_ptr<IPlayerAction> CreateJumpAction() = 0;
     virtual std::unique_ptr<IPlayerAction> CreateAttackAction() = 0;
-    virtual std::unique_ptr<IPlayerAction> CreateShootAction() ;
-    
+    virtual std::unique_ptr<IPlayerAction> CreateShootAction();
+
 
     virtual std::unique_ptr<IPlayerBehavior> CreateBehavior(BehaviorType type) = 0;
 };
@@ -49,6 +49,17 @@ public:
 // --- RideOnPlayerFactory ---
 class RideOnPlayerFactory : public IPlayerFactory {
 public:
+   virtual std::unique_ptr<IPlayerState> CreateState() override;
+   virtual std::unique_ptr<IPlayerAction> CreateMoveAction() override;
+   virtual std::unique_ptr<IPlayerAction> CreateJumpAction() override;
+   virtual std::unique_ptr<IPlayerAction> CreateAttackAction() override;
+   virtual std::unique_ptr<IPlayerAction> CreateShootAction() override;
+   virtual std::unique_ptr<IPlayerBehavior> CreateBehavior(BehaviorType type) override;
+};
+
+// --- BoundPlayerFactory ---
+class BoundPlayerFactory : public RideOnPlayerFactory {
+public:
     std::unique_ptr<IPlayerState> CreateState() override;
     std::unique_ptr<IPlayerAction> CreateMoveAction() override;
     std::unique_ptr<IPlayerAction> CreateJumpAction() override;
@@ -56,7 +67,8 @@ public:
     std::unique_ptr<IPlayerAction> CreateShootAction() override;
     std::unique_ptr<IPlayerBehavior> CreateBehavior(BehaviorType type) override;
 };
+
 class PlayerStateFactory {
 public:
-    static std::unique_ptr<IPlayerState> CreateState(PlayerFormType type) ;
+    static std::unique_ptr<IPlayerState> CreateState(PlayerFormType type);
 };

@@ -166,3 +166,41 @@ void BehaviorAim::HandleInput(Player* player, ICommand* command) {
         }
     }
 }
+// --- BehaviorBound ---
+void BehaviorBound::Initialize(Player* player) {
+    // 状態開始と同時に最初の跳躍を実行
+    if (auto state = player->GetState()) {
+        if (auto jumpAction = state->GetJumpAction()) {
+            jumpAction->Execute(player);
+        }
+    }
+}
+
+void BehaviorBound::Update(Player* player) {
+    // 地面に就いた瞬間に自動で再度ジャンプする（常に跳ね続ける）
+    if (player->IsGround()) {
+        if (auto state = player->GetState()) {
+            if (auto jumpAction = state->GetJumpAction()) {
+                jumpAction->Execute(player);
+            }
+        }
+    }
+    
+    // 重力更新
+    player->UpdateGravity();
+}
+
+void BehaviorBound::Finalize(Player* player) {}
+
+void BehaviorBound::HandleInput(Player* player, ICommand* command) {
+    auto state = player->GetState();
+    if (!state) return;
+
+    // 空中・着地問わず左右移動は受け付ける
+    if (auto moveCmd = dynamic_cast<MoveCommand*>(command)) {
+        if (auto moveAction = state->GetMoveAction()) {
+            static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());
+            moveAction->Execute(player);
+        }
+    }
+}

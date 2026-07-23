@@ -67,6 +67,13 @@ public:
     explicit StateRideOnTest(std::shared_ptr<IPlayerFactory> factory) : IStateRideOn(std::move(factory)) {}
     const char* GetName() const override { return "RideOnTest"; }
 };
+// --- ライドオンバウンドロボ状態 ---
+class StateBound: public IStateRideOn {
+public:
+    explicit StateBound(std::shared_ptr<IPlayerFactory> factory) : IStateRideOn(std::move(factory)) {}
+    const char* GetName() const override { return "RideOnTest"; }
+};
+
 
 // --- 死亡状態 ---
 class StateDead : public IPlayerState {

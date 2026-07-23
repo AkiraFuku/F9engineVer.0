@@ -6,7 +6,7 @@
 #include "Player.h"
 #include "PlayerState.h"
 #include "EnemyState.h"
-
+#include "boundRobot.h"
 BoundEnemy::BoundEnemy() {}
 
 BoundEnemy::~BoundEnemy() = default;
@@ -19,7 +19,7 @@ void BoundEnemy::Initialize() {
     ChangeBehavior(std::make_unique<EnemyBehaviorBounce>());
 
     // 基底クラスのメソッドを使ってロボットを登録するだけ
-    SetRobot(std::make_unique<TestRobot>());
+    SetRobot(std::make_unique<BoundRobot>());
 }
 
 void BoundEnemy::Update() {
