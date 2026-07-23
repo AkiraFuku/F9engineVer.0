@@ -4,6 +4,7 @@
 #include "Object3d.h"
 #include "Behavior/PlayerState.h"
 #include "ICollider.h"
+
 class InputHandler;
 class Input;
 class Camera;
@@ -11,26 +12,20 @@ class RailMover;
 class RailPath;
 class IPlayerBehavior;
 class Robot;
-class Enemy; // Player.h の場合
+class Enemy;
 class Scene;
+
 class Player : public ICollider
 {
 public:
     Player();
     ~Player();
 
-    //コリジョン
-    void OnCollision(ICollider* other) override; // Player側
+    void OnCollision(ICollider* other) override;
 
-    Vector3 GetWorldPosition() const override {
-        return object_->GetTranslate();
-    }
-    float GetRadius() const override {
-        return Radius;
-    }
-    CollisionCategory GetCategory() const override {
-        return CollisionCategory::Player;
-    }
+    Vector3 GetWorldPosition() const override { return object_->GetTranslate(); }
+    float GetRadius() const override { return Radius; }
+    CollisionCategory GetCategory() const override { return CollisionCategory::Player; }
 
     void Initialize();
     void Update();
@@ -39,7 +34,6 @@ public:
     void SetCamera(Camera* camera) {
         camera_ = camera;
         if (object_) {
-
             object_->SetCamera(camera);
         }
     }
@@ -63,186 +57,115 @@ public:
         }
         return {};
     }
-    Vector3 GetVelocity() const {
-        return velocity_;
-    }
-    void SetVelocity(const Vector3& velocity) {
-        velocity_ = velocity;
-    }
+    Vector3 GetVelocity() const { return velocity_; }
+    void SetVelocity(const Vector3& velocity) { velocity_ = velocity; }
+
     IPlayerBehavior* GetBehavior() {
-        if (!baseState_->GetBehavior())
-        {
-            return nullptr;
-        }
-        return baseState_->GetBehavior();
-    };
+        return baseState_ ? baseState_->GetBehavior() : nullptr;
+    }
     IPlayerState* GetState() {
-        if (!baseState_)
-        {
-            return nullptr;
-        }
         return baseState_.get();
     }
-    void SetAngle(float angle) {
-        playerAngle_ = angle;
-    }
+
+    void SetAngle(float angle) { playerAngle_ = angle; }
     void AddVelocity(Vector3 v);
 
     void SetRail(RailPath* rail);
-    // 状態を切り替えるメソッド
     void ChangeState(std::unique_ptr<IPlayerState> newState);
     void ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior);
 
-    // レール上の移動を進めるメソッド
-    // ratio: 進行量の比率（0.0f～1.0f）
     void Move(float ratio);
     void Jump();
     void Attack();
 
     float GetRailProgress() const;
     float GetCurrentDistance() const;
-    const RailPath* GetRailPath()const;
+    const RailPath* GetRailPath() const;
 
-    const RailMover* GetRailMover() const {
-        return railMover_.get();
-    }
-    bool IsGround()const {
-        return isGrounded_;
-    }
+    const RailMover* GetRailMover() const { return railMover_.get(); }
+    bool IsGround() const { return isGrounded_; }
 
-    // ワールド方向ベクトルを返す
     Vector3 GetDirection() const;
-    // レール上の進行方向を返す
     int GetMoveDirection() const;
-    //重力の更新処理
     void UpdateGravity();
-    //レイキャスト判定処理
-    void RayCastUpdate()override;
+    void RayCastUpdate() override;
 
+    bool IsHit() const { return isDamaged_; }
+    float GetHitVisualTimer() const { return hitInvincibilityTimer_; }
 
-    //プレイヤーの状態を取得するための関数
-    bool IsHit() const {
-        return isDamaged_;
-    }
-    float GetHitVisualTimer() const {
-        return hitInvincibilityTimer_;
-    }
-
-    InputHandler* GetInputHandler() {
-        return inputHandler_.get();
-    }
+    InputHandler* GetInputHandler() { return inputHandler_.get(); }
     const char* GetStateName() const;
     const char* GetBehaviorName() const;
 
     void SetScene(Scene* scene);
-    Scene* GetScene() {
-        return scene_;
-    }
+    Scene* GetScene() { return scene_; }
 
-    float GetWorldY() const {
-        return worldY_;
-    }
+    float GetWorldY() const { return worldY_; }
 
-    bool IsAlive() const {
-        return isAlive_;
-    }
-    bool IsDead() const {
-        return !isAlive_;
-    }
-    void SetAlive(bool alive) {
-        isAlive_ = alive;
-    }
-    void Die() {
-        isAlive_ = false;
-    }
+    bool IsAlive() const { return isAlive_; }
+    bool IsDead() const { return !isAlive_; }
+    void SetAlive(bool alive) { isAlive_ = alive; }
+    void Die() { isAlive_ = false; }
 
-    bool IsActive() const {
-        return isActive_;
-    }
+    bool IsActive() const { return isActive_; }
     bool SetActive(bool active) {
         isActive_ = active;
         return isActive_;
     }
-    bool IsGrounded() const {
-        return isGrounded_;
-    }
-    bool IsRayHit() const {
-        return isRayHit_;
-    }
+    bool IsGrounded() const { return isGrounded_; }
+    bool IsRayHit() const { return isRayHit_; }
 
-    const Triangle& GetRayHitTriangle() const {
-        return rayHitTriangle_;
-    }
-    int GetHitPoints() const {
-        return hitPoints_.value;
-    }
-    int GetMaxHitPoints() const {
-        return hitPoints_.max;
-    }
+    const Triangle& GetRayHitTriangle() const { return rayHitTriangle_; }
+    int GetHitPoints() const { return hitPoints_.value; }
+    int GetMaxHitPoints() const { return hitPoints_.max; }
 
-    void SetDeltaTime(float deltaTime= DXCommon::kDeltaTime) {
-        deltaTime_ = deltaTime;
-    }
+    void SetDeltaTime(float deltaTime = DXCommon::kDeltaTime) { deltaTime_ = deltaTime; }
+    float GetDeltaTime() const { return deltaTime_; }
 
-    void SetGravityScale(float scale) {
-        gravityScale_ = scale;
-    }
+    void SetGravityScale(float scale) { gravityScale_ = scale; }
 
+    void TakeDamage();
 
 private:
-    float deltaTime_ = DXCommon::kDeltaTime; // フレームレートに合わせたデルタタイム
+    float deltaTime_ = DXCommon::kDeltaTime;
 
-    // --- 状態管理 ---
-    std::unique_ptr<IPlayerState> baseState_; // 現在のプレイヤーの状態管理のためのポインタ
-    Scene* scene_;
+    std::unique_ptr<IPlayerState> baseState_;
+    Scene* scene_ = nullptr;
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
-    const float kMoveSpeed_ =12.0f; // 好みの速度に調整
+    const float kMoveSpeed_ = 12.0f;
+
     void UpdateRailPath();
     void HandleInput();
-    //無敵・被弾処理
     void HandleDamage();
-    //生存管理
     void HandleAlive();
-    //--- カメラ ---
-    Camera* camera_ = nullptr;
 
+    Camera* camera_ = nullptr;
     void ImGuiDrawDebugInfo();
 
-    Vector3 velocity_ = { 0.0f, 0.0f, 0.0f }; // 現在の速度
+    Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
     float worldY_ = 0.0f;
 
-
-
-    float gravityScale_ = 1.0f; // 重力のスケール
-    const float kGravity = -50.0f;           // 重力加速度（毎フレーム引く値）
-    const float kJumpAcceleration = 24.0f;     // ジャンプした瞬間の上昇速度
+    float gravityScale_ = 1.0f;
+    const float kGravity = -50.0f;
+    const float kJumpAcceleration = 24.0f;
     bool isGrounded_ = true;
 
-
-    //レイキャスト当たり判定用の変数
     ICollider::GroundRayPalamata rayHitPalamata_;
-    const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
-    // --- レール移動管理 ---
+    const float kHeightOffset = 0.5f;
+
     std::unique_ptr<RailMover> railMover_;
     float playerAngle_ = -10.0f;
-    // --- 被弾処理用 ---
-    float Radius = 1.0f;// 当たり判定の半径
-    bool isDamaged_ = false;      //被弾フラグ
-    Gauge hitPoints_ = { 3, 3 }; // プレイヤーの体力
-    float hitInvincibilityTimer_ = 0.0f;   // 無敵時間のタイマー
-    const float kHitInvincibilityDuration_ = 10.0f; // 無敵時間
-    const float kKnockbackForce_ = 0.5f; // ノックバックの強さ
-    int knockbackDirection_ = 0; // ノックバックの方向（1:前方、-1:後方)
-    //無敵フラグ
+
+    float Radius = 1.0f;
+    bool isDamaged_ = false;
+    Gauge hitPoints_ = { 3, 3 };
+    float hitInvincibilityTimer_ = 0.0f;
+    const float kHitInvincibilityDuration_ = 1.5f; // 1.5秒間の無敵時間
+    const float kKnockbackForce_ = 0.5f;
+    int knockbackDirection_ = 0;
     bool isInvincible_ = false;
-    // --- その他必要なメンバ変数や関数をここに追加 ---
-    //プレイヤーの生存フラグ
+
     bool isAlive_ = true;
-    //プレイヤーの有効フラグ
     bool isActive_ = true;
-
-
-
 };
-
