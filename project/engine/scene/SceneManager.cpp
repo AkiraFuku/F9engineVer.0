@@ -3,7 +3,8 @@
 #include <memory>
 #include "LightManager.h"
 #include "PrimitiveDrawer.h"
-
+#include "OffScreen.h"
+#include "ParticleManager.h"
 // 静的メンバ変数の実体
 std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
 

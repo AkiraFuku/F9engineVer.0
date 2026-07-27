@@ -94,7 +94,7 @@ void PrimitiveDrawer::AddPSO() {
         static_cast<UINT>(inputLayout.inputElement.size());
     return inputLayout;
   };
-
+  //config.depth=
   config.cullMode = D3D12_CULL_MODE_NONE; // カリングなし
   PSOManager::GetInstance()->RegisterPsoGenerator("Primitive", config);
 #endif // USE_LINE

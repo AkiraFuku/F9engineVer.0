@@ -22,7 +22,15 @@ void Player::Initialize()
     object_ = std::make_unique<Object3d>();
     ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
     object_->Initialize();
-    object_->SetModel("player.obj");
+    //object_->SetModel("player.obj");
+    object_->SetModel("walk.gltf");
+    animation = std::make_unique<Animation>();
+
+    // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
+    animation->Initialize("resources/human", "walk.gltf");
+    animation->SetCurrentTime(0.0f);
+    object_->SetAnimations(animation.get());
+
     railMover_ = std::make_unique<RailMover>();
 
     // Stateの初期化のみ行い、Behaviorの初期化はState内部で行う

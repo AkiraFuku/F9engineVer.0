@@ -79,18 +79,26 @@ Quaternion Inverse(const Quaternion& quaternion)
 Quaternion EulerToQuaternion(const Vector3& euler)
 {
 
-    float cy = cosf(euler.y * 0.5f);
-    float sy = sinf(euler.y * 0.5f);
-    float cp = cosf(euler.x * 0.5f);
-    float sp = sinf(euler.x * 0.5f);
-    float cr = cosf(euler.z * 0.5f);
-    float sr = sinf(euler.z * 0.5f);
-    Quaternion result_;
-    result_.w = cr * cp * cy + sr * sp * sy;
-    result_.x = cr * sp * cy + sr * cp * sy; // Pitch成分
-    result_.y = cr * cp * sy - sr * sp * cy; // Yaw成分
-    result_.z = sr * cp * cy - cr * sp * sy; // Roll成分
-    return result_;
+    // 各軸の回転角を半分にする
+    float x = euler.x * 0.5f;
+    float y = euler.y * 0.5f;
+    float z = euler.z * 0.5f;
+
+    // 各軸のsinとcosを計算
+    float cx = std::cos(x);
+    float sx = std::sin(x);
+    float cy = std::cos(y);
+    float sy = std::sin(y);
+    float cz = std::cos(z);
+    float sz = std::sin(z);
+   // クォータニオンを合成（ZYX順）
+    Quaternion q;
+    q.x = sx * cy * cz - cx * sy * sz;
+    q.y = cx * sy * cz + sx * cy * sz;
+    q.z = cx * cy * sz - sx * sy * cz;
+    q.w = cx * cy * cz + sx * sy * sz;
+
+    return q;
 }
 
 Vector3 QuaternionToEuler(const Quaternion& quaternion)

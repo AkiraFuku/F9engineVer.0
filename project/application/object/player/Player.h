@@ -4,6 +4,7 @@
 #include "Object3d.h"
 #include "Behavior/PlayerState.h"
 #include "ICollider.h"
+#include "Animation.h"
 
 class InputHandler;
 class Input;
@@ -23,9 +24,15 @@ public:
 
     void OnCollision(ICollider* other) override;
 
-    Vector3 GetWorldPosition() const override { return object_->GetTranslate(); }
-    float GetRadius() const override { return Radius; }
-    CollisionCategory GetCategory() const override { return CollisionCategory::Player; }
+    Vector3 GetWorldPosition() const override {
+        return object_->GetTranslate();
+    }
+    float GetRadius() const override {
+        return Radius;
+    }
+    CollisionCategory GetCategory() const override {
+        return CollisionCategory::Player;
+    }
 
     void Initialize();
     void Update();
@@ -57,8 +64,12 @@ public:
         }
         return {};
     }
-    Vector3 GetVelocity() const { return velocity_; }
-    void SetVelocity(const Vector3& velocity) { velocity_ = velocity; }
+    Vector3 GetVelocity() const {
+        return velocity_;
+    }
+    void SetVelocity(const Vector3& velocity) {
+        velocity_ = velocity;
+    }
 
     IPlayerBehavior* GetBehavior() {
         return baseState_ ? baseState_->GetBehavior() : nullptr;
@@ -67,7 +78,9 @@ public:
         return baseState_.get();
     }
 
-    void SetAngle(float angle) { playerAngle_ = angle; }
+    void SetAngle(float angle) {
+        playerAngle_ = angle;
+    }
     void AddVelocity(Vector3 v);
 
     void SetRail(RailPath* rail);
@@ -82,47 +95,87 @@ public:
     float GetCurrentDistance() const;
     const RailPath* GetRailPath() const;
 
-    const RailMover* GetRailMover() const { return railMover_.get(); }
-    bool IsGround() const { return isGrounded_; }
+    const RailMover* GetRailMover() const {
+        return railMover_.get();
+    }
+    bool IsGround() const {
+        return isGrounded_;
+    }
 
     Vector3 GetDirection() const;
     int GetMoveDirection() const;
     void UpdateGravity();
     void RayCastUpdate() override;
 
-    bool IsHit() const { return isDamaged_; }
-    float GetHitVisualTimer() const { return hitInvincibilityTimer_; }
+    bool IsHit() const {
+        return isDamaged_;
+    }
+    float GetHitVisualTimer() const {
+        return hitInvincibilityTimer_;
+    }
 
-    InputHandler* GetInputHandler() { return inputHandler_.get(); }
+    InputHandler* GetInputHandler() {
+        return inputHandler_.get();
+    }
     const char* GetStateName() const;
     const char* GetBehaviorName() const;
 
     void SetScene(Scene* scene);
-    Scene* GetScene() { return scene_; }
+    Scene* GetScene() {
+        return scene_;
+    }
 
-    float GetWorldY() const { return worldY_; }
+    float GetWorldY() const {
+        return worldY_;
+    }
 
-    bool IsAlive() const { return isAlive_; }
-    bool IsDead() const { return !isAlive_; }
-    void SetAlive(bool alive) { isAlive_ = alive; }
-    void Die() { isAlive_ = false; }
+    bool IsAlive() const {
+        return isAlive_;
+    }
+    bool IsDead() const {
+        return !isAlive_;
+    }
+    void SetAlive(bool alive) {
+        isAlive_ = alive;
+    }
+    void Die() {
+        isAlive_ = false;
+    }
 
-    bool IsActive() const { return isActive_; }
+    bool IsActive() const {
+        return isActive_;
+    }
     bool SetActive(bool active) {
         isActive_ = active;
         return isActive_;
     }
-    bool IsGrounded() const { return isGrounded_; }
-    bool IsRayHit() const { return isRayHit_; }
+    bool IsGrounded() const {
+        return isGrounded_;
+    }
+    bool IsRayHit() const {
+        return isRayHit_;
+    }
 
-    const Triangle& GetRayHitTriangle() const { return rayHitTriangle_; }
-    int GetHitPoints() const { return hitPoints_.value; }
-    int GetMaxHitPoints() const { return hitPoints_.max; }
+    const Triangle& GetRayHitTriangle() const {
+        return rayHitTriangle_;
+    }
+    int GetHitPoints() const {
+        return hitPoints_.value;
+    }
+    int GetMaxHitPoints() const {
+        return hitPoints_.max;
+    }
 
-    void SetDeltaTime(float deltaTime = DXCommon::kDeltaTime) { deltaTime_ = deltaTime; }
-    float GetDeltaTime() const { return deltaTime_; }
+    void SetDeltaTime(float deltaTime = DXCommon::kDeltaTime) {
+        deltaTime_ = deltaTime;
+    }
+    float GetDeltaTime() const {
+        return deltaTime_;
+    }
 
-    void SetGravityScale(float scale) { gravityScale_ = scale; }
+    void SetGravityScale(float scale) {
+        gravityScale_ = scale;
+    }
 
     void TakeDamage();
 
@@ -133,6 +186,8 @@ private:
     Scene* scene_ = nullptr;
     std::unique_ptr<InputHandler> inputHandler_;
     std::unique_ptr<Object3d> object_;
+    std::unique_ptr<Animation> animation;
+
     const float kMoveSpeed_ = 12.0f;
 
     void UpdateRailPath();

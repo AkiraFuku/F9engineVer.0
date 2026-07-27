@@ -283,12 +283,12 @@ void OffScreen::Draw()
     //    materialData_->time += DXCommon::GetInstance()->kDeltaTime;
     //}
 
-    /* materialData_->projectionInverse = Inverse(
+     materialData_->projectionInverse = Inverse(
          camera_->GetProjectionMatrix()
-     );*/
+     );
 
      // 1. PSOの取得とセット
-    PsoSet pso = psoManager->GetPso("OffScreen");
+    PsoSet pso = psoManager->GetPso("DepthOutline");
     commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
     commandList->SetPipelineState(pso.pipelineState.Get());
 
@@ -303,10 +303,11 @@ void OffScreen::Draw()
     //srvManager->SetGraphicsRootDescriptorTable(1, MaskMaterial_.maskTextureSrvIndex);
 
     //commandList->SetGraphicsRootConstantBufferView(1, blurConstantBuffer_->GetGPUVirtualAddress());
-    // srvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
-    //srvManager->SetGraphicsRootDescriptorTable(1, srvIndex);
+     srvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
+    srvManager->SetGraphicsRootDescriptorTable(1, srvIndex);
 
-    //commandList->SetGraphicsRootConstantBufferView(1, materialConstantBuffer_->GetGPUVirtualAddress());
+   // commandList->SetGraphicsRootConstantBufferView(1, materialConstantBuffer_->GetGPUVirtualAddress());
+    commandList->SetGraphicsRootConstantBufferView(2, materialConstantBuffer_->GetGPUVirtualAddress());
     //commandList->SetGraphicsRootConstantBufferView(2, dissolveConstantBuffer_->GetGPUVirtualAddress());
 
     // 4. 描画実行（頂点シェーダーで全画面生成している場合は3頂点）

@@ -12,6 +12,8 @@
 #include <memory>
 
 
+#include "SkyBox.h"
+
 #include "Animation.h"
 
 class TitleScene :public Scene
@@ -22,13 +24,14 @@ public:
     void Update()override;
     void Draw()override;
 private:
-   // std::unique_ptr<Camera> camera;
+    // std::unique_ptr<Camera> camera;
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
 
     bool isDebugCamera_ = false;
+    std::unique_ptr<SkyBox> skyBox;
 
-     uint32_t handle_=0;
+    uint32_t handle_ = 0;
 };
 

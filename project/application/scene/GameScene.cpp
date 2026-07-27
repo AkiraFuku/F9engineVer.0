@@ -185,8 +185,8 @@ void GameScene::Initialize() {
     cameraRail = std::make_unique<RailPath>();
     // Initialize内
     float playerRadius = 25.0f;
-    float cameraRadius = 40.0f; // プレイヤーより遠くに配置
-    float cameraHeight = 8.0f;  // 少し高い位置から見下ろす
+    float cameraRadius = 45.0f; // プレイヤーより遠くに配置
+    float cameraHeight = 5.0f;  // 少し高い位置から見下ろす
     float h_cam = cameraRadius * 0.5522f;
 
     // カメラレール (cameraRail) の構築
@@ -285,8 +285,7 @@ void GameScene::Initialize() {
 
 }
 void GameScene::Finalize() {
-    // パーティクルマネージャーのクリア
-   // ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
+  
 }
 
 void GameScene::Update() {

@@ -61,10 +61,6 @@ public:
 class BoundPlayerFactory : public RideOnPlayerFactory {
 public:
     std::unique_ptr<IPlayerState> CreateState() override;
-    std::unique_ptr<IPlayerAction> CreateMoveAction() override;
-    std::unique_ptr<IPlayerAction> CreateJumpAction() override;
-    std::unique_ptr<IPlayerAction> CreateAttackAction() override;
-    std::unique_ptr<IPlayerAction> CreateShootAction() override;
     std::unique_ptr<IPlayerBehavior> CreateBehavior(BehaviorType type) override;
 };
 

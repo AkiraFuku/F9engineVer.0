@@ -1,6 +1,9 @@
 #include "defeatPhase.h"
 #include "Sprite.h"
 #include "WinApp.h"
+#include "SceneManager.h"
+#include "Input.h"
+
 void defeatPhase::Initialize(Scene* scene)
 {
     Sprite_ = std::make_unique<Sprite>();
@@ -12,6 +15,16 @@ void defeatPhase::Initialize(Scene* scene)
 void defeatPhase::Update(Scene* scene)
 {
     Sprite_->Update();
+
+    if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
+
+
+
+        
+
+        SceneManager::GetInstance()->ChangeScene("GameScene");
+
+    }
 }
 
 void defeatPhase::Draw(Scene* scene)

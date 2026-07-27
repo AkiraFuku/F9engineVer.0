@@ -185,7 +185,7 @@ void BehaviorBound::Update(Player* player) {
             }
         }
     }
-    
+
     // 重力更新
     player->UpdateGravity();
 }
@@ -201,6 +201,18 @@ void BehaviorBound::HandleInput(Player* player, ICommand* command) {
         if (auto moveAction = state->GetMoveAction()) {
             static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());
             moveAction->Execute(player);
+        }
+    }
+    // ★ Factory を取得して生成
+    auto factory = state->GetFactory();
+    if (!factory) return;
+
+    if (dynamic_cast<AttackCommand*>(command)) {
+        state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Attack));
+    }
+    if (dynamic_cast<PreShootCommand*>(command)) {
+        if (dynamic_cast<IStateRideOn*>(state)) {
+            state->ChangeBehavior(player, factory->CreateBehavior(BehaviorType::Aim));
         }
     }
 }

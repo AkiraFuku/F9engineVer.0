@@ -1,6 +1,8 @@
 #include "ClearPhase.h"
 #include "Sprite.h"
 #include "WinApp.h"
+#include "SceneManager.h"
+#include "Input.h"
 void ClearPhase::Initialize(Scene* scene)
 {
 
@@ -17,6 +19,16 @@ void ClearPhase::Initialize(Scene* scene)
 void ClearPhase::Update(Scene * scene)
 {
     clearSprite_->Update();
+
+     if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
+
+
+
+        
+
+        SceneManager::GetInstance()->ChangeScene("TitleScene");
+
+    }
 
 }
 

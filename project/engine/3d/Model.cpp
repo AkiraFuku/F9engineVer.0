@@ -141,7 +141,6 @@ void Model::Draw() {
         DXCommon::GetInstance()->GetCommandList()->DrawInstanced(
             UINT(modelData_.vertices.size()), 1, 0, 0);
     }
-    //DXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
     DebugDrawSkeleton();
 
 
@@ -639,7 +638,7 @@ void Model::DebugDrawSkeleton()
                 // 子ジョイントのワールド座標
                 Vector3 end = { childJoint.skeletonSpaceMatrix.m[3][0], childJoint.skeletonSpaceMatrix.m[3][1], childJoint.skeletonSpaceMatrix.m[3][2] };
 
-                PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 1.0f, 1.0f, 1.0f });
+                PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 0.0f, 0.0f, 10.0f });
             }
         }
     }

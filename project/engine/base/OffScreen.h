@@ -54,14 +54,14 @@ private:
     BlurParam* blurParamData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> blurConstantBuffer_;
 
-    //struct Material
-    //{
-    //    Matrix4x4 projectionInverse;
-    //};
     struct Material
     {
-        float time;
+        Matrix4x4 projectionInverse;
     };
+ /*   struct Material
+    {
+        float time;
+    };*/
     Material* materialData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> materialConstantBuffer_;
 

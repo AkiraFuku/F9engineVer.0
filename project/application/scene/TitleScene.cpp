@@ -8,7 +8,6 @@
 #include "PSOManager.h"
 #include "LightManager.h"
 #include "PrimitiveDrawer.h"
-
 void TitleScene::Initialize() {
 
  // 1. メインカメラの生成

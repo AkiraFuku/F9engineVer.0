@@ -63,6 +63,9 @@ std::unique_ptr<IPlayerState> PlayerStateFactory::CreateState(PlayerFormType typ
     case PlayerFormType::RideOnTest:
         factory = std::make_shared<RideOnPlayerFactory>();
         break;
+    case PlayerFormType::Bound: // ★ 追加
+        factory = std::make_shared<BoundPlayerFactory>();
+        break;
     }
 
     if (factory) {
@@ -79,29 +82,15 @@ std::unique_ptr<IPlayerAction> IPlayerFactory::CreateShootAction()
 // --- BoundFactory ---
 std::unique_ptr<IPlayerState> BoundPlayerFactory::CreateState() {
     // 乗り物用の StateRideOnTest（または専用の StateRideOnBound）を返す
-    return std::make_unique<StateRideOnTest>(shared_from_this());
+    return std::make_unique<StateBound>(shared_from_this());
 }
-
-std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateMoveAction() {
-    return std::make_unique<NormalMoveAction>(1.2f); // バウンド中の横移動速度
-}
-
-std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateJumpAction() {
-    return std::make_unique<NormalJumpAction>(); // 跳ねる高さ（専用Actionに差し替えも可能）
-}
-
-std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateAttackAction() {
-    return std::make_unique<NormalAttackAction>();
-}
-std::unique_ptr<IPlayerAction> BoundPlayerFactory::CreateShootAction() {
-    return std::make_unique<ShootRobotAction>();
-}
-
 std::unique_ptr<IPlayerBehavior> BoundPlayerFactory::CreateBehavior(BehaviorType type) {
     switch (type) {
-        case BehaviorType::Root:
-        default:
-            // ★ Root(デフォルト状態) を「自動跳躍ビヘイビア」にする！
-            return std::make_unique<BehaviorBound>();
+    case BehaviorType::Aim:
+        return std::make_unique<BehaviorAim>(); // ★ 追加：プレシュート（エイム）状態へ遷移できるようにする
+    case BehaviorType::Root:
+    default:
+        // ★ Root(デフォルト状態) を「自動跳躍ビヘイビア」にする！
+        return std::make_unique<BehaviorBound>();
     }
 }
