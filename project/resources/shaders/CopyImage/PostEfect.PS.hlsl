@@ -1,7 +1,7 @@
 // PostEffect.ps.hlsl
 #include "FullScreen.hlsli"
 #include "../PostEfect/DepthOutline.hlsli"
-
+#include "../PostEfect/Grayscale.hlsli"
 // テクスチャ宣言
 Texture2D<float4> gTexture : register(t0); // メインカラー
 Texture2D<float> gTextureDepth : register(t1); // 深度
@@ -57,6 +57,12 @@ PixelShaderOutput main(VertexShaderOutput input)
     // ----------------------------------------------------
     // フラグ判定によるエフェクト適用
     // ----------------------------------------------------
+    
+    // 1. グレースケール適用判定
+    if ((gMaterial.activeFlags & POST_EFFECT_GRAYSCALE) != 0)
+    {
+        finalColor = ApplyGrayscale(finalColor);
+    }
     
     // 深度アウトライン適用判定
     if ((gMaterial.activeFlags & POST_EFFECT_DEPTH_OUTLINE) != 0)

@@ -94,7 +94,7 @@ private:
     Camera* camera_;
 
     // 現在有効なポストエフェクトのフラグ (デフォルトは通常表示)
-    PostEffectFlag activeFlags_ = PostEffectFlag::DepthOutline;
+    PostEffectFlag activeFlags_ = PostEffectFlag::GrayScale;
 
     BlurParam* blurParamData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> blurConstantBuffer_;
