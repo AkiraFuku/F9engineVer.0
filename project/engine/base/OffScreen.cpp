@@ -26,7 +26,64 @@ void OffScreen::Initialize() {
     TextureManager::GetInstance()->LoadTexture(MaskMaterial_.textureFilePath);
     MaskMaterial_.maskTextureSrvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(MaskMaterial_.textureFilePath);
 
-    PsoConfig psoConfig = {};
+
+
+    // =========================================================
+// ポストエフェクト統括用 PSO ("PostEffect") の登録
+// =========================================================
+PsoConfig psoConfig = {};
+psoConfig.shaderPaths = {
+    { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+    { ShaderType::PS, L"resources/shaders/CopyImage/PostEfect.PS.hlsl", "main", L"ps_6_0" }
+};
+
+psoConfig.rootSignatureGenerator = []() {
+    // 静的サンプラー s0 (リニアフィルタ) と s1 (ポイントフィルタ)
+    auto sampler0 = PSOManager::GetInstance()->StaticSamplers(); // s0
+    
+    auto sampler1 = sampler0;
+    sampler1.ShaderRegister = 1;                        // s1
+    sampler1.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;   // 深度用ポイントフィルタ
+
+    return RootSignatureBuilder()
+        // [Param 0] Color Texture (t0)
+        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
+        
+        // [Param 1] Depth Texture (t1)
+        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_SHADER_VISIBILITY_PIXEL)
+        
+        // [Param 2] Mask Texture (t2)
+        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, D3D12_SHADER_VISIBILITY_PIXEL)
+        
+        // [Param 3] Main Material CBV (b0: projectionInverse, time, activeFlags)
+        .AddCBV(0, D3D12_SHADER_VISIBILITY_PIXEL)
+        
+        // [Param 4] Blur Param CBV (b1: center, radius, blurWidth)
+        .AddCBV(1, D3D12_SHADER_VISIBILITY_PIXEL)
+        
+        // [Param 5] Dissolve Param CBV (b2: threshold)
+        .AddCBV(2, D3D12_SHADER_VISIBILITY_PIXEL)
+        
+        // スタティックサンプラー (s0, s1)
+        .AddStaticSampler(sampler0)
+        .AddStaticSampler(sampler1)
+        
+        .Build(DXCommon::GetInstance()->GetDevice().Get());
+};
+
+psoConfig.inputLayoutGenerator = []() {
+    InputLayout inputLayout = {};
+    inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };
+    return inputLayout;
+};
+
+psoConfig.depthEnable = false;
+
+// "PostEffect" という名前でPSOを登録
+PSOManager::GetInstance()->RegisterPsoGenerator("PostEffect", psoConfig);
+///
+///
+ psoConfig = {};
     psoConfig.shaderPaths = {
         { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
         { ShaderType::PS, L"resources/shaders/CopyImage/CopyImage.ps.hlsl", "main", L"ps_6_0" }
@@ -261,58 +318,110 @@ void OffScreen::Initialize() {
 
     dissolveParamData_->threshold = 0.5f; // 初期値
 }
-
 void OffScreen::Draw()
 {
-
-
     auto commandList = DXCommon::GetInstance()->GetCommandList();
     auto psoManager = PSOManager::GetInstance();
     auto srvManager = SrvManager::GetInstance();
+
     if (!camera_)
     {
-
         Logger::Log("Camera is not set for OffScreen.");
         return;
-
     }
 
-    //if (materialData_)
-    //{
-    //    // 毎フレームの経過時間を加算する
-    //    materialData_->time += DXCommon::GetInstance()->kDeltaTime;
-    //}
+    // 1. 定数バッファの更新
+    if (materialData_)
+    {
+        materialData_->time += DXCommon::GetInstance()->kDeltaTime;
+        materialData_->projectionInverse = Inverse(camera_->GetProjectionMatrix());
+        materialData_->activeFlags = static_cast<uint32_t>(activeFlags_); // フラグをセット
+    }
 
-     materialData_->projectionInverse = Inverse(
-         camera_->GetProjectionMatrix()
-     );
-
-     // 1. PSOの取得とセット
-    PsoSet pso = psoManager->GetPso("DepthOutline");
+    // 2. 統括PSO の取得とバインド
+    PsoSet pso = psoManager->GetPso("PostEffect");
     commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
     commandList->SetPipelineState(pso.pipelineState.Get());
 
-    // 2. トポロジの設定（これを忘れると何も出ません）
+    // 3. トポロジ設定
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // 3. SRVのセット（第1引数はルートパラメータの番号: 今回は0番）
-    uint32_t srvIndex = DXCommon::GetInstance()->GetRenderTextureSrvIndex();
-    srvManager->SetGraphicsRootDescriptorTable(0, srvIndex);
+    // 4. 各リソースのバインド (Root Parameter 0 ~ 5)
+    
+    // [Param 0] メインカラーテクスチャ (t0)
+    uint32_t colorSrvIndex = DXCommon::GetInstance()->GetRenderTextureSrvIndex();
+    srvManager->SetGraphicsRootDescriptorTable(0, colorSrvIndex);
 
-    //
-    //srvManager->SetGraphicsRootDescriptorTable(1, MaskMaterial_.maskTextureSrvIndex);
+    // [Param 1] 深度テクスチャ (t1)
+    uint32_t depthSrvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
+    srvManager->SetGraphicsRootDescriptorTable(1, depthSrvIndex);
 
-    //commandList->SetGraphicsRootConstantBufferView(1, blurConstantBuffer_->GetGPUVirtualAddress());
-     srvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
-    srvManager->SetGraphicsRootDescriptorTable(1, srvIndex);
+    // [Param 2] マスクノイズテクスチャ (t2)
+    srvManager->SetGraphicsRootDescriptorTable(2, MaskMaterial_.maskTextureSrvIndex);
 
-   // commandList->SetGraphicsRootConstantBufferView(1, materialConstantBuffer_->GetGPUVirtualAddress());
-    commandList->SetGraphicsRootConstantBufferView(2, materialConstantBuffer_->GetGPUVirtualAddress());
-    //commandList->SetGraphicsRootConstantBufferView(2, dissolveConstantBuffer_->GetGPUVirtualAddress());
+    // [Param 3] メインマテリアル CBV (b0)
+    commandList->SetGraphicsRootConstantBufferView(3, materialConstantBuffer_->GetGPUVirtualAddress());
 
-    // 4. 描画実行（頂点シェーダーで全画面生成している場合は3頂点）
+    // [Param 4] ブラーパラメータ CBV (b1)
+    commandList->SetGraphicsRootConstantBufferView(4, blurConstantBuffer_->GetGPUVirtualAddress());
+
+    // [Param 5] ディゾルブパラメータ CBV (b2)
+    commandList->SetGraphicsRootConstantBufferView(5, dissolveConstantBuffer_->GetGPUVirtualAddress());
+
+    // 5. 描画実行
     commandList->DrawInstanced(3, 1, 0, 0);
 }
+//void OffScreen::Draw()
+//{
+//
+//
+//    auto commandList = DXCommon::GetInstance()->GetCommandList();
+//    auto psoManager = PSOManager::GetInstance();
+//    auto srvManager = SrvManager::GetInstance();
+//    if (!camera_)
+//    {
+//
+//        Logger::Log("Camera is not set for OffScreen.");
+//        return;
+//
+//    }
+//
+//    if (materialData_)
+//    {
+//        // 毎フレームの経過時間を加算する
+//        materialData_->time += DXCommon::GetInstance()->kDeltaTime;
+//    }
+//
+//     materialData_->projectionInverse = Inverse(
+//         camera_->GetProjectionMatrix()
+//     );
+//
+//
+//     // 1. PSOの取得とセット
+//    PsoSet pso = psoManager->GetPso("OffScreen");
+//    commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
+//    commandList->SetPipelineState(pso.pipelineState.Get());
+//
+//    // 2. トポロジの設定（これを忘れると何も出ません）
+//    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//
+//    // 3. SRVのセット（第1引数はルートパラメータの番号: 今回は0番）
+//    uint32_t srvIndex = DXCommon::GetInstance()->GetRenderTextureSrvIndex();
+//    srvManager->SetGraphicsRootDescriptorTable(0, srvIndex);
+//
+//    //
+//    //srvManager->SetGraphicsRootDescriptorTable(1, MaskMaterial_.maskTextureSrvIndex);
+//
+//    //commandList->SetGraphicsRootConstantBufferView(1, blurConstantBuffer_->GetGPUVirtualAddress());
+//    // srvIndex = DXCommon::GetInstance()->GetDepthTextureSrvIndex();
+//    //srvManager->SetGraphicsRootDescriptorTable(1, srvIndex);
+//
+//    //commandList->SetGraphicsRootConstantBufferView(1, materialConstantBuffer_->GetGPUVirtualAddress());
+//    //commandList->SetGraphicsRootConstantBufferView(2, dissolveConstantBuffer_->GetGPUVirtualAddress());
+//
+//    // 4. 描画実行（頂点シェーダーで全画面生成している場合は3頂点）
+//    commandList->DrawInstanced(3, 1, 0, 0);
+//}
 
 void OffScreen::SetMaskMaterial(std::string textureFilePath)
 {}

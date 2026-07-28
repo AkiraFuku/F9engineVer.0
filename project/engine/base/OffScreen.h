@@ -16,6 +16,36 @@ struct BlurParam
 
 };
 
+// --- ビットフラグの定義 ---
+enum class PostEffectFlag : uint32_t {
+    None         = 0,//通常表示
+    GrayScale    = 1 << 0, // 0x01: グレースケール
+    Random       = 1 << 1, // 0x02: ランダムノイズ
+    Vignette     = 1 << 2, // 0x04: ヴィネット（輝度アウトライン）
+    RadialBlur   = 1 << 3, // 0x08: ラジアルブラー
+    DepthOutline = 1 << 4, // 0x10: 深度アウトライン
+    LuminanceOutline = 1 << 5, // 0x10: 輝度アウトライン
+    Dissolve     = 1 << 6  // 0x20: ディゾルブ
+};
+// ビット演算子を使いやすくするためのオーバーロード定義
+inline PostEffectFlag operator|(PostEffectFlag a, PostEffectFlag b) {
+    return static_cast<PostEffectFlag>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+}
+inline PostEffectFlag operator&(PostEffectFlag a, PostEffectFlag b) {
+    return static_cast<PostEffectFlag>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
+}
+inline PostEffectFlag& operator|=(PostEffectFlag& a, PostEffectFlag b) {
+    a = a | b;
+    return a;
+}
+inline PostEffectFlag& operator&=(PostEffectFlag& a, PostEffectFlag b) {
+    a = a & b;
+    return a;
+}
+inline PostEffectFlag operator~(PostEffectFlag a) {
+    return static_cast<PostEffectFlag>(~static_cast<uint32_t>(a));
+}
+
 class Camera;
 class OffScreen
 {
@@ -43,6 +73,18 @@ public:
 
     void SetMaskMaterial( std::string textureFilePath) ;
 
+    // --- ビットフラグ操作用 API ---
+    void SetEffectFlags(PostEffectFlag flags) { activeFlags_ = flags; }
+    void EnableEffect(PostEffectFlag flag) { activeFlags_ |= flag; }
+    void DisableEffect(PostEffectFlag flag) { activeFlags_ &= ~flag; }
+    void ToggleEffect(PostEffectFlag flag) {
+        activeFlags_ = static_cast<PostEffectFlag>(static_cast<uint32_t>(activeFlags_) ^ static_cast<uint32_t>(flag));
+    }
+    bool IsEffectActive(PostEffectFlag flag) const {
+        return (static_cast<uint32_t>(activeFlags_) & static_cast<uint32_t>(flag)) != 0;
+    }
+    void ClearEffects() { activeFlags_ = PostEffectFlag::None; }
+
 private:
     OffScreen() = default;
     ~OffScreen() = default;
@@ -51,17 +93,19 @@ private:
 
     Camera* camera_;
 
+    // 現在有効なポストエフェクトのフラグ (デフォルトは通常表示)
+    PostEffectFlag activeFlags_ = PostEffectFlag::DepthOutline;
+
     BlurParam* blurParamData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> blurConstantBuffer_;
 
-    struct Material
-    {
-        Matrix4x4 projectionInverse;
-    };
- /*   struct Material
-    {
-        float time;
-    };*/
+struct Material
+{
+    Matrix4x4 projectionInverse;
+    float time;
+    uint32_t activeFlags; // シェーダーに送るビットフラグ
+    float padding[2];     // 16バイトアラインメント調整
+};
     Material* materialData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> materialConstantBuffer_;
 
