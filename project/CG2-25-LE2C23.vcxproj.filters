@@ -669,6 +669,14 @@
     <None Include="resources\shaders\CopyImage\CopyImage.hlsli">
       <Filter>シェーダー ファイル\ofScrene</Filter>
     </None>
+    <None Include="resources\shaders\PostEfect\DepthOutline.hlsli" />
+    <None Include="resources\shaders\PostEfect\Dissolve.hlsli" />
+    <None Include="resources\shaders\PostEfect\GrayScale.hlsli" />
+    <None Include="resources\shaders\PostEfect\LuminanceOutline.PS.hlsli" />
+    <None Include="resources\shaders\PostEfect\RadialBlur.hlsli" />
+    <None Include="resources\shaders\PostEfect\Random.hlsli" />
+    <None Include="resources\shaders\PostEfect\Vignette.hlsli" />
+    <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
@@ -710,5 +718,6 @@
     <FxCompile Include="resources\shaders\CopyImage\CopyImage.PS.hlsl">
       <Filter>シェーダー ファイル\ofScrene</Filter>
     </FxCompile>
+    <FxCompile Include="resources\shaders\CopyImage\PostEfect.PS.hlsl" />
   </ItemGroup>
 </Project>
