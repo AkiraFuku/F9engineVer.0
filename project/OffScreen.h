@@ -65,6 +65,7 @@ public:
 
     void Initialize();
     void Finalize();
+    void Update();
     void Draw();
 
     void SetCamera(Camera* camera) {
@@ -94,7 +95,7 @@ private:
     Camera* camera_;
 
     // 現在有効なポストエフェクトのフラグ (デフォルトは通常表示)
-    PostEffectFlag activeFlags_ = PostEffectFlag::GrayScale;
+    PostEffectFlag activeFlags_ = PostEffectFlag::None;
 
     BlurParam* blurParamData_;
     Microsoft::WRL::ComPtr<ID3D12Resource> blurConstantBuffer_;

@@ -142,7 +142,7 @@ void Framework::Update()
     Audio::GetInstance()->Update();
     LightManager::GetInstance()->Update();
 
-
+     OffScreen::GetInstance()->Update();
 }
 
 void Framework::PreDraw()
