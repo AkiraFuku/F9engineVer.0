@@ -18,16 +18,16 @@ struct BlurParam
 
 // --- ビットフラグの定義 ---
 enum class PostEffectFlag : uint32_t {
-    None         = 0,//通常表示
-    GrayScale    = 1 << 0, // 0x01: グレースケール
-    Random       = 1 << 1, // 0x02: ランダムノイズ
-    Vignette     = 1 << 2, // 0x04: ヴィネット（輝度アウトライン）
-    RadialBlur   = 1 << 3, // 0x08: ラジアルブラー
-    DepthOutline = 1 << 4, // 0x10: 深度アウトライン
-    LuminanceOutline = 1 << 5, // 0x10: 輝度アウトライン
-    Dissolve     = 1 << 6  // 0x20: ディゾルブ
-};
-// ビット演算子を使いやすくするためのオーバーロード定義
+    None             = 0,       // 通常表示
+    GrayScale        = 1 << 0,  // 0x01: グレースケール
+    Random           = 1 << 1,  // 0x02: ランダムノイズ
+    Vignette         = 1 << 2,  // 0x04: ヴィネット
+    RadialBlur       = 1 << 3,  // 0x08: ラジアルブラー
+    DepthOutline     = 1 << 4,  // 0x10: 深度アウトライン
+    LuminanceOutline = 1 << 5,  // 0x20: 輝度アウトライン
+    Dissolve         = 1 << 6,  // 0x40: ディゾルブ
+    BoxFilter        = 1 << 7   // 0x80: 5x5ボックスフィルタ(平滑化) ← 追加
+};// ビット演算子を使いやすくするためのオーバーロード定義
 inline PostEffectFlag operator|(PostEffectFlag a, PostEffectFlag b) {
     return static_cast<PostEffectFlag>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }

@@ -1,7 +1,13 @@
 // PostEffect.ps.hlsl
 #include "FullScreen.hlsli"
-#include "../PostEfect/DepthOutline.hlsli"
 #include "../PostEfect/Grayscale.hlsli"
+#include "../PostEfect/DepthOutline.hlsli"
+#include "../PostEfect/LuminanceOutline.hlsli"
+#include "../PostEfect/RadialBlur.hlsli"
+#include "../PostEfect/Random.hlsli"
+#include "../PostEfect/Dissolve.hlsli"
+#include "../PostEfect/Vignette.hlsli"     
+#include "../PostEfect/BoxFilter.hlsli"    
 // テクスチャ宣言
 Texture2D<float4> gTexture : register(t0); // メインカラー
 Texture2D<float> gTextureDepth : register(t1); // 深度
@@ -45,26 +51,79 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
     
-    // ベースカラーのサンプリング
-    float4 baseColor = gTexture.Sample(gSampler, input.texcoord);
-    float3 finalColor = baseColor.rgb;
-
     // 1ピクセル幅の計算
     uint width, height;
     gTexture.GetDimensions(width, height);
     float2 uvStepSize = float2(rcp(width), rcp(height));
 
     // ----------------------------------------------------
-    // フラグ判定によるエフェクト適用
+    // 1. ディゾルブ判定（画面から破棄する判定を最優先）
     // ----------------------------------------------------
-    
-    // 1. グレースケール適用判定
+    float3 finalColor = gTexture.Sample(gSampler, input.texcoord).rgb;
+
+    if ((gMaterial.activeFlags & POST_EFFECT_DISSOLVE) != 0)
+    {
+        finalColor = ApplyDissolve(
+            finalColor,
+            input.texcoord,
+            gMaskTexture,
+            gSampler,
+            gDissolveParam.threshold
+        );
+    }
+
+    // ----------------------------------------------------
+    // 2. ブラー・フィルタ系
+    // ----------------------------------------------------
+    if ((gMaterial.activeFlags & POST_EFFECT_BOX_FILTER) != 0)
+    {
+        finalColor = ApplyBoxFilter(gTexture, gSampler, input.texcoord, uvStepSize);
+    }
+
+    if ((gMaterial.activeFlags & POST_EFFECT_RADIAL_BLUR) != 0)
+    {
+        finalColor = ApplyRadialBlur(
+            gTexture,
+            gSampler,
+            input.texcoord,
+            gBlurParam.center,
+            gBlurParam.radius,
+            gBlurParam.blurWidth
+        );
+    }
+
+    // ----------------------------------------------------
+    // 3. カラー・トーン・画面減光調整系
+    // ----------------------------------------------------
+    if ((gMaterial.activeFlags & POST_EFFECT_RANDOM) != 0)
+    {
+        finalColor = ApplyRandomNoise(finalColor, input.texcoord, gMaterial.time);
+    }
+
     if ((gMaterial.activeFlags & POST_EFFECT_GRAYSCALE) != 0)
     {
         finalColor = ApplyGrayscale(finalColor);
     }
-    
-    // 深度アウトライン適用判定
+
+    if ((gMaterial.activeFlags & POST_EFFECT_VIGNETTE) != 0)
+    {
+        finalColor = ApplyVignette(finalColor, input.texcoord);
+    }
+
+    // ----------------------------------------------------
+    // 4. アウトライン系（輪郭線を一番上に重畳）
+    // ----------------------------------------------------
+    if ((gMaterial.activeFlags & POST_EFFECT_LUMINANCE_OUTLINE) != 0)
+    {
+        finalColor = ApplyLuminanceOutline(
+            finalColor,
+            gTexture,
+            gSampler,
+            input.texcoord,
+            uvStepSize
+        );
+    }
+
     if ((gMaterial.activeFlags & POST_EFFECT_DEPTH_OUTLINE) != 0)
     {
         finalColor = ApplyDepthOutline(
@@ -77,6 +136,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         );
     }
 
-    output.color = float4(finalColor, baseColor.a);
+    float baseAlpha = gTexture.Sample(gSampler, input.texcoord).a;
+    output.color = float4(finalColor, baseAlpha);
     return output;
 }

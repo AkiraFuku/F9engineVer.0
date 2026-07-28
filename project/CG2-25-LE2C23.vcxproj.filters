@@ -597,8 +597,10 @@
     <None Include="resources\shaders\PostEfect\Vignette.hlsli" />
     <None Include="resources\shaders\PostEfect\RadialBlur.hlsli" />
     <None Include="resources\shaders\PostEfect\DepthOutline.hlsli" />
-    <None Include="resources\shaders\PostEfect\LuminanceOutline.PS.hlsli" />
+    <None Include="resources\shaders\PostEfect\LuminanceOutline.hlsli" />
     <None Include="resources\shaders\PostEfect\Dissolve.hlsli" />
+    <None Include="resources\shaders\PostEfect\GaussianBlur.hlsli" />
+    <None Include="resources\shaders\PostEfect\BoxFilter.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">

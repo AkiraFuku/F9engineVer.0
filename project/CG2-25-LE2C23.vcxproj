@@ -185,10 +185,12 @@
     <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
+    <None Include="resources\shaders\PostEfect\BoxFilter.hlsli" />
     <None Include="resources\shaders\PostEfect\DepthOutline.hlsli" />
     <None Include="resources\shaders\PostEfect\Dissolve.hlsli" />
+    <None Include="resources\shaders\PostEfect\GaussianBlur.hlsli" />
     <None Include="resources\shaders\PostEfect\GrayScale.hlsli" />
-    <None Include="resources\shaders\PostEfect\LuminanceOutline.PS.hlsli" />
+    <None Include="resources\shaders\PostEfect\LuminanceOutline.hlsli" />
     <None Include="resources\shaders\PostEfect\RadialBlur.hlsli" />
     <None Include="resources\shaders\PostEfect\Random.hlsli" />
     <None Include="resources\shaders\PostEfect\Vignette.hlsli" />
