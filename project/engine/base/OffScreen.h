@@ -75,15 +75,39 @@ public:
     void SetMaskMaterial( std::string textureFilePath) ;
 
     // --- ビットフラグ操作用 API ---
+    /// <summary>
+    /// ポストエフェクトの有効フラグを一括で設定します（指定したフラグで上書きします）。
+    /// </summary>
+    /// <param name="flags">有効にしたいエフェクトフラグの組み合わせ（OR(|)結合可能）</param>
     void SetEffectFlags(PostEffectFlag flags) { activeFlags_ = flags; }
+    /// <summary>
+    /// 指定したポストエフェクトを追加で有効化します。
+    /// </summary>
+    /// <param name="flag">有効化したいエフェクト（PostEffectFlag::A | PostEffectFlag::B で複数指定も可能）</param>
     void EnableEffect(PostEffectFlag flag) { activeFlags_ |= flag; }
+    /// <summary>
+    /// 指定したポストエフェクトを追加で有効化します。
+    /// </summary>
+    /// <param name="flag">有効化したいエフェクト（PostEffectFlag::A | PostEffectFlag::B で複数指定も可能）</param>
     void DisableEffect(PostEffectFlag flag) { activeFlags_ &= ~flag; }
+    /// <summary>
+    /// 指定したポストエフェクトの有効／無効状態を反転（トグル）します。
+    /// </summary>
+    /// <param name="flag">状態を反転させたいエフェクト</param>
     void ToggleEffect(PostEffectFlag flag) {
         activeFlags_ = static_cast<PostEffectFlag>(static_cast<uint32_t>(activeFlags_) ^ static_cast<uint32_t>(flag));
     }
+    /// <summary>
+    /// 指定したポストエフェクトが有効になっているか判定します。
+    /// </summary>
+    /// <param name="flag">確認したいエフェクト</param>
+    /// <returns>有効な場合は true、無効な場合は false</returns>
     bool IsEffectActive(PostEffectFlag flag) const {
         return (static_cast<uint32_t>(activeFlags_) & static_cast<uint32_t>(flag)) != 0;
     }
+    /// <summary>
+    /// すべてのポストエフェクトを解除（無効化）し、通常描画状態に戻します。
+    /// </summary>
     void ClearEffects() { activeFlags_ = PostEffectFlag::None; }
 
 private:

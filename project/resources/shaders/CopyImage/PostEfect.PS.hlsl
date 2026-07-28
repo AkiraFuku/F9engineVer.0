@@ -71,7 +71,7 @@ PixelShaderOutput main(VertexShaderOutput input)
             gDissolveParam.threshold
         );
     }
-
+    
     // ----------------------------------------------------
     // 2. ブラー・フィルタ系
     // ----------------------------------------------------
@@ -109,7 +109,6 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         finalColor = ApplyVignette(finalColor, input.texcoord);
     }
-
     // ----------------------------------------------------
     // 4. アウトライン系（輪郭線を一番上に重畳）
     // ----------------------------------------------------
@@ -135,6 +134,7 @@ PixelShaderOutput main(VertexShaderOutput input)
             gMaterial.projectionInverse
         );
     }
+    
 
     float baseAlpha = gTexture.Sample(gSampler, input.texcoord).a;
     output.color = float4(finalColor, baseAlpha);
