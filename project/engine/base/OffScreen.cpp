@@ -32,56 +32,56 @@ void OffScreen::Initialize() {
     // =========================================================
 // ポストエフェクト統括用 PSO ("PostEffect") の登録
 // =========================================================
-PsoConfig psoConfig = {};
-psoConfig.shaderPaths = {
-    { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
-    { ShaderType::PS, L"resources/shaders/CopyImage/PostEfect.PS.hlsl", "main", L"ps_6_0" }
-};
+    PsoConfig psoConfig = {};
+    psoConfig.shaderPaths = {
+        { ShaderType::VS, L"resources/shaders/CopyImage/FullScreen.vs.hlsl", "main", L"vs_6_0" },
+        { ShaderType::PS, L"resources/shaders/CopyImage/PostEfect.PS.hlsl", "main", L"ps_6_0" }
+    };
 
-psoConfig.rootSignatureGenerator = []() {
-    // 静的サンプラー s0 (リニアフィルタ) と s1 (ポイントフィルタ)
-    auto sampler0 = PSOManager::GetInstance()->StaticSamplers(); // s0
-    
-    auto sampler1 = sampler0;
-    sampler1.ShaderRegister = 1;                        // s1
-    sampler1.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;   // 深度用ポイントフィルタ
+    psoConfig.rootSignatureGenerator = []() {
+        // 静的サンプラー s0 (リニアフィルタ) と s1 (ポイントフィルタ)
+        auto sampler0 = PSOManager::GetInstance()->StaticSamplers(); // s0
 
-    return RootSignatureBuilder()
-        // [Param 0] Color Texture (t0)
-        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
-        
-        // [Param 1] Depth Texture (t1)
-        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_SHADER_VISIBILITY_PIXEL)
-        
-        // [Param 2] Mask Texture (t2)
-        .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, D3D12_SHADER_VISIBILITY_PIXEL)
-        
-        // [Param 3] Main Material CBV (b0: projectionInverse, time, activeFlags)
-        .AddCBV(0, D3D12_SHADER_VISIBILITY_PIXEL)
-        
-        // [Param 4] Blur Param CBV (b1: center, radius, blurWidth)
-        .AddCBV(1, D3D12_SHADER_VISIBILITY_PIXEL)
-        
-        // [Param 5] Dissolve Param CBV (b2: threshold)
-        .AddCBV(2, D3D12_SHADER_VISIBILITY_PIXEL)
-        
-        // スタティックサンプラー (s0, s1)
-        .AddStaticSampler(sampler0)
-        .AddStaticSampler(sampler1)
-        
-        .Build(DXCommon::GetInstance()->GetDevice().Get());
-};
+        auto sampler1 = sampler0;
+        sampler1.ShaderRegister = 1;                        // s1
+        sampler1.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;   // 深度用ポイントフィルタ
 
-psoConfig.inputLayoutGenerator = []() {
-    InputLayout inputLayout = {};
-    inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };
-    return inputLayout;
-};
+        return RootSignatureBuilder()
+            // [Param 0] Color Texture (t0)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
 
-psoConfig.depthEnable = false;
+            // [Param 1] Depth Texture (t1)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_SHADER_VISIBILITY_PIXEL)
 
-// "PostEffect" という名前でPSOを登録
-PSOManager::GetInstance()->RegisterPsoGenerator("PostEffect", psoConfig);
+            // [Param 2] Mask Texture (t2)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, D3D12_SHADER_VISIBILITY_PIXEL)
+
+            // [Param 3] Main Material CBV (b0: projectionInverse, time, activeFlags)
+            .AddCBV(0, D3D12_SHADER_VISIBILITY_PIXEL)
+
+            // [Param 4] Blur Param CBV (b1: center, radius, blurWidth)
+            .AddCBV(1, D3D12_SHADER_VISIBILITY_PIXEL)
+
+            // [Param 5] Dissolve Param CBV (b2: threshold)
+            .AddCBV(2, D3D12_SHADER_VISIBILITY_PIXEL)
+
+            // スタティックサンプラー (s0, s1)
+            .AddStaticSampler(sampler0)
+            .AddStaticSampler(sampler1)
+
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
+
+    psoConfig.inputLayoutGenerator = []() {
+        InputLayout inputLayout = {};
+        inputLayout.inputLayout = D3D12_INPUT_LAYOUT_DESC{ nullptr, 0 };
+        return inputLayout;
+        };
+
+    psoConfig.depthEnable = false;
+
+    // "PostEffect" という名前でPSOを登録
+    PSOManager::GetInstance()->RegisterPsoGenerator("PostEffect", psoConfig);
 
     // マテリアル定数バッファの生成とマップ
     materialConstantBuffer_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
@@ -119,10 +119,13 @@ void OffScreen::Update()
                 bool active = IsEffectActive(flag);
                 if (ImGui::Checkbox(label, &active))
                 {
-                    if (active) { EnableEffect(flag); }
-                    else { DisableEffect(flag); }
+                    if (active) {
+                        EnableEffect(flag);
+                    } else {
+                        DisableEffect(flag);
+                    }
                 }
-            };
+                };
 
             FlagCheckbox("Gray Scale", PostEffectFlag::GrayScale);
             FlagCheckbox("Random Noise", PostEffectFlag::Random);
@@ -214,7 +217,7 @@ void OffScreen::Draw()
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // 4. 各リソースのバインド (Root Parameter 0 ~ 5)
-    
+
     // [Param 0] メインカラーテクスチャ (t0)
     uint32_t colorSrvIndex = DXCommon::GetInstance()->GetRenderTextureSrvIndex();
     srvManager->SetGraphicsRootDescriptorTable(0, colorSrvIndex);

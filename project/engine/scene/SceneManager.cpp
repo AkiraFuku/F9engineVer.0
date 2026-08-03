@@ -5,6 +5,8 @@
 #include "PrimitiveDrawer.h"
 #include "OffScreen.h"
 #include "ParticleManager.h"
+#include "EffectManager.h"
+
 // 静的メンバ変数の実体
 std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
 
@@ -51,6 +53,7 @@ void SceneManager::Update() {
         scene_->Update();
         LightManager::GetInstance()->Update();
         ParticleManager::GetInstance()->Update();
+        EffectManager::GetInstance()->Update();
     }
 }
 

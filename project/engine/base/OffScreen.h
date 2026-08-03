@@ -93,7 +93,7 @@ public:
     /// <summary>
     /// 指定したポストエフェクトの有効／無効状態を反転（トグル）します。
     /// </summary>
-    /// <param name="flag">状態を反転させたいエフェクト</param>
+    /// <param name="flag">状態を反転させたいエフェクトPostEffectFlag::A | PostEffectFlag::B で複数指定も可能）</param>
     void ToggleEffect(PostEffectFlag flag) {
         activeFlags_ = static_cast<PostEffectFlag>(static_cast<uint32_t>(activeFlags_) ^ static_cast<uint32_t>(flag));
     }
@@ -109,6 +109,41 @@ public:
     /// すべてのポストエフェクトを解除（無効化）し、通常描画状態に戻します。
     /// </summary>
     void ClearEffects() { activeFlags_ = PostEffectFlag::None; }
+
+
+    BlurParam* GetBlurParam() const {
+        return blurParamData_;
+    }
+    void SetBlurParam(const BlurParam& param) {
+        if (blurParamData_) {
+            *blurParamData_ = param;
+        }
+    }
+    void SetBlurCenter(const Vector2& center) {
+        if (blurParamData_) {
+            blurParamData_->center = center;
+        }
+    }
+    void SetBlurRadius(int radius) {
+        if (blurParamData_) {
+            blurParamData_->radius = radius;
+        }
+    }
+    void SetBlurWidth(float width) {
+        if (blurParamData_) {
+            blurParamData_->blurWidth = width;
+        }
+    }
+
+    void SetDissolveThreshold(float threshold) {
+        if (dissolveParamData_) {
+            dissolveParamData_->threshold = threshold;
+        }
+    }
+
+    float GetDissolveThreshold() const {
+        return dissolveParamData_ ? dissolveParamData_->threshold : 0.0f;
+    }
 
 private:
     OffScreen() = default;
@@ -138,7 +173,7 @@ struct Material
 
     struct DissolveParm
     {
-        float threshold;
+        float threshold;// ディゾルブのしきい値
         float padding[3]; // 16バイトアラインメントのためのパディング
     };
     DissolveParm* dissolveParamData_;

@@ -155,6 +155,14 @@ Vector3 Normalize(const Vector3& v);
 Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
 
 template<typename T>
+
+/// <summary>
+/// 線形補間
+/// </summary>
+/// <param name="v1">ベクトル１ </param>
+/// <param name="v2">ベクトル２</param>
+/// <param name="t">補間値</param>
+/// <returns>補間後のベクトル</returns>
 inline T Lerp(const T& v1, const T& v2, float t)
 {
     return v1 + (v2 - v1) * t;

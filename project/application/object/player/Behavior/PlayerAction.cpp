@@ -4,6 +4,8 @@
 #include "Scene.h"
 #include "GameScene.h"
 #include "MathFunction.h"
+#include "EffectManager.h"
+
 void NormalMoveAction::Execute(Player* player) {
     // Player.cpp にあった移動ロジックをここに移譲
     player->Move(speed_);
@@ -15,6 +17,9 @@ void NormalJumpAction::Execute(Player* player) {
 }
 // PlayerAction.cpp
 void NormalAttackAction::Execute(Player* player) {
+
+    EffectManager::GetInstance()->TriggerEffect(PostEffectFlag::RadialBlur, 0.75f,EffectManager::CreateRadialBlurFunctional(0.03f, 0.0f));
+
     // 進行方向（1 or -1）を取得
     int attackDir = player->GetMoveDirection();
 

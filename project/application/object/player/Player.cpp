@@ -12,6 +12,7 @@
 #include "PrimitiveDrawer.h"
 #include <numbers>
 #include "GameScene.h"
+#include "EffectManager.h"
 
 Player::Player() = default;
 Player::~Player() = default;

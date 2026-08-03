@@ -15,11 +15,9 @@ void GameEngine::Initialize() {
 
     SceneManager::GetInstance()->ChangeScene("GameScene");
     PrimitiveDrawer::GetInstance()->Initialize();
-  OffScreen::GetInstance()->SetEffectFlags(
-    PostEffectFlag::GrayScale | 
-    PostEffectFlag::DepthOutline | 
-    PostEffectFlag::RadialBlur
-);
+    OffScreen::GetInstance()->SetEffectFlags(
+        PostEffectFlag::DepthOutline
+    );
 };
 void GameEngine::Finalize() {
     SceneManager::GetInstance()->Finalize();
@@ -30,10 +28,7 @@ void GameEngine::Update() {
     Framework::Update();
 
     SceneManager::GetInstance()->Update();
-   // ParticleManager::GetInstance()->Update();
-
-
-
+    
 }
 void GameEngine::PreDraw()
 {

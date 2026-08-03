@@ -399,6 +399,9 @@
     <ClCompile Include="BoundRobot.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="EffectManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -647,6 +650,9 @@
     <ClInclude Include="BoundRobot.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="EffectManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
@@ -672,11 +678,13 @@
     <None Include="resources\shaders\PostEfect\DepthOutline.hlsli" />
     <None Include="resources\shaders\PostEfect\Dissolve.hlsli" />
     <None Include="resources\shaders\PostEfect\GrayScale.hlsli" />
-    <None Include="resources\shaders\PostEfect\LuminanceOutline.PS.hlsli" />
     <None Include="resources\shaders\PostEfect\RadialBlur.hlsli" />
     <None Include="resources\shaders\PostEfect\Random.hlsli" />
     <None Include="resources\shaders\PostEfect\Vignette.hlsli" />
     <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
+    <None Include="resources\shaders\PostEfect\BoxFilter.hlsli" />
+    <None Include="resources\shaders\PostEfect\GaussianBlur.hlsli" />
+    <None Include="resources\shaders\PostEfect\LuminanceOutline.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">
