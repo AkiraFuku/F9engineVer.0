@@ -396,10 +396,10 @@
     <ClCompile Include="application\object\player\Behavior\IPlayerFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="BoundRobot.cpp">
+    <ClCompile Include="application\object\Robot\BoundRobot.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="EffectManager.cpp">
+    <ClCompile Include="engine\EffectManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\Collision\Collider.cpp">
@@ -650,10 +650,10 @@
     <ClInclude Include="application\object\player\Behavior\IPlayerFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="BoundRobot.h">
+    <ClInclude Include="application\object\Robot\BoundRobot.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="EffectManager.h">
+    <ClInclude Include="engine\EffectManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\Collision\Collider.h">
