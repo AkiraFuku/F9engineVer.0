@@ -2,7 +2,7 @@
 #include <memory>
 #include "Transform.h"
 #include "Object3d.h"
-#include "ICollider.h"
+#include "GameObject.h"
 #include "Scene.h"
 class Camera;
 class RailMover;
@@ -13,7 +13,7 @@ class Player; // Enemy.h の場合
 class Robot; // Enemy.h の場合
 class ParticleEmitter; // Enemy.h の場合
 
-class Enemy : public ICollider
+class Enemy : public GameObject
 {
 public:
 
@@ -28,10 +28,10 @@ public:
     virtual ~Enemy();
     //コリジョン
 
-    float GetRadius() const override {
+    float GetRadius() const  {
         return radius_;
     }
-    virtual void OnCollision(ICollider* other) override; // Enemy側
+    virtual void OnCollision(GameObject* other) override; // Enemy側
     Vector3 GetWorldPosition() const override {
         return object_->GetTranslate();
     }
@@ -182,7 +182,7 @@ protected:
 
     Scene* scene_ = nullptr; // Enemyが所属するシーンへのポインタ
 
-    ICollider::GroundRayPalamata rayHitPalamata_;
+    GameObject::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
     EnemyType enemyType;
 };

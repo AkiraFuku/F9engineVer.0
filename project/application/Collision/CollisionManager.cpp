@@ -6,6 +6,7 @@
 #include "MathFunction.h"
 #include "GoalObject.h"
 #include "GameScene.h"
+#include "Collider.h"
 std::unique_ptr<CollisionManager> CollisionManager::instance = nullptr;
 
 CollisionManager* CollisionManager::GetInstance() {
@@ -21,7 +22,7 @@ CollisionManager* CollisionManager::GetInstance() {
 
 
 
-void CollisionManager::CheckCollision(ICollider* a, ICollider* b) {
+void CollisionManager::CheckCollision(Collider* a, Collider* b) {
     Vector3 posA = a->GetWorldPosition();
     Vector3 posB = b->GetWorldPosition();
 
@@ -73,7 +74,7 @@ void CollisionManager::CheckAllCollisions() {
         if (!enemies_.empty())
         {
             for (Enemy* enemy : enemies_) {
-                CheckCollision( enemy,player_);
+                CheckCollision( enemy->GetCollider(),player_->GetCollider());
             }
         }
 
@@ -89,14 +90,14 @@ void CollisionManager::CheckAllCollisions() {
                 if (!enemies_.empty())
                 {
                     for (Enemy* enemy : enemies_) {
-                        CheckCollision(projectile, enemy);
+                        CheckCollision(projectile->GetCollider(), enemy->GetCollider());
                     }
                 }
             }
             // 敵が撃った弾なら、プレイヤーとの判定を行う
             else if (projectile->GetOwner() == Projectile::ProjectileOwner::Enemy) {
                 if (player_) {
-                    CheckCollision(projectile, player_);
+                    CheckCollision(projectile->GetCollider(), player_->GetCollider());
                 }
             }
         }
@@ -104,7 +105,7 @@ void CollisionManager::CheckAllCollisions() {
 
     if (player_ && goal_)
     {
-        CheckCollision(player_, goal_);
+        CheckCollision(player_->GetCollider(), goal_->GetCollider());
     }
 
 }

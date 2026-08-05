@@ -15,6 +15,7 @@
 #include "GameScene.h"
 #include "CameraController.h"
 #include "PrimitiveDrawer.h"
+#include "Collider.h"
 Enemy::Enemy() = default;
 Enemy::~Enemy() = default;
 void Enemy::SetRobot(std::unique_ptr<Robot> robot) {
@@ -34,6 +35,9 @@ void Enemy::Initialize()
     ChangeState(std::make_unique<StateEnemyNormal>());
     // セット名 "GameEffects"、グループ名は空（セット内のすべてのエフェクトを発生させる）
     hitParticle_ = std::make_unique<ParticleEmitter>("GameEffects", "", object_->GetTransform(), 3, 10.0f, 0.0f);
+
+    collider_ = std::make_unique<Collider>();
+    collider_->initialize(this, radius_);
 
 }
 
@@ -168,7 +172,7 @@ void Enemy::UpdatePhysics() {
     object_->Update();
 }
 // Enemy.cpp
-void Enemy::OnCollision(ICollider* other) {
+void Enemy::OnCollision(GameObject* other) {
 
     // ぶつかった相手がPlayerかどうかを確認
     if (!other || isDamaged_ || IsDead()) return;

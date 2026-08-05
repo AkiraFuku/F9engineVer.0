@@ -1,12 +1,13 @@
 #pragma once
 #include <memory>
 #include <vector>
-class ICollider;
+class GameObject;
 class Player;
 class Enemy;
 class Projectile; // 前方宣言
 class GameScene;
-class GoalObject;
+class Collider;
+class GoalObject; // ★追加：前方宣言
 class CollisionManager {
 public:
     static CollisionManager* GetInstance();
@@ -45,7 +46,7 @@ private:
     std::vector<Enemy*> enemies_;
     // 衝突判定の実装（球体判定）
     // A優先で衝突判定を行う
-    void CheckCollision(ICollider* a, ICollider* b);
+    void CheckCollision(Collider* a, Collider* b);
 
     //// 2点間の球判定（必要に応じて引数を調整してください）
     //void CheckPlayerEnemyCollision(Player* p, Enemy* e);

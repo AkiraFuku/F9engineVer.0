@@ -1,7 +1,7 @@
 #pragma once
 #include "Vector3.h"
 #include "DrawFunction.h"
-
+#include <memory>
 enum class CollisionCategory {
     Player,
     Enemy,
@@ -12,17 +12,22 @@ enum class CollisionCategory {
     // 必要に応じて他のカテゴリも追加
 
 };
-class ICollider
+class Collider;
+class GameObject
 {
 public:
-    virtual ~ICollider() = default;
+    virtual ~GameObject() = default;
 
     // 衝突時に呼ばれる通知関数
-    virtual void OnCollision(ICollider* other) = 0;
+    virtual void OnCollision(GameObject* other) = 0;
 
     // 判定に必要な情報のゲッター
     virtual Vector3 GetWorldPosition() const = 0;
-    virtual float GetRadius() const = 0;
+
+    // Colliderのゲッター
+    virtual Collider* GetCollider() {
+        return collider_.get();
+    }
     /// <summary>
     /// ぶつかった相手のカテゴリを識別するための関数
     /// </summary>
@@ -53,6 +58,9 @@ protected:
     float rayHitDistance_ = 0.0f;
     Triangle rayHitTriangle_ = {};
     RayTriangleCollisionResult result_ = RayTriangleCollisionResult::NoCollision;
+
+    // 自身のコライダー（必要に応じて派生クラスで初期化）
+    std::unique_ptr<Collider> collider_;
 
 };
 

@@ -19,6 +19,7 @@
     <ClCompile Include="application\Phase\defeatPhase.cpp" />
     <ClCompile Include="application\object\Enemy\BoundEnemy.cpp" />
     <ClCompile Include="BoundRobot.cpp" />
+    <ClCompile Include="application\Collision\Collider.cpp" />
     <ClCompile Include="EffectManager.cpp" />
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
@@ -74,7 +75,7 @@
     <ClCompile Include="engine\Tool\LightManager.cpp" />
     <ClCompile Include="application\object\player\Command.cpp" />
     <ClCompile Include="application\object\player\InputHandler.cpp" />
-    <ClCompile Include="application\Collision\ICollider.cpp" />
+    <ClCompile Include="application\Collision\GameObject.cpp" />
     <ClCompile Include="application\object\player\Behavior\IPlayerFactory.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
@@ -117,6 +118,7 @@
     <ClInclude Include="application\Phase\defeatPhase.h" />
     <ClInclude Include="application\object\Enemy\BoundEnemy.h" />
     <ClInclude Include="BoundRobot.h" />
+    <ClInclude Include="application\Collision\Collider.h" />
     <ClInclude Include="EffectManager.h" />
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
@@ -189,7 +191,7 @@
     <ClInclude Include="application\object\Robot\Base\Robot.h" />
     <ClInclude Include="application\object\Bullet\Projectile.h" />
     <ClInclude Include="engine\Tool\SkyBox.h" />
-    <ClInclude Include="application\Collision\ICollider.h" />
+    <ClInclude Include="application\Collision\GameObject.h" />
     <ClInclude Include="application\Phase\Phase.h" />
     <ClInclude Include="application\Phase\PlayPhase.h" />
     <ClInclude Include="application\UI\PlayerHPUI.h" />

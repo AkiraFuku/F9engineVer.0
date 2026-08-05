@@ -13,6 +13,7 @@
 #include <numbers>
 #include "GameScene.h"
 #include "EffectManager.h"
+#include "collider.h"
 
 Player::Player() = default;
 Player::~Player() = default;
@@ -36,8 +37,9 @@ void Player::Initialize()
 
     // Stateの初期化のみ行い、Behaviorの初期化はState内部で行う
     ChangeState(PlayerStateFactory::CreateState(PlayerFormType::Normal));
+    collider_ = std::make_unique<Collider>();
+    collider_->initialize(this,Radius);
 }
-
 void Player::Update()
 {
     if (!isActive_) return;
@@ -301,7 +303,7 @@ void Player::ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior) {
     }
 }
 
-void Player::OnCollision([[maybe_unused]] ICollider* other) {
+void Player::OnCollision(GameObject* other) {
     if (!other || isInvincible_) return;
 
     if (other->GetCategory() == CollisionCategory::Enemy) {

@@ -3,12 +3,12 @@
 #include <memory>
 #include "Vector3.h"
 #include "Vector2.h"
-#include "ICollider.h"
+#include "GameObject.h"
 class RailPath;
 class RailMover;
 class Player;
 
-class GoalObject : public ICollider {
+class GoalObject : public GameObject {
 public:
     GoalObject();
     ~GoalObject();
@@ -24,7 +24,7 @@ public:
     void SetCamera(Camera* camera);
 
     // 衝突判定用
-    void OnCollision(ICollider* other) override;
+    void OnCollision(GameObject* other) override;
     bool IsCleared() const {
         return isCleared_;
     }
@@ -32,7 +32,7 @@ public:
     Vector3 GetWorldPosition() const override {
         return object_->GetTranslate();
     }
-    float GetRadius() const override {
+    float GetRadius() const  {
         return radius_;
     }
     CollisionCategory GetCategory() const override {

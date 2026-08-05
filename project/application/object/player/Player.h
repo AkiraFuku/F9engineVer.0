@@ -3,7 +3,7 @@
 #include "Transform.h"
 #include "Object3d.h"
 #include "Behavior/PlayerState.h"
-#include "ICollider.h"
+#include "GameObject.h"
 #include "Animation.h"
 
 class InputHandler;
@@ -16,20 +16,18 @@ class Robot;
 class Enemy;
 class Scene;
 
-class Player : public ICollider
+class Player : public GameObject
 {
 public:
     Player();
     ~Player();
 
-    void OnCollision(ICollider* other) override;
+    void OnCollision(GameObject* other) override;
 
     Vector3 GetWorldPosition() const override {
         return object_->GetTranslate();
     }
-    float GetRadius() const override {
-        return Radius;
-    }
+
     CollisionCategory GetCategory() const override {
         return CollisionCategory::Player;
     }
@@ -86,6 +84,7 @@ public:
     void SetRail(RailPath* rail);
     void ChangeState(std::unique_ptr<IPlayerState> newState);
     void ChangeBehavior(std::unique_ptr<IPlayerBehavior> newBehavior);
+
 
     void Move(float ratio);
     void Jump();
@@ -206,7 +205,7 @@ private:
     const float kJumpAcceleration = 24.0f;
     bool isGrounded_ = true;
 
-    ICollider::GroundRayPalamata rayHitPalamata_;
+    GameObject::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f;
 
     std::unique_ptr<RailMover> railMover_;

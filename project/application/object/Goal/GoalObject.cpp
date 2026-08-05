@@ -3,6 +3,7 @@
 #include "ModelManager.h"
 #include "PrimitiveDrawer.h"
 #include "Player.h"
+#include "Collider.h"
 GoalObject::GoalObject() = default;
 GoalObject::~GoalObject() = default;
 
@@ -14,6 +15,9 @@ void GoalObject::Initialize() {
     //  object_->SetModel("goal.obj");
 
     railMover_ = std::make_unique<RailMover>();
+    collider_ = std::make_unique<Collider>();
+    collider_->initialize(this, radius_);
+
 }
 
 void GoalObject::SetRail(RailPath* rail) {
@@ -60,7 +64,7 @@ void GoalObject::Draw() {
     PrimitiveDrawer::GetInstance()->DrawSphere(collisionSphere, color);
 }
 
-void GoalObject::OnCollision(ICollider* other) {
+void GoalObject::OnCollision(GameObject* other) {
    if (other->GetCategory() == CollisionCategory::Player) {
         isCleared_ = true;
     }
