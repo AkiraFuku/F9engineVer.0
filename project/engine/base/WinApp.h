@@ -52,7 +52,9 @@ private: // メンバ変数
     static std::unique_ptr<WinApp> instance;
     HWND hwnd = nullptr;
     WNDCLASS wc{};
-    //メッセージ
+    //　ウィンドウ名
+    const wchar_t* windowName_ = L"RoboDash-ロボダッシュ-";
+
 
 };
 

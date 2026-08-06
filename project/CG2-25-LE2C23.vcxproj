@@ -20,7 +20,7 @@
     <ClCompile Include="application\object\Enemy\BoundEnemy.cpp" />
     <ClCompile Include="application\object\Robot\BoundRobot.cpp" />
     <ClCompile Include="application\Collision\Collider.cpp" />
-    <ClCompile Include="engine\EffectManager.cpp" />
+    <ClCompile Include="engine\Tool\EffectManager.cpp" />
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
     <ClCompile Include="application\object\Enemy\TestEnemy.cpp" />
@@ -119,7 +119,7 @@
     <ClInclude Include="application\object\Enemy\BoundEnemy.h" />
     <ClInclude Include="application\object\Robot\BoundRobot.h" />
     <ClInclude Include="application\Collision\Collider.h" />
-    <ClInclude Include="engine\EffectManager.h" />
+    <ClInclude Include="engine\Tool\EffectManager.h" />
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />
     <ClInclude Include="application\object\Enemy\TestEnemy.h" />

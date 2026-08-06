@@ -91,7 +91,7 @@ void Object3d::Draw()
 
 
     //WVP行列リソースの設定
-    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());LightManager::GetInstance()->Draw(3);
+    DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_.Get()->GetGPUVirtualAddress());
     LightManager::GetInstance()->Draw(3);
 
     DXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(7, cameraResource_->GetGPUVirtualAddress());

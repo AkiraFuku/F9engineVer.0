@@ -11,7 +11,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 std::unique_ptr<WinApp> WinApp::instance = nullptr;
 
 WinApp* WinApp::GetInstance() {
-      if (instance == nullptr) {
+    if (instance == nullptr) {
         // privateコンストラクタを呼び出せるヘルパー構造体
         struct Helper : public WinApp {
             Helper() : WinApp() {}
@@ -48,7 +48,7 @@ void WinApp::Initialize() {
     //ウィンドウプロシージャ
     wc.lpfnWndProc = WindowProc;
     //ウィンドウクラスの名前
-    wc.lpszClassName = L"CG2WindowClass";
+    wc.lpszClassName =windowName_;
     //インスタンスハンドル
     wc.hInstance = GetModuleHandle(nullptr);
     //カーソル
@@ -69,7 +69,8 @@ void WinApp::Initialize() {
     //ウィンドウの作成
     hwnd = CreateWindow(
         wc.lpszClassName,//クラス名
-        L"CG2",
+        windowName_,
+
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
@@ -91,8 +92,7 @@ void WinApp::Initialize() {
 
 
 };
-void WinApp::Update() {
-}
+void WinApp::Update() {}
 void WinApp::Finalize()
 {
     CoUninitialize();
