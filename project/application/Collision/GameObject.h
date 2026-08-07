@@ -52,6 +52,9 @@ public:
     };
 
 protected:
+
+    Vector3 Position_ = {};
+
     Ray ray_;
     bool isRayHit_ = false;
     Vector3 rayHitPoint_ = {};
