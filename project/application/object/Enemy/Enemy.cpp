@@ -60,6 +60,9 @@ void Enemy::Update()
 
     // 3. 物理計算とレール座標の更新
     UpdatePhysics();
+
+    collider_->Update();
+
 }
 
 void Enemy::Draw()
@@ -67,6 +70,7 @@ void Enemy::Draw()
     if (object_) {
         object_->Draw();
     }
+    collider_->Draw();
 
 #ifdef USE_IMGUI
     ImGui::Begin("Debug/Enemy");

@@ -62,7 +62,7 @@ void Projectile::Update() {
     object_->SetTranslate(finalPos);
 
     object_->Update();
-
+    collider_->Update();
     if (--lifeTimer_ <= 0) {
         isDead_ = true;
     }

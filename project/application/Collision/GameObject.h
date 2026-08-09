@@ -3,12 +3,15 @@
 #include "DrawFunction.h"
 #include <memory>
 enum class CollisionCategory {
-    Player,
-    Enemy,
-    PlayerProjectile,
-    EnemyProjectile,
-    Goal,
-    Terrain,
+    Player=0,// プレイヤー
+    Enemy=10,// 敵
+    PlayerProjectile=20,// プレイヤーの弾
+    EnemyProjectile=30,// 敵の弾
+    Goal=40,// ゴール
+    Collectible=50,// 収集アイテム
+    CollisionObject=60, // めり込めないオブジェクト
+    Attackable=70, // 攻撃可能オブジェクト
+    InvincibleEnemy=80, // 攻撃（無敵）不可エネミー
     // 必要に応じて他のカテゴリも追加
 
 };

@@ -53,6 +53,7 @@ void Player::Update()
     HandleDamage();
     HandleInput();
     RayCastUpdate();
+    collider_->Update();
 
     if (baseState_) baseState_->Update(this);
 
@@ -64,6 +65,8 @@ void Player::Draw()
 {
     if (!isActive_) return;
     object_->Draw();
+
+    collider_->Draw();
 }
 
 void Player::SetRailPosition(const Vector2& position)
