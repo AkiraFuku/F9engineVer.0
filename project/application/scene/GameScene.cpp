@@ -250,7 +250,6 @@ void GameScene::Initialize() {
 
 
 
-    CollisionManager::GetInstance()->SetScene(this);
 
     currentPhase_ = std::make_unique<PlayPhase>();
 

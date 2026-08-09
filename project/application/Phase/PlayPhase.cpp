@@ -46,7 +46,32 @@ void PlayPhase::Update(Scene* scene)
     // ※同様にここでの erase も削除します。
      // --- 衝突判定の実行 ---
     CollisionManager* colManager = CollisionManager::GetInstance();
-    colManager->CheckAllCollisions();
+    std::vector<Collider*> colliders;
+
+    const auto& player = gameScene->GetPlayer();
+    const auto& goal_ = gameScene->GetGoal();
+
+
+    if (player && player->GetCollider()) {
+        colliders.push_back(player->GetCollider());
+    }
+
+    for (auto& enemy : enemies) {
+        if (enemy && !enemy->IsDead() && enemy->GetCollider()) {
+            colliders.push_back(enemy->GetCollider());
+        }
+    }
+
+    for (auto& projectile : projectiles) {
+        if (projectile && !projectile->IsDead() && projectile->GetCollider()) {
+            colliders.push_back(projectile->GetCollider());
+        }
+    }
+
+    if (goal_ && goal_->GetCollider()) {
+        colliders.push_back(goal_->GetCollider());
+    }
+    colManager->CheckAllCollisions(colliders);
 
 
 }

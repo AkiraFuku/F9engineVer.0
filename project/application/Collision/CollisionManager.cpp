@@ -1,140 +1,107 @@
 #include "CollisionManager.h"
-#include "Player.h"
-#include "Enemy.h"
-#include <cmath>
-#include "Projectile.h"
-#include "MathFunction.h"
-#include "GoalObject.h"
-#include "GameScene.h"
 #include "Collider.h"
+#include "MathFunction.h" // SubtractやLengthSqなどの数学関数用
+#include <cmath>
+
 std::unique_ptr<CollisionManager> CollisionManager::instance = nullptr;
 
 CollisionManager* CollisionManager::GetInstance() {
     if (instance == nullptr) {
         struct Helper : public CollisionManager {
-            Helper() : CollisionManager() {
-            }
+            Helper() : CollisionManager() {}
         };
         instance = std::make_unique<Helper>();
     }
     return instance.get();
 }
 
+void CollisionManager::Finalize() {
+    instance.reset();
+}
 
+void CollisionManager::CheckAllCollisions(const std::vector<Collider*>& colliders) {
+    size_t count = colliders.size();
+    if (count < 2) return;
+
+    // 2重ループですべてのペアを網羅（重複なし）
+    for (size_t i = 0; i < count; ++i) {
+        Collider* colA = colliders[i];
+        if (!colA) continue;
+
+        for (size_t j = i + 1; j < count; ++j) {
+            Collider* colB = colliders[j];
+            if (!colB) continue;
+
+            // 2. 距離による早期除外（ブロードフェーズ）
+            Vector3 posA = colA->GetWorldPosition();
+            Vector3 posB = colB->GetWorldPosition();
+            Vector3 diff = Subtract(posA, posB);
+
+            // 距離の2乗を計算（平方根の計算コストを回避）
+            float distSq = (diff.x * diff.x) + (diff.y * diff.y) + (diff.z * diff.z);
+
+            // 設定した最大距離より離れていればスキップ
+            if (distSq > kBroadPhaseMaxDistanceSq) {
+                continue;
+            }
+
+            // 1. 持ち主（カテゴリ）の組み合わせチェック（不要なペアは即スキップ）
+            if (!ShouldCheckCollision(colA->GetCategory(), colB->GetCategory())) {
+                continue;
+            }
+
+
+
+            // 3. 実際の球同士の判定（ナローフェーズ）[cite: 13]
+            CheckCollision(colA, colB);
+        }
+    }
+}
 
 void CollisionManager::CheckCollision(Collider* a, Collider* b) {
     Vector3 posA = a->GetWorldPosition();
     Vector3 posB = b->GetWorldPosition();
 
-    float distanceSq = Length(Subtract(posA, posB));
+    Vector3 diff = Subtract(posA, posB);
+    float distanceSq = (diff.x * diff.x) + (diff.y * diff.y) + (diff.z * diff.z);
+
     float radiusSum = a->GetRadius() + b->GetRadius();
+    float radiusSumSq = radiusSum * radiusSum; // 半径和も2乗で比較
 
-    if (distanceSq <= radiusSum) {
+    if (distanceSq <= radiusSumSq) {
         // お互いに「相手」を渡して通知する
-        a->OnCollision(b);
         b->OnCollision(a);
+
+        a->OnCollision(b);
     }
 }
 
-void CollisionManager::SetScene(GameScene* scene)
-{
-    scene_ = scene;
+bool CollisionManager::ShouldCheckCollision(CollisionCategory catA, CollisionCategory catB) const {
+    // 同じカテゴリ同士（敵同士、弾同士など）は判定しない
+    if (catA == catB) return false;
+
+    // プレイヤー × 敵[cite: 13, 16]
+    if (catA == CollisionCategory::Player && catB == CollisionCategory::Enemy) {
+        return true;
+    }
+
+    // プレイヤー × 敵の弾[cite: 13, 16]
+    if ((catA == CollisionCategory::Player && catB == CollisionCategory::EnemyProjectile) ||
+        (catA == CollisionCategory::EnemyProjectile && catB == CollisionCategory::Player)) {
+        return true;
+    }
+
+    // 敵 × プレイヤーの弾[cite: 13, 16]
+    if ((catA == CollisionCategory::Enemy && catB == CollisionCategory::PlayerProjectile) ||
+        (catA == CollisionCategory::PlayerProjectile && catB == CollisionCategory::Enemy)) {
+        return true;
+    }
+
+    // プレイヤー × ゴール[cite: 13, 16]
+    if ((catA == CollisionCategory::Player && catB == CollisionCategory::Goal) ||
+        (catA == CollisionCategory::Goal && catB == CollisionCategory::Player)) {
+        return true;
+    }
+
+    return false; // それ以外は無視
 }
-
-
-
-void CollisionManager::Finalize() {
-    instance.reset();
-}
-void CollisionManager::CheckAllCollisions() {
-    Clear();
-    if (scene_)
-    {
-        // 敵のリストを参照で取得し、生のポインタを登録用vectorに入れる
-        const auto& sceneEnemies = scene_->GetEnemies();
-        for (auto& enemy : sceneEnemies) {
-            enemies_.push_back(enemy.get());
-        }
-
-        // 弾のリストも同様
-        const auto& sceneProjectiles = scene_->GetProjectile();
-        for (auto& projectile : sceneProjectiles) {
-            projectiles_.push_back(projectile.get());
-        }
-
-        // プレイヤーとゴールも最新の状態を取得
-        player_ = const_cast<Player*>(scene_->GetPlayer());
-        goal_ = const_cast<GoalObject*>(scene_->GetGoal());
-
-    }
-
-
-    // 既存のプレイヤー vs 敵の判定
-    if (player_) {
-        if (!enemies_.empty())
-        {
-            for (Enemy* enemy : enemies_) {
-                CheckCollision( enemy->GetCollider(),player_->GetCollider());
-            }
-        }
-
-    }
-    if (!projectiles_.empty())
-    {
-        // 弾に関連する判定
-        for (Projectile* projectile : projectiles_) {
-            if (projectile->IsDead()) continue;
-
-            // プレイヤーが撃った弾なら、敵との判定を行う
-            if (projectile->GetOwner() == Projectile::ProjectileOwner::Player) {
-                if (!enemies_.empty())
-                {
-                    for (Enemy* enemy : enemies_) {
-                        CheckCollision(projectile->GetCollider(), enemy->GetCollider());
-                    }
-                }
-            }
-            // 敵が撃った弾なら、プレイヤーとの判定を行う
-            else if (projectile->GetOwner() == Projectile::ProjectileOwner::Enemy) {
-                if (player_) {
-                    CheckCollision(projectile->GetCollider(), player_->GetCollider());
-                }
-            }
-        }
-    }
-
-    if (player_ && goal_)
-    {
-        CheckCollision(player_->GetCollider(), goal_->GetCollider());
-    }
-
-}
-
-//void CollisionManager::CheckProjectileEnemyCollision(Projectile* p, Enemy* e) {
-//    // 球体同士の判定ロジック
-//    Vector3 posP = p->GetWorldPosition();
-//    Vector3 posE = e->GetTransform().translate;
-//
-//    float distanceSq = Length(Subtract(posP, posE));
-//    float radiusSum = p->GetRadius() + 1.0f; // 敵の半径を仮に1.0とする
-//
-//    if (distanceSq <= radiusSum) {
-//        p->OnCollision(); // 弾の消滅処理など
-//        // 敵の被弾処理（Enemy側に弾用のOnCollisionが必要な場合は作成してください）
-//        e->OnCollision();
-//    }
-//}
-//void CollisionManager::CheckProjectilePlayerCollision(Projectile* p, Player* player) {
-//    // 球体同士の判定ロジック
-//    Vector3 posP = p->GetWorldPosition();
-//    Vector3 posPlayer = player->GetTransform().translate;
-//
-//    float distanceSq = Length(Subtract(posP, posPlayer));
-//    float radiusSum = p->GetRadius() + player->GetRadius(); // プレイヤーの半径を取得
-//
-//    if (distanceSq <= radiusSum) {
-//        p->OnCollision(); // 弾の消滅処理など
-//        // プレイヤーの被弾処理（Player側に弾用のOnCollisionが必要な場合は作成してください）
-//       //  player->OnCollision(); 
-//    }
-//}

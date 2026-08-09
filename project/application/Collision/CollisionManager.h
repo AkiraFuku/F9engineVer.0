@@ -1,55 +1,37 @@
 #pragma once
 #include <memory>
 #include <vector>
-class GameObject;
-class Player;
-class Enemy;
-class Projectile; // 前方宣言
-class GameScene;
+#include "GameObject.h" // CollisionCategoryが定義されているヘッダー[cite: 16]
+
 class Collider;
-class GoalObject; // ★追加：前方宣言
+
 class CollisionManager {
 public:
     static CollisionManager* GetInstance();
     void Finalize();
 
-
-    void SetScene(GameScene* scene );
-
-    // 判定対象の登録（毎フレームリセットする想定）
-    void SetPlayer(Player* player) { player_ = player; }
-    void AddEnemy(Enemy* enemy) { enemies_.push_back(enemy); }
-    void AddProjectile(Projectile* projectile) { projectiles_.push_back(projectile); }
-    
-    // リストのクリア
-    void Clear() {
-      //  player_ = nullptr;
-        enemies_.clear();
-        projectiles_.clear(); // 弾リストもクリア
-    }
-
-    // 全ての衝突チェックを実行
-    void CheckAllCollisions();
+    /// <summary>
+    /// シーン等から渡されたコライダーリスト全体の衝突チェックを実行
+    /// </summary>
+    /// <param name="colliders">判定対象となるすべてのコライダー</param>
+    void CheckAllCollisions(const std::vector<Collider*>& colliders);
 
 private:
-   GameScene* scene_=nullptr;
-   GoalObject* goal_=nullptr;
     CollisionManager() = default;
     ~CollisionManager() = default;
     CollisionManager(const CollisionManager&) = delete;
     CollisionManager& operator=(const CollisionManager&) = delete;
 
     static std::unique_ptr<CollisionManager> instance;
-     friend struct std::default_delete<CollisionManager>;
+    friend struct std::default_delete<CollisionManager>;
 
-    Player* player_ = nullptr;
-    std::vector<Enemy*> enemies_;
-    // 衝突判定の実装（球体判定）
-    // A優先で衝突判定を行う
+    // 衝突を検知・通知する基本処理[cite: 13]
     void CheckCollision(Collider* a, Collider* b);
 
-    //// 2点間の球判定（必要に応じて引数を調整してください）
-    //void CheckPlayerEnemyCollision(Player* p, Enemy* e);
+    // カテゴリの組み合わせで判定が必要かをチェック
+    bool ShouldCheckCollision(CollisionCategory catA, CollisionCategory catB) const;
 
-    std::vector<Projectile*> projectiles_;
+    // 離れすぎているオブジェクト（例えば50.0f以上離れている等）を弾く距離閾値（二乗値）
+    // 例: 50ユニット以上離れていたらスキップする場合は 50 * 50 = 2500.0f
+    const float kBroadPhaseMaxDistanceSq = 2500.0f;
 };
