@@ -49,12 +49,35 @@ void CollisionManager::CheckAllCollisions(const std::vector<Collider*>& collider
             if (!ShouldCheckCollision(colA->GetCategory(), colB->GetCategory())) {
                 continue;
             }
+            // 優先度の取得
+            int priorityA = GetCategoryPriority(colA->GetCategory());
+            int priorityB = GetCategoryPriority(colB->GetCategory());
 
+            Collider* first = colA;
+            Collider* second = colB;
 
+            // Bの方が優先度が高い場合は、Bを先に（第1引数に）する
+            if (priorityB > priorityA) {
+                first = colB;
+                second = colA;
+            }
 
-            // 3. 実際の球同士の判定（ナローフェーズ）[cite: 13]
-            CheckCollision(colA, colB);
+            // 優先度が高い方の OnCollision が先に呼ばれる
+            CheckCollision(first, second);
+
         }
+    }
+}
+
+int CollisionManager::GetCategoryPriority(CollisionCategory category)
+{
+    switch (category) {
+    case CollisionCategory::Enemy:            return 100; // エネミー最優先
+    case CollisionCategory::Player:           return 80;  // プレイヤー
+    case CollisionCategory::PlayerProjectile: return 50;  // プレイヤーの弾
+    case CollisionCategory::EnemyProjectile:  return 50;  // 敵の弾
+    case CollisionCategory::Goal:             return 10;  // ゴール
+    default:                                  return 0;
     }
 }
 
@@ -70,9 +93,9 @@ void CollisionManager::CheckCollision(Collider* a, Collider* b) {
 
     if (distanceSq <= radiusSumSq) {
         // お互いに「相手」を渡して通知する
+        a->OnCollision(b);
         b->OnCollision(a);
 
-        a->OnCollision(b);
     }
 }
 

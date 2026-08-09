@@ -5,6 +5,8 @@
 
 class Collider;
 
+
+
 class CollisionManager {
 public:
     static CollisionManager* GetInstance();
@@ -22,6 +24,8 @@ private:
     CollisionManager(const CollisionManager&) = delete;
     CollisionManager& operator=(const CollisionManager&) = delete;
 
+
+   
     static std::unique_ptr<CollisionManager> instance;
     friend struct std::default_delete<CollisionManager>;
 
@@ -34,4 +38,7 @@ private:
     // 離れすぎているオブジェクト（例えば50.0f以上離れている等）を弾く距離閾値（二乗値）
     // 例: 50ユニット以上離れていたらスキップする場合は 50 * 50 = 2500.0f
     const float kBroadPhaseMaxDistanceSq = 2500.0f;
+
+     int GetCategoryPriority(CollisionCategory category);
+
 };
