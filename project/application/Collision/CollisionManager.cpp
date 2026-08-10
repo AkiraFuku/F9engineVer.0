@@ -18,12 +18,10 @@ CollisionManager* CollisionManager::GetInstance() {
 void CollisionManager::Finalize() {
     instance.reset();
 }
-
 void CollisionManager::CheckAllCollisions(const std::vector<Collider*>& colliders) {
     size_t count = colliders.size();
     if (count < 2) return;
 
-    // 2重ループですべてのペアを網羅（重複なし）
     for (size_t i = 0; i < count; ++i) {
         Collider* colA = colliders[i];
         if (!colA) continue;
@@ -32,39 +30,35 @@ void CollisionManager::CheckAllCollisions(const std::vector<Collider*>& collider
             Collider* colB = colliders[j];
             if (!colB) continue;
 
-            // 2. 距離による早期除外（ブロードフェーズ）
+            // 1. カテゴリチェックで不要なペアを即座にスキップ（最優先で高速化）
+            if (!ShouldCheckCollision(colA->GetCategory(), colB->GetCategory())) {
+                continue;
+            }
+
+            // 2. 距離によるブロードフェーズ除外
             Vector3 posA = colA->GetWorldPosition();
             Vector3 posB = colB->GetWorldPosition();
             Vector3 diff = Subtract(posA, posB);
-
-            // 距離の2乗を計算（平方根の計算コストを回避）
             float distSq = (diff.x * diff.x) + (diff.y * diff.y) + (diff.z * diff.z);
 
-            // 設定した最大距離より離れていればスキップ
             if (distSq > kBroadPhaseMaxDistanceSq) {
                 continue;
             }
 
-            // 1. 持ち主（カテゴリ）の組み合わせチェック（不要なペアは即スキップ）
-            if (!ShouldCheckCollision(colA->GetCategory(), colB->GetCategory())) {
-                continue;
-            }
-            // 優先度の取得
+            // 3. 優先度の取得と並び替え
             int priorityA = GetCategoryPriority(colA->GetCategory());
             int priorityB = GetCategoryPriority(colB->GetCategory());
 
             Collider* first = colA;
             Collider* second = colB;
 
-            // Bの方が優先度が高い場合は、Bを先に（第1引数に）する
             if (priorityB > priorityA) {
                 first = colB;
                 second = colA;
             }
 
-            // 優先度が高い方の OnCollision が先に呼ばれる
+            // 4. 精密判定とイベント呼び出し
             CheckCollision(first, second);
-
         }
     }
 }

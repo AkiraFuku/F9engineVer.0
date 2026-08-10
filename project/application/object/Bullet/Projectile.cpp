@@ -73,7 +73,7 @@ void Projectile::Draw() {
 }
 
 Vector3 Projectile::GetWorldPosition() const {
-    return railMover_->GetCurrentPosition();
+    return object_ ? object_->GetTranslate() : Vector3{ 0.0f, 0.0f, 0.0f };
 }
 
 void Projectile::OnCollision( GameObject* other) {

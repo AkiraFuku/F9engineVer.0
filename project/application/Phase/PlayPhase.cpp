@@ -7,6 +7,7 @@
 #include "RailPath.h"
 #include "Projectile.h"
 #include "Enemy.h"
+#include "MiniBoss.h"
 
 void PlayPhase::Initialize(Scene* scene)
 {}
@@ -58,6 +59,14 @@ void PlayPhase::Update(Scene* scene)
 
     for (auto& enemy : enemies) {
         if (enemy && !enemy->IsDead() && enemy->GetCollider()) {
+            //ミニボスのパーツも含めて衝突判定を行う
+            if (auto miniBoss = dynamic_cast<MiniBoss*>(enemy.get())) {
+                for (const auto& collider : miniBoss->GetColliders()) {
+                    colliders.push_back(collider);
+                }
+                continue; // ミニボスのパーツを追加したので、次の敵へ
+            }
+
             colliders.push_back(enemy->GetCollider());
         }
     }

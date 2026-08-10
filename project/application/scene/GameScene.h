@@ -20,6 +20,7 @@ class GoalObject;
 class Phase;
 class PlayerHPUI;
 class ScoreUI;
+class MiniBoss;
 
 class GameScene :public Scene
 {
@@ -85,6 +86,8 @@ private:
     std::unique_ptr<Player> player;
     std::unique_ptr<RailPath> stageRail;
     std::unique_ptr<RailPath> cameraRail;
+
+    std::unique_ptr<MiniBoss> miniBoss_;
 
     std::unique_ptr<CameraController> cameraController;
     std::vector<std::unique_ptr<Enemy>> enemies_;

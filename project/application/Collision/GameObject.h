@@ -22,7 +22,7 @@ public:
     virtual ~GameObject() = default;
 
     // 衝突時に呼ばれる通知関数
-    virtual void OnCollision(GameObject* other) = 0;
+    virtual void OnCollision(GameObject* other) {};
 
     // 判定に必要な情報のゲッター
     virtual Vector3 GetWorldPosition() const = 0;
@@ -58,7 +58,7 @@ protected:
 
     Vector3 Position_ = {};
 
-    Ray ray_;
+    Ray ray_={};
     bool isRayHit_ = false;
     Vector3 rayHitPoint_ = {};
     float rayHitDistance_ = 0.0f;
