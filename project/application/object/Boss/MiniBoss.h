@@ -4,23 +4,29 @@
 class Cllider;
 class BossPart;
 
-class MiniBoss : public Enemy {
+class MiniBoss {
 public:
     MiniBoss() ;
-    ~MiniBoss() override ;
+    ~MiniBoss()  ;
 
-    void Initialize() override;
-    void Update() override;
-    void Draw() override;
+    void Initialize() ;
+    void Update() ;
+    void Draw() ;
 
     void TakeDamage(int damage); // ボス全体のHP減算などのインターフェース
     // シーンから全パーツのコライダーを登録できるように公開
     const std::vector<std::unique_ptr<BossPart>>& GetParts() const { return parts_; }
 
     std::vector<Collider*> GetColliders() const;
-    void OnCollision(GameObject* other) override;
-
+  //  void OnCollision(GameObject* other) override;
+    Vector3 GetPosition() const {
+        return position_;
+    }
 private:
     std::vector<std::unique_ptr<BossPart>> parts_;
     int hp_ = 5;
+
+    bool isDamaged_ = false;
+    Vector3 position_ = {};
+
 };

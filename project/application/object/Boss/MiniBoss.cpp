@@ -12,7 +12,7 @@ MiniBoss::MiniBoss() = default;
 MiniBoss::~MiniBoss() = default;
 
 void MiniBoss::Initialize() {
-    Enemy::Initialize();
+   // Enemy::Initialize();
 
     ModelManager::GetInstance()->CreateSphereModel("BossBody");
     ModelManager::GetInstance()->CreateSphereModel("BossWeak");
@@ -50,15 +50,15 @@ void MiniBoss::Initialize() {
 }
 
 void MiniBoss::Update() {
-    Enemy::Update();
+    //Enemy::Update();
 
-    Vector3 bossPos = GetWorldPosition();
+    
 
     // 各パーツの位置・モデル・コライダーの更新
     for (auto& part : parts_) {
         Vector3 worldPos = part->GetWorldPosition();
         if (part->GetObject3D()) {
-            part->GetObject3D()->SetTranslate(worldPos);
+            part->GetObject3D()->SetTranslate(worldPos+position_);
             part->GetObject3D()->Update();
         }
         if (part->GetCollider()) {
@@ -70,8 +70,8 @@ void MiniBoss::Update() {
 
     ImGui::Begin("MiniBoss Debug");
     ImGui::Text("MiniBoss HP: %d", hp_);
-    ImGui::Text("MiniBoss State: %s", GetStateName());
-    ImGui::Text("MiniBoss Behavior: %s", GetBehaviorName());
+    //ImGui::Text("MiniBoss State: %s", GetStateName());
+    //ImGui::Text("MiniBoss Behavior: %s", GetBehaviorName());
     ImGui::End();
 
 
@@ -96,14 +96,14 @@ void MiniBoss::Draw()
 
 // ボス全体のHP減算などのインターフェースを用意
 void MiniBoss::TakeDamage(int damage) {
-    if (isDamaged_ || IsDead()) return;
+//    if (isDamaged_ || IsDead()) return;
 
     hp_ -= damage;
     isDamaged_ = true;
-    hitInvincibilityTimer_ = kHitInvincibilityDuration_;
+//    hitInvincibilityTimer_ = kHitInvincibilityDuration_;
 
     if (hp_ <= 0) {
-        ChangeState(std::make_unique<StateEnemyDead>());
+//        ChangeState(std::make_unique<StateEnemyDead>());
     }
 }
 
@@ -118,7 +118,7 @@ std::vector<Collider*> MiniBoss::GetColliders() const
     return colliders;
 }
 
-void MiniBoss::OnCollision(GameObject* other)
-{
-    other;
-}
+//void MiniBoss::OnCollision(GameObject* other)
+//{
+//    other;
+//}
