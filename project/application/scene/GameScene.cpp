@@ -241,14 +241,7 @@ void GameScene::Initialize() {
     AddEnemy({ 0.3f, 0.0f });
     AddEnemy({ 0.4f, 0.0f });
 
-    miniBoss_ = std::make_unique<MiniBoss>();
-    miniBoss_->Initialize();
-    miniBoss_->SetCamera(activeCamera_);
-    miniBoss_->SetRail(stageRail.get());
-    miniBoss_->SetRailPosition({ 0.1f, 0.0f }); // レールの中間付近に配置
-    miniBoss_->SetScene(this);
 
-    enemies_.push_back(std::move(miniBoss_));
 
 
     goal_ = std::make_unique<GoalObject>();

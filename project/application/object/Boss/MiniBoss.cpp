@@ -58,7 +58,7 @@ void MiniBoss::Update() {
     for (auto& part : parts_) {
         Vector3 worldPos = part->GetWorldPosition();
         if (part->GetObject3D()) {
-            part->GetObject3D()->SetTranslate(worldPos+position_);
+            part->GetObject3D()->SetTranslate(worldPos);
             part->GetObject3D()->Update();
         }
         if (part->GetCollider()) {
