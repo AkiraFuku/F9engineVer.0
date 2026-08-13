@@ -35,6 +35,7 @@ void GoalObject::SetRailPosition(const Vector2& position) {
         // 初期座標の更新
         Vector3 railPos = railMover_->GetCurrentPosition();
         object_->SetTranslate({ railPos.x, position.y, railPos.z });
+        object_->Update();
     }
 }
 

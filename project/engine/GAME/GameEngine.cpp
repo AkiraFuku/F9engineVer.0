@@ -1,6 +1,7 @@
 #include "GameEngine.h"
 #include "PrimitiveDrawer.h"
 #include "OffScreen.h"
+#include "Fade.h"
 void GameEngine::Initialize() {
 
     Framework::Initialize();
@@ -12,7 +13,7 @@ void GameEngine::Initialize() {
 
     SceneManager::GetInstance()->SetSceneFactory(sceneFactory_.get());
 
-
+    Fade::GetInstance()->Initialize();
     SceneManager::GetInstance()->ChangeScene("GameScene");
     PrimitiveDrawer::GetInstance()->Initialize();
     OffScreen::GetInstance()->SetEffectFlags(
@@ -26,7 +27,7 @@ void GameEngine::Finalize() {
 };
 void GameEngine::Update() {
     Framework::Update();
-
+    Fade::GetInstance()->Update();
     SceneManager::GetInstance()->Update();
     
 }

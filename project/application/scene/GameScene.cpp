@@ -31,9 +31,13 @@
 #include "defeatPhase.h"
 #include "PlayerHPUI.h"
 #include "ScoreUI.h"
+#include "StartPhase.h"
+#include "Fade.h"
 
 #include "MiniBoss.h"
 void GameScene::Initialize() {
+    Fade::GetInstance()->StartFadeIn(5.0f);
+    ChangePhase(std::make_unique<StartPhase>());
 
     // 1. メインカメラの生成
     auto mainCamera = std::make_unique<Camera>();
@@ -232,6 +236,7 @@ void GameScene::Initialize() {
     stageRail->Update();
 
     player->SetRail(stageRail.get());
+    player->SetRailPosition({ 0.0f, 0.0f });
 
 
 
@@ -256,7 +261,6 @@ void GameScene::Initialize() {
 
 
 
-    currentPhase_ = std::make_unique<PlayPhase>();
 
     // 立方体モデルの登録と、オブジェクトの生成・配置
     ModelManager::GetInstance()->CreateBoxModel("box");
@@ -284,12 +288,14 @@ void GameScene::Initialize() {
     TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
     TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
 
-
+    //   Fade::GetInstance()->StartFadeIn(10.0f);
+    TestGround_->Update();
     GameScene::AddTriangles(TestGround_->GetWorldTriangles());
+
 
 }
 void GameScene::Finalize() {
-  
+
 }
 
 void GameScene::Update() {
@@ -526,13 +532,13 @@ void GameScene::Draw() {
     }
 
 
+
+    playerHPUI_->Draw();
+    scoreUI_->Draw();
     if (currentPhase_)
     {
         currentPhase_->Draw(this);
     }
-    playerHPUI_->Draw();
-    scoreUI_->Draw();
-
 }
 void GameScene::CheckPhaseTransition()
 {

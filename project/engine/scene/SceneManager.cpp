@@ -6,6 +6,7 @@
 #include "OffScreen.h"
 #include "ParticleManager.h"
 #include "EffectManager.h"
+#include "Fade.h"
 
 // 静的メンバ変数の実体
 std::unique_ptr<SceneManager> SceneManager::instance = nullptr;
@@ -62,6 +63,7 @@ void SceneManager::Draw() {
 
         scene_->Draw();
         PrimitiveDrawer::GetInstance()->Draw(); // シーンの描画後にプリミティブ描画を実行   
+        Fade::GetInstance()->Draw();
     }
 }
 

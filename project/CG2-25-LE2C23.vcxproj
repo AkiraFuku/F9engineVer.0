@@ -82,6 +82,7 @@
     <ClCompile Include="application\object\player\InputHandler.cpp" />
     <ClCompile Include="application\Collision\GameObject.cpp" />
     <ClCompile Include="application\object\player\Behavior\IPlayerFactory.cpp" />
+    <ClCompile Include="Fade.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -117,6 +118,7 @@
     <ClCompile Include="application\UI\PlayerHPUI.cpp" />
     <ClCompile Include="application\UI\NumberTex.cpp" />
     <ClCompile Include="application\UI\ScoreUI.cpp" />
+    <ClCompile Include="StartPhase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\object\Boss\MiniBoss.h" />
@@ -208,6 +210,8 @@
     <ClInclude Include="application\UI\ScoreUI.h" />
     <ClInclude Include="application\UI\NumberTex.h" />
     <ClInclude Include="application\object\player\Behavior\IPlayerFactory.h" />
+    <ClInclude Include="Fade.h" />
+    <ClInclude Include="StartPhase.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

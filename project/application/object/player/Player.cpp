@@ -22,7 +22,7 @@ void Player::Initialize()
 {
     inputHandler_ = std::make_unique<InputHandler>();
     object_ = std::make_unique<Object3d>();
-    ModelManager::GetInstance()->LoadModel("resources/player/", "player.obj");
+    ModelManager::GetInstance()->LoadModel("resources/human/", "walk.gltf");
     object_->Initialize();
     //object_->SetModel("player.obj");
     object_->SetModel("walk.gltf");
@@ -38,7 +38,7 @@ void Player::Initialize()
     // Stateの初期化のみ行い、Behaviorの初期化はState内部で行う
     ChangeState(PlayerStateFactory::CreateState(PlayerFormType::Normal));
     collider_ = std::make_unique<Collider>();
-    collider_->initialize(this,Radius);
+    collider_->initialize(this, Radius);
 }
 void Player::Update()
 {
@@ -72,9 +72,23 @@ void Player::Draw()
 void Player::SetRailPosition(const Vector2& position)
 {
     if (railMover_) {
-        float progress = position.x;
-        railMover_->BindProgress(&progress);
-        object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z });
+        // 1. レールの進捗を設定
+        railMover_->SetProgress(position.x);
+
+        // 2. 高度(Y)の設定（Y座標の管理変数 worldY_ も同期）
+        worldY_ = position.y;
+
+        // 3. 即座にトランスフォーム（位置・回転）を更新
+        UpdateRailPath();
+
+        // 4. 地面へのレイキャスト判定と高度補正（シーンが設定済みの場合）
+        if (scene_) {
+            RayCastUpdate();
+            if (isRayHit_) {
+                worldY_ = rayHitPoint_.y + kHeightOffset;
+                UpdateRailPath(); // 重力補正後の高度で再度トランスフォーム更新
+            }
+        }
     }
 }
 
@@ -85,7 +99,23 @@ void Player::AddVelocity(Vector3 v) {
 void Player::SetRail(RailPath* rail)
 {
     if (!rail || !railMover_) return;
+    if (!rail || !railMover_) return;
+
+    // レールパスを適用
     railMover_->SetPath(rail);
+
+    // 物理座標の同期
+    UpdateRailPath();
+
+    // 地面へのレイキャスト判定と高度補正（シーンが設定済みの場合）
+    if (scene_) {
+        RayCastUpdate();
+        if (isRayHit_) {
+            worldY_ = rayHitPoint_.y + kHeightOffset;
+            UpdateRailPath(); // 重力補正後の高度で再度トランスフォーム更新
+
+        }
+    }
 }
 
 void Player::Move(float ratio)

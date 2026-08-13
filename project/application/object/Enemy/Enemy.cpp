@@ -131,8 +131,20 @@ void Enemy::SetRailPosition(const Vector2& position)
         // 例えば、レールの全長に対して0.0f～1.0fの範囲で位置を指定する場合など
         // ここでは仮にposition.xを進捗として使用する例を示します
         // 進捗をx成分から取得（例）
-        railMover_->SetProgress(position.x); // 進捗をRailMoverにバインド 
-        object_->SetTranslate({ object_->GetTranslate().x, position.y, object_->GetTranslate().z }); // Yは現在のまま、XZはレール上の位置に設定
+        railMover_->SetProgress(position.x);
+        worldY_ = position.y;
+
+        // 2. 物理座標の同期
+        UpdatePhysics();
+
+        // 3. 地面へのレイキャスト判定と高度補正（※シーンが設定済みの場合）
+        if (scene_) {
+            RayCastUpdate();
+            if (isRayHit_) {
+                worldY_ = rayHitPoint_.y + kHeightOffset;
+                UpdatePhysics(); // 重力補正後の高度で再度トランスフォーム更新
+            }
+        }
 
     }
 }
