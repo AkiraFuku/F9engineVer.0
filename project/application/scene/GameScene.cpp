@@ -165,9 +165,57 @@ void GameScene::Initialize() {
     object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);
 
+        // --- 円形レールの設定例 ---
+    stageRail = std::make_unique<RailPath>();
+    stageRail->SetLoop(true); // ループを有効化
+
+    float radius = 20.0f;       // 円の半径
+    float h = radius * 0.5522f; // ハンドルの長さ
+
+    // 【修正版】反時計回りの順序に変更
+   // 点0: 前方 (Z+) -> 次は左(X-)へ向かうので、Outは左(-X)方向
+    stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
+
+    // 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
+    stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
+
+    // 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
+    stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
+
+    // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
+    stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+
+    // 最後に必ず更新して距離テーブルを作成
+    stageRail->Update();
 
 
 
+    // 立方体モデルの登録と、オブジェクトの生成・配置
+    ModelManager::GetInstance()->CreateBoxModel("box");
+    boxObject_ = std::make_unique<Object3d>();
+    boxObject_->Initialize();
+    boxObject_->SetModel("box");
+    boxObject_->SetCamera(activeCamera_);
+
+    // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
+    Vector3 railPoint1 = stageRail->GetPointPos(1);
+    boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
+    boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
+
+    boxObject_->Update();
+    GameScene::AddTriangles(boxObject_->GetWorldTriangles());
+
+    ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
+    TestGround_ = std::make_unique<Object3d>();
+    TestGround_->Initialize();
+
+    TestGround_->SetModel("TentativeStage.obj");
+    TestGround_->SetCamera(activeCamera_);
+    TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
+    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
+
+    TestGround_->Update();
+    GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
     player = std::make_unique<Player>();
     player->Initialize();
@@ -204,40 +252,15 @@ void GameScene::Initialize() {
 
     cameraController->SetRailPath(cameraRail.get());
 
-
-
     debugCameraC = std::make_unique<CameraController>();
     debugCameraC->Initialize(cameraMap_["Debug"].get());
     debugCameraC->SetTarget(player.get());
 
-
-    // --- 円形レールの設定例 ---
-    stageRail = std::make_unique<RailPath>();
-    stageRail->SetLoop(true); // ループを有効化
-
-    float radius = 20.0f;       // 円の半径
-    float h = radius * 0.5522f; // ハンドルの長さ
-
-    // 【修正版】反時計回りの順序に変更
-   // 点0: 前方 (Z+) -> 次は左(X-)へ向かうので、Outは左(-X)方向
-    stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
-
-    // 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
-    stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
-
-    // 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
-    stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
-
-    // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
-    stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-
-    // 最後に必ず更新して距離テーブルを作成
-    stageRail->Update();
-
     player->SetRail(stageRail.get());
     player->SetRailPosition({ 0.0f, 0.0f });
 
-
+    // カメラ初期化直後にプレイヤーを追尾・注視するように更新
+    cameraController->Update();
 
     // テスト用に敵を生成する場合
     AddEnemy({ 0.5f, 0.0f }, Enemy::EnemyType::Bound);
@@ -245,51 +268,11 @@ void GameScene::Initialize() {
     AddEnemy({ 0.3f, 0.0f });
     AddEnemy({ 0.4f, 0.0f });
 
-
-
-
     goal_ = std::make_unique<GoalObject>();
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
-    goal_->SetRailPosition({ 1.0f, 0.0f }); // レールの終端付近に配置
-
     goal_->SetRailPosition({ stageRail->GetMaxT() - 1.0f, 0.0f }); // レールの終端付近に配置
-
-
-
-
-
-
-    // 立方体モデルの登録と、オブジェクトの生成・配置
-    ModelManager::GetInstance()->CreateBoxModel("box");
-    boxObject_ = std::make_unique<Object3d>();
-    boxObject_->Initialize();
-    boxObject_->SetModel("box");
-    boxObject_->SetCamera(activeCamera_);
-
-    // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
-    Vector3 railPoint1 = stageRail->GetPointPos(1);
-    boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
-    boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
-
-    boxObject_->Update();
-
-    GameScene::AddTriangles(boxObject_->GetWorldTriangles());
-
-
-    ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
-    TestGround_ = std::make_unique<Object3d>();
-    TestGround_->Initialize();
-
-    TestGround_->SetModel("TentativeStage.obj");
-    TestGround_->SetCamera(activeCamera_);
-    TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
-
-    //   Fade::GetInstance()->StartFadeIn(10.0f);
-    TestGround_->Update();
-    GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
     ChangePhase(std::make_unique<StartPhase>());
 
@@ -621,8 +604,8 @@ void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
         // 共通の設定
         newEnemy->SetCamera(cameraMap_["Main"].get());
         newEnemy->SetRail(stageRail.get());
+        newEnemy->SetScene(this); // SetRailPosition 内で scene_ のレイキャストを使うため先に設定
         newEnemy->SetRailPosition(pos);
-        newEnemy->SetScene(this); // GameSceneのポインタを渡す
 
         // ベクターに追加
         enemies_.push_back(std::move(newEnemy));

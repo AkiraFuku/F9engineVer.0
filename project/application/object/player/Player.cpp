@@ -62,6 +62,15 @@ void Player::Update()
     ImGuiDrawDebugInfo();
 }
 
+void Player::UpdateTransform()
+{
+    RayCastUpdate();
+    UpdateRailPath();
+    if (collider_) {
+        collider_->Update();
+    }
+}
+
 void Player::Draw()
 {
 //    if (!isActive_) return;

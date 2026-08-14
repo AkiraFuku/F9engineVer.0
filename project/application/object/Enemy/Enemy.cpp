@@ -67,6 +67,15 @@ void Enemy::Update()
 
 }
 
+void Enemy::UpdateTransform()
+{
+    RayCastUpdate();
+    UpdatePhysics();
+    if (collider_) {
+        collider_->Update();
+    }
+}
+
 void Enemy::Draw()
 {
     if (object_) {

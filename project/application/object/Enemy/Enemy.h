@@ -42,6 +42,7 @@ public:
 
     virtual void Initialize();
     virtual void Update();
+    virtual void UpdateTransform();
     virtual void Draw();
 
     void SetCamera(Camera* camera) {

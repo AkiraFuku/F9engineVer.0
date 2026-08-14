@@ -34,6 +34,7 @@ public:
 
     void Initialize();
     void Update();
+    void UpdateTransform();
     void Draw();
 
     void SetCamera(Camera* camera) {

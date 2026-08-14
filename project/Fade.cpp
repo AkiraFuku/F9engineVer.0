@@ -148,7 +148,7 @@ void Fade::Update()
 void Fade::Draw()
 {
     // 完全透明かつフェード実行中でない場合は描画をスキップ
-    if (status_ == Status::None && alpha_ <= 0.0f)
+    if ((status_ == Status::None && alpha_ <= 0.0f)||!fading_)
     {
         return;
     }

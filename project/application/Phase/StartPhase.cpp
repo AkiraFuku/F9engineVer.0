@@ -3,6 +3,7 @@
 #include "PlayPhase.h"
 #include "Fade.h"
 #include "RailPath.h"
+#include "GoalObject.h"
 
 void StartPhase::Initialize(Scene* scene)
 {
@@ -27,14 +28,36 @@ void StartPhase::Update(Scene* scene)
 {
     GameScene* gameScene = static_cast<GameScene*>(scene);
 
-    gameScene->GetStageRaill()->Update();
+    if (gameScene->GetGoal()) {
+        gameScene->GetGoal()->Update();
+    }
+    if (gameScene->GetStageRaill()) {
+        gameScene->GetStageRaill()->Update();
+    }
 
-    // スタートフェーズ中はプレイヤーとエネミーを動かさない
-    // （Update を呼ばず、位置は初期化時の状態を維持）
+    // 1. プレイヤーとエネミーのレール・高さトランスフォームを更新
+    if (gameScene->GetPlayer()) {
+        gameScene->GetPlayer()->UpdateTransform();
+    }
+    for (auto& enemy : gameScene->GetEnemies()) {
+        if (enemy) {
+            enemy->UpdateTransform();
+        }
+    }
 
-    // カメラコントローラーを更新してプレイヤーとエネミーを映す
+    // 2. カメラコントローラーを更新してプレイヤーを追尾・注視
     if (gameScene->GetCamera()) {
         gameScene->GetCamera()->Update();
+    }
+
+    // 3. 最新のカメラ行列を反映してモデルの WVP 行列を更新
+    if (gameScene->GetPlayer()) {
+        gameScene->GetPlayer()->UpdateTransform();
+    }
+    for (auto& enemy : gameScene->GetEnemies()) {
+        if (enemy) {
+            enemy->UpdateTransform();
+        }
     }
 
     // フェードインが完了したら PlayPhase に遷移する
