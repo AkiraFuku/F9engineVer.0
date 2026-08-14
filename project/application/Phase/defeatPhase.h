@@ -17,6 +17,6 @@ private:
 
 
     std::unique_ptr<Sprite> Sprite_;
-
+    bool isTransitioning_ = false;
 };
 

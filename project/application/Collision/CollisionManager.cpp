@@ -108,7 +108,7 @@ bool CollisionManager::ShouldCheckCollision(CollisionCategory catA, CollisionCat
     if (catA == catB) return false;
 
     // プレイヤー × 敵[cite: 13, 16]
-    if (catA == CollisionCategory::Player && catB == CollisionCategory::Enemy) {
+    if ((catA == CollisionCategory::Player && catB == CollisionCategory::Enemy)||(catA == CollisionCategory::Enemy && catB == CollisionCategory::Player)) {
         return true;
     }
     // プレイヤー × 収集アイテム[cite: 13, 16]

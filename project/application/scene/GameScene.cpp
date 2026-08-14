@@ -36,8 +36,7 @@
 
 #include "MiniBoss.h"
 void GameScene::Initialize() {
-    Fade::GetInstance()->StartFadeIn(5.0f);
-    ChangePhase(std::make_unique<StartPhase>());
+   // Fade::GetInstance()->StartFadeIn(5.0f);
 
     // 1. メインカメラの生成
     auto mainCamera = std::make_unique<Camera>();
@@ -292,6 +291,7 @@ void GameScene::Initialize() {
     TestGround_->Update();
     GameScene::AddTriangles(TestGround_->GetWorldTriangles());
 
+    ChangePhase(std::make_unique<StartPhase>());
 
 }
 void GameScene::Finalize() {
@@ -544,28 +544,21 @@ void GameScene::CheckPhaseTransition()
 {
     if (goal_)
     {
-        if (goal_->IsCleared()) {
-            isCleared_ = goal_->IsCleared();
-
+        if (goal_->IsCleared() && !isCleared_) {
+            isCleared_ = true;
             ChangePhase(std::make_unique<ClearPhase>()); // 次のフェーズに遷移
-
         }
     }
     CheckPlayerFall();
     //プレイヤーが死亡した場合のフェーズ遷移もここでチェックすることができます。
     if (player)
     {
-        if (player->IsDead())
+        if (player->IsDead() && !isDefeated_)
         {
+            isDefeated_ = true;
             ChangePhase(std::make_unique<defeatPhase>()); // 次のフェーズに遷移
-
         }
     }
-
-
-
-
-
 }
 void GameScene::ChangePhase(std::unique_ptr<Phase> nextPhase)
 {
@@ -587,8 +580,9 @@ void GameScene::CheckPlayerFall()
     if (player)
     {
         Vector3 playerPos = player->GetWorldPosition();
-        if (playerPos.y < fallLimit_)
+        if (playerPos.y < fallLimit_ && !isDefeated_)
         {
+            isDefeated_ = true;
             // プレイヤーが落下限界を下回った場合の処理
             player->Die(); // プレイヤーを死亡状態にする
             ChangePhase(std::make_unique<defeatPhase>()); // 次のフェーズに遷移

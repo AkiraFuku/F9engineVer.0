@@ -115,7 +115,7 @@ void Sprite::Draw() {
     SpriteCommon::GetInstance()->SpriteCommonDraw();
 
     // 各種ブレンド・フィルモードに対応したPSO（パイプラインステート）の取得
-    auto psoSet = PSOManager::GetInstance()->GetPso("Sprite", blendMode_, fillMode_);
+    auto psoSet = PSOManager::GetInstance()->GetPso(psoName_, blendMode_, fillMode_);
 
     // パイプラインステートの設定
     DXCommon::GetInstance()->GetCommandList()->SetPipelineState(psoSet.pipelineState.Get());
@@ -250,7 +250,7 @@ std::unique_ptr<Sprite> Sprite::Clone() const {
     if (this->materialData_ && newSprite->materialData_) {
         newSprite->materialData_->color = this->materialData_->color;
     }
-
+    newSprite->psoName_ = this->psoName_;
 
     return newSprite;
 }

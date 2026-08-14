@@ -2,58 +2,115 @@
 #include "WinApp.h"
 #include <algorithm> // std::clamp 用
 
+std::unique_ptr<Fade> Fade::instance_ = nullptr;
 
-
-std::unique_ptr<Fade> Fade::instance = nullptr;
 Fade* Fade::GetInstance() {
-    if (instance == nullptr) {
+    if (instance_ == nullptr) {
         struct Helper : public Fade {
             Helper() : Fade() {}
         };
-        instance = std::make_unique<Helper>();
+        instance_ = std::make_unique<Helper>();
     }
-    return instance.get();
+    return instance_.get();
 }
-
 
 void Fade::Initialize()
 {
-    fadeSprite_ = std::make_unique<Sprite>();
-    fadeSprite_->Initialize("resources/human/white.png");
-    fadeSprite_->SetSize(Vector2(WinApp::kClientWidth, WinApp::kClientHeight));
-    fadeSprite_->SetAnchorPoint(Anchor::TopLeft);
-    fadeSprite_->SetPosition(Vector2(0.0f, 0.0f));
+    // 1. フェード専用PSOの登録
+    RegisterFadePso();
 
-    // 黒の透過表示を行うため通常ブレンドに変更を推奨（加算指定から変更）[cite: 4]
-    fadeSprite_->SetBlendMode(BlendMode::Normal);
+    // 2. スプライトの生成と初期化
+    // ※ダミーの単色テクスチャや白画像などを指定します
+    sprite_ = std::make_unique<Sprite>();
+    sprite_->Initialize("resources/white.png"); // ※環境に合わせて存在する画像パスに指定してください
+    sprite_->SetPosition({ 0.0f, 0.0f });
+    sprite_->SetSize({ static_cast<float>(WinApp::kClientWidth), static_cast<float>(WinApp::kClientHeight) });
+    sprite_->SetAnchorPoint(Anchor::TopLeft);
 
+    // スプライトにフェード専用PSOとブレンドモードを指定
+    sprite_->SetPSOName("Fade");
+    sprite_->SetBlendMode(BlendMode::Normal); // アルファ合成 (通常のフェード)
+
+    // 初期状態
     status_ = Status::None;
-    alpha_ = 1.0f;
-    fadeSprite_->SetColor(Vector4(1.0f, 1.0f, 1.0f, alpha_));
+    alpha_  = 0.0f;
+    fading_ = false;
+
+    sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
+    sprite_->Update();
+}
+
+void Fade::RegisterFadePso()
+{
+    PsoConfig config{};
+
+    // シェーダーパスの設定
+    PsoConfig::ShaderPath vsPath{ ShaderType::VS, L"resources/shaders/Fade/Fade.VS.hlsl", "main", L"vs_6_0" };
+    PsoConfig::ShaderPath psPath{ ShaderType::PS, L"resources/shaders/Fade/Fade.PS.hlsl", "main", L"ps_6_0" };
+    config.shaderPaths.push_back(vsPath);
+    config.shaderPaths.push_back(psPath);
+
+    // ルートシグネチャ (Sprite::Draw のバインド順と一致させる)
+    // 0: マテリアル CBV (b0)
+    // 1: 変換行列 CBV (b1)
+    // 2: テクスチャ SRV (t0)
+    config.rootSignatureGenerator = []() {
+        return RootSignatureBuilder()
+            .AddCBV(0, D3D12_SHADER_VISIBILITY_ALL)
+            .AddCBV(1, D3D12_SHADER_VISIBILITY_VERTEX)
+            .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
+            .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
+            .Build(DXCommon::GetInstance()->GetDevice().Get());
+    };
+
+    // 入力レイアウト (Sprite::VertexData のレイアウトに合わせる)
+    config.inputLayoutGenerator = []() {
+        InputLayout inputLayout{};
+        inputLayout.inputElement = {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        };
+        inputLayout.inputLayout.pInputElementDescs = inputLayout.inputElement.data();
+        inputLayout.inputLayout.NumElements = static_cast<UINT>(inputLayout.inputElement.size());
+        return inputLayout;
+    };
+
+    // 深度テストは無効（最前面に描画）
+    config.depthEnable    = false;
+    config.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    config.cullMode       = D3D12_CULL_MODE_NONE;
+
+    // PSOManager に "Fade" として登録
+    PSOManager::GetInstance()->RegisterPsoGenerator("Fade", config);
 }
 
 void Fade::StartFadeIn(float duration)
 {
     if (IsFading()) return;
 
-    status_ = Status::FadeIn;
+    status_       = Status::FadeIn;
     fadeDuration_ = duration;
-    timer_ = 0.0f;
-    alpha_ = 1.0f; // フェードイン開始時は完全不透明（画面を真っ黒にする）
-    fading = true;
+    timer_        = 0.0f;
+    alpha_        = 1.0f; // 不透明からスタート
+    fading_       = true;
 
+    sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
+    sprite_->Update();
 }
 
 void Fade::StartFadeOut(float duration)
 {
     if (IsFading()) return;
 
-    status_ = Status::FadeOut;
+    status_       = Status::FadeOut;
     fadeDuration_ = duration;
-    timer_ = 0.0f;
-    alpha_ = 0.0f; // フェードアウト開始時は透明
-    fading = true;
+    timer_        = 0.0f;
+    alpha_        = 0.0f; // 透明からスタート
+    fading_       = true;
 
+    sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
+    sprite_->Update();
 }
 
 void Fade::Update()
@@ -63,42 +120,38 @@ void Fade::Update()
         return;
     }
 
-    // 経過時間を進める
     timer_ += kDeltaTime_;
+    float t = std::clamp(timer_ / fadeDuration_, 0.0f, 1.0f);
 
-    // 進捗率 t (0.0 ～ 1.0) を算出
-    float t = timer_ / fadeDuration_;
-    t = std::clamp(t, 0.0f, 1.0f); // 1.0を超えないようにクランプ
-
-    // 線形補間（Lerp）を用いてアルファ値を計算[cite: 1, 2]
     if (status_ == Status::FadeIn)
     {
-        // 1.0 (黒) -> 0.0 (透明)
+        // 1.0 (画面真っ黒) -> 0.0 (画面が見える)
         alpha_ = Lerp(1.0f, 0.0f, t);
-    } else if (status_ == Status::FadeOut)
+    } 
+    else if (status_ == Status::FadeOut)
     {
-        // 0.0 (透明) -> 1.0 (黒)
+        // 0.0 (画面が見える) -> 1.0 (画面真っ黒)
         alpha_ = Lerp(0.0f, 1.0f, t);
     }
 
-    // 時間が終了したらフェード完了
     if (t >= 1.0f)
     {
         status_ = Status::None;
-        fading=false;
+        fading_ = false;
     }
 
-    // アルファ値をスプライトに適用[cite: 4]
-    fadeSprite_->SetColor(Vector4(1.0f, 1.0f, 1.0f, alpha_));
-    fadeSprite_->Update();
+    // 黒フェード（RGBA = 0, 0, 0, alpha）
+    sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
+    sprite_->Update();
 }
 
 void Fade::Draw()
 {
-    // フェード中、または完全黒で画面を隠している場合は描画する
+    // 完全透明かつフェード実行中でない場合は描画をスキップ
     if (status_ == Status::None && alpha_ <= 0.0f)
     {
         return;
     }
-    fadeSprite_->Draw();
+
+    sprite_->Draw();
 }

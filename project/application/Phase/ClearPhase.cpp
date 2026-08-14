@@ -3,6 +3,7 @@
 #include "WinApp.h"
 #include "SceneManager.h"
 #include "Input.h"
+#include "Fade.h"
 void ClearPhase::Initialize(Scene* scene)
 {
 
@@ -16,28 +17,29 @@ void ClearPhase::Initialize(Scene* scene)
 
 }
 
-void ClearPhase::Update(Scene * scene)
+void ClearPhase::Update(Scene* scene)
 {
     clearSprite_->Update();
 
-     if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
-
-
-
-        
-
-        SceneManager::GetInstance()->ChangeScene("TitleScene");
-
+    if (!isTransitioning_) {
+        if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
+            Fade::GetInstance()->StartFadeOut(1.0f); // 1.0秒かけてフェードアウト
+            isTransitioning_ = true;
+        }
+    } else {
+        if (!Fade::GetInstance()->IsFading()) {
+            SceneManager::GetInstance()->ChangeScene("TitleScene");
+        }
     }
 
 }
 
-void ClearPhase::Draw(Scene * scene)
+void ClearPhase::Draw(Scene* scene)
 {
     clearSprite_->Draw();
 }
 
-void ClearPhase::Finalize(Scene * scene)
+void ClearPhase::Finalize(Scene* scene)
 {
-       clearSprite_.reset();
+    clearSprite_.reset();
 }

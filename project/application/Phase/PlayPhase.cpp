@@ -86,7 +86,9 @@ void PlayPhase::Update(Scene* scene)
 }
 
 void PlayPhase::Draw(Scene* scene)
-{}
+{
+
+}
 
 void PlayPhase::Finalize(Scene* scene)
 {}

@@ -423,7 +423,7 @@
     <ClCompile Include="Fade.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="StartPhase.cpp">
+    <ClCompile Include="application\Phase\StartPhase.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -698,7 +698,7 @@
     <ClInclude Include="Fade.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="StartPhase.h">
+    <ClInclude Include="application\Phase\StartPhase.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -733,6 +733,7 @@
     <None Include="resources\shaders\PostEfect\BoxFilter.hlsli" />
     <None Include="resources\shaders\PostEfect\GaussianBlur.hlsli" />
     <None Include="resources\shaders\PostEfect\LuminanceOutline.hlsli" />
+    <None Include="resources\shaders\Fade\Fade.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d\Object3d.PS.hlsl">

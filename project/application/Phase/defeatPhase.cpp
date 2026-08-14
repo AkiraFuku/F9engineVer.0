@@ -4,6 +4,8 @@
 #include "SceneManager.h"
 #include "Input.h"
 
+#include "Fade.h"
+
 void defeatPhase::Initialize(Scene* scene)
 {
     Sprite_ = std::make_unique<Sprite>();
@@ -16,14 +18,15 @@ void defeatPhase::Update(Scene* scene)
 {
     Sprite_->Update();
 
-    if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
-
-
-
-        
-
-        SceneManager::GetInstance()->ChangeScene("GameScene");
-
+    if (!isTransitioning_) {
+        if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
+            Fade::GetInstance()->StartFadeOut(1.0f); // 1.0秒かけてフェードアウト
+            isTransitioning_ = true;
+        }
+    } else {
+        if (!Fade::GetInstance()->IsFading()) {
+            SceneManager::GetInstance()->ChangeScene("GameScene");
+        }
     }
 }
 

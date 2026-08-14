@@ -39,10 +39,11 @@ void Player::Initialize()
     ChangeState(PlayerStateFactory::CreateState(PlayerFormType::Normal));
     collider_ = std::make_unique<Collider>();
     collider_->initialize(this, Radius);
+    object_->Update();
 }
 void Player::Update()
 {
-    if (!isActive_) return;
+ //   if (!isActive_) return;
 
     HandleAlive();
 
@@ -63,7 +64,7 @@ void Player::Update()
 
 void Player::Draw()
 {
-    if (!isActive_) return;
+//    if (!isActive_) return;
     object_->Draw();
 
     collider_->Draw();
@@ -87,6 +88,7 @@ void Player::SetRailPosition(const Vector2& position)
             if (isRayHit_) {
                 worldY_ = rayHitPoint_.y + kHeightOffset;
                 UpdateRailPath(); // 重力補正後の高度で再度トランスフォーム更新
+                object_->Update();
             }
         }
     }

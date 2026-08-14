@@ -265,7 +265,10 @@ public:
      * @brief スプライトのサイズに合わせてUVのスケール（反復率）を自動調整する
      */
     void FitUVScaleToSpriteSize();
-
+    /// @brief PSO名を設定する
+    void SetPSOName(const std::string& psoName) { psoName_ = psoName; }
+    /// @brief PSO名を取得する
+    const std::string& GetPSOName() const { return psoName_; }
 private:
     /**
      * @brief テクスチャの元サイズに合わせてスプライトサイズを自動調整する
@@ -277,6 +280,7 @@ private:
     void AdjustSpriteSize();
 
 private:
+    std::string psoName_ = "Sprite"; //!< 使用するPSO名 (デフォルトは "Sprite")
     BlendMode blendMode_ = BlendMode::Normal; //!< ブレンドモード（デフォルトは通常アルファ）
     FillMode fillMode_ = FillMode::kSolid;    //!< フィルモード（デフォルトは塗りつぶし）
 
@@ -314,6 +318,7 @@ private:
 
     uint32_t textureIndex_ = 0;        //!< テクスチャマネージャーが管理する固有ID
     std::string textureFilePath_;      //!< 読み込んでいるテクスチャのパス
+     //!< 読み込んでいるテクスチャのパス
 
 
     // ==========================================

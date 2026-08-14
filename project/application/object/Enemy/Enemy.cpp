@@ -39,6 +39,8 @@ void Enemy::Initialize()
     collider_ = std::make_unique<Collider>();
     collider_->initialize(this, radius_);
 
+    object_->Update();
+
 }
 
 void Enemy::Update()
@@ -143,6 +145,7 @@ void Enemy::SetRailPosition(const Vector2& position)
             if (isRayHit_) {
                 worldY_ = rayHitPoint_.y + kHeightOffset;
                 UpdatePhysics(); // 重力補正後の高度で再度トランスフォーム更新
+                object_->Update();
             }
         }
 

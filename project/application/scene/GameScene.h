@@ -103,6 +103,7 @@ private:
     Quaternion rotation_ = { 0.0f,0.0f,0.0f,1.0f };
 
     bool isCleared_ = false;
+    bool isDefeated_ = false;
     uint32_t handle_ = 0;
     // 投射物リスト
     std::vector<std::unique_ptr<Projectile>> projectiles_;

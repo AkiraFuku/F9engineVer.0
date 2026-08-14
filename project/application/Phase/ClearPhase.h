@@ -17,6 +17,7 @@ private:
 
 
     std::unique_ptr<Sprite> clearSprite_;
+    bool isTransitioning_ = false;
 
 };
 

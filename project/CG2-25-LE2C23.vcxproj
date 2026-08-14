@@ -118,7 +118,7 @@
     <ClCompile Include="application\UI\PlayerHPUI.cpp" />
     <ClCompile Include="application\UI\NumberTex.cpp" />
     <ClCompile Include="application\UI\ScoreUI.cpp" />
-    <ClCompile Include="StartPhase.cpp" />
+    <ClCompile Include="application\Phase\StartPhase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\object\Boss\MiniBoss.h" />
@@ -211,7 +211,7 @@
     <ClInclude Include="application\UI\NumberTex.h" />
     <ClInclude Include="application\object\player\Behavior\IPlayerFactory.h" />
     <ClInclude Include="Fade.h" />
-    <ClInclude Include="StartPhase.h" />
+    <ClInclude Include="application\Phase\StartPhase.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -224,6 +224,7 @@
   <ItemGroup>
     <None Include="resources\shaders\CopyImage\CopyImage.hlsli" />
     <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
+    <None Include="resources\shaders\Fade\Fade.hlsli" />
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\PostEfect\BoxFilter.hlsli" />
