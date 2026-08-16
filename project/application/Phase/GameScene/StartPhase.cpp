@@ -12,16 +12,7 @@ void StartPhase::Initialize(Scene* scene)
 
     GameScene* gameScene = static_cast<GameScene*>(scene);
 
-    //gameScene->GetPlayer()->Update();
-    //gameScene->GetPlayer()->Draw();
-    //gameScene->Update();
-    //gameScene->Draw();
 
-    //const auto& enemies = gameScene->GetEnemies();
-    //for (auto& enemy : enemies) {
-    //    enemy->Update();
-    //    enemy->Draw();
-    //}
 }
 
 void StartPhase::Update(Scene* scene)

@@ -146,6 +146,13 @@ void SkyBox::Finalize()
 
 void SkyBox::Update()
 {
+
+    if (camera_)
+    {
+        transform_.translate=camera_->GetTranslate();
+
+    }
+
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
     Matrix4x4 worldViewProjectionMatrix = {};
     //ワールド行列とビュー行列とプロジェクション行列を掛け算

@@ -16,15 +16,26 @@
 
 #include "Animation.h"
 
+class Phase;
+
+
+
 class TitleScene :public Scene
 {
 public:
+    TitleScene();
+    ~TitleScene();
+
     void Initialize()override;
     void Finalize()override;
     void Update()override;
     void Draw()override;
+
+
 private:
-    // std::unique_ptr<Camera> camera;
+    std::unique_ptr<Camera> camera;
+   // std::unique_ptr<Phase> currentPhase_;
+
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;

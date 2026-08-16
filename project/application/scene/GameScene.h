@@ -38,7 +38,7 @@ public:
     /// フェーズを変更する
     /// </summary>
     /// <param name="nextPhase"></param>
-    void ChangePhase(std::unique_ptr<Phase> nextPhase);
+    //void ChangePhase(std::unique_ptr<Phase> nextPhase);
 
 
     //プレイヤーが落下下かの判定
@@ -80,7 +80,7 @@ private:
     /// </summary>
     void CheckClear();
     std::unique_ptr<Object3d> object3d;
-    std::unique_ptr<Phase> currentPhase_;
+  //  std::unique_ptr<Phase> currentPhase_;
 
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;

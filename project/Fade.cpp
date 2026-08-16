@@ -33,7 +33,7 @@ void Fade::Initialize()
 
     // 初期状態
     status_ = Status::None;
-    alpha_  = 0.0f;
+    alpha_ = 0.0f;
     fading_ = false;
 
     sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
@@ -61,7 +61,7 @@ void Fade::RegisterFadePso()
             .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
             .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
             .Build(DXCommon::GetInstance()->GetDevice().Get());
-    };
+        };
 
     // 入力レイアウト (Sprite::VertexData のレイアウトに合わせる)
     config.inputLayoutGenerator = []() {
@@ -74,12 +74,12 @@ void Fade::RegisterFadePso()
         inputLayout.inputLayout.pInputElementDescs = inputLayout.inputElement.data();
         inputLayout.inputLayout.NumElements = static_cast<UINT>(inputLayout.inputElement.size());
         return inputLayout;
-    };
+        };
 
     // 深度テストは無効（最前面に描画）
-    config.depthEnable    = false;
+    config.depthEnable = false;
     config.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-    config.cullMode       = D3D12_CULL_MODE_NONE;
+    config.cullMode = D3D12_CULL_MODE_NONE;
 
     // PSOManager に "Fade" として登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Fade", config);
@@ -87,13 +87,14 @@ void Fade::RegisterFadePso()
 
 void Fade::StartFadeIn(float duration)
 {
-    if (IsFading()) return;
+    if (!IsFading()) {
+        alpha_ = 1.0f; // 不透明からスタート
+    };
 
-    status_       = Status::FadeIn;
+    status_ = Status::FadeIn;
     fadeDuration_ = duration;
-    timer_        = 0.0f;
-    alpha_        = 1.0f; // 不透明からスタート
-    fading_       = true;
+    timer_ = 0.0f;
+    fading_ = true;
 
     sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
     sprite_->Update();
@@ -101,13 +102,14 @@ void Fade::StartFadeIn(float duration)
 
 void Fade::StartFadeOut(float duration)
 {
-    if (IsFading()) return;
+    if (!IsFading()) {
+        alpha_ = 0.0f; // 透明からスタート
+    };
 
-    status_       = Status::FadeOut;
+    status_ = Status::FadeOut;
     fadeDuration_ = duration;
-    timer_        = 0.0f;
-    alpha_        = 0.0f; // 透明からスタート
-    fading_       = true;
+    timer_ = 0.0f;
+    fading_ = true;
 
     sprite_->SetColor({ 0.0f, 0.0f, 0.0f, alpha_ });
     sprite_->Update();
@@ -127,8 +129,7 @@ void Fade::Update()
     {
         // 1.0 (画面真っ黒) -> 0.0 (画面が見える)
         alpha_ = Lerp(1.0f, 0.0f, t);
-    } 
-    else if (status_ == Status::FadeOut)
+    } else if (status_ == Status::FadeOut)
     {
         // 0.0 (画面が見える) -> 1.0 (画面真っ黒)
         alpha_ = Lerp(0.0f, 1.0f, t);
@@ -148,7 +149,7 @@ void Fade::Update()
 void Fade::Draw()
 {
     // 完全透明かつフェード実行中でない場合は描画をスキップ
-    if ((status_ == Status::None && alpha_ <= 0.0f)||!fading_)
+    if ((status_ == Status::None && alpha_ <= 0.0f) || !fading_)
     {
         return;
     }

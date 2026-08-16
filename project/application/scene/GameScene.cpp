@@ -36,7 +36,6 @@
 
 #include "MiniBoss.h"
 void GameScene::Initialize() {
-   // Fade::GetInstance()->StartFadeIn(5.0f);
 
     // 1. メインカメラの生成
     auto mainCamera = std::make_unique<Camera>();
@@ -60,7 +59,6 @@ void GameScene::Initialize() {
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
     TextureManager::GetInstance()->LoadTexture("resources/Efect.png");
 
-    //ParticleManager::GetInstance()->CreateParticleGroup("Test", "resources/circle2.png");
     ParticleManager::ParticleEmitterFunc initializeFunc = [](const Vector3& emitterPosition, std::mt19937& randomEngine)-> ParticleManager::Particle {
 
         std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
@@ -125,22 +123,17 @@ void GameScene::Initialize() {
 
 
         };
-    // ParticleManager::GetInstance()->CreateParticleGroup("GameEffects", "Test", "resources/gradationLine.png", ParticleManager::EffectType::Plane, initializeFunc, updateFunc);
 
     ParticleManager::GetInstance()->CreateParticleGroup("GameEffects", "Hit", "resources/Efect.png", ParticleManager::EffectType::Ring, initialize, update);
-    /*EulerTransform M = { position_,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-    emitter_ = std::make_unique<ParticleEmitter>("Hit", M, 5, 5.0f, 0.0f);*/
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
     LightManager::GetInstance()->AddDirectionalLight({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 
 
-    //}
 
 
 
     animation = std::make_unique<Animation>();
 
-    // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->Initialize("resources/human", "walk.gltf");
     animation->SetCurrentTime(0.0f);
 
@@ -543,20 +536,7 @@ void GameScene::CheckPhaseTransition()
         }
     }
 }
-void GameScene::ChangePhase(std::unique_ptr<Phase> nextPhase)
-{
-    // 現在のフェーズをクリア
-    if (currentPhase_) {
-        currentPhase_->Finalize(this);
-        currentPhase_.reset();
-    }
 
-    // 新しいフェーズを設定して初期化
-    currentPhase_ = std::move(nextPhase);
-    if (currentPhase_) {
-        currentPhase_->Initialize(this);
-    }
-}
 void GameScene::CheckPlayerFall()
 {
 

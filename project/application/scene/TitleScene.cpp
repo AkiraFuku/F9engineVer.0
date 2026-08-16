@@ -8,12 +8,20 @@
 #include "PSOManager.h"
 #include "LightManager.h"
 #include "PrimitiveDrawer.h"
+#include "Phase.h"
+#include "Fade.h"
+#include "TitlePhase.h"
+
+
+TitleScene::TitleScene() = default;
+TitleScene::~TitleScene() = default;
+
 void TitleScene::Initialize() {
 
  // 1. メインカメラの生成
-    auto mainCamera = std::make_unique<Camera>();
-    mainCamera->SetTranslate({ 0.0f, 0.0f, -5.0f });
-    cameraMap_["Main"] = std::move(mainCamera);
+    camera = std::make_unique<Camera>();
+    camera->SetTranslate({ 0.0f, 0.0f, -5.0f });
+    cameraMap_["Main"] = std::move(camera);
 
     // 2. デバッグ用カメラの生成
     auto debugCamera = std::make_unique<Camera>();
@@ -24,151 +32,39 @@ void TitleScene::Initialize() {
     ChangeActiveCamera(cameraMap_["Main"].get());
 
 
-    Object3dCommon::GetInstance()->SetDefaultCamera(activeCamera_);
-    ParticleManager::GetInstance()->SetCamera(activeCamera_);
      handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-    Audio::GetInstance()->PlayAudio(handle_, true);
+   // Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
-    ParticleManager::GetInstance()->CreateParticleGroup("TitleEffects", "Test", "resources/uvChecker.png");
     LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
-    /*   std::vector<Sprite*> sprites;
-       for (uint32_t i = 0; i < 5; i++)
-       {*/
-    sprite = std::make_unique<Sprite>();
-    sprite->Initialize("resources/monsterBall.png");
 
-    sprite->SetPosition(Vector2{ 25.0f + 100.0f,100.0f });
-    // sprite->SetSize(Vector2{ 100.0f,100.0f });
-    //sprites.push_back(sprite);
-   // sprite->SetBlendMode(BlendMode::Add);
-    sprite->SetAnchorPoint(Vector2{ 0.5f,0.5f });
+        skyBox = std::make_unique<SkyBox>();
+    skyBox->Initialize();
+    skyBox->SetCamera(activeCamera_);
+    skyBox->SetTextureByFilePath("resources/output_skybox.dds");
+    Object3dCommon::GetInstance()->SetDefaultSkyBox(skyBox.get());
 
-    //}
+    Fade::GetInstance()->StartFadeIn(5.0f);
 
-
-
-    animation = std::make_unique<Animation>();
-
-    animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
-    animation->SetCurrentTime(0.0f);
-
-
-
-
-    ModelManager::GetInstance()->LoadModel("resources/AnimatedCube","AnimatedCube.gltf");
-        object3d = std::make_unique<Object3d>();
-        object3d->Initialize();
-        object3d->SetModel("AnimatedCube.gltf");
-        object3d->SetCamera(activeCamera_);
-
-    object3d->SetAnimations(animation.get());
-
-
-
-
+    ChangePhase( std::make_unique<TitlePhase>());
 
 }
 void TitleScene::Finalize() {
 
-  //  ParticleManager::GetInstance()->ReleaseAllParticleGroupSets();
 }
 void TitleScene::Update() {
-
-
-    XINPUT_STATE state;
-
-    // 現在のジョイスティックを取得
-    if (Input::GetInstance()->TriggerMouseDown(0))
-    {
-        if (Audio::GetInstance()->IsPlaying(handle_))
-        {
-            Audio::GetInstance()->PauseAudio(handle_);
-        } else
-        {
-            Audio::GetInstance()->ResumeAudio(handle_);
-
-        }
+    if (activeCamera_) {
+        activeCamera_->Update();
+        activeCamera_->UpdateViewProjection();
     }
+    skyBox->Update();
 
-
-    Input::GetInstance()->GetJoyStick(0, state);
-
-    // Aボタンを押していたら
-
-    if (Input::GetInstance()->TriggerKeyDown(DIK_SPACE)) {
-
-
-
-        // Aボタンを押したときの処理
-
-        if (Audio::GetInstance()->IsPlaying(handle_))
-        {
-
-            Audio::GetInstance()->StopAudio(handle_);
-        }
-
-        GetSceneManager()->ChangeScene("GameScene");
-
-    }
-    if (Input::GetInstance()->TriggerPadDown(0, XINPUT_GAMEPAD_B))
-    {
-
-    }
-
-    //マウスホイールの入力取得
-
-    if (Input::GetInstance()->GetMouseMove().z)
-    {
-        Vector3 camreaTranslate = activeCamera_->GetTranslate();
-        camreaTranslate = Add(camreaTranslate, Vector3{ 0.0f,0.0f,static_cast<float>(Input::GetInstance()->GetMouseMove().z) * 0.1f });
-        activeCamera_->SetTranslate(camreaTranslate);
-
-    }
-    if (Input::GetInstance()->GetJoyStick(0, state))
-    {
-        // 左スティックの値を取得
-        float x = (float)state.Gamepad.sThumbLX;
-        
-        float y = (float)state.Gamepad.sThumbLY;
-
-        // 数値が大きいので正規化（-1.0 ～ 1.0）して使うのが一般的
-        float normalizedX = x / 32767.0f;
-        float normalizedY = y / 32767.0f;
-        Vector3 camreaTranslate = activeCamera_->GetTranslate();
-        camreaTranslate = Add(camreaTranslate, Vector3{ normalizedX / 60.0f,normalizedY / 60.0f,0.0f });
-        activeCamera_->SetTranslate(camreaTranslate);
-    }
-
-    activeCamera_->Update();
- 
-    activeCamera_->UpdateViewProjection();
-    object3d->Update();
-
-#ifdef USE_IMGUI
-    ImGui::Begin("Debug");
-
-    ImGui::Text("Sprite");
-    Vector2 Position =
-        sprite->GetPosition();
-    ImGui::SliderFloat2("Position", &(Position.x), 0.1f, 1000.0f);
-    sprite->SetPosition(Position);
-
-    ImGui::End();
-#endif // USE_IMGUI
-
-    //sprite->SetRotation(sprite->GetRotation() + 0.1f);
-    sprite->Update();
+    currentPhase_->Update(this);
 }
 void TitleScene::Draw() {
-    Sphere sphere1={{0.0f,0.0f,0.0f},1.0f};
-    Sphere sphere2={{1.0f,0.0f,0.0f},1.0f};
-
-    PrimitiveDrawer::GetInstance()->DrawSphere(sphere1,{1.0f,1.0f,1.0f,1.0f});
-    PrimitiveDrawer::GetInstance()->DrawSphere(sphere2,{1.0f,1.0f,1.0f,1.0f});
-
-    ParticleManager::GetInstance()->Draw();
-
+    skyBox->Draw();
 }
+
+

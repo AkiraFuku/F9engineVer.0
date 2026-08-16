@@ -5,6 +5,8 @@
 #include <string>
 class SceneManager;
 class Camera;
+class  Phase;
+
 class Scene
 {
 public:
@@ -17,7 +19,7 @@ public:
     virtual void SetSceneManager(SceneManager* sceneManager) {
         sceneManager_ = sceneManager;
     }
-    SceneManager*  GetSceneManager() {
+    SceneManager* GetSceneManager() {
         return sceneManager_;
     }
 
@@ -27,12 +29,19 @@ public:
         return activeCamera_;
     }
 
+   void ChangePhase(std::unique_ptr<Phase> nextPhase);
+
+
+
 private:
     SceneManager* sceneManager_ = nullptr;
 
 protected:
     uint32_t BGMHandle_ = 0;
-  Camera*activeCamera_ = nullptr;
-  std::map<std::string, std::unique_ptr<Camera>> cameraMap_;
+    Camera* activeCamera_ = nullptr;
+    std::map<std::string, std::unique_ptr<Camera>> cameraMap_;
+
+    std::unique_ptr<Phase> currentPhase_;
+
 };
 

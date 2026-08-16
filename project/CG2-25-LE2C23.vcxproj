@@ -17,8 +17,8 @@
   <ItemGroup>
     <ClCompile Include="application\object\Boss\MiniBoss.cpp" />
     <ClCompile Include="application\object\Boss\Part\BossPart.cpp" />
-    <ClCompile Include="application\Phase\ClearPhase.cpp" />
-    <ClCompile Include="application\Phase\defeatPhase.cpp" />
+    <ClCompile Include="application\Phase\GameScene\ClearPhase.cpp" />
+    <ClCompile Include="application\Phase\GameScene\defeatPhase.cpp" />
     <ClCompile Include="application\object\Enemy\BoundEnemy.cpp" />
     <ClCompile Include="application\object\Robot\BoundRobot.cpp" />
     <ClCompile Include="application\Collision\Collider.cpp" />
@@ -114,17 +114,18 @@
     <ClCompile Include="application\object\Bullet\Projectile.cpp" />
     <ClCompile Include="engine\Tool\SkyBox.cpp" />
     <ClCompile Include="application\Phase\Phase.cpp" />
-    <ClCompile Include="application\Phase\PlayPhase.cpp" />
+    <ClCompile Include="application\Phase\GameScene\PlayPhase.cpp" />
     <ClCompile Include="application\UI\PlayerHPUI.cpp" />
     <ClCompile Include="application\UI\NumberTex.cpp" />
     <ClCompile Include="application\UI\ScoreUI.cpp" />
-    <ClCompile Include="application\Phase\StartPhase.cpp" />
+    <ClCompile Include="application\Phase\GameScene\StartPhase.cpp" />
+    <ClCompile Include="TitlePhase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\object\Boss\MiniBoss.h" />
     <ClInclude Include="application\object\Boss\Part\BossPart.h" />
-    <ClInclude Include="application\Phase\ClearPhase.h" />
-    <ClInclude Include="application\Phase\defeatPhase.h" />
+    <ClInclude Include="application\Phase\GameScene\ClearPhase.h" />
+    <ClInclude Include="application\Phase\GameScene\defeatPhase.h" />
     <ClInclude Include="application\object\Enemy\BoundEnemy.h" />
     <ClInclude Include="application\object\Robot\BoundRobot.h" />
     <ClInclude Include="application\Collision\Collider.h" />
@@ -205,13 +206,14 @@
     <ClInclude Include="engine\Tool\SkyBox.h" />
     <ClInclude Include="application\Collision\GameObject.h" />
     <ClInclude Include="application\Phase\Phase.h" />
-    <ClInclude Include="application\Phase\PlayPhase.h" />
+    <ClInclude Include="application\Phase\GameScene\PlayPhase.h" />
     <ClInclude Include="application\UI\PlayerHPUI.h" />
     <ClInclude Include="application\UI\ScoreUI.h" />
     <ClInclude Include="application\UI\NumberTex.h" />
     <ClInclude Include="application\object\player\Behavior\IPlayerFactory.h" />
     <ClInclude Include="Fade.h" />
-    <ClInclude Include="application\Phase\StartPhase.h" />
+    <ClInclude Include="application\Phase\GameScene\StartPhase.h" />
+    <ClInclude Include="TitlePhase.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -401,7 +403,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collision;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)application\object\Goal;$(ProjectDir)application\Phase;$(ProjectDir)application\UI;$(ProjectDir)application\object\Boss;$(ProjectDir)application\object\Boss\Part</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collision;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)application\object\Goal;$(ProjectDir)application\Phase;$(ProjectDir)application\UI;$(ProjectDir)application\object\Boss;$(ProjectDir)application\object\Boss\Part;$(ProjectDir)application\Phase\GameScene;$(ProjectDir)application\Phase\TitleScene</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -432,7 +434,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collision;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)application\object\Goal;$(ProjectDir)application\Phase;$(ProjectDir)application\UI;$(ProjectDir)application\object\Boss;$(ProjectDir)application\object\Boss\Part</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collision;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)application\object\Goal;$(ProjectDir)application\Phase;$(ProjectDir)application\UI;$(ProjectDir)application\object\Boss;$(ProjectDir)application\object\Boss\Part;$(ProjectDir)application\Phase\GameScene;$(ProjectDir)application\Phase\TitleScene</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -466,7 +468,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collision;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)application\object\Goal;$(ProjectDir)application\Phase;$(ProjectDir)application\UI;$(ProjectDir)application\object\Boss;$(ProjectDir)application\object\Boss\Part</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\audio;$(ProjectDir)engine\2d;$(ProjectDir)engine\GAME;$(ProjectDir)engine\math;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\input;$(ProjectDir)engine\Tool;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir);$(ProjectDir)externals\assimp\include;$(ProjectDir)application\debugcamera;$(ProjectDir)application\scene;$(ProjectDir)application\object\player;$(ProjectDir)application\object\player\Behavior;$(ProjectDir)application\Rail;$(ProjectDir)application\object\Enemy;$(ProjectDir)application\object\Robot;$(ProjectDir)application\Behavior;$(ProjectDir)application\object\Enemy\Behavior;$(ProjectDir)application\Collision;$(ProjectDir)application\object\Robot\Base;$(ProjectDir)application\object\CameraContorol;$(ProjectDir)application\object\Bullet;$(ProjectDir)application\Abilities;$(ProjectDir)application\object\Goal;$(ProjectDir)application\Phase;$(ProjectDir)application\UI;$(ProjectDir)application\object\Boss;$(ProjectDir)application\object\Boss\Part;$(ProjectDir)application\Phase\GameScene;$(ProjectDir)application\Phase\TitleScene</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
