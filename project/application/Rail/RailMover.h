@@ -57,6 +57,9 @@ public:
     MoveDirection GetMoveDirection() const {
         return currentDir_;
     }
+    void SetMoveDirection(MoveDirection dir) {
+        currentDir_ = dir;
+    }
 private:
 
 

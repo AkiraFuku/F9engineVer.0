@@ -26,15 +26,15 @@ void StartPhase::Update(Scene* scene)
         gameScene->GetStageRaill()->Update();
     }
 
-    // 1. プレイヤーとエネミーのレール・高さトランスフォームを更新
-    if (gameScene->GetPlayer()) {
-        gameScene->GetPlayer()->UpdateTransform();
-    }
-    for (auto& enemy : gameScene->GetEnemies()) {
-        if (enemy) {
-            enemy->UpdateTransform();
-        }
-    }
+    //// 1. プレイヤーとエネミーのレール・高さトランスフォームを更新
+    //if (gameScene->GetPlayer()) {
+    //    gameScene->GetPlayer()->UpdateTransform();
+    //}
+    //for (auto& enemy : gameScene->GetEnemies()) {
+    //    if (enemy) {
+    //        enemy->UpdateTransform();
+    //    }
+    //}
 
     // 2. カメラコントローラーを更新してプレイヤーを追尾・注視
     if (gameScene->GetCamera()) {

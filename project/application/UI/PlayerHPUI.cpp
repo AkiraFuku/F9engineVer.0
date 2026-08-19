@@ -15,14 +15,14 @@ void PlayerHPUI::Initialize(Player* player)
     hpSprite_->SetPosition({ position_.x, position_.y });
     hpSprite_->SetSize({ hpSpriteWidth_ * scale_, 20.0f * scale_ });
     // 
-
+    
 
      baseCounterSprite_ = std::make_unique<Sprite>();
     // 1. 初期テクスチャ（実HP）で初期化
-    baseCounterSprite_->Initialize("resources/white.png");
+    baseCounterSprite_->Initialize("resources/HPUI/ActiveHP.png");
 
     // 2. 空テクスチャを追加登録
-    baseCounterSprite_->RegisterTexture("resources/monsterBall.png");
+    baseCounterSprite_->RegisterTexture("resources//HPUI/DeactiveHP.png");
 
     // 座標とサイズの設定
     baseCounterSprite_->SetPosition({ position_.x + counterOffset_.x + (counterSpacing_+counterSize_ )* scale_, position_.y + counterOffset_.y });

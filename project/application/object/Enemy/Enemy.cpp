@@ -383,3 +383,11 @@ void Enemy::PlayHitEffect() {
         hitParticle_->Emit();
     }
 }
+
+float Enemy::GetCurrentDistance() const {
+    return railMover_ ? railMover_->GetCurrentDistance() : 0.0f;
+}
+
+const RailMover* Enemy::GetRailMover() const {
+    return railMover_.get();
+}

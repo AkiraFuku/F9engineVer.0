@@ -5,6 +5,7 @@
 #include "Behavior/PlayerState.h"
 #include "GameObject.h"
 #include "Animation.h"
+#include "RailMover.h"
 
 class InputHandler;
 class Input;
@@ -177,7 +178,10 @@ public:
         gravityScale_ = scale;
     }
 
-    void TakeDamage();
+    void TakeDamage(int knockbackDirection = -1);
+    bool IsKnockback() const {
+        return isKnockback_;
+    }
 
 private:
     float deltaTime_ = DXCommon::kDeltaTime;
@@ -193,6 +197,7 @@ private:
     void UpdateRailPath();
     void HandleInput();
     void HandleDamage();
+    void HandleKnockback();
     void HandleAlive();
 
     Camera* camera_ = nullptr;
@@ -217,8 +222,15 @@ private:
     Gauge hitPoints_ = { 3, 3 };
     float hitInvincibilityTimer_ = 0.0f;
     const float kHitInvincibilityDuration_ = 1.5f; // 1.5秒間の無敵時間
-    const float kKnockbackForce_ = 0.5f;
-    int knockbackDirection_ = 0;
+
+    bool isKnockback_ = false;
+    float knockbackTimer_ = 0.0f;
+    const float kKnockbackDuration_ = 0.25f; // 0.25秒間のノックバック
+    const float kKnockbackSpeed_ = 7.0f;     // ノックバックの初速
+    const float kKnockbackJumpForce_ = 6.0f; // ノックバック時の軽い跳ね上げ
+    int knockbackDirection_ = -1;            // -1: 手前(後退), 1: 奥(前進)
+    float currentAngle_ = 0.0f;              // 現在の回転角度
+    RailMover::MoveDirection savedFacingDirection_ = RailMover::MoveDirection::Forward;
     bool isInvincible_ = false;
 
     bool isAlive_ = true;

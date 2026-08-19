@@ -18,7 +18,7 @@ TitleScene::~TitleScene() = default;
 
 void TitleScene::Initialize() {
 
- // 1. メインカメラの生成
+    // 1. メインカメラの生成
     camera = std::make_unique<Camera>();
     camera->SetTranslate({ 0.0f, 0.0f, -5.0f });
     cameraMap_["Main"] = std::move(camera);
@@ -32,15 +32,16 @@ void TitleScene::Initialize() {
     ChangeActiveCamera(cameraMap_["Main"].get());
 
 
-     handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
+    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
 
-   // Audio::GetInstance()->PlayAudio(handle_, true);
+    // Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+    TextureManager::GetInstance()->LoadTexture("resources/Title/RoBoDashTitle.png");
 
     LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
 
-        skyBox = std::make_unique<SkyBox>();
+    skyBox = std::make_unique<SkyBox>();
     skyBox->Initialize();
     skyBox->SetCamera(activeCamera_);
     skyBox->SetTextureByFilePath("resources/output_skybox.dds");
@@ -48,7 +49,13 @@ void TitleScene::Initialize() {
 
     Fade::GetInstance()->StartFadeIn(5.0f);
 
-    ChangePhase( std::make_unique<TitlePhase>());
+
+    sprite = std::make_unique<Sprite>();
+    sprite->Initialize("resources/Title/RoBoDashTitle.png");
+    sprite->SetAnchorPoint(Anchor::Center);
+    sprite->SetPosition(WinApp::GetInstance()->GetWindowCenter());
+
+    ChangePhase(std::make_unique<TitlePhase>());
 
 }
 void TitleScene::Finalize() {
@@ -60,11 +67,12 @@ void TitleScene::Update() {
         activeCamera_->UpdateViewProjection();
     }
     skyBox->Update();
-
+    sprite->Update();
     currentPhase_->Update(this);
 }
 void TitleScene::Draw() {
     skyBox->Draw();
+    sprite->Draw();
 }
 
 

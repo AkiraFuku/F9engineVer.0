@@ -138,9 +138,11 @@ public:
 
         gravityScale_ = Scale;
     };
-    float GetDeltaTime(){   return deltaTime_;}
+    float GetCurrentDistance() const;
+    const RailMover* GetRailMover() const;
+    float GetDeltaTime() { return deltaTime_; }
 
-      float GetGroundY(){
+    float GetGroundY() {
     
         return rayHitPalamata_.groundY;
     }

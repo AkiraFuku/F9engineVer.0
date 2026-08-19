@@ -52,6 +52,7 @@ void Player::Update()
     }
 
     HandleDamage();
+    HandleKnockback();
     HandleInput();
     RayCastUpdate();
     collider_->Update();
@@ -74,9 +75,23 @@ void Player::UpdateTransform()
 void Player::Draw()
 {
 //    if (!isActive_) return;
+
+    // 無敵時間中のモデル点滅（0.08秒ごとに表示/非表示を切り替え）
+    if (hitInvincibilityTimer_ > 0.0f) {
+        const float kBlinkInterval = 0.08f;
+        if (fmodf(hitInvincibilityTimer_, kBlinkInterval * 2.0f) < kBlinkInterval) {
+            if (collider_) {
+                collider_->Draw();
+            }
+            return;
+        }
+    }
+
     object_->Draw();
 
-    collider_->Draw();
+    if (collider_) {
+        collider_->Draw();
+    }
 }
 
 void Player::SetRailPosition(const Vector2& position)
@@ -162,15 +177,19 @@ void Player::UpdateRailPath()
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
     object_->SetTranslate(finalPos);
 
-    float currentFrameAngle = 0.0f;
-    if (Length(railDir) > 0.001f) {
-        currentFrameAngle = atan2f(railDir.x, railDir.z);
-        if (railMover_->GetMoveDirection() == RailMover::MoveDirection::Backward) {
-            currentFrameAngle += std::numbers::pi_v<float>;
+    // ノックバック中は向きを変更せず直前の向きを固定
+    if (!isKnockback_) {
+        float currentFrameAngle = 0.0f;
+        if (Length(railDir) > 0.001f) {
+            currentFrameAngle = atan2f(railDir.x, railDir.z);
+            if (railMover_->GetMoveDirection() == RailMover::MoveDirection::Backward) {
+                currentFrameAngle += std::numbers::pi_v<float>;
+            }
         }
+        currentAngle_ = currentFrameAngle;
     }
 
-    object_->SetRotate({ 0.0f, currentFrameAngle, 0.0f });
+    object_->SetRotate({ 0.0f, currentAngle_, 0.0f });
     object_->Update();
 }
 
@@ -263,6 +282,11 @@ void Player::RayCastUpdate()
 
 void Player::HandleInput()
 {
+    // ノックバック中は操作不能にする
+    if (isKnockback_) {
+        return;
+    }
+
     auto commands = inputHandler_->HandleInput();
     for (auto& command : commands) {
         if (baseState_) {
@@ -282,12 +306,48 @@ void Player::HandleDamage()
     }
 }
 
-void Player::TakeDamage()
+void Player::HandleKnockback()
+{
+    if (isKnockback_ && knockbackTimer_ > 0.0f) {
+        // ノックバックの残り時間に応じて速度を減衰
+        float progressRatio = knockbackTimer_ / kKnockbackDuration_;
+        float moveAmount = float(knockbackDirection_) * kKnockbackSpeed_ * progressRatio * deltaTime_;
+        railMover_->Advance(moveAmount);
+
+        // Advance内でcurrentDir_が反転してしまわないよう、保存した移動向きを維持
+        railMover_->SetMoveDirection(savedFacingDirection_);
+
+        knockbackTimer_ -= deltaTime_;
+        if (knockbackTimer_ <= 0.0f) {
+            knockbackTimer_ = 0.0f;
+            isKnockback_ = false;
+        }
+    }
+}
+
+void Player::TakeDamage(int knockbackDirection)
 {
     if (hitInvincibilityTimer_ <= 0.0f && !isInvincible_) {
         isDamaged_ = true;
         hitInvincibilityTimer_ = kHitInvincibilityDuration_;
         hitPoints_.value--;
+
+        // ノックバック開始
+        isKnockback_ = true;
+        knockbackTimer_ = kKnockbackDuration_;
+        knockbackDirection_ = knockbackDirection;
+        velocity_.y = kKnockbackJumpForce_;
+        isGrounded_ = false;
+
+        // ノックバック前の移動向きを保存
+        if (railMover_) {
+            savedFacingDirection_ = railMover_->GetMoveDirection();
+        }
+
+        // アタック中などの特殊状態を解除して通常行動に戻す
+        if (baseState_ && baseState_->GetFactory()) {
+            baseState_->ChangeBehavior(this, baseState_->GetFactory()->CreateBehavior(BehaviorType::Root));
+        }
     }
 }
 
@@ -322,8 +382,10 @@ void Player::ImGuiDrawDebugInfo() {
     }
     ImGui::Separator();
 
-    if (isDamaged_) {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "STATUS: COLLIDING / DAMAGED!");
+    if (isKnockback_) {
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "STATUS: KNOCKBACK! (Timer: %.2f)", knockbackTimer_);
+    } else if (isDamaged_) {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "STATUS: INVINCIBLE / DAMAGED!");
     } else {
         ImGui::Text("STATUS: Normal");
     }
@@ -360,12 +422,7 @@ void Player::OnCollision(GameObject* other) {
         if (playerState && strcmp(playerState, "Normal") == 0) {
             const char* enemyState = enemy->GetStateName();
 
-            if (enemyState && strcmp(enemyState, "Normal") == 0) {
-                if (hitInvincibilityTimer_ <= 0.0f) {
-                    TakeDamage();
-                }
-            }
-
+            // プレイヤーが攻撃中の場合
             if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
                 if (enemyState && strcmp(enemyState, "Dead") != 0) {
                     Vector3 now = velocity_;
@@ -378,6 +435,26 @@ void Player::OnCollision(GameObject* other) {
                     }
                 }
                 return;
+            }
+
+            // 敵が通常状態の場合、ダメージおよびノックバック
+            if (enemyState && strcmp(enemyState, "Normal") == 0) {
+                if (hitInvincibilityTimer_ <= 0.0f) {
+                    // レール上の位置関係からノックバック方向を決定
+                    int knockDir = -1;
+                    float playerDist = GetCurrentDistance();
+                    float enemyDist = enemy->GetCurrentDistance();
+                    if (playerDist < enemyDist) {
+                        knockDir = -1; // プレイヤーが手前 → 手前側(後退)へノックバック
+                    } else if (playerDist > enemyDist) {
+                        knockDir = 1;  // プレイヤーが奥 → 奥側(前進)へノックバック
+                    } else {
+                        // 同一地点の場合はプレイヤーの移動向きの逆方向
+                        knockDir = (GetMoveDirection() == 1) ? -1 : 1;
+                    }
+
+                    TakeDamage(knockDir);
+                }
             }
         }
     }
