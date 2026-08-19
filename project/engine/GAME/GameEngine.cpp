@@ -14,7 +14,8 @@ void GameEngine::Initialize() {
     SceneManager::GetInstance()->SetSceneFactory(sceneFactory_.get());
 
     Fade::GetInstance()->Initialize();
-    SceneManager::GetInstance()->ChangeScene("GameScene");
+ //   SceneManager::GetInstance()->ChangeScene("GameScene");
+    SceneManager::GetInstance()->ChangeScene("TitleScene");
     PrimitiveDrawer::GetInstance()->Initialize();
     OffScreen::GetInstance()->SetEffectFlags(
         PostEffectFlag::DepthOutline
@@ -29,7 +30,7 @@ void GameEngine::Update() {
     Framework::Update();
     Fade::GetInstance()->Update();
     SceneManager::GetInstance()->Update();
-    
+
 }
 void GameEngine::PreDraw()
 {

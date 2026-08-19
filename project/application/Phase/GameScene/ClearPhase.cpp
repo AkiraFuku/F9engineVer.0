@@ -8,7 +8,7 @@ void ClearPhase::Initialize(Scene* scene)
 {
 
     clearSprite_ = std::make_unique<Sprite>();
-    clearSprite_->Initialize("resources/uvChecker.png");
+    clearSprite_->Initialize("resources/StageClear/StageClear.png");
 
     clearSprite_->SetPosition(WinApp::GetInstance()->GetWindowCenter());
     clearSprite_->SetAnchorPoint({ 0.5f, 0.5f });
