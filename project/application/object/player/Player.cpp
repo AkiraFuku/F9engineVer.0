@@ -413,8 +413,14 @@ void Player::UpdateRayCollisions()
 
     // 【修正点4】めり込んだ分だけレールの進捗（Progress）を戻す
     if (std::abs(maxPushBackProgress) > 0.0001f) {
-        // 壁にぶつかった距離だけレールを押し戻して止める
-        railMover_->Advance(-maxPushBackProgress);
+        // 壁にぶつかったら押し戻す（Advance）のではなく、壁の手前の座標を計算して直接セットし「止まる」挙動にする
+        float currentDist = railMover_->GetCurrentDistance();
+        float targetDist = currentDist - maxPushBackProgress;
+        const RailPath* path = railMover_->GetRailPath();
+        if (path) {
+            float targetT = path->GetTFromDistance(targetDist);
+            railMover_->SetProgress(targetT);
+        }
     }
 
     // レール上ゲームのため、位置自体の直接的なオフセット加算は行わない（向きが狂う原因になるため）
