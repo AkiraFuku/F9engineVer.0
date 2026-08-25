@@ -105,8 +105,10 @@ public:
 
     Vector3 GetDirection() const;
     int GetMoveDirection() const;
+    void CheckGroundCollision();
     void UpdateGravity();
-    void RayCastUpdate() override;
+    void RayCastUpdate() override; // 互換性のため残し、中でUpdateRayCollisionsを呼ぶ
+    const CollisionRayInfo* GetRayInfo(const std::string& name) const;
 
     bool IsHit() const {
         return isDamaged_;
@@ -200,10 +202,14 @@ private:
     void HandleKnockback();
     void HandleAlive();
 
+    void InitializeRays();
+    void UpdateRayCollisions();
+
     Camera* camera_ = nullptr;
     void ImGuiDrawDebugInfo();
 
     Vector3 velocity_ = { 0.0f, 0.0f, 0.0f };
+    Vector3 wallPushOffset_ = { 0.0f, 0.0f, 0.0f }; // 壁からの押し返し用オフセット
     float worldY_ = 0.0f;
 
     float gravityScale_ = 1.0f;
@@ -235,4 +241,6 @@ private:
 
     bool isAlive_ = true;
     bool isActive_ = true;
+
+    std::vector<CollisionRayInfo> rayList_;
 };

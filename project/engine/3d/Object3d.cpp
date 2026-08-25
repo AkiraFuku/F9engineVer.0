@@ -16,7 +16,7 @@ void Object3d::Initialize()
     CreateWVPResource();
     //平行光源リソースの作成
    // CreateDirectionalLightResource();
-    transform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+    worldTransform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
     camera_ = Object3dCommon::GetInstance()->GetDefaultCamera();
     box_ = Object3dCommon::GetInstance()->GetDefaultSkyBox();
     CreateCameraResource();
@@ -36,7 +36,7 @@ void Object3d::Update()
         model_->Update();
     }
     //  WVP行列の作成
-    Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+    Matrix4x4 worldMatrix = MakeAffineMatrix(worldTransform_.scale, worldTransform_.rotate, worldTransform_.translate);
     Matrix4x4 worldViewProjectionMatrix = {};
     //ワールド行列とビュー行列とプロジェクション行列を掛け算
     if (camera_)

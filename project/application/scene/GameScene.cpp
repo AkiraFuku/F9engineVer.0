@@ -8,10 +8,8 @@
 #include "ParticleEmitter.h"
 #include "PSOManager.h"
 #include "LightManager.h"
-
 #include "RailPath.h"
 #include "Object3d.h"
-
 #include "Animation.h"
 #include"Audio.h"
 #include "TextureManager.h"
@@ -34,7 +32,6 @@
 #include "StartPhase.h"
 #include "Fade.h"
 
-#include "MiniBoss.h"
 void GameScene::Initialize() {
 
     // 1. メインカメラの生成
@@ -158,7 +155,7 @@ void GameScene::Initialize() {
     object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);
 
-        // --- 円形レールの設定例 ---
+    // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
     stageRail->SetLoop(true); // ループを有効化
 
@@ -201,11 +198,12 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
     TestGround_ = std::make_unique<Object3d>();
     TestGround_->Initialize();
+    TextureManager::GetInstance()->LoadTexture("resources/Stagemap/863603.png");
 
     TestGround_->SetModel("TentativeStage.obj");
     TestGround_->SetCamera(activeCamera_);
     TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-    TestGround_->SetScale({ 5.0f, 2.5f, 5.0f });
+    TestGround_->SetScale({ 1.0f, 1.0f, 1.0f });
 
     TestGround_->Update();
     GameScene::AddTriangles(TestGround_->GetWorldTriangles());
@@ -267,6 +265,10 @@ void GameScene::Initialize() {
     goal_->SetRail(stageRail.get());
     goal_->SetRailPosition({ stageRail->GetMaxT() - 1.0f, 0.0f }); // レールの終端付近に配置
 
+
+    gaidUI_ = std::make_unique<GaidUI>();
+    gaidUI_->Initialize(player.get());
+
     ChangePhase(std::make_unique<StartPhase>());
 
 }
@@ -311,6 +313,9 @@ void GameScene::Update() {
     skyBox->Update();
 
     object3d->Update();
+    if (gaidUI_) {
+        gaidUI_->Update();
+    }
 
 #ifdef USE_IMGUI
     ImGui::Begin("Debug");
@@ -477,7 +482,6 @@ void GameScene::Draw() {
         enemy->Draw();
     }
 
-    ParticleManager::GetInstance()->Draw();
     ///////スプライトの描画
     object3d->Draw();
 
@@ -507,10 +511,16 @@ void GameScene::Draw() {
         PrimitiveDrawer::GetInstance()->DrawLine(hitTriangle_.vertices[2], hitTriangle_.vertices[0], { 1.0f, 1.0f, 1.0f, 1.0f });
     }
 
+    ParticleManager::GetInstance()->Draw();
 
 
     playerHPUI_->Draw();
     scoreUI_->Draw();
+
+    if (gaidUI_) {
+        gaidUI_->Draw();
+    }
+
     if (currentPhase_)
     {
         currentPhase_->Draw(this);

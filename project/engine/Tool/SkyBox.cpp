@@ -130,9 +130,9 @@ void SkyBox::Initialize()
     wvpResource_->WorldInverseTranspose = Inverse(wvpResource_->World);
 
 
-    transform_.scale = Vector3(1.0f, 1.0f, 1.0f);
-    transform_.rotate = Vector3(0.0f, 0.0f, 0.0f);
-    transform_.translate = Vector3(0.0f, 0.0f, 0.0f);
+    worldTransform_.scale = Vector3(1.0f, 1.0f, 1.0f);
+    worldTransform_.rotate = Vector3(0.0f, 0.0f, 0.0f);
+    worldTransform_.translate = Vector3(0.0f, 0.0f, 0.0f);
 
 
     for (int i = 0; i < 24; ++i) {
@@ -149,11 +149,11 @@ void SkyBox::Update()
 
     if (camera_)
     {
-        transform_.translate=camera_->GetTranslate();
+        worldTransform_.translate=camera_->GetTranslate();
 
     }
 
-    Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+    Matrix4x4 worldMatrix = MakeAffineMatrix(worldTransform_.scale, worldTransform_.rotate, worldTransform_.translate);
     Matrix4x4 worldViewProjectionMatrix = {};
     //ワールド行列とビュー行列とプロジェクション行列を掛け算
     if (camera_)

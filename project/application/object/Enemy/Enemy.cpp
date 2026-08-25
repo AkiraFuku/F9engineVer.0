@@ -26,9 +26,13 @@ void Enemy::Initialize()
     object_ = std::make_unique<Object3d>();
     // エネミー用にCubeモデルを作成（既存ならそれを使用）
     ModelManager::GetInstance()->CreateSphereModel("Enemy");
+    ModelManager::GetInstance()->LoadModel("resources/taru", "taru.obj");
 
     object_->Initialize();
-    object_->SetModel("Enemy");
+    object_->SetModel("taru.obj");
+    object_->SetScale({ 0.9f,0.9f,0.9f });
+    object_->SetRotate({ 90.0f,0.0f,0.0f });
+
 
     railMover_ = std::make_unique<RailMover>();
     ChangeBehavior(std::make_unique<EnemyBehaviorPatrol>());
@@ -195,8 +199,7 @@ void Enemy::UpdatePhysics() {
     // 回転処理
     Vector3 dir = railMover_->GetCurrentDirection();
     float angle = atan2f(dir.x, dir.z);
-    object_->SetRotate({ 0.0f, angle, 0.0f });
-
+    object_->SetRotate(initialRotationOffset_ + Vector3{ 0.0f, angle, 0.0f });
     object_->Update();
 }
 // Enemy.cpp

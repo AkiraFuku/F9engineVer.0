@@ -37,7 +37,7 @@ void TitleScene::Initialize() {
     // Audio::GetInstance()->PlayAudio(handle_, true);
 
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-    TextureManager::GetInstance()->LoadTexture("resources/Title/RoBoDashTitle.png");
+    TextureManager::GetInstance()->LoadTexture("resources/Title/tekutekuTitle.png");
 
     LightManager::GetInstance()->AddDirectionalLight({ 0.0f,-1.0f,0.0f }, { 1.0f,1.0f,1.0f }, 1.0f);
 
@@ -51,7 +51,7 @@ void TitleScene::Initialize() {
 
 
     sprite = std::make_unique<Sprite>();
-    sprite->Initialize("resources/Title/RoBoDashTitle.png");
+    sprite->Initialize("resources/Title/tekutekuTitle.png");
     sprite->SetAnchorPoint(Anchor::Center);
     sprite->SetPosition(WinApp::GetInstance()->GetWindowCenter());
 

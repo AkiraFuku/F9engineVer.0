@@ -83,6 +83,7 @@
     <ClCompile Include="application\Collision\GameObject.cpp" />
     <ClCompile Include="application\object\player\Behavior\IPlayerFactory.cpp" />
     <ClCompile Include="Fade.cpp" />
+    <ClCompile Include="application\UI\GaidUI.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -101,7 +102,11 @@
     <ClCompile Include="engine\base\SrvManager.cpp" />
     <ClCompile Include="engine\Tool\ParticleEmitter.cpp" />
     <ClCompile Include="engine\scene\Scene.cpp" />
-    <ClCompile Include="engine\scene\SceneManager.cpp" />
+    <ClCompile Include="engine\scene\SceneManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="application\object\player\Player.cpp" />
     <ClCompile Include="application\object\player\Behavior\PlayerState.cpp" />
@@ -119,6 +124,11 @@
     <ClCompile Include="application\UI\NumberTex.cpp" />
     <ClCompile Include="application\UI\ScoreUI.cpp" />
     <ClCompile Include="application\Phase\GameScene\StartPhase.cpp" />
+    <ClCompile Include="ResultScene.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="TitlePhase.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -213,6 +223,12 @@
     <ClInclude Include="application\object\player\Behavior\IPlayerFactory.h" />
     <ClInclude Include="Fade.h" />
     <ClInclude Include="application\Phase\GameScene\StartPhase.h" />
+    <ClInclude Include="application\UI\GaidUI.h" />
+    <ClInclude Include="ResultScene.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="TitlePhase.h" />
   </ItemGroup>
   <ItemGroup>

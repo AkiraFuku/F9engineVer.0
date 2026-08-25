@@ -6,10 +6,14 @@
 #include "Quaternion.h"
 #include "Vector3.h"
 #include "Vector2.h"
+
 //#include "Transform.h"
 struct EulerTransform;
 struct QuaternionTransform;
 struct UVTransform;
+
+float ToRadians(float d);
+
 Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t);
 static const int kColumnWidth = 60;

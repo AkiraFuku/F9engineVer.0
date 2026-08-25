@@ -53,7 +53,7 @@ private: // メンバ変数
     HWND hwnd = nullptr;
     WNDCLASS wc{};
     //　ウィンドウ名
-    const wchar_t* windowName_ = L"RoboDash-ロボダッシュ-";
+    const wchar_t* windowName_ = L"てくてくウォーク";
 
 
 };

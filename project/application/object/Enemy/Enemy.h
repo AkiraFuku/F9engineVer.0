@@ -188,4 +188,5 @@ protected:
     GameObject::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
     EnemyType enemyType;
+    Vector3 initialRotationOffset_ = {0.0f, 0.0f, 0.0f};
 };

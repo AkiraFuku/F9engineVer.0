@@ -37,13 +37,13 @@ public:
 
     //トランスフォームセッター
     void SetScale(const Vector3& scale) {
-        transform_.scale = scale;
+        worldTransform_.scale = scale;
     }
     void SetRotate(const Vector3& rotate) {
-        transform_.rotate = rotate;
+        worldTransform_.rotate = rotate;
     }
     void SetTranslate(const Vector3& translate) {
-        transform_.translate = translate;
+        worldTransform_.translate = translate;
     }
     void SetCamera(Camera* camera) {
         camera_ = camera;
@@ -52,13 +52,13 @@ public:
 
     //トランスフォームゲッター
     const Vector3& GetScale()const {
-        return transform_.scale;
+        return worldTransform_.scale;
     }
     const Vector3& GetRotate()const {
-        return transform_.rotate;
+        return worldTransform_.rotate;
     }
     const Vector3& GetTranslate()const {
-        return transform_.translate;
+        return worldTransform_.translate;
     }
 
     // マテリアル
@@ -89,7 +89,7 @@ private:
     //WVP行列リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
     TransformationMatrix* wvpResource_ = nullptr;
-    EulerTransform transform_ = {};
+    EulerTransform worldTransform_ = {};
     uint32_t textureIndex_ = 0;
     std::string textureFilePath_;
 

@@ -12,6 +12,16 @@ enum HPUIState
 };
 
 /// <summary>
+/// プレイヤー形態マークの種類
+/// </summary>
+enum class StateMarkType
+{
+    Walk,   // 通常時  : WarlkMark
+    Jump,   // バウンドロボット形態 : JumpMark
+    Bullet, // テストロボット形態  : BulletMark
+};
+
+/// <summary>
 /// プレイヤーのHPを表示するUIクラス
 /// </summary>
 class PlayerHPUI
@@ -72,9 +82,21 @@ private:
     Player* player_ = nullptr;
     //HPの背景スプライト用
     std::unique_ptr<Sprite> hpSprite_ = nullptr;
+    //プレイヤーの形態状態の把握用スプライト（Markアイコン表示）
+    std::unique_ptr<Sprite> stateSprite_ = nullptr;
 
+    // Markテクスチャのインデックス
+    size_t markTexIndexWalk_   = 0; // WarlkMark
+    size_t markTexIndexJump_   = 1; // JumpMark
+    size_t markTexIndexBullet_ = 2; // BulletMark
+
+    // ライフカウンター右端からMarkアイコンまでのオフセット
+    Vector2 markOffset_ = { 15.0f, 0.0f };
+    // Markアイコンのサイズ
+    float markSize_ = 32.0f;
+
+    //HPのカウンター用スプライト
     std::unique_ptr<Sprite> baseCounterSprite_ = nullptr;
-    //HPのカウンタースプライト用
     std::vector<std::unique_ptr<Sprite>> CounterSprite_ ;
     // 追加：テクスチャリスト内のインデックスを保持
     size_t texIndexFull_ = ACTIVE;  // HPが有る時のインデックス

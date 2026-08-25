@@ -11,6 +11,7 @@
 #include "PSOManager.h"
 #include "MathFunction.h"
 #include "SkyBox.h"
+#include <numbers>
 class Animation;
 class Object3d
 {
@@ -43,13 +44,13 @@ public:
 
     //トランスフォームセッター
     void SetScale(const Vector3& scale) {
-        transform_.scale = scale;
+        worldTransform_.scale = scale;
     }
     void SetRotate(const Vector3& rotate) {
-        transform_.rotate = rotate;
+        worldTransform_.rotate = rotate;
     }
     void SetTranslate(const Vector3& translate) {
-        transform_.translate = translate;
+        worldTransform_.translate = translate;
     }
     void SetCamera(Camera* camera) {
         camera_ = camera;
@@ -58,13 +59,13 @@ public:
 
     //トランスフォームゲッター
     const Vector3& GetScale()const {
-        return transform_.scale;
+        return worldTransform_.scale;
     }
     const Vector3& GetRotate()const {
-        return transform_.rotate;
+        return worldTransform_.rotate;
     }
     const Vector3& GetTranslate()const {
-        return transform_.translate;
+        return worldTransform_.translate;
     }
 
     void SetBlendMode(BlendMode blendMode) {
@@ -87,7 +88,7 @@ public:
         psoName_ = psoName;
     }
     EulerTransform GetTransform() const {
-        return transform_;
+        return worldTransform_;
     }
     
     // モデルゲッター
@@ -160,6 +161,24 @@ public:
         return { 0.0f, 0.0f }; // デフォルトのオフセット
     }
 
+    // --- 単一軸用 (度数法) ---
+void SetRotateXDegree(float degree) {
+    worldTransform_.rotate.x =ToRadians(degree);
+}
+void SetRotateYDegree(float degree) {
+    worldTransform_.rotate.y = ToRadians(degree);
+}
+void SetRotateZDegree(float degree) {
+    worldTransform_.rotate.z = ToRadians(degree);
+}
+
+// --- Vector3用 (度数法) ---
+void SetRotateDegree(const Vector3& rotateDegree) {
+    worldTransform_.rotate.x =ToRadians(rotateDegree.x);
+    worldTransform_.rotate.y = ToRadians(rotateDegree.y);
+    worldTransform_.rotate.z = ToRadians(rotateDegree.z);
+}
+
 private:
 
     //float radius_ = 1.0f;
@@ -174,7 +193,9 @@ private:
     void  CreateCameraResource();
 
     //トランスフォーム
-    EulerTransform transform_ = {};
+    EulerTransform worldTransform_ = {};
+     EulerTransform localTransform_ = {};   // モデルのローカルトランスフォーム
+
     //カメラ　
     Camera* camera_ = nullptr;
     //スカイボックス

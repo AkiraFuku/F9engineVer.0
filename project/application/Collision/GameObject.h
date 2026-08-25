@@ -2,6 +2,20 @@
 #include "Vector3.h"
 #include "DrawFunction.h"
 #include <memory>
+#include <string>
+#include <vector>
+
+// 1本のレイの定義と判定結果
+struct CollisionRayInfo {
+    std::string name;         // レイの識別名（"Floor", "FrontWall" など）
+    Ray ray;                  // レイの起点と方向
+    bool isColide = false;    // 衝突したかどうか
+    Vector3 crossPoint = {};  // 交差点（衝突地点）
+    Vector3 hitNormal = {};   // 衝突面の法線（壁の押し返しなどに使用）
+    float distance = FLT_MAX; // 衝突距離
+    Triangle hitTriangle = {}; // 衝突したポリゴン（三角形）
+};
+
 enum class CollisionCategory {
     Player=0,// プレイヤー
     Enemy=10,// 敵

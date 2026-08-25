@@ -31,10 +31,10 @@ public:
     );
 
     void SetTransform(const EulerTransform& transform) {
-        transform_ = transform;
+        worldTransform_ = transform;
     }
     void SetTranslate(const Vector3& translate) {
-        transform_.translate = translate;
+        worldTransform_.translate = translate;
     }
 
     // 毎フレーム呼ぶ（frequencyTime_ が frequency_ を超えたら自動 Emit）
@@ -44,7 +44,7 @@ public:
     void Emit();
 
 private:
-    EulerTransform transform_;  // エミッタのトランスフォーム
+    EulerTransform worldTransform_;  // エミッタのトランスフォーム
     uint32_t count_;            // 1 回の発生数
     float frequency_;           // 発生間隔（秒）
     float frequencyTime_;       // 経過タイマー

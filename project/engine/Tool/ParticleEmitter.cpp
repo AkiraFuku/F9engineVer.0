@@ -11,7 +11,7 @@ ParticleEmitter::ParticleEmitter(
 {
     setName_ = setName;
     groupName_ = groupName;
-    transform_ = transform;
+    worldTransform_ = transform;
     count_ = count;
     frequency_ = frequency;
     frequencyTime_ = frequencyTime;
@@ -22,12 +22,12 @@ void ParticleEmitter::Update()
     frequencyTime_ += DXCommon::kDeltaTime;
     if (frequency_ <= frequencyTime_)
     {
-        ParticleManager::GetInstance()->Emit(setName_, groupName_, transform_.translate, count_);
+        ParticleManager::GetInstance()->Emit(setName_, groupName_, worldTransform_.translate, count_);
         frequencyTime_ -= frequency_;
     }
 }
 
 void ParticleEmitter::Emit()
 {
-    ParticleManager::GetInstance()->Emit(setName_, groupName_, transform_.translate, count_);
+    ParticleManager::GetInstance()->Emit(setName_, groupName_, worldTransform_.translate, count_);
 }

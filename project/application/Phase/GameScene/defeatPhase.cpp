@@ -9,7 +9,7 @@
 void defeatPhase::Initialize(Scene* scene)
 {
     Sprite_ = std::make_unique<Sprite>();
-    Sprite_->Initialize("resources/GAMOVER/GameOver.png");
+    Sprite_->Initialize("resources/GAMOVER/tekutekuGameOver.png");
     Sprite_->SetPosition(WinApp::GetInstance()->GetWindowCenter());
     Sprite_->SetAnchorPoint({ 0.5f, 0.5f });
 }

@@ -1,8 +1,9 @@
 #include "PlayerHPUI.h"
 #include "Player.h"
 #include "Sprite.h"
-void PlayerHPUI::Initialize(Player* player)
-{
+#include "PlayerState.h"
+#include <string>
+void PlayerHPUI::Initialize(Player* player){
     if (!player)
     {
         return;
@@ -13,7 +14,7 @@ void PlayerHPUI::Initialize(Player* player)
     hpSprite_->Initialize("resources/uvChecker.png");
     hpSprite_->SetAnchorPoint({ Anchor::TopLeft });
     hpSprite_->SetPosition({ position_.x, position_.y });
-    hpSprite_->SetSize({ hpSpriteWidth_ * scale_, 20.0f * scale_ });
+    hpSprite_->SetSize({ hpSpriteWidth_ * scale_, 30.0f * scale_ });
     // 
     
 
@@ -40,11 +41,33 @@ void PlayerHPUI::Initialize(Player* player)
             // 2. 雛形からコピーを作成
             auto counterSprite = baseCounterSprite_->Clone();
             
-            // 固有の座標だけ個別に設定して登録
-            counterSprite->SetPosition({ position_.x + counterOffset_.x + i * (counterSpacing_+counterSize_) * scale_, position_.y + counterOffset_.y });
+            // ステートマーク幅 + 間隔分だけ右にオフセットして配置
+            // レイアウト: [MarkIcon] + markOffset_.x(間隔) + [Counter×n]
+            float counterStartX = position_.x + counterOffset_.x
+                + markSize_ * scale_ + markOffset_.x;
+            counterSprite->SetPosition({
+                counterStartX + i * (counterSpacing_ + counterSize_) * scale_,
+                position_.y + counterOffset_.y });
             CounterSprite_.push_back(std::move(counterSprite));
         }
     }
+
+    // --- Markアイコンスプライトの初期化 ---
+    // ステートマークは counterOffset_ の位置（カウンターより左）に配置
+    float markX = position_.x + counterOffset_.x;
+    float markY = position_.y + counterOffset_.y;
+
+    stateSprite_ = std::make_unique<Sprite>();
+    // テクスチャ登録：インデックス0 = WarlkMark（通常時）
+    stateSprite_->Initialize("resources/Mark/WarlkMark.png");
+    // インデックス1 = JumpMark（バウンドロボット形態）
+    stateSprite_->RegisterTexture("resources/Mark/JumpMark.png");
+    // インデックス2 = BulletMark（テストロボット形態）
+    stateSprite_->RegisterTexture("resources/Mark/BulletMark.png");
+
+    stateSprite_->SetAnchorPoint({ Anchor::TopLeft });
+    stateSprite_->SetPosition({ markX, markY });
+    stateSprite_->SetSize({ markSize_ * scale_, markSize_ * scale_ });
 
 }
 
@@ -64,7 +87,12 @@ void PlayerHPUI::Update()
     while (CounterSprite_.size() < static_cast<size_t>(maxHP))
     {
         auto counterSprite = baseCounterSprite_->Clone();
-        counterSprite->SetPosition({ position_.x + counterOffset_.x + CounterSprite_.size() * counterSpacing_ * scale_, position_.y + counterOffset_.y });
+        // Mark右端 + 間隔 + i番目の位置
+        float counterStartX = position_.x + counterOffset_.x
+            + markSize_ * scale_ + markOffset_.x;
+        counterSprite->SetPosition({
+            counterStartX + CounterSprite_.size() * (counterSpacing_ + counterSize_) * scale_,
+            position_.y + counterOffset_.y });
         CounterSprite_.push_back(std::move(counterSprite));
     }
 
@@ -89,6 +117,32 @@ void PlayerHPUI::Update()
         counterSprite->Update(); 
     }
 
+    // --- Markアイコンの切り替え ---
+    if (stateSprite_)
+    {
+        // プレイヤーの状態名で形態を判定
+        const char* stateName = player_->GetState() ? player_->GetState()->GetName() : "Normal";
+        std::string name(stateName);
+
+        if (name == "Bound")
+        {
+            // バウンドロボット形態 → JumpMark
+            stateSprite_->SetTextureByIndex(markTexIndexJump_);
+        }
+        else if (name == "RideOnTest")
+        {
+            // テストロボット形態 → BulletMark
+            stateSprite_->SetTextureByIndex(markTexIndexBullet_);
+        }
+        else
+        {
+            // 通常（Normal / Dead など）→ WarlkMark
+            stateSprite_->SetTextureByIndex(markTexIndexWalk_);
+        }
+
+        stateSprite_->Update();
+    }
+
 }
 
 void PlayerHPUI::Draw()
@@ -103,5 +157,11 @@ void PlayerHPUI::Draw()
     for (auto& counterSprite : CounterSprite_)
     {
         counterSprite->Draw();
+    }
+
+    // --- Markアイコンの描画 ---
+    if (stateSprite_)
+    {
+        stateSprite_->Draw();
     }
 }

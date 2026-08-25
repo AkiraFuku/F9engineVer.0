@@ -28,6 +28,7 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
             }
         }
     }
+    //狙いを定める
     // 1. スティック入力の処理
     if (input->GetJoyStick(0, state) || (input->PushedKeyDown(DIK_A) || input->PushedKeyDown(DIK_D) || input->PushedKeyDown(DIK_W) || input->PushedKeyDown(DIK_S)))
     {
@@ -38,7 +39,6 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
                 commands.push_back(std::make_unique<AimCommand>(Vector2{ rawX, rawY }));
             }
         }
-        //　キー入力の例（WASDで移動、スペースでジャンプなど）もここに追加可
         if (input->PushedKeyDown(DIK_A) || input->PushedKeyDown(DIK_D) || input->PushedKeyDown(DIK_W) || input->PushedKeyDown(DIK_S))
         {
             if (input->PushedKeyDown(DIK_A))

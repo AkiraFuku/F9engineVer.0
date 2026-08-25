@@ -13,15 +13,13 @@
 #include "Projectile.h"
 #include "Animation.h"
 #include "Enemy.h"
-
+#include "GaidUI.h"
 class ParticleEmitter;
 class RailPath;
 class GoalObject;
 class Phase;
 class PlayerHPUI;
 class ScoreUI;
-class MiniBoss;
-
 class GameScene :public Scene
 {
 public:
@@ -70,25 +68,24 @@ public:
     GameScene();
     ~GameScene() override;
 
-    void AddEnemy(Vector2 pos,Enemy::EnemyType enemyType =Enemy::EnemyType::Normal);
+    void AddEnemy(Vector2 pos, Enemy::EnemyType enemyType = Enemy::EnemyType::Normal);
     void AddProjectile(const Projectile::ProjectileSpawnParam& param, Projectile::ProjectileOwner owner);
     void AddTriangles(std::vector<Triangle> triangles);
 
 private:
+
+
     /// <summary>
     /// クリアフラグが立ったら遷移
     /// </summary>
     void CheckClear();
     std::unique_ptr<Object3d> object3d;
-  //  std::unique_ptr<Phase> currentPhase_;
-
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
     std::unique_ptr<RailPath> stageRail;
     std::unique_ptr<RailPath> cameraRail;
 
-    std::unique_ptr<MiniBoss> miniBoss_;
-
+    std::unique_ptr<GaidUI> gaidUI_;
     std::unique_ptr<CameraController> cameraController;
     std::vector<std::unique_ptr<Enemy>> enemies_;
     std::unique_ptr<SkyBox> skyBox;
@@ -135,7 +132,7 @@ private:
     // GameScene.h (privateメンバ変数に追加)
     float stopTimer_ = 0; // 残りヒットストップフレーム数
 
-    void UpdateHitStop() ;
+    void UpdateHitStop();
 
 public:
     // ヒットストップを開始する関数
@@ -143,7 +140,7 @@ public:
         stopTimer_ = frames;
     }
     bool IsHitStopActive() const {
-        return stopTimer_  > 0;
+        return stopTimer_ > 0;
     }
 };
 

@@ -16,13 +16,13 @@ public:
 
 
     void SetRotate(const Vector3& rotate) {
-        transform_.rotate = rotate;
+        worldTransform_.rotate = rotate;
     }
     void SetTranslate(const Vector3& translate) {
-        transform_.translate = translate;
+        worldTransform_.translate = translate;
     }
     void SetTransform(const EulerTransform& transForm) {
-        transform_ = transForm;
+        worldTransform_ = transForm;
     }
     void SetFovY(const float fovY) {
         this->fovY = fovY;
@@ -43,16 +43,16 @@ public:
     
 
 
-    const Vector3& GetRotate()const{return transform_.rotate;}
-    const Vector3& GetTranslate()const{return transform_.translate;}
-    const EulerTransform& GetTransform()const{ return transform_; };
+    const Vector3& GetRotate()const{return worldTransform_.rotate;}
+    const Vector3& GetTranslate()const{return worldTransform_.translate;}
+    const EulerTransform& GetTransform()const{ return worldTransform_; };
 
     const Matrix4x4& GetWorldMatrix()const{return worldMatrix;};
     const Matrix4x4& GetViewMatrix()const{return viewMatrix;};
     const Matrix4x4& GetProjectionMatrix()const{return projectionMatrix;};
     const Matrix4x4& GetViewProtectionMatrix()const{return viewProtectionMatrix;};
     float GetFarCrip() const { return farCrip; }
- EulerTransform transform_;
+ EulerTransform worldTransform_;
 
 private:
    

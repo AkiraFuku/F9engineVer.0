@@ -63,8 +63,9 @@ void SceneManager::Draw() {
 
         scene_->Draw();
         PrimitiveDrawer::GetInstance()->Draw(); // シーンの描画後にプリミティブ描画を実行   
-        Fade::GetInstance()->Draw();
     }
+    Fade::GetInstance()->Draw();
+
 }
 
 void SceneManager::ChangeScene(const std::string& sceneName)

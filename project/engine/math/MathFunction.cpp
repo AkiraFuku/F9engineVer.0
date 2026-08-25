@@ -4,6 +4,7 @@
 #include <cmath>
 #include <assert.h>
 #include "Transform.h"
+#include <numbers>
 
 
 
@@ -31,6 +32,10 @@ Matrix4x4 MakeBillboardMatrix(const Vector3& scale, const Vector3& rotate, Matri
     Matrix4x4 result_ = Multiply(matSRB, translateMatrix);
 
     return result_;
+}
+float ToRadians(float d)
+{
+    return d * (std::numbers::pi_v<float>/ 180.0f);;
 }
 Vector3 Bezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t) {
     float u = 1.0f - t;

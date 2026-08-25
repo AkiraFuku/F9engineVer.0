@@ -28,7 +28,6 @@ void Player::Initialize()
     object_->SetModel("walk.gltf");
     animation = std::make_unique<Animation>();
 
-    // animation->Initialize("resources/AnimatedCube", "AnimatedCube.gltf");
     animation->Initialize("resources/human", "walk.gltf");
     animation->SetCurrentTime(0.0f);
     object_->SetAnimations(animation.get());
@@ -37,13 +36,16 @@ void Player::Initialize()
 
     // Stateの初期化のみ行い、Behaviorの初期化はState内部で行う
     ChangeState(PlayerStateFactory::CreateState(PlayerFormType::Normal));
+
+    InitializeRays();
+
     collider_ = std::make_unique<Collider>();
     collider_->initialize(this, Radius);
     object_->Update();
 }
 void Player::Update()
 {
- //   if (!isActive_) return;
+    //   if (!isActive_) return;
 
     HandleAlive();
 
@@ -74,9 +76,9 @@ void Player::UpdateTransform()
 
 void Player::Draw()
 {
-//    if (!isActive_) return;
+    //    if (!isActive_) return;
 
-    // 無敵時間中のモデル点滅（0.08秒ごとに表示/非表示を切り替え）
+        // 無敵時間中のモデル点滅（0.08秒ごとに表示/非表示を切り替え）
     if (hitInvincibilityTimer_ > 0.0f) {
         const float kBlinkInterval = 0.08f;
         if (fmodf(hitInvincibilityTimer_, kBlinkInterval * 2.0f) < kBlinkInterval) {
@@ -175,6 +177,7 @@ void Player::UpdateRailPath()
     Vector3 railDir = railMover_->GetCurrentDirection();
 
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
+    finalPos = Add(finalPos, wallPushOffset_);
     object_->SetTranslate(finalPos);
 
     // ノックバック中は向きを変更せず直前の向きを固定
@@ -193,10 +196,13 @@ void Player::UpdateRailPath()
     object_->Update();
 }
 
-void Player::UpdateGravity()
+void Player::CheckGroundCollision()
 {
-    if (isRayHit_ && velocity_.y <= 0.0f) {
-        rayHitPalamata_.groundY = rayHitPoint_.y;
+    auto floorRay = GetRayInfo("Floor");
+    bool hitFloor = floorRay && floorRay->isColide;
+
+    if (hitFloor && velocity_.y <= 0.0f) {
+        rayHitPalamata_.groundY = floorRay->crossPoint.y;
         const float kGroundEpsilon = 0.05f;
         float playerBottomY = worldY_ - kHeightOffset;
 
@@ -210,6 +216,25 @@ void Player::UpdateGravity()
         rayHitPalamata_.groundY = -FLT_MAX;
     }
 
+    // めり込み補正（接地時に地面の高さに合わせる）
+    if (isGrounded_ && hitFloor) {
+        worldY_ = rayHitPalamata_.groundY + kHeightOffset;
+    }
+
+    // 奈落の最低保証（落下・死の防止処理：既存のコードを維持）
+    if (!hitFloor && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
+        worldY_ = rayHitPalamata_.minY + kHeightOffset;
+        velocity_.y = 0.0f;
+        isGrounded_ = true;
+    }
+}
+
+void Player::UpdateGravity()
+{
+    // 1. 地面の当たり判定
+    CheckGroundCollision();
+
+    // 2. 重力加速度の適用
     if (!isGrounded_) {
         velocity_.y += (kGravity * gravityScale_) * deltaTime_;
     } else {
@@ -218,68 +243,193 @@ void Player::UpdateGravity()
         }
     }
 
+    // 3. 速度による位置更新
     worldY_ += velocity_.y * deltaTime_;
+}
 
-    if (isGrounded_ && isRayHit_) {
-        worldY_ = rayHitPalamata_.groundY + kHeightOffset;
-    }
+void Player::InitializeRays() {
+    rayList_.clear();
 
-    if (!isRayHit_ && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
-        worldY_ = rayHitPalamata_.minY + kHeightOffset;
-        velocity_.y = 0.0f;
-        isGrounded_ = true;
+    CollisionRayInfo floorRay;
+    floorRay.name = "Floor";
+    // 実際のoriginやdiffは毎フレーム更新
+    floorRay.ray.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
+    rayList_.push_back(floorRay);
+
+    float wallLength = Radius + 0.2f;
+
+    CollisionRayInfo frontRay;
+    frontRay.name = "FrontWall";
+    frontRay.ray.diff = { 0.0f, 0.0f, wallLength };
+    rayList_.push_back(frontRay);
+
+    CollisionRayInfo backRay;
+    backRay.name = "BackWall";
+    backRay.ray.diff = { 0.0f, 0.0f, -wallLength };
+    rayList_.push_back(backRay);
+
+    CollisionRayInfo leftRay;
+    leftRay.name = "LeftWall";
+    leftRay.ray.diff = { -wallLength, 0.0f, 0.0f };
+    rayList_.push_back(leftRay);
+
+    CollisionRayInfo rightRay;
+    rightRay.name = "RightWall";
+    rightRay.ray.diff = { wallLength, 0.0f, 0.0f };
+    rayList_.push_back(rightRay);
+}
+
+const CollisionRayInfo* Player::GetRayInfo(const std::string& name) const {
+    for (const auto& rayInfo : rayList_) {
+        if (rayInfo.name == name) {
+            return &rayInfo;
+        }
     }
+    return nullptr;
 }
 
 void Player::RayCastUpdate()
+{
+    UpdateRayCollisions();
+}
+
+void Player::UpdateRayCollisions()
 {
     if (!scene_) return;
     auto gs = dynamic_cast<GameScene*>(scene_);
     if (!gs) return;
 
     const std::vector<Triangle>& triangles = gs->GetTriangle();
-    if (triangles.empty()) {
-        isRayHit_ = false;
-        rayHitDistance_ = FLT_MAX;
-        return;
-    }
 
-    ray_.origin = object_->GetTranslate();
-    ray_.origin.y += rayHitPalamata_.rayOffset;
-    ray_.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
+    Vector3 center = object_->GetTranslate();
 
-    isRayHit_ = false;
-    rayHitDistance_ = FLT_MAX;
-    result_ = RayTriangleCollisionResult::NoCollision;
+    // 【修正点1】壁レイの発射方向を「現在の進行方向（ワールド絶対）」と「左右方向」にする
+    // プレイヤーの回転行列依存にすると衝突時にレイも回転して挙動が不安定になるため、
+    // レール進行方向(railDir)を基点にします。
+    Vector3 railDir = railMover_->GetCurrentDirection();
+    Vector3 forwardDir = (Length(railDir) > 0.001f) ? Normalize(railDir) : Vector3{ 0.0f, 0.0f, 1.0f };
 
-    rayHitPoint_ = { 0.0f, 0.0f, 0.0f };
-    rayHitTriangle_ = Triangle{};
+    // ワールドY軸(0,1,0)との外積でプレイヤーの右方向ベクトルを求める
+    Vector3 rightDir = Normalize(Cross({ 0.0f, 1.0f, 0.0f }, forwardDir));
 
-    for (const auto& tri : triangles) {
-        Vector3 tmpHit = {};
-        float dist = 0.0f;
-        RayTriangleCollisionResult result;
+    float wallLength = Radius + 0.3f; // レイの長さ（半径 + マージン）
 
-        if (CheckRayTriangle(ray_, tri, &dist, &tmpHit, &result)) {
-            if (result == RayTriangleCollisionResult::FrontFace) {
-                if (dist < rayHitDistance_) {
-                    rayHitDistance_ = dist;
-                    rayHitTriangle_ = tri;
-                    rayHitPoint_ = tmpHit;
-                    isRayHit_ = true;
+    // 衝突によるレールの押し戻し量
+    float maxPushBackProgress = 0.0f;
+
+    for (auto& rayInfo : rayList_) {
+        rayInfo.isColide = false;
+        rayInfo.distance = FLT_MAX;
+        rayInfo.crossPoint = {};
+        rayInfo.hitNormal = {};
+        rayInfo.hitTriangle = {};
+
+        // レイの起点と方向を設定
+        if (rayInfo.name == "Floor") {
+            rayInfo.ray.origin = center;
+            rayInfo.ray.origin.y += rayHitPalamata_.rayOffset;
+            rayInfo.ray.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
+        } else if (rayInfo.name == "FrontWall") {
+            rayInfo.ray.origin = center;
+            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.diff = Multiply(wallLength, forwardDir);
+        } else if (rayInfo.name == "BackWall") {
+            rayInfo.ray.origin = center;
+            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.diff = Multiply(-wallLength, forwardDir);
+        } else if (rayInfo.name == "LeftWall") {
+            rayInfo.ray.origin = center;
+            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.diff = Multiply(-wallLength, rightDir);
+        } else if (rayInfo.name == "RightWall") {
+            rayInfo.ray.origin = center;
+            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.diff = Multiply(wallLength, rightDir);
+        }
+
+        if (triangles.empty()) continue;
+
+        for (const auto& tri : triangles) {
+            Vector3 tmpHit = {};
+            float dist = 0.0f;
+            RayTriangleCollisionResult result;
+
+            if (CheckRayTriangle(rayInfo.ray, tri, &dist, &tmpHit, &result)) {
+                // 【修正点2】FrontFace / BackFace 両方で当たり判定を取る
+                if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
+
+                    Vector3 v01 = Subtract(tri.vertices[1], tri.vertices[0]);
+                    Vector3 v12 = Subtract(tri.vertices[2], tri.vertices[1]);
+                    Vector3 normal = Normalize(Cross(v01, v12));
+
+                    // 裏面衝突時は法線を裏返す
+                    if (result == RayTriangleCollisionResult::BackFace) {
+                        normal = Multiply(-1.0f, normal);
+                    }
+
+                    // 床・天井などの傾斜面を弾く（ほぼ垂直な壁のみ壁判定とする）
+                    if (rayInfo.name != "Floor" && std::abs(normal.y) >= 0.7f) {
+                        continue;
+                    }
+
+                    // 一番近い交差を採用
+                    if (dist < rayInfo.distance) {
+                        rayInfo.distance = dist;
+                        rayInfo.crossPoint = tmpHit;
+                        rayInfo.hitNormal = normal;
+                        rayInfo.hitTriangle = tri;
+                        rayInfo.isColide = true;
+                    }
                 }
             }
-            result_ = result;
+        }
+
+        // デバッグ描画
+        float drawScale = (rayInfo.name == "Floor") ? 1.0f : 1.0f;
+        Vector3 drawEnd = Add(rayInfo.ray.origin, Multiply(drawScale, rayInfo.ray.diff));
+        PrimitiveDrawer::GetInstance()->DrawLine(rayInfo.ray.origin, drawEnd,
+            rayInfo.isColide ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
+
+        if (rayInfo.isColide) {
+            PrimitiveDrawer::GetInstance()->DrawSphere({ rayInfo.crossPoint, 0.05f, {} }, { 0,0,1,1 });
+
+            // 【修正点3】めり込み量の計算と押し戻し
+            if (rayInfo.name == "FrontWall") {
+                // レイの先端から交差地点までの距離＝めり込み量
+                float penetration = wallLength - rayInfo.distance;
+                if (penetration > 0.0f) {
+                    // 前方の壁にぶつかったら進行方向と逆（後方）へ押し戻す
+                    maxPushBackProgress = (std::max)(maxPushBackProgress, penetration);
+                }
+            } else if (rayInfo.name == "BackWall") {
+                float penetration = wallLength - rayInfo.distance;
+                if (penetration > 0.0f) {
+                    // 後方の壁にぶつかったら進行方向（前方）へ押し戻す
+                    maxPushBackProgress = (std::min)(maxPushBackProgress, -penetration);
+                }
+            }
         }
     }
 
-    PrimitiveDrawer::GetInstance()->DrawLine(ray_.origin, Add(ray_.origin, ray_.diff),
-        isRayHit_ ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
-    if (isRayHit_) {
-        PrimitiveDrawer::GetInstance()->DrawSphere({ rayHitPoint_, 0.05f, {} }, { 0,0,1,1 });
+    // 【修正点4】めり込んだ分だけレールの進捗（Progress）を戻す
+    if (std::abs(maxPushBackProgress) > 0.0001f) {
+        // 壁にぶつかった距離だけレールを押し戻して止める
+        railMover_->Advance(-maxPushBackProgress);
+    }
+
+    // レール上ゲームのため、位置自体の直接的なオフセット加算は行わない（向きが狂う原因になるため）
+    wallPushOffset_ = { 0.0f, 0.0f, 0.0f };
+
+    // 地面判定の更新
+    auto floorRay = GetRayInfo("Floor");
+    if (floorRay) {
+        isRayHit_ = floorRay->isColide;
+        rayHitDistance_ = floorRay->distance;
+        rayHitPoint_ = floorRay->crossPoint;
+        rayHitTriangle_ = floorRay->hitTriangle;
+        result_ = RayTriangleCollisionResult::FrontFace;
     }
 }
-
 void Player::HandleInput()
 {
     // ノックバック中は操作不能にする
@@ -392,6 +542,16 @@ void Player::ImGuiDrawDebugInfo() {
 
     ImGui::Text("Hit Points: %d", hitPoints_.value);
     ImGui::ProgressBar(hitInvincibilityTimer_ / kHitInvincibilityDuration_, ImVec2(0, 0), "Hit Timer");
+
+    ImGui::Separator();
+    ImGui::Text("--- Raycast Info ---");
+    for (const auto& rayInfo : rayList_) {
+        if (rayInfo.isColide) {
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[%s] Hit! Dist: %.2f", rayInfo.name.c_str(), rayInfo.distance);
+        } else {
+            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "[%s] No Hit", rayInfo.name.c_str());
+        }
+    }
 
     ImGui::End();
 #endif
