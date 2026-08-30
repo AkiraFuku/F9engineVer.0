@@ -49,9 +49,9 @@ void GameScene::Initialize() {
     ChangeActiveCamera(cameraMap_["Main"].get());
 
 
-    handle_ = Audio::GetInstance()->LoadAudio("resources/fanfare.mp3");
+    handle_ = Audio::GetInstance()->LoadAudio("resources/Audio/BGM/bgm_Loop.mp3");
 
-
+    BGMHandle_=Audio::GetInstance()->PlayAudio(handle_,true,0.25f ,"BGM");
     TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
     TextureManager::GetInstance()->LoadTexture("resources/gradationLine.png");
     TextureManager::GetInstance()->LoadTexture("resources/Efect.png");
@@ -148,12 +148,12 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
     ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
     //  ModelManager::GetInstance()->CreateSphereModel("sphere");
-    object3d = std::make_unique<Object3d>();
+  /*  object3d = std::make_unique<Object3d>();
     object3d->Initialize();
     object3d->SetModel("walk.gltf");
 
     object3d->SetAnimations(animation.get());
-    object3d->SetCamera(activeCamera_);
+    object3d->SetCamera(activeCamera_);*/
 
     // --- 円形レールの設定例 ---
     stageRail = std::make_unique<RailPath>();
@@ -185,6 +185,8 @@ void GameScene::Initialize() {
     boxObject_ = std::make_unique<Object3d>();
     boxObject_->Initialize();
     boxObject_->SetModel("box");
+
+    boxObject_->SetTexture("resources/grass.png");
     boxObject_->SetCamera(activeCamera_);
 
     // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
@@ -263,7 +265,7 @@ void GameScene::Initialize() {
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
     goal_->SetRail(stageRail.get());
-    goal_->SetRailPosition({ stageRail->GetMaxT() - 1.0f, 0.0f }); // レールの終端付近に配置
+    goal_->SetRailPosition({ stageRail->GetMaxT() - 1.0f, 2.0f }); // レールの終端付近に配置
 
 
     gaidUI_ = std::make_unique<GaidUI>();
@@ -273,6 +275,11 @@ void GameScene::Initialize() {
 
 }
 void GameScene::Finalize() {
+
+    if (Audio::GetInstance()->IsPlaying(BGMHandle_))
+    {
+        Audio::GetInstance()->StopAudio(BGMHandle_);
+    }
 
 }
 
@@ -312,7 +319,7 @@ void GameScene::Update() {
     skyBox->SetTranslate(activeCamera_->GetTranslate());
     skyBox->Update();
 
-    object3d->Update();
+   // object3d->Update();
     if (gaidUI_) {
         gaidUI_->Update();
     }
@@ -483,7 +490,7 @@ void GameScene::Draw() {
     }
 
     ///////スプライトの描画
-    object3d->Draw();
+    //object3d->Draw();
 
     // 箱オブジェクトの描画
     if (boxObject_) {
@@ -630,10 +637,7 @@ void GameScene::CheckClear()
 {
     // 2. シーン遷移の実行
     if (isCleared_) {
-        // 必要に応じてフェードアウト演出やSE再生をここで行う
-        if (Audio::GetInstance()->IsPlaying(handle_)) {
-            Audio::GetInstance()->StopAudio(handle_);
-        }
+
 
         // 次のシーン（例: TitleScene や ResultScene）へ遷移（仮）
         GetSceneManager()->ChangeScene("TitleScene");

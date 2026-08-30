@@ -91,4 +91,10 @@ void PlayPhase::Draw(Scene* scene)
 }
 
 void PlayPhase::Finalize(Scene* scene)
-{}
+{
+
+            // 必要に応じてフェードアウト演出やSE再生をここで行う
+        if (Audio::GetInstance()->IsPlaying(scene->getBGMPlayHundle())) {
+            Audio::GetInstance()->PauseAudio(scene->getBGMPlayHundle());
+        }
+}

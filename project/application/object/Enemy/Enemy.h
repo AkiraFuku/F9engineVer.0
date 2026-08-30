@@ -28,7 +28,7 @@ public:
     virtual ~Enemy();
     //コリジョン
 
-    float GetRadius() const  {
+    float GetRadius() const {
         return radius_;
     }
     virtual void OnCollision(GameObject* other) override; // Enemy側
@@ -116,6 +116,14 @@ public:
     void SetScene(Scene* scene) {
         scene_ = scene;
     }
+    Scene* GetScene() {
+        if (scene_)
+        {
+            return scene_;
+        }
+        return nullptr;
+    }
+
     // 外部（GameSceneのUpdate等）から毎フレームのdeltaTimeを受け取るためのセッター
     void SetDeltaTime(float deltaTime) {
         deltaTime_ = deltaTime;
@@ -140,10 +148,12 @@ public:
     };
     float GetCurrentDistance() const;
     const RailMover* GetRailMover() const;
-    float GetDeltaTime() { return deltaTime_; }
+    float GetDeltaTime() {
+        return deltaTime_;
+    }
 
     float GetGroundY() {
-    
+
         return rayHitPalamata_.groundY;
     }
 
@@ -188,5 +198,5 @@ protected:
     GameObject::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f; // プレイヤーの高さオフセット（地面からの距離）
     EnemyType enemyType;
-    Vector3 initialRotationOffset_ = {0.0f, 0.0f, 0.0f};
+    Vector3 initialRotationOffset_ = { 0.0f, 0.0f, 0.0f };
 };

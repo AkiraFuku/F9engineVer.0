@@ -12,6 +12,11 @@ void defeatPhase::Initialize(Scene* scene)
     Sprite_->Initialize("resources/GAMOVER/tekutekuGameOver.png");
     Sprite_->SetPosition(WinApp::GetInstance()->GetWindowCenter());
     Sprite_->SetAnchorPoint({ 0.5f, 0.5f });
+
+    defeatSE = Audio::GetInstance()->LoadAudio("resources/Audio/BGM/GameOver.mp3");
+    Play_ = Audio::GetInstance()->PlayAudio(defeatSE, false, 0.25f, "SE");
+
+
 }
 
 void defeatPhase::Update(Scene* scene)
@@ -28,6 +33,12 @@ void defeatPhase::Update(Scene* scene)
             SceneManager::GetInstance()->ChangeScene("GameScene");
         }
     }
+    if (!Audio::GetInstance()->IsPlaying(Play_)) {
+        if (!Audio::GetInstance()->IsPlaying(scene->getBGMPlayHundle())) {
+            Audio::GetInstance()->ResumeAudio(scene->getBGMPlayHundle());
+        }
+    }
+
 }
 
 void defeatPhase::Draw(Scene* scene)
@@ -38,5 +49,5 @@ void defeatPhase::Draw(Scene* scene)
 void defeatPhase::Finalize(Scene* scene)
 {
 
-       Sprite_.reset();
+    Sprite_.reset();
 }

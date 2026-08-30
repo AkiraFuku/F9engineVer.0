@@ -16,7 +16,7 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 
     name_ = filename;
     modelData_ = LoadModelFile(directoryPath, filename);
-    if (modelData_.material.textureFilePath.empty()||modelData_.material.textureFilePath == (directoryPath + "/")) {
+    if (modelData_.material.textureFilePath.empty() || modelData_.material.textureFilePath == (directoryPath + "/")) {
         modelData_.material.textureFilePath = "resources/uvChecker.png"; // 確実に存在する画像を指定
         TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilePath);
 
@@ -730,12 +730,12 @@ Model* Model::CreateBox() {
     // 【修正】インデックスを時計回り（表面が外側を向く）になるように設定
     for (uint32_t i = 0; i < 6; ++i) {
         uint32_t offset = i * 4;
-        
+
         // 三角形1 (左下 -> 左上 -> 右下 で組むと時計回りになる)
         model->modelData_.indices.push_back(offset + 0);
         model->modelData_.indices.push_back(offset + 1);
         model->modelData_.indices.push_back(offset + 2);
-        
+
         // 三角形2 (左上 -> 右下 -> 右上 で組むと時計回りになる)
         model->modelData_.indices.push_back(offset + 2);
         model->modelData_.indices.push_back(offset + 1);
@@ -747,4 +747,13 @@ Model* Model::CreateBox() {
     model->CreateMaterialResource();
 
     return model;
+}
+
+void Model::SetTexture(std::string textureFilePath)
+{
+    modelData_.material.textureFilePath = textureFilePath;
+        TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilePath);
+    modelData_.material.textureIndex =
+        TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData_.material.textureFilePath);
+
 }

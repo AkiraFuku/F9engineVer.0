@@ -10,7 +10,7 @@
 
 #include "Scene.h"
 #include <memory>
-
+#include "Audio.h"
 
 #include "SkyBox.h"
 
@@ -43,6 +43,6 @@ private:
     bool isDebugCamera_ = false;
     std::unique_ptr<SkyBox> skyBox;
 
-    uint32_t handle_ = 0;
+     Audio::SoundHandle  handle_ = 0;
 };
 

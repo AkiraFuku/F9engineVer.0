@@ -2,7 +2,6 @@
 #include "ModelManager.h"
 #include "Input.h"
 #include "imgui.h"
-#include "GameScene.h"
 #include "SceneManager.h"
 #include "ParticleManager.h"//フレームワークに移植
 #include "PSOManager.h"
@@ -57,8 +56,16 @@ void TitleScene::Initialize() {
 
     ChangePhase(std::make_unique<TitlePhase>());
 
+    handle_ = Audio::GetInstance()->LoadAudio("resources/Audio/BGM/bgm.mp3");
+
+    BGMHandle_= Audio::GetInstance()->PlayAudio(handle_, true, 0.5f ,"BGM");
+
 }
 void TitleScene::Finalize() {
+    if (Audio::GetInstance()->IsPlaying(BGMHandle_))
+    {
+        Audio::GetInstance()->StopAudio(BGMHandle_);
+    }
 
 }
 void TitleScene::Update() {

@@ -224,6 +224,7 @@ public: // 外部入出力
     // 四角いモデル（Box）を動的に生成する
     static Model* CreateBox();
 
+    void SetTexture(std::string textureFilePath);
 
 private:
 

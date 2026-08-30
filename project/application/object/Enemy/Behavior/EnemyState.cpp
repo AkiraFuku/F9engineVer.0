@@ -1,6 +1,8 @@
 #include "EnemyState.h"
 #include "Enemy.h"
 #include "EnemyBehavior.h"
+#include "GameScene.h"
+#include "ScoreUI.h"
 // --- StateEnemyNormal ---
 void StateEnemyNormal::Initialize(Enemy* enemy) {
     // 通常状態の初期化処理
@@ -12,8 +14,8 @@ void StateEnemyNormal::Update(Enemy* enemy) {
         enemy->GetBehavior()->Update(enemy); // 現在の行動状態の更新を呼び出す
 
     }
- //   enemy->UpdateGravity(); // 重力の更新を行う
-    // 通常状態の毎フレーム処理
+    //   enemy->UpdateGravity(); // 重力の更新を行う
+       // 通常状態の毎フレーム処理
 }
 
 void StateEnemyNormal::Finalize(Enemy* enemy) {
@@ -42,7 +44,16 @@ void StateEnemyStan::Finalize(Enemy* enemy) {
 
 // --- StateEnemyDead ---
 void StateEnemyDead::Initialize(Enemy* enemy) {
-    // 死亡状態の初期化処理（例：爆発エフェクト再生）
+
+
+    if (auto scene = dynamic_cast<GameScene*>(enemy->GetScene()))
+    {
+        if (auto score = scene->GetScore())
+        {
+            score->AddScore();
+
+        }
+    }
 }
 
 void StateEnemyDead::Update(Enemy* enemy) {

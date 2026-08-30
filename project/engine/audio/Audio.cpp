@@ -1,7 +1,8 @@
 #include "Audio.h"
+#include <algorithm>
 #include <cassert>
-#include "StringUtility.h" // 既存の変換クラス
 #include <windows.h>
+#include "StringUtility.h" // 既存の変換クラス
 
 // Media Foundation 関連
 #include <mfapi.h>
@@ -18,8 +19,7 @@ std::unique_ptr<Audio> Audio::instance = nullptr;
 
 Audio* Audio::GetInstance()
 {
-  if (instance == nullptr) {
-        // privateコンストラクタを呼び出せるヘルパー構造体
+    if (instance == nullptr) {
         struct Helper : public Audio {
             Helper() : Audio() {}
         };
@@ -30,24 +30,23 @@ Audio* Audio::GetInstance()
 
 void Audio::Initialize()
 {
-    HRESULT result_;
+    HRESULT result;
     // MF初期化
-    result_ = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
-    assert(SUCCEEDED(result_));
+    result = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
+    assert(SUCCEEDED(result));
 
     // XAudio2初期化
-    result_ = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
-    assert(SUCCEEDED(result_));
+    result = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
+    assert(SUCCEEDED(result));
 
     // マスターボイス作成
-    result_ = xAudio2_->CreateMasteringVoice(&masteringVoice_);
-    assert(SUCCEEDED(result_));
+    result = xAudio2_->CreateMasteringVoice(&masteringVoice_);
+    assert(SUCCEEDED(result));
 }
 
 void Audio::Finalize()
 {
-    // 再生中のボイスを破棄
-  // 再生中のボイスをすべて破棄
+    // 再生中のボイスをすべて破棄
     for (auto& voice : activeVoices_)
     {
         if (voice.sourceVoice)
@@ -67,39 +66,53 @@ void Audio::Finalize()
     }
 
     xAudio2_.Reset();
-    soundDatas_.clear(); // データ解放
+    soundDatas_.clear();
+    categoryVolumes_.clear();
     MFShutdown();
 }
+
 void Audio::Update()
 {
     for (auto it = activeVoices_.begin(); it != activeVoices_.end(); )
     {
+        if (it->sourceVoice == nullptr) {
+            it = activeVoices_.erase(it);
+            continue;
+        }
+
         XAUDIO2_VOICE_STATE state{};
         it->sourceVoice->GetState(&state);
 
-        if (state.BuffersQueued == 0)
+        // 再生が完了し、キューが空になったボイスを自動破棄
+        if (state.BuffersQueued == 0 && it->state == VoiceState::Playing)
         {
+            it->sourceVoice->Stop();
+            it->sourceVoice->FlushSourceBuffers();
             it->sourceVoice->DestroyVoice();
             it = activeVoices_.erase(it);
-        } else
+        }
+        else
         {
             ++it;
         }
     }
 }
 
-// 読み込み：ハンドルを返す形に変更
+Audio::VoiceHandle Audio::MakeVoiceHandle(uint32_t index, uint32_t generation) {
+    return (static_cast<uint64_t>(generation) << 32) | index;
+}
+
 Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
 {
     std::wstring filePathW = StringUtility::ConvertString(filename);
-    HRESULT result_;
+    HRESULT result;
 
     // 1. ソースリーダー作成
     ComPtr<IMFSourceReader> pReader;
-    result_ = MFCreateSourceReaderFromURL(filePathW.c_str(), nullptr, &pReader);
-    if (FAILED(result_)) {
+    result = MFCreateSourceReaderFromURL(filePathW.c_str(), nullptr, &pReader);
+    if (FAILED(result)) {
         assert(false && "Failed to load audio file.");
-        return -1; // エラー時は最大値を返す等の処理
+        return 0;
     }
 
     // 2. メディアタイプ設定 (PCM)
@@ -107,8 +120,8 @@ Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
     MFCreateMediaType(&pPCMType);
     pPCMType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
     pPCMType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-    result_ = pReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pPCMType.Get());
-    assert(SUCCEEDED(result_));
+    result = pReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pPCMType.Get());
+    assert(SUCCEEDED(result));
 
     // 3. フォーマット取得
     ComPtr<IMFMediaType> pOutType;
@@ -125,7 +138,7 @@ Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
     {
         ComPtr<IMFSample> pSample;
         DWORD flags = 0;
-        result_ = pReader->ReadSample(
+        result = pReader->ReadSample(
             (DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM,
             0, nullptr, &flags, nullptr, &pSample);
 
@@ -145,101 +158,123 @@ Audio::SoundHandle Audio::LoadAudio(const std::string& filename)
     }
 
     // 5. ハンドル発行と登録
-    SoundHandle handle = nextHandle_;
+    SoundHandle handle = nextSoundHandle_++;
     soundDatas_[handle] = soundData;
-
-    // 次のハンドル番号を準備
-    nextHandle_++;
 
     return handle;
 }
 
 void Audio::UnloadAudio(SoundHandle soundHandle)
 {
-    // マップから削除（メモリ解放される）
     soundDatas_.erase(soundHandle);
 }
 
-void Audio::PlayAudio(SoundHandle soundHandle, bool loop, float volume)
+Audio::VoiceHandle Audio::PlayAudio(SoundHandle soundHandle, bool loop, float volume, const std::string& category)
 {
-    if (soundDatas_.find(soundHandle) == soundDatas_.end()) return;
+    auto it = soundDatas_.find(soundHandle);
+    if (it == soundDatas_.end()) return 0;
 
-    const SoundData& soundData = soundDatas_[soundHandle];
+    const SoundData& soundData = it->second;
 
-    // --- ボイス作成 (既存コード) ---
     IXAudio2SourceVoice* pSourceVoice = nullptr;
-    HRESULT result_ = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-    assert(SUCCEEDED(result_));
+    HRESULT result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+    if (FAILED(result)) return 0;
 
-    pSourceVoice->SetVolume(volume);
+    // カテゴリ音量の適用
+    float catVol = categoryVolumes_.count(category) ? categoryVolumes_[category] : 1.0f;
+    pSourceVoice->SetVolume(volume * catVol);
 
     XAUDIO2_BUFFER buf{};
-    buf.AudioBytes = (UINT32)soundData.buffer.size();
+    buf.AudioBytes = static_cast<UINT32>(soundData.buffer.size());
     buf.pAudioData = soundData.buffer.data();
     buf.Flags = XAUDIO2_END_OF_STREAM;
     if (loop) buf.LoopCount = XAUDIO2_LOOP_INFINITE;
 
-    result_ = pSourceVoice->SubmitSourceBuffer(&buf);
-    result_ = pSourceVoice->Start();
+    result = pSourceVoice->SubmitSourceBuffer(&buf);
+    if (FAILED(result)) {
+        pSourceVoice->DestroyVoice();
+        return 0;
+    }
 
-    // --- Voice登録 (修正箇所) ---
+    result = pSourceVoice->Start();
+    if (FAILED(result)) {
+        pSourceVoice->DestroyVoice();
+        return 0;
+    }
+
+    // 世代つき VoiceHandle の発行
+    VoiceHandle handle = MakeVoiceHandle(nextVoiceIndex_++, currentGeneration_++);
+
     Voice voice{};
-    voice.handle = nextVoiceHandle_++;
-    voice.sourceHandle = soundHandle; // ★ここで親ハンドルを覚える！
+    voice.handle = handle;
+    voice.sourceHandle = soundHandle;
     voice.sourceVoice = pSourceVoice;
-    voice.state=VoiceState::Playing;
+    voice.category = category;
+    voice.state = VoiceState::Playing;
+    voice.baseVolume = volume;
 
     activeVoices_.push_back(voice);
+
+    return handle;
 }
-void Audio::StopAudio(SoundHandle voiceHandle)
+
+void Audio::StopAudio(VoiceHandle voiceHandle)
 {
     auto it = std::find_if(
         activeVoices_.begin(), activeVoices_.end(),
-        [voiceHandle](const Voice& v) { return v.sourceHandle == voiceHandle; }
+        [voiceHandle](const Voice& v) { return v.handle == voiceHandle; }
     );
 
     if (it != activeVoices_.end())
     {
-        it->sourceVoice->Stop();
-        it->sourceVoice->FlushSourceBuffers();
-        it->sourceVoice->DestroyVoice();
-        it->state=VoiceState::Stopped;
+        if (it->sourceVoice) {
+            it->sourceVoice->Stop();
+            it->sourceVoice->FlushSourceBuffers();
+            it->sourceVoice->DestroyVoice();
+            it->sourceVoice = nullptr;
+        }
+        it->state = VoiceState::Stopped;
         activeVoices_.erase(it);
     }
 }
 
-void Audio::PauseAudio(SoundHandle voiceHandle)
-{
-    auto it = std::find_if(activeVoices_.begin(), activeVoices_.end(),
-        [voiceHandle](const Voice& v) { return v.sourceHandle == voiceHandle; });
-
-    if (it != activeVoices_.end())
-    {
-        // 単に停止させる。
-        // FlushSourceBuffers() を呼ばなければ、再生位置(カーソル)は維持される。
-        it->state=VoiceState::Paused;
-        it->sourceVoice->Stop(0);
-    }
-}
-
-void Audio::ResumeAudio(SoundHandle voiceHandle)
-{
-    auto it = std::find_if(activeVoices_.begin(), activeVoices_.end(),
-        [voiceHandle](const Voice& v) { return v.sourceHandle == voiceHandle; });
-
-    if (it != activeVoices_.end())
-    {
-        it->state=VoiceState::Playing;
-        // 停止した位置から再開される
-        it->sourceVoice->Start(0, XAUDIO2_COMMIT_NOW);
-    }
-}
-
-bool Audio::IsPlaying(SoundHandle voiceHandle)
+void Audio::PauseAudio(VoiceHandle voiceHandle)
 {
     auto it = std::find_if(
         activeVoices_.begin(), activeVoices_.end(),
-        [voiceHandle](const Voice& v) { return v.sourceHandle == voiceHandle; }
+        [voiceHandle](const Voice& v) { return v.handle == voiceHandle; }
+    );
+
+    if (it != activeVoices_.end() && it->state == VoiceState::Playing)
+    {
+        it->state = VoiceState::Paused;
+        if (it->sourceVoice) {
+            it->sourceVoice->Stop(0);
+        }
+    }
+}
+
+void Audio::ResumeAudio(VoiceHandle voiceHandle)
+{
+    auto it = std::find_if(
+        activeVoices_.begin(), activeVoices_.end(),
+        [voiceHandle](const Voice& v) { return v.handle == voiceHandle; }
+    );
+
+    if (it != activeVoices_.end() && it->state == VoiceState::Paused)
+    {
+        it->state = VoiceState::Playing;
+        if (it->sourceVoice) {
+            it->sourceVoice->Start(0, XAUDIO2_COMMIT_NOW);
+        }
+    }
+}
+
+bool Audio::IsPlaying(VoiceHandle voiceHandle)
+{
+    auto it = std::find_if(
+        activeVoices_.begin(), activeVoices_.end(),
+        [voiceHandle](const Voice& v) { return v.handle == voiceHandle; }
     );
 
     if (it == activeVoices_.end())
@@ -247,5 +282,39 @@ bool Audio::IsPlaying(SoundHandle voiceHandle)
         return false;
     }
 
-   return it->state == VoiceState::Playing;
+    return it->state == VoiceState::Playing;
+}
+
+void Audio::SetCategoryVolume(const std::string& category, float volume)
+{
+    categoryVolumes_[category] = volume;
+
+    for (auto& v : activeVoices_)
+    {
+        if (v.category == category && v.sourceVoice)
+        {
+            v.sourceVoice->SetVolume(v.baseVolume * volume);
+        }
+    }
+}
+
+void Audio::StopCategory(const std::string& category)
+{
+    for (auto it = activeVoices_.begin(); it != activeVoices_.end(); )
+    {
+        if (it->category == category)
+        {
+            if (it->sourceVoice) {
+                it->sourceVoice->Stop();
+                it->sourceVoice->FlushSourceBuffers();
+                it->sourceVoice->DestroyVoice();
+                it->sourceVoice = nullptr;
+            }
+            it = activeVoices_.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }

@@ -14,7 +14,7 @@ void Scene::ChangeActiveCamera(Camera* targetCamera) {
     ParticleManager::GetInstance()->SetCamera(activeCamera_);
     PrimitiveDrawer::GetInstance()->SetCamera(activeCamera_);
     OffScreen::GetInstance()->SetCamera(activeCamera_);
-    
+
 
 }
 
@@ -31,4 +31,11 @@ void Scene::ChangePhase(std::unique_ptr<Phase> nextPhase)
     if (currentPhase_) {
         currentPhase_->Initialize(this);
     }
+}
+
+void Scene::PrayBGM(Audio::SoundHandle bgmHundle)
+{
+
+    BGMHandle_ = Audio::GetInstance()->PlayAudio(bgmHundle, true, 0.25f, "BGM");
+
 }

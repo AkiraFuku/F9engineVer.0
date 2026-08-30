@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include "Audio.h"
 class SceneManager;
 class Camera;
 class  Phase;
@@ -32,12 +33,17 @@ public:
    void ChangePhase(std::unique_ptr<Phase> nextPhase);
 
 
+   Audio::VoiceHandle getBGMPlayHundle(){
+   return BGMHandle_;
+   };
+
+   void PrayBGM(Audio::SoundHandle bgmHundle);
 
 private:
     SceneManager* sceneManager_ = nullptr;
 
 protected:
-    uint32_t BGMHandle_ = 0;
+    Audio::VoiceHandle BGMHandle_ = 0;
     Camera* activeCamera_ = nullptr;
     std::map<std::string, std::unique_ptr<Camera>> cameraMap_;
 

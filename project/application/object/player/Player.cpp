@@ -26,6 +26,7 @@ void Player::Initialize()
     object_->Initialize();
     //object_->SetModel("player.obj");
     object_->SetModel("walk.gltf");
+    object_->SetTexture("resources/Yellow.png");
     animation = std::make_unique<Animation>();
 
     animation->Initialize("resources/human", "walk.gltf");
@@ -41,7 +42,12 @@ void Player::Initialize()
 
     collider_ = std::make_unique<Collider>();
     collider_->initialize(this, Radius);
+
     object_->Update();
+
+    HitSE_ = Audio::GetInstance()->LoadAudio("resources/Audio/SE/Hit.mp3");
+    DamageSE_ = Audio::GetInstance()->LoadAudio("resources/Audio/SE/Damage.mp3");
+
 }
 void Player::Update()
 {
@@ -585,44 +591,50 @@ void Player::OnCollision(GameObject* other) {
         const char* playerBehavior = GetBehaviorName();
         const char* playerState = GetStateName();
 
-        if (playerState && strcmp(playerState, "Normal") == 0) {
-            const char* enemyState = enemy->GetStateName();
+        const char* enemyState = enemy->GetStateName();
 
-            // プレイヤーが攻撃中の場合
-            if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
-                if (enemyState && strcmp(enemyState, "Dead") != 0) {
-                    Vector3 now = velocity_;
-                    now.x = 0.0f;
-                    velocity_ = now;
+        // プレイヤーが攻撃中の場合
+        if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+            if (enemyState && strcmp(enemyState, "Dead") != 0) {
+                Vector3 now = velocity_;
+                now.x = 0.0f;
+                velocity_ = now;
 
-                    // アタック成功時のBehavior復帰
-                    if (baseState_) {
-                        baseState_->ChangeBehavior(this, std::make_unique<BehaviorRoot>());
-                    }
+
+                // アタック成功時のBehavior復帰
+                if (baseState_) {
+                    baseState_->ChangeBehavior(this, std::make_unique<BehaviorRoot>());
                 }
-                return;
             }
+            return;
+        }
 
-            // 敵が通常状態の場合、ダメージおよびノックバック
-            if (enemyState && strcmp(enemyState, "Normal") == 0) {
-                if (hitInvincibilityTimer_ <= 0.0f) {
-                    // レール上の位置関係からノックバック方向を決定
-                    int knockDir = -1;
-                    float playerDist = GetCurrentDistance();
-                    float enemyDist = enemy->GetCurrentDistance();
-                    if (playerDist < enemyDist) {
-                        knockDir = -1; // プレイヤーが手前 → 手前側(後退)へノックバック
-                    } else if (playerDist > enemyDist) {
-                        knockDir = 1;  // プレイヤーが奥 → 奥側(前進)へノックバック
-                    } else {
-                        // 同一地点の場合はプレイヤーの移動向きの逆方向
-                        knockDir = (GetMoveDirection() == 1) ? -1 : 1;
-                    }
-
-                    TakeDamage(knockDir);
+        // 敵が通常状態の場合、ダメージおよびノックバック
+        if (enemyState && strcmp(enemyState, "Normal") == 0) {
+            if (hitInvincibilityTimer_ <= 0.0f) {
+                // レール上の位置関係からノックバック方向を決定
+                int knockDir = -1;
+                float playerDist = GetCurrentDistance();
+                float enemyDist = enemy->GetCurrentDistance();
+                if (playerDist < enemyDist) {
+                    knockDir = -1; // プレイヤーが手前 → 手前側(後退)へノックバック
+                } else if (playerDist > enemyDist) {
+                    knockDir = 1;  // プレイヤーが奥 → 奥側(前進)へノックバック
+                } else {
+                    // 同一地点の場合はプレイヤーの移動向きの逆方向
+                    knockDir = (GetMoveDirection() == 1) ? -1 : 1;
                 }
+                playHundle_ = Audio::GetInstance()->PlayAudio(DamageSE_, false, 0.75);
+
+                if (auto scene = dynamic_cast<GameScene*>(scene_))
+                {
+                    scene->GetCamera()->ShakeCamera();
+                }
+
+                TakeDamage(knockDir);
             }
         }
+
     }
 }
 

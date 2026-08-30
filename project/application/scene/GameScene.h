@@ -3,7 +3,7 @@
 #include "DrawFunction.h"
 #include "Sprite.h"
 #include"Object3D.h"
-
+#include "Audio.h"
 #include "Player.h"
 #include "Scene.h"
 #include <memory>
@@ -36,7 +36,6 @@ public:
     /// フェーズを変更する
     /// </summary>
     /// <param name="nextPhase"></param>
-    //void ChangePhase(std::unique_ptr<Phase> nextPhase);
 
 
     //プレイヤーが落下下かの判定
@@ -64,6 +63,9 @@ public:
     GoalObject* GetGoal() {
         return goal_.get();
     }
+    ScoreUI* GetScore() {
+        return scoreUI_.get();
+    }
 
     GameScene();
     ~GameScene() override;
@@ -72,6 +74,11 @@ public:
     void AddProjectile(const Projectile::ProjectileSpawnParam& param, Projectile::ProjectileOwner owner);
     void AddTriangles(std::vector<Triangle> triangles);
 
+    Audio::SoundHandle getBGMSoundoHandle() {
+        return handle_;
+
+    }
+
 private:
 
 
@@ -79,7 +86,7 @@ private:
     /// クリアフラグが立ったら遷移
     /// </summary>
     void CheckClear();
-    std::unique_ptr<Object3d> object3d;
+    //std::unique_ptr<Object3d> object3d;
     std::unique_ptr<Animation> animation;
     std::unique_ptr<Player> player;
     std::unique_ptr<RailPath> stageRail;
@@ -101,7 +108,7 @@ private:
 
     bool isCleared_ = false;
     bool isDefeated_ = false;
-    uint32_t handle_ = 0;
+    Audio::SoundHandle handle_ = 0;
     // 投射物リスト
     std::vector<std::unique_ptr<Projectile>> projectiles_;
     //シーン内三角形リスト

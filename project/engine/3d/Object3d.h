@@ -178,6 +178,11 @@ void SetRotateDegree(const Vector3& rotateDegree) {
     worldTransform_.rotate.y = ToRadians(rotateDegree.y);
     worldTransform_.rotate.z = ToRadians(rotateDegree.z);
 }
+void SetTexture(std::string textureFilePath){
+
+
+    model_->SetTexture(textureFilePath);
+}
 
 private:
 

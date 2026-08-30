@@ -33,10 +33,13 @@ void NormalAttackAction::Execute(Player* player) {
     float moveAmount = float(attackDir) * dashSpeed_ * DXCommon::kDeltaTime;
 
     player->Move(moveAmount);
+
+    player->PlayHitSE();
 }
 
 void ShootRobotAction::Execute(Player* player) {
     // PlayerAction.cpp
+        player->PlayHitSE();
 
 
     Scene* scene = player->GetScene();

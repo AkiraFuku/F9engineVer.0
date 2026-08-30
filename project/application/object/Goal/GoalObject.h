@@ -41,7 +41,8 @@ public:
 private:
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_;
-
+    float worldY=0.0f;
+    const float rotateSpeed=5.0f;
     float radius_ = 1.5f;   // 当たり判定の大きさ
     bool isCleared_ = false; // クリアフラグ
 };

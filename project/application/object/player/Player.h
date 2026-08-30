@@ -6,6 +6,7 @@
 #include "GameObject.h"
 #include "Animation.h"
 #include "RailMover.h"
+#include "Audio.h"
 
 class InputHandler;
 class Input;
@@ -185,6 +186,12 @@ public:
         return isKnockback_;
     }
 
+
+    void PlayHitSE() {
+        playHundle_ = Audio::GetInstance()->PlayAudio(HitSE_, false, 1.0f);
+
+    }
+
 private:
     float deltaTime_ = DXCommon::kDeltaTime;
 
@@ -243,4 +250,8 @@ private:
     bool isActive_ = true;
 
     std::vector<CollisionRayInfo> rayList_;
+
+    Audio::SoundHandle HitSE_ = 0;
+    Audio::SoundHandle DamageSE_ = 0;
+    Audio::VoiceHandle playHundle_ = 0;
 };
