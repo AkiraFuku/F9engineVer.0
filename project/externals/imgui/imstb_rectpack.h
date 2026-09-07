@@ -48,7 +48,7 @@
 //     1.01  (2021-07-11)  always use large rect mode, expose STBRP__MAXVAL in public section
 //     1.00  (2019-02-25)  avoid small space waste; gracefully fail too-wide rectangles
 //     0.99  (2019-02-07)  warning fixes
-//     0.11  (2017-03-03)  return packing success/fail result_
+//     0.11  (2017-03-03)  return packing success/fail result
 //     0.10  (2016-10-25)  remove cast-away-const to avoid warnings
 //     0.09  (2016-08-27)  fix compiler warnings
 //     0.08  (2015-09-13)  really fix bug with empty rects (w=0 or h=0)
@@ -315,7 +315,7 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
       if (node->y > min_y) {
          // raise min_y higher.
          // we've accounted for all waste up to min_y,
-         // but we'll now add more waste for everything we've visted
+         // but we'll now add more waste for everything we've visited
          waste_area += visited_width * (node->y - min_y);
          min_y = node->y;
          // the first time through, visited_width might be reduced
@@ -470,7 +470,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
 
    // insert the new node into the right starting point, and
    // let 'cur' point to the remaining nodes needing to be
-   // stiched back in
+   // stitched back in
 
    cur = *res.prev_link;
    if (cur->x < res.x) {
