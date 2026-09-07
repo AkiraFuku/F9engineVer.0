@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="ヘッダー ファイル">
@@ -287,6 +287,9 @@
     </ClCompile>
     <ClCompile Include="engine\Tool\ImGuiManager.cpp">
       <Filter>engine\Tool\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Tool\JsonManager.cpp">
+      <Filter>engine\Tool</Filter>
     </ClCompile>
     <ClCompile Include="engine\Tool\ParticleManager.cpp">
       <Filter>engine\Tool\Paeticle</Filter>
@@ -577,6 +580,9 @@
     </ClInclude>
     <ClInclude Include="engine\Tool\ParticleEmitter.h">
       <Filter>engine\Tool\Paeticle</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Tool\JsonManager.h">
+      <Filter>engine\Tool</Filter>
     </ClInclude>
     <ClInclude Include="application\object\player\Player.h">
       <Filter>App\Object\Player</Filter>

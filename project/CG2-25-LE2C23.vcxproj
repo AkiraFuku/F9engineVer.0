@@ -52,6 +52,7 @@
     <ClCompile Include="engine\base\DXCommon.cpp" />
     <ClCompile Include="engine\audio\Audio.cpp" />
     <ClCompile Include="engine\Tool\ImGuiManager.cpp" />
+    <ClCompile Include="engine\Tool\JsonManager.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -229,6 +230,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="engine\Tool\JsonManager.h" />
     <ClInclude Include="TitlePhase.h" />
   </ItemGroup>
   <ItemGroup>

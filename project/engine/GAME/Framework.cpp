@@ -17,6 +17,7 @@
 #include "PSOManager.h"
 #include "LightManager.h"
 #include "OffScreen.h"
+#include "JsonManager.h"
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
     //ダンプファイルの作成
     SYSTEMTIME time;
@@ -88,6 +89,7 @@ void Framework::Initialize()
     OffScreen::GetInstance()->Initialize();
 
     ImGuiManager::GetInstance()->Initialize();
+    JsonManager::GetInstance()->Initialize();
     TextureManager::GetInstance()->Initialize();
     ModelManager::GetInstance()->Initialize();
     ParticleManager::GetInstance()->Initialize();
@@ -105,6 +107,7 @@ void Framework::Initialize()
 
 void Framework::Finalize()
 {
+    JsonManager::GetInstance()->Finalize();
     LightManager::GetInstance()->Finalize();
     SrvManager::GetInstance()->Finalize();
     SceneManager::GetInstance()->Finalize();
