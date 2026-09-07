@@ -40,10 +40,13 @@ void GameScene::Initialize() {
 
     cameraMap_["Main"] = std::move(mainCamera);
 
-    //// 2. デバッグ用カメラの生成
+#ifdef USE_IMGUI
+    //// 2. デバッグ・エディタ用カメラの生成
     auto debugCamera = std::make_unique<Camera>();
     debugCamera->SetTranslate({ 0.0f, 10.0f, -20.0f });
+    debugCamera->SetEditorMode(true);
     cameraMap_["Debug"] = std::move(debugCamera);
+#endif
 
     // 3. 最初はメインカメラをセット
     ChangeActiveCamera(cameraMap_["Main"].get());
