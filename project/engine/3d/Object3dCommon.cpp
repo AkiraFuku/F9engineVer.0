@@ -16,6 +16,9 @@ Object3dCommon* Object3dCommon::GetInstance() {
 }
 
 void Object3dCommon::Finalize() {
+    // CameraManager の終了処理
+    CameraManager::GetInstance()->Finalize();
+
     instance.reset(); // 解放
 }
 void Object3dCommon::Initialize()
@@ -159,6 +162,9 @@ void Object3dCommon::Initialize()
     graphicsPipelineState_ = psoSet.pipelineState;
 
     //   CreatePSO();
+
+    // CameraManager の初期化（GetInstance で自動初期化されるが、明示的に初期化）
+    CameraManager::GetInstance();
 }
 void Object3dCommon::Object3dCommonDraw()
 {

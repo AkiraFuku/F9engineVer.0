@@ -2,6 +2,7 @@
 #include "MathFunction.h"
 #include "ImGuI.h"
 #include "ImGuiManager.h"
+#include "DXCommon.h"
 #include <cmath>
 Camera::Camera()
     :worldTransform_({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
@@ -17,6 +18,8 @@ Camera::Camera()
 #ifdef USE_IMGUI
     initialTransform_ = worldTransform_;
 #endif
+    // カメラバッファ作成
+    CreateCameraBuffer();
 }
 
 #ifdef USE_IMGUI
@@ -48,9 +51,15 @@ void Camera::UpdateEditorCamera() {
     Vector3 up = { worldMatrix.m[1][0], worldMatrix.m[1][1], worldMatrix.m[1][2] };
     Vector3 forward = { worldMatrix.m[2][0], worldMatrix.m[2][1], worldMatrix.m[2][2] };
 
-    if (Length(right) > 0.0001f) { right = Normalize(right); }
-    if (Length(up) > 0.0001f) { up = Normalize(up); }
-    if (Length(forward) > 0.0001f) { forward = Normalize(forward); }
+    if (Length(right) > 0.0001f) {
+        right = Normalize(right);
+    }
+    if (Length(up) > 0.0001f) {
+        up = Normalize(up);
+    }
+    if (Length(forward) > 0.0001f) {
+        forward = Normalize(forward);
+    }
 
     // 1. 右クリックホールド：視点回転（Pitch / Yaw）＆ WASD 移動（Unity Flythrough）
     if (isRightDragging_) {
@@ -63,13 +72,19 @@ void Camera::UpdateEditorCamera() {
 
         // ピッチ角制限（首が真上・真下を超えて反転しないように制限）
         const float kMaxPitch = 1.55f;
-        if (worldTransform_.rotate.x > kMaxPitch) { worldTransform_.rotate.x = kMaxPitch; }
-        if (worldTransform_.rotate.x < -kMaxPitch) { worldTransform_.rotate.x = -kMaxPitch; }
+        if (worldTransform_.rotate.x > kMaxPitch) {
+            worldTransform_.rotate.x = kMaxPitch;
+        }
+        if (worldTransform_.rotate.x < -kMaxPitch) {
+            worldTransform_.rotate.x = -kMaxPitch;
+        }
 
         // 右ドラッグ中のホイール回転：移動速度の調整
         if (std::abs(io.MouseWheel) > 0.01f) {
             moveSpeed_ += io.MouseWheel * 0.05f;
-            if (moveSpeed_ < 0.05f) { moveSpeed_ = 0.05f; }
+            if (moveSpeed_ < 0.05f) {
+                moveSpeed_ = 0.05f;
+            }
         }
 
         // WASD / QE による移動
@@ -79,12 +94,24 @@ void Camera::UpdateEditorCamera() {
         }
 
         Vector3 moveDir = { 0.0f, 0.0f, 0.0f };
-        if (ImGui::IsKeyDown(ImGuiKey_W)) { moveDir = moveDir + forward; }
-        if (ImGui::IsKeyDown(ImGuiKey_S)) { moveDir = moveDir - forward; }
-        if (ImGui::IsKeyDown(ImGuiKey_D)) { moveDir = moveDir + right; }
-        if (ImGui::IsKeyDown(ImGuiKey_A)) { moveDir = moveDir - right; }
-        if (ImGui::IsKeyDown(ImGuiKey_E)) { moveDir = moveDir + Vector3{ 0.0f, 1.0f, 0.0f }; } // ワールド上昇
-        if (ImGui::IsKeyDown(ImGuiKey_Q)) { moveDir = moveDir - Vector3{ 0.0f, 1.0f, 0.0f }; } // ワールド下降
+        if (ImGui::IsKeyDown(ImGuiKey_W)) {
+            moveDir = moveDir + forward;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_S)) {
+            moveDir = moveDir - forward;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_D)) {
+            moveDir = moveDir + right;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_A)) {
+            moveDir = moveDir - right;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_E)) {
+            moveDir = moveDir + Vector3{ 0.0f, 1.0f, 0.0f };
+        } // ワールド上昇
+        if (ImGui::IsKeyDown(ImGuiKey_Q)) {
+            moveDir = moveDir - Vector3{ 0.0f, 1.0f, 0.0f };
+        } // ワールド下降
 
         if (Length(moveDir) > 0.0001f) {
             worldTransform_.translate = worldTransform_.translate + Normalize(moveDir) * currentSpeed;
@@ -149,6 +176,7 @@ void Camera::Update() {
 
     UpdateView();
     UpdateViewProjection();
+    UpdateCameraBuffer();
 }
 
 void Camera::UpdateView()
@@ -160,4 +188,44 @@ void Camera::UpdateViewProjection()
 {
     projectionMatrix = MakePerspectiveFovMatrix(fovY, aspect, nearCrip, farCrip);
     viewProtectionMatrix = Multiply(viewMatrix, projectionMatrix);
-}
+}
+
+void Camera::CreateCameraBuffer()
+{
+    // CameraForGPU のサイズを 256 バイト境界にアライン
+    size_t bufferSize = (sizeof(CameraForGPU) + 0xff) & ~0xff;
+
+    // GPU リソース確保
+    cameraBufferResource_ = DXCommon::GetInstance()->CreateBufferResource(bufferSize);
+
+    // GPU メモリにマッピング
+    cameraBufferResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+
+    // 初期値を設定
+    if (cameraData_) {
+        cameraData_->worldPosition = worldTransform_.translate;
+        cameraData_->farClip = farCrip;
+
+        // ワールド行列から前方ベクトル (Z軸) を抽出
+        Vector3 forward = { worldMatrix.m[2][0], worldMatrix.m[2][1], worldMatrix.m[2][2] };
+        cameraData_->cameraForward = Normalize(forward);
+    }
+}
+
+void Camera::UpdateCameraBuffer()
+{
+    if (!cameraData_) {
+        return;
+    }
+
+    // カメラ位置を更新
+    cameraData_->worldPosition = worldTransform_.translate;
+
+    // far値を更新
+    cameraData_->farClip = farCrip;
+
+    // ワールド行列から前方ベクトル (Z軸) を抽出・正規化
+    Vector3 forward = { worldMatrix.m[2][0], worldMatrix.m[2][1], worldMatrix.m[2][2] };
+    cameraData_->cameraForward = Normalize(forward);
+}
+

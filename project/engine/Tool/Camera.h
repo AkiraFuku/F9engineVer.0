@@ -2,6 +2,10 @@
 #include "Vector4.h"
 #include "WinApp.h"
 #include "Transform.h"
+#include "RenderTypes.h"
+#include <wrl/client.h>
+#include <d3d12.h>
+
 class Camera
 {
 public:
@@ -52,6 +56,11 @@ public:
     const Matrix4x4& GetProjectionMatrix()const{return projectionMatrix;};
     const Matrix4x4& GetViewProtectionMatrix()const{return viewProtectionMatrix;};
     float GetFarCrip() const { return farCrip; }
+
+    // カメラバッファ管理メソッド
+    ID3D12Resource* GetCameraBufferResource() const { return cameraBufferResource_.Get(); }
+    bool HasCameraBuffer() const { return cameraBufferResource_ != nullptr; }
+
     EulerTransform worldTransform_;
 
 #ifdef USE_IMGUI
@@ -75,7 +84,7 @@ private:
     bool isMiddleDragging_ = false;   // 中ボタンドラッグ中か
     EulerTransform initialTransform_; // 初期リセット用
 #endif
-   
+
     Matrix4x4 worldMatrix;
     Matrix4x4 viewMatrix;
     Matrix4x4 projectionMatrix;
@@ -85,6 +94,11 @@ private:
     float nearCrip ;
     float farCrip ;
 
+    // カメラバッファ管理
+    Microsoft::WRL::ComPtr<ID3D12Resource> cameraBufferResource_;
+    CameraForGPU* cameraData_ = nullptr;
+    void CreateCameraBuffer();
+    void UpdateCameraBuffer();
 
 };
 

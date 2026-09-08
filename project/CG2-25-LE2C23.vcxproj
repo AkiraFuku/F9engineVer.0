@@ -25,6 +25,7 @@
     <ClCompile Include="application\object\Boss\Part\BossArmorPart.cpp" />
     <ClCompile Include="application\object\Boss\Part\BossBodyPart.cpp" />
     <ClCompile Include="application\object\Boss\Part\BossWeakPart.cpp" />
+    <ClCompile Include="engine\Tool\CameraManager.cpp" />
     <ClCompile Include="engine\Tool\EffectManager.cpp" />
     <ClCompile Include="engine\3d\Animation.cpp" />
     <ClCompile Include="application\object\Enemy\Behavior\EnemyAction.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="application\object\Boss\Part\BossBodyPart.h" />
     <ClInclude Include="application\object\Boss\Part\BossWeakPart.h" />
     <ClInclude Include="engine\base\RenderTypes.h" />
+    <ClInclude Include="engine\Tool\CameraManager.h" />
     <ClInclude Include="engine\Tool\EffectManager.h" />
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />

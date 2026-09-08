@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "DXCommon.h"
 #include "Camera.h"
+#include "CameraManager.h"
 #include "SkyBox.h"
 class Object3dCommon
 {
@@ -14,16 +15,19 @@ public:
     void Finalize();
 
     void Initialize();
-    
+
     void Object3dCommonDraw();
     void SetDefaultCamera(Camera* camera) {
-        defaultCamera_ = camera;
+        if (camera) {
+            CameraManager::GetInstance()->RegisterCamera("Default", camera);
+            CameraManager::GetInstance()->SetActiveGameCamera("Default");
+        }
     }
     void SetDefaultSkyBox(SkyBox* box) {
        defaultBox_=box;
     }
     Camera* GetDefaultCamera()const {
-        return defaultCamera_;
+        return CameraManager::GetInstance()->GetActiveGameCamera();
     }
     SkyBox* GetDefaultSkyBox()const {
         return defaultBox_;
@@ -40,7 +44,7 @@ private:
 
     HRESULT hr_;
     SkyBox* defaultBox_=nullptr;
-   
+
 
     //ルートシグネチャ
     Microsoft::WRL::ComPtr<ID3D12RootSignature>rootSignature_;
@@ -48,6 +52,5 @@ private:
     //グラフィックパイプラインステート
     Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
     void CreatePSO();
-    Camera* defaultCamera_ = nullptr;
 };
 
