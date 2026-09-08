@@ -143,6 +143,7 @@
     <ClInclude Include="application\object\Boss\Part\BossArmorPart.h" />
     <ClInclude Include="application\object\Boss\Part\BossBodyPart.h" />
     <ClInclude Include="application\object\Boss\Part\BossWeakPart.h" />
+    <ClInclude Include="engine\base\RenderTypes.h" />
     <ClInclude Include="engine\Tool\EffectManager.h" />
     <ClInclude Include="engine\3d\Animation.h" />
     <ClInclude Include="application\object\Enemy\Behavior\EnemyAction.h" />

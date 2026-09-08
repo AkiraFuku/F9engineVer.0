@@ -35,21 +35,9 @@ public:
         Vector3 normal;   //!< 法線ベクトル
     };
 
-    /// @brief 定数バッファ用マテリアル構造体
-    struct Material
-    {
-        Vector4 color;          //!< スプライトの色（RGBA）
-        int32_t enableLighting; //!< ライティングの有効フラグ（0:無効, 1:有効）
-        float padding[3];       //!< パディング（16バイトアライメント用）
-        Matrix4x4 uvTransform;  //!< UV変換行列
-    };
+    #include "../base/RenderTypes.h"
 
-    /// @brief 定数バッファ用座標変換行列構造体
-    struct TransformationMatrix
-    {
-        Matrix4x4 WVP;   //!< ワールド・ビュー・プロジェクション合成行列
-        Matrix4x4 World; //!< ワールド変換行列
-    };
+    // Material と TransformationMatrix は共通ヘッダー RenderTypes.h で定義されます
 
     /**
      * @brief スプライトの初期化

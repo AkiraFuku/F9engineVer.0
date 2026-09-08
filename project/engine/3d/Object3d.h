@@ -12,31 +12,14 @@
 #include "MathFunction.h"
 #include "SkyBox.h"
 #include <numbers>
+#include "../base/RenderTypes.h"
 class Animation;
 class Object3d
 {
 
 public:
 
-    struct TransformationMatrix {
-        Matrix4x4 WVP;
-        Matrix4x4 World;
-        Matrix4x4 WorldInverseTranspose;
-    };
-    struct DirectionalLight {
-        Vector4 color;//ライトの色
-        Vector3 direction;//ライトの向き
-        float intensity;// 明るさ
-
-
-    };
-    struct CameraForGPU
-    {
-        Vector3 worldPosition;
-        float farClip;
-        Vector3 cameraForward; // ★追加: カメラの前方ベクトル
-        float padding;
-    };
+    // 共通定義 (engine/base/RenderTypes.h) を使用します
     void Initialize();
     void Update();
     void Draw();

@@ -5,6 +5,7 @@
 #include <wrl/client.h>
 #include "Transform.h"
 #include "Camera.h"
+#include "../base/RenderTypes.h"
 class SkyBox
 {
 
@@ -24,11 +25,7 @@ public:
     {
         Vector4  color;
     };
-    struct TransformationMatrix {
-        Matrix4x4 WVP;
-        Matrix4x4 World;
-        Matrix4x4 WorldInverseTranspose;
-    };
+    // TransformationMatrix は engine/base/RenderTypes.h に移動
     void Initialize();
     void Finalize();
     void Update();
