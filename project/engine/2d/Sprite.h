@@ -7,6 +7,8 @@
 #include "Transform.h"
 #include "PSOManager.h"
 #include <initializer_list> 
+#include "RenderTypes.h"
+
 
 
 namespace Anchor {
@@ -299,7 +301,7 @@ private:
     D3D12_INDEX_BUFFER_VIEW indexBufferView_;               //!< インデックスバッファビュー
 
     Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_; //!< マテリアル用定数バッファリソース
-    Material* materialData_ = nullptr;                        //!< マテリアルのマッピングポインタ
+    MaterialCB* materialData_ = nullptr;                        //!< マテリアルのマッピングポインタ
 
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourse_; //!< 行列用定数バッファリソース
     TransformationMatrix* transformationMatrixData_ = nullptr;           //!< 行列のマッピングポインタ

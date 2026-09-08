@@ -28,7 +28,7 @@ void Sprite::Initialize(std::string textureFilePath) {
     indexResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
 
     // 2. マテリアルバッファの作成と初期設定
-    materialResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+    materialResource_ = DXCommon::GetInstance()->CreateBufferResource(sizeof(MaterialCB));
     materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 
     materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f); // デフォルトは白

@@ -12,7 +12,7 @@
 #include "MathFunction.h"
 #include "SkyBox.h"
 #include <numbers>
-#include "../base/RenderTypes.h"
+#include "RenderTypes.h"
 class Animation;
 class Object3d
 {
