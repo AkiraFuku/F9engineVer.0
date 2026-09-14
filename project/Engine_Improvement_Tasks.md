@@ -67,11 +67,13 @@ DirectX 12の強みを活かし、CPU-GPUオーバーヘッドを極小化しつ
     3. メイン描画シェーダーでライト空間行列を用いて深度比較（PCFフィルタ）を行い、リアルな影を描画。
   - **優先度**: 高 / **難易度**: 高
 
-- [ ] **Task 2.5: 動的ライトバッファへの拡張**
-  - **対象ファイル**: [`LightManager.h`](file:///c:/Users/k024g/OneDrive/デスクトップ/study/3nenn/AL/Project/project/engine/Tool/LightManager.h), [`LightManager.cpp`](file:///c:/Users/k024g/OneDrive/デスクトップ/study/3nenn/AL/Project/project/engine/Tool/LightManager.cpp)
+- [x] **Task 2.5: 動的ライトバッファの最適化（Dirty flag + 動的割り当て + DrawIndirect）**
+  - **対象ファイル**: [`RenderTypes.h`](file:///c:/Users/k024g/OneDrive/デスクトップ/study/3nenn/AL/Project/project/engine/base/RenderTypes.h), [`LightManager.h`](file:///c:/Users/k024g/OneDrive/デスクトップ/study/3nenn/AL/Project/project/engine/Tool/LightManager.h), [`LightManager.cpp`](file:///c:/Users/k024g/OneDrive/デスクトップ/study/3nenn/AL/Project/project/engine/Tool/LightManager.cpp)
   - **内容**:
-    1. 固定配列（Dir3, Point3, Spot3）を廃止し、可変長 `std::vector` で管理。
-    2. 画面内に存在するライトの数をカウントバッファで渡し、シェーダー側で動的ループ処理できるようにする。
+    1. `RenderTypes.h` に間接描画引数 `IndirectArguments` および GPU 用ライト構造体を整備。
+    2. `LightManager` に Dirty flag システムを導入し、変更があったライトのみ GPU へ差分転送（不要な memcpy 削減）。
+    3. 初期サイズ超過時に 2 倍拡張する動的 StructuredBuffer 割り当てロジック（既存データ保持・安全解放）を実装。
+    4. ID ベースのライト管理（`Add`, `Remove`, `Set`, `GetByID`）および Swap & Pop によるスロット管理を実装。既存コードとの後方互換性も確保。
   - **優先度**: 中 / **難易度**: 中
 
 - [ ] **Task 2.6: PBR（物理ベースレンダリング）マテリアルの導入**
