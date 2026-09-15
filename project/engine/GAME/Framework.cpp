@@ -9,7 +9,8 @@
 #include"Logger.h"//フレームワークに移植
 #include "SpriteCommon.h"//フレームワークに移植
 #include "TextureManager.h"//フレームワークに移植
-#include"Object3DCommon.h"//フレームワークに移植
+#include "Object3DCommon.h"//フレームワークに移植
+#include "PbdCommon.h"
 #include "ModelManager.h"//フレームワークに移植
 #include "SrvManager.h"//フレームワークに移植
 #include <fstream>
@@ -100,6 +101,7 @@ void Framework::Initialize()
 
     SpriteCommon::GetInstance()->Initialize();
     Object3dCommon::GetInstance()->Initialize();
+    PbdCommon::GetInstance()->Initialize();
     Audio::GetInstance()->Initialize();
 
 
@@ -119,6 +121,7 @@ void Framework::Finalize()
 
     Audio::GetInstance()->Finalize();
     Input::GetInstance()->Finalize();
+    PbdCommon::GetInstance()->Finalize();
     Object3dCommon::GetInstance()->Finalize();
 
     ImGuiManager::GetInstance()->Finalize();

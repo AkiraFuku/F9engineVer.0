@@ -96,6 +96,10 @@
     <ClCompile Include="engine\2d\Sprite.cpp" />
     <ClCompile Include="engine\3d\Object3d.cpp" />
     <ClCompile Include="engine\3d\Object3dCommon.cpp" />
+    <ClCompile Include="engine\3d\PbdCommon.cpp" />
+    <ClCompile Include="engine\3d\PbdSolver.cpp" />
+    <ClCompile Include="engine\3d\PbdCloth.cpp" />
+    <ClCompile Include="engine\3d\PbdRope.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelManager.cpp" />
     <ClCompile Include="engine\Tool\StringUtility.cpp" />
@@ -193,6 +197,10 @@
     <ClInclude Include="engine\2d\Sprite.h" />
     <ClInclude Include="engine\3d\Object3d.h" />
     <ClInclude Include="engine\3d\Object3dCommon.h" />
+    <ClInclude Include="engine\3d\PbdCommon.h" />
+    <ClInclude Include="engine\3d\PbdSolver.h" />
+    <ClInclude Include="engine\3d\PbdCloth.h" />
+    <ClInclude Include="engine\3d\PbdRope.h" />
     <ClInclude Include="engine\3d\Model.h" />
     <ClInclude Include="engine\3d\ModelManager.h" />
     <ClInclude Include="engine\Tool\StringUtility.h" />
@@ -248,6 +256,9 @@
     <None Include="resources\shaders\CopyImage\CopyImage.hlsli" />
     <None Include="resources\shaders\CopyImage\FullScreen.hlsli" />
     <None Include="resources\shaders\Fade\Fade.hlsli" />
+    <None Include="resources\shaders\PBD\PBD.hlsli" />
+    <None Include="resources\shaders\PBD\PBD.VS.hlsl" />
+    <None Include="resources\shaders\PBD\PBD.PS.hlsl" />
     <None Include="resources\shaders\Object3d\Object3d.hlsli" />
     <None Include="resources\shaders\Particle\Particle.hlsli" />
     <None Include="resources\shaders\PostEfect\BoxFilter.hlsli" />

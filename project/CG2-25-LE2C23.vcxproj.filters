@@ -58,6 +58,9 @@
     <Filter Include="シェーダー ファイル\Object3d">
       <UniqueIdentifier>{c1ebee99-5a77-45c0-bef5-04abf250cb5f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="シェーダー ファイル\PBD">
+      <UniqueIdentifier>{d3a1f82b-4e8c-4f7e-9c2b-8a5e7c1f4e3a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="シェーダー ファイル\Particle">
       <UniqueIdentifier>{2c8dd127-8615-434f-8bae-00add16c0923}</UniqueIdentifier>
     </Filter>
@@ -232,6 +235,18 @@
       <Filter>engine\3d</Filter>
     </ClCompile>
     <ClCompile Include="engine\3d\Object3dCommon.cpp">
+      <Filter>engine\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3d\PbdCommon.cpp">
+      <Filter>engine\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3d\PbdSolver.cpp">
+      <Filter>engine\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3d\PbdCloth.cpp">
+      <Filter>engine\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3d\PbdRope.cpp">
       <Filter>engine\3d</Filter>
     </ClCompile>
     <ClCompile Include="engine\3d\Model.cpp">
@@ -515,6 +530,18 @@
     <ClInclude Include="engine\3d\Object3dCommon.h">
       <Filter>engine\3d</Filter>
     </ClInclude>
+    <ClInclude Include="engine\3d\PbdCommon.h">
+      <Filter>engine\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3d\PbdSolver.h">
+      <Filter>engine\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3d\PbdCloth.h">
+      <Filter>engine\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3d\PbdRope.h">
+      <Filter>engine\3d</Filter>
+    </ClInclude>
     <ClInclude Include="engine\3d\Model.h">
       <Filter>engine\3d</Filter>
     </ClInclude>
@@ -752,6 +779,15 @@
     </None>
     <None Include="resources\shaders\Primitive\Primitive.hlsli">
       <Filter>シェーダー ファイル\Primitive</Filter>
+    </None>
+    <None Include="resources\shaders\PBD\PBD.hlsli">
+      <Filter>シェーダー ファイル\PBD</Filter>
+    </None>
+    <None Include="resources\shaders\PBD\PBD.VS.hlsl">
+      <Filter>シェーダー ファイル\PBD</Filter>
+    </None>
+    <None Include="resources\shaders\PBD\PBD.PS.hlsl">
+      <Filter>シェーダー ファイル\PBD</Filter>
     </None>
     <None Include="resources\shaders\CopyImage\CopyImage.hlsli">
       <Filter>シェーダー ファイル\ofScrene</Filter>
