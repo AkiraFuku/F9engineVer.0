@@ -10,6 +10,8 @@
 #include "Phase.h"
 #include "Fade.h"
 #include "TitlePhase.h"
+#include "PbdCloth.h"
+#include <cmath>
 
 
 TitleScene::TitleScene() = default;
@@ -54,6 +56,13 @@ void TitleScene::Initialize() {
     sprite->SetAnchorPoint(Anchor::Center);
     sprite->SetPosition(WinApp::GetInstance()->GetWindowCenter());
 
+    // PBD 布オブジェクトの初期化
+    cloth_ = std::make_unique<PbdCloth>();
+    // 幅: 4.0 (x: -2.0 ~ 2.0), 高さ: 3.0 (y: 1.5 ~ -1.5), 格子数: 16x16
+    cloth_->Initialize({ -2.0f, 1.5f, 0.0f }, { 2.0f, -1.5f, 0.0f }, 16, 16, 0.3f, 1.0f / 60.0f, 0.03f, { 0.0f, -9.8f, 0.0f });
+    cloth_->SetTexture("resources/uvChecker.png");
+    cloth_->SetCamera(activeCamera_);
+
     ChangePhase(std::make_unique<TitlePhase>());
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/Audio/BGM/bgm.mp3");
@@ -74,11 +83,56 @@ void TitleScene::Update() {
         activeCamera_->UpdateViewProjection();
     }
     skyBox->Update();
+
+    // 布の更新（風シミュレーション付き）
+    if (cloth_) {
+        clothTimer_ += 1.0f / 60.0f;
+        if (clothWindEnabled_) {
+            // 自然な風の揺れをサイン・コサインの合成波で生成
+            float windZ = std::sin(clothTimer_ * 2.5f) * clothWindStrength_ + std::cos(clothTimer_ * 4.7f) * (clothWindStrength_ * 0.4f);
+            float windX = std::cos(clothTimer_ * 1.8f) * (clothWindStrength_ * 0.3f);
+            cloth_->SetGravity({ windX, -9.8f, windZ });
+        } else {
+            cloth_->SetGravity({ 0.0f, -9.8f, 0.0f });
+        }
+
+        cloth_->SetCamera(activeCamera_);
+        cloth_->Update();
+    }
+
     sprite->Update();
     currentPhase_->Update(this);
+
+#ifdef USE_IMGUI
+    ImGui::Begin("PBD Cloth Debug");
+    if (ImGui::Button("Reset Cloth")) {
+        cloth_->Initialize({ -2.0f, 1.5f, 0.0f }, { 2.0f, -1.5f, 0.0f }, 16, 16, 0.3f, 1.0f / 60.0f, 0.03f, { 0.0f, -9.8f, 0.0f });
+        cloth_->SetTexture("resources/uvChecker.png");
+        cloth_->SetCamera(activeCamera_);
+    }
+    ImGui::Checkbox("Enable Wind", &clothWindEnabled_);
+    ImGui::SliderFloat("Wind Strength", &clothWindStrength_, 0.0f, 20.0f);
+
+    if (cloth_) {
+        if (ImGui::Button("Apply Gust Push (+Z)")) {
+            auto& solver = cloth_->GetSolver();
+            int w = solver.GetWidth();
+            int h = solver.GetHeight();
+            for (int i = 0; i < w; ++i) {
+                for (int j = 1; j < h; ++j) {
+                    solver.GetPoint(i, j).velocity.z += 8.0f;
+                }
+            }
+        }
+    }
+    ImGui::End();
+#endif
 }
 void TitleScene::Draw() {
     skyBox->Draw();
+    if (cloth_) {
+        cloth_->Draw();
+    }
     sprite->Draw();
 }
 

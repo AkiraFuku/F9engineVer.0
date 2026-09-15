@@ -44,5 +44,9 @@ private:
     std::unique_ptr<SkyBox> skyBox;
 
      Audio::SoundHandle  handle_ = 0;
+    std::unique_ptr<class PbdCloth> cloth_;
+    bool clothWindEnabled_ = true;
+    float clothWindStrength_ = 3.5f;
+    float clothTimer_ = 0.0f;
 };
 
