@@ -166,6 +166,9 @@
     <Filter Include="App\Phase">
       <UniqueIdentifier>{2ceedbd6-f563-4f6c-b3aa-8a4deba61565}</UniqueIdentifier>
     </Filter>
+    <Filter Include="App\Level">
+      <UniqueIdentifier>{9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -455,6 +458,18 @@
     </ClCompile>
     <ClCompile Include="engine\Tool\CameraManager.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\level\EventTrigger.cpp">
+      <Filter>App\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="application\level\LevelLoader.cpp">
+      <Filter>App\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="application\level\StageBlock.cpp">
+      <Filter>App\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="application\level\StageManager.cpp">
+      <Filter>App\Level</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -760,6 +775,21 @@
     </ClInclude>
     <ClInclude Include="engine\Tool\CameraManager.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\level\EventTrigger.h">
+      <Filter>App\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="application\level\LevelData.h">
+      <Filter>App\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="application\level\LevelLoader.h">
+      <Filter>App\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="application\level\StageBlock.h">
+      <Filter>App\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="application\level\StageManager.h">
+      <Filter>App\Level</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

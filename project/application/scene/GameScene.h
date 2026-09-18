@@ -14,6 +14,7 @@
 #include "Animation.h"
 #include "Enemy.h"
 #include "GaidUI.h"
+class StageManager;
 class ParticleEmitter;
 class RailPath;
 class GoalObject;
@@ -48,9 +49,7 @@ public:
     CameraController* GetCamera() {
         return cameraController.get();
     }
-    RailPath* GetStageRaill() {
-        return stageRail.get();
-    }
+    RailPath* GetStageRaill();
     const std::vector<std::unique_ptr<Enemy>>& GetEnemies() {
         return enemies_;
     }
@@ -65,6 +64,9 @@ public:
     }
     ScoreUI* GetScore() {
         return scoreUI_.get();
+    }
+    StageManager* GetStageManager() {
+        return stageManager_.get();
     }
 
     GameScene();
@@ -125,6 +127,8 @@ private:
 
     //テスト用地面
     std::unique_ptr<Object3d> TestGround_;
+    //ステージマネージャー（LevelLoader経由でステージ・敵等を統括）
+    std::unique_ptr<StageManager> stageManager_;
     //生存限界
     float fallLimit_ = -8.5f;
 

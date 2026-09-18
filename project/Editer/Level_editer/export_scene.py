@@ -1,0 +1,322 @@
+import bpy
+import math
+import bpy_extras
+import json
+# ==========================================
+# 6. シーン出力（エクスポート機能・詳細ログ追加）
+# ==========================================
+class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
+    bl_idname = "myaddon.myaddon_ot_export_scene"
+    bl_label = "シーン出力"
+    bl_description = "シーン情報をExportする"
+    filename_ext = ".json"
+    
+
+    def execute(self, context):
+        print("--- シーン情報Export開始 ---")
+        self.export_json()
+        print("--- シーン情報Export完了 ---")
+        self.report({'INFO'}, "シーン情報をExportしました")
+        return {'FINISHED'}   
+
+    def export(self):
+        with open(self.filepath, 'wt', encoding='utf-8') as file:
+            self.Write_and_print(file, "SCENE")
+            for object in bpy.context.scene.objects:
+                if object.parent:
+                    continue
+                self.parse_scene_recursive(file, object, 0)
+                if object.parent is not None:
+                    self.Write_and_print(file, "parent: " + object.parent.name)
+                self.Write_and_print(file, "")
+
+    def export_json(self):
+        """"JSON形式でファイルに出力"""
+
+        json_object_root =dict()
+
+        json_object_root["name"]="scene"
+        json_object_root["objects"]=list()
+        # シーンのオブジェクト走査してパック
+        for object in bpy.context.scene.objects:
+             if (object.parent):
+                continue
+             self.parse_scene_recursive_json(json_object_root["objects"],object,0)
+        #エンコード
+        json_text=json.dumps(json_object_root,ensure_ascii=False,cls=json.JSONEncoder,indent=4)
+        print(json_text)
+
+        with open(self.filepath, 'wt', encoding='utf-8') as file:
+            file.write(json_text)
+
+    
+
+    def Write_and_print(self, file, text):
+        print(text)
+        file.write(text + "\n")
+    def parse_scene_recursive_json(self, data_parent, object, level):
+        json_object=dict()
+
+        json_object["type"]=object.type
+        json_object["name"]=object.name
+
+        #その他情報
+        trans, rot, scale = object.matrix_local.decompose()
+        rot = rot.to_euler()
+        rot.x = math.degrees(rot.x)
+        rot.y = math.degrees(rot.y)
+        rot.z = math.degrees(rot.z)
+        transform =dict()
+        transform["translation"]=(trans.x,trans.y,trans.z)
+        transform["rotation"]=(rot.x,rot.y,rot.z)
+        transform["scaling"]=(scale.x,scale.y,scale.z)
+
+        json_object["transform"]=transform
+
+        if "file_name" in object:
+            json_object["file_name"]= object["file_name"]
+                    
+        if "collider" in object:
+            collider=dict()
+            collider["type"]=object["collider"]
+            collider["center"]=object["collider_center"].to_list()
+            collider["size"]=object["collider_size"].to_list()
+            json_object["collider"]=collider
+
+
+        # ビヘイビアツリー出力判定（JSON版）
+        if "behavior_tree" in object:
+            
+            tree_name = object["behavior_tree"]
+            if tree_name in bpy.data.node_groups:
+                tree = bpy.data.node_groups[tree_name]
+                if tree.bl_idname == 'BehaviorTreeType':
+                    bt_data = self.export_behavior_tree_json(tree)
+                    if bt_data:
+                        json_object["behavior_tree"] = bt_data
+                else:
+                    print(f"⚠ {object.name}: '{tree_name}' は BehaviorTreeType ではありません。")
+            else:
+                print(f"⚠ {object.name}: 指定されたツリー名 '{tree_name}' が存在しません。")
+        # 親オブジェクトに登録する
+        data_parent.append(json_object)       
+        #子供リスト
+        if len(object.children)>0:
+            json_object["children"] =list()
+            for child in object.children:
+                self.parse_scene_recursive_json(json_object["children"],child,level+1)
+        
+      
+
+    def parse_scene_recursive(self, file, object, level):
+        indent = ''
+        for i in range(level):
+            indent += "\t"
+
+        self.Write_and_print(file, indent + object.type )
+        trans, rot, scale = object.matrix_local.decompose()
+        rot = rot.to_euler()
+        rot.x = math.degrees(rot.x)
+        rot.y = math.degrees(rot.y)
+        rot.z = math.degrees(rot.z)
+
+        self.Write_and_print(file, indent + "Trans(%f, %f, %f)" % (trans.x, trans.y, trans.z))
+        self.Write_and_print(file, indent + "Rot(%f, %f, %f)" % (rot.x, rot.y, rot.z))
+        self.Write_and_print(file, indent + "Scale(%f, %f, %f)" % (scale.x, scale.y, scale.z))
+        self.Write_and_print(file, "" )
+
+        # カスタムプロパティ出力
+        if "file_name" in object:
+            self.Write_and_print(file, indent + "Name %s" % object["file_name"])
+
+        if "collider" in object:
+            self.Write_and_print(file, indent + "Collider %s" % object["collider"])
+            temp_str = indent + "CC(%f,%f,%f)" % (object["collider_center"][0], object["collider_center"][1], object["collider_center"][2])
+            self.Write_and_print(file, temp_str)
+            temp_str = indent + "CS(%f,%f,%f)" % (object["collider_size"][0], object["collider_size"][1], object["collider_size"][2])
+            self.Write_and_print(file, temp_str)
+
+        # ビヘイビアツリー出力判定
+        if "behavior_tree" in object:
+            tree_name = object["behavior_tree"]
+            if tree_name in bpy.data.node_groups:
+                tree = bpy.data.node_groups[tree_name]
+                if tree.bl_idname == 'BehaviorTreeType':
+                    self.Write_and_print(file, indent + "BehaviorTree %s" % tree_name)
+                    self.export_behavior_tree(file, tree, indent + "\t")
+                else:
+                    print(f"⚠ {object.name}: '{tree_name}' は BehaviorTreeType ではありません。")
+            else:
+                print(f"⚠ {object.name}: 指定されたツリー名 '{tree_name}' が存在しません。")
+
+        self.Write_and_print(file, indent + 'End')
+        self.Write_and_print(file, '')
+
+        for child in object.children:
+            self.parse_scene_recursive(file, child, level + 1)
+    def export_behavior_tree_json(self, tree):
+        """ビヘイビアツリーを平坦なリスト構造として出力する"""
+        root_node = None
+        for node in tree.nodes:
+            if node.bl_idname == 'BTNode_Root':
+                root_node = node
+                break
+        
+        if not root_node:
+            print(f"⚠ ツリー '{tree.name}' 内に BTNode_Root が見つかりませんでした。")
+            return None
+
+        node_list = []
+        node_id_map = {}  # ノードオブジェクト -> ID の辞書
+
+        # 1. ツリーを巡回してすべてのノードにIDを採番＆リスト化
+        self.collect_nodes_to_list(root_node, node_list, node_id_map, parent_id=None)
+
+        return {
+            "name": tree.name,
+            "node_list": node_list
+        }
+
+    def collect_nodes_to_list(self, node, node_list, node_id_map, parent_id=None):
+        """ノードを巡回してリストに追加する再帰関数"""
+        # すでに登録済みの場合はスキップ（循環参照回避）
+        if node in node_id_map:
+            return node_id_map[node]
+
+        current_id = len(node_list)
+        node_id_map[node] = current_id
+
+        # 基本情報の構築
+        node_data = {
+            "id": current_id,
+            "parent_id": parent_id
+        }
+
+        # パラメータやプロパティの取得
+        if hasattr(node, "get_export_data"):
+            data = node.get_export_data()
+            node_data["type"] = data.get("type", node.bl_idname)
+            params = {k: v for k, v in data.items() if k not in ("type", "condition", "switch")}
+            if params:
+                node_data["parameters"] = params
+            if "condition" in data:
+                node_data["condition"] = data["condition"]
+            if "switch" in data:
+                node_data["switch"] = data["switch"]
+        else:
+            node_data["type"] = node.bl_idname
+
+        # リストに仮登録（子のIDは後で埋める）
+        node_list.append(node_data)
+
+        # 1. Branchノードの分岐処理
+        if node.bl_idname == 'BTNode_Branch':
+            branch_ids = {}
+            for output in node.outputs:
+                label = output.name
+                child_ids = []
+                for link in output.links:
+                    cid = self.collect_nodes_to_list(link.to_node, node_list, node_id_map, parent_id=current_id)
+                    child_ids.append(cid)
+                if child_ids:
+                    branch_ids[label] = child_ids
+            node_data["branches"] = branch_ids
+            return current_id
+
+        # 2. Switchノードの分岐処理
+        if node.bl_idname == 'BTNode_Switch':
+            case_ids = {}
+            for output in node.outputs:
+                label = output.name
+                child_ids = []
+                for link in output.links:
+                    cid = self.collect_nodes_to_list(link.to_node, node_list, node_id_map, parent_id=current_id)
+                    child_ids.append(cid)
+                if child_ids:
+                    case_ids[label] = child_ids
+            node_data["cases"] = case_ids
+            return current_id
+
+        # 3. 通常ノード（Y座標降順で子を取得）
+        children_nodes = []
+        for output in node.outputs:
+            for link in output.links:
+                children_nodes.append(link.to_node)
+        children_nodes.sort(key=lambda n: n.location.y, reverse=True)
+
+        child_ids = []
+        for child in children_nodes:
+            cid = self.collect_nodes_to_list(child, node_list, node_id_map, parent_id=current_id)
+            child_ids.append(cid)
+
+        node_data["child_ids"] = child_ids
+        return current_id
+   
+
+    def export_behavior_tree(self, file, tree, indent):
+        root_node = None
+        for node in tree.nodes:
+            if node.bl_idname == 'BTNode_Root':
+                root_node = node
+                break
+        
+        if root_node:
+            self.export_bt_node_recursive(file, root_node, indent)
+        else:
+            print(f"⚠ ツリー '{tree.name}' 内に BTNode_Root が見つかりませんでした。")
+
+    def export_bt_node_recursive(self, file, node, indent):
+        import json as _json
+        if hasattr(node, "get_export_data"):
+            data = node.get_export_data()
+            type_name = data.get("type", node.bl_idname)
+            params = []
+            for k, v in data.items():
+                if k not in ("type", "condition"):
+                    params.append(f"{k}:{v}")
+            param_str = " ".join(params)
+            if param_str:
+                self.Write_and_print(file, indent + f"Node {type_name} {param_str}")
+            else:
+                self.Write_and_print(file, indent + f"Node {type_name}")
+
+            if "condition" in data:
+                cond = data["condition"]
+                if isinstance(cond, dict):
+                    self.Write_and_print(file, indent + f"Condition {_json.dumps(cond, ensure_ascii=False)}")
+                else:
+                    self.Write_and_print(file, indent + f"Condition {cond}")
+        else:
+            self.Write_and_print(file, indent + f"Node {node.bl_idname}")
+
+        if node.bl_idname == 'BTNode_Branch':
+            for output in node.outputs:
+                branch_label = output.name
+                for link in output.links:
+                    self.Write_and_print(file, indent + f"Branch_{branch_label}")
+                    self.export_bt_node_recursive(file, link.to_node, indent + "\t")
+            return
+
+        if node.bl_idname == 'BTNode_Switch':
+            if hasattr(node, "get_export_data"):
+                data = node.get_export_data()
+                if "switch" in data:
+                    sw = data["switch"]
+                    import json as _json2
+                    self.Write_and_print(file, indent + f"Switch {_json2.dumps(sw, ensure_ascii=False)}")
+            for output in node.outputs:
+                case_label = output.name
+                for link in output.links:
+                    self.Write_and_print(file, indent + f"Case_{case_label}")
+                    self.export_bt_node_recursive(file, link.to_node, indent + "\t")
+            return
+
+        children = []
+        for output in node.outputs:
+            for link in output.links:
+                children.append(link.to_node)
+
+        children.sort(key=lambda n: n.location.y, reverse=True)
+
+        for child in children:
+            self.export_bt_node_recursive(file, child, indent + "\t")

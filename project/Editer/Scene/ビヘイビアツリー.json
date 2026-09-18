@@ -1,0 +1,148 @@
+{
+    "name": "scene",
+    "objects": [
+        {
+            "type": "MESH",
+            "name": "Cube",
+            "transform": {
+                "translation": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotation": [
+                    0.0,
+                    -0.0,
+                    0.0
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "file_name": "とりあえず箱",
+            "collider": {
+                "type": "BOX",
+                "center": [
+                    2.2200000286102295,
+                    0.0,
+                    0.0
+                ],
+                "size": [
+                    7.980000019073486,
+                    2.0,
+                    2.0
+                ]
+            },
+            "behavior_tree": {
+                "name": "Behavior Tree Editor.001",
+                "node_list": [
+                    {
+                        "id": 0,
+                        "parent_id": null,
+                        "type": "BTNode_Root",
+                        "child_ids": [
+                            1
+                        ]
+                    },
+                    {
+                        "id": 1,
+                        "parent_id": 0,
+                        "type": "BTNode_Sequence",
+                        "parameters": {
+                            "child_count": 2
+                        },
+                        "child_ids": [
+                            2,
+                            3
+                        ]
+                    },
+                    {
+                        "id": 2,
+                        "parent_id": 1,
+                        "type": "BTNode_ActionWait",
+                        "parameters": {
+                            "wait_time": 1.0
+                        },
+                        "child_ids": []
+                    },
+                    {
+                        "id": 3,
+                        "parent_id": 1,
+                        "type": "BTNode_ActionMoveTo",
+                        "parameters": {
+                            "speed": 1.0
+                        },
+                        "child_ids": []
+                    }
+                ]
+            },
+            "children": [
+                {
+                    "type": "MESH",
+                    "name": "ICO球",
+                    "transform": {
+                        "translation": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            -0.0,
+                            0.0
+                        ],
+                        "scaling": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "type": "LIGHT",
+            "name": "Light",
+            "transform": {
+                "translation": [
+                    4.076245307922363,
+                    1.0054539442062378,
+                    5.903861999511719
+                ],
+                "rotation": [
+                    37.26104736328125,
+                    3.1637091636657715,
+                    106.93632507324219
+                ],
+                "scaling": [
+                    1.0,
+                    0.9999999403953552,
+                    1.0
+                ]
+            }
+        },
+        {
+            "type": "CAMERA",
+            "name": "Camera",
+            "transform": {
+                "translation": [
+                    7.358891487121582,
+                    -6.925790786743164,
+                    4.958309173583984
+                ],
+                "rotation": [
+                    63.559295654296875,
+                    2.2983238068263745e-07,
+                    46.69194412231445
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        }
+    ]
+}

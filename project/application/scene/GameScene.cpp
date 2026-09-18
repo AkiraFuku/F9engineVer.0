@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "application/level/StageManager.h"
 #include "ModelManager.h"
 #include "Input.h"
 #include "imgui.h"
@@ -158,67 +159,21 @@ void GameScene::Initialize() {
     object3d->SetAnimations(animation.get());
     object3d->SetCamera(activeCamera_);*/
 
-    // --- 円形レールの設定例 ---
-    stageRail = std::make_unique<RailPath>();
-    stageRail->SetLoop(true); // ループを有効化
-
-    float radius = 20.0f;       // 円の半径
-    float h = radius * 0.5522f; // ハンドルの長さ
-
-    // 【修正版】反時計回りの順序に変更
-   // 点0: 前方 (Z+) -> 次は左(X-)へ向かうので、Outは左(-X)方向
-    stageRail->AddBezierPoint({ 0, 0,  radius }, { h, 0, 0 }, { -h, 0, 0 });
-
-    // 点1: 左 (X-) -> 次は後方(Z-)へ向かうので、Outは後方(-Z)方向
-    stageRail->AddBezierPoint({ -radius, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
-
-    // 点2: 後方 (Z-) -> 次は右(X+)へ向かうので、Outは右(+X)方向
-    stageRail->AddBezierPoint({ 0, 0, -radius }, { -h, 0, 0 }, { h, 0, 0 });
-
-    // 点3: 右 (X+) -> 次は前方(Z+)へ向かうので、Outは前方(+Z)方向
-    stageRail->AddBezierPoint({ radius, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-
-    // 最後に必ず更新して距離テーブルを作成
-    stageRail->Update();
-
-
-
-    // 立方体モデルの登録と、オブジェクトの生成・配置
-    ModelManager::GetInstance()->CreateBoxModel("box");
-    boxObject_ = std::make_unique<Object3d>();
-    boxObject_->Initialize();
-    boxObject_->SetModel("box");
-
-    boxObject_->SetTexture("resources/grass.png");
-    boxObject_->SetCamera(activeCamera_);
-
-    // レール上の第1ポイントの位置に配置 (Yは少し下げて、スケールを大きめにする)
-    Vector3 railPoint1 = stageRail->GetPointPos(1);
-    boxObject_->SetTranslate({ railPoint1.x, 0.5f, railPoint1.z });
-    boxObject_->SetScale({ 4.0f, 4.0f, 4.0f }); // 大きめの箱にする
-
-    boxObject_->Update();
-    GameScene::AddTriangles(boxObject_->GetWorldTriangles());
-
-    ModelManager::GetInstance()->LoadModel("resources/Stagemap", "TentativeStage.obj");
-    TestGround_ = std::make_unique<Object3d>();
-    TestGround_->Initialize();
-    TextureManager::GetInstance()->LoadTexture("resources/Stagemap/863603.png");
-
-    TestGround_->SetModel("TentativeStage.obj");
-    TestGround_->SetCamera(activeCamera_);
-    TestGround_->SetTranslate({ 0.0f, -0.5f, 0.0f });
-    TestGround_->SetScale({ 1.0f, 1.0f, 1.0f });
-
-    TestGround_->Update();
-    GameScene::AddTriangles(TestGround_->GetWorldTriangles());
+    // --- ステージマネージャーによるJSONステージデータの読み込み ---
+    stageManager_ = std::make_unique<StageManager>();
+    stageManager_->Load("resources/Stagemap/stage1.json", activeCamera_,
+        [this](const LevelObjectData& data) {
+            Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
+            AddEnemy(data.railPos, type);
+        }
+    );
 
     player = std::make_unique<Player>();
     player->Initialize();
     player->SetCamera(activeCamera_);
     player->SetScene(this);
 
-    player->SetPosition({ 0.0f,0.0f,0.0f });
+    player->SetPosition(stageManager_->GetPlayerSpawnPosition());
 
     playerHPUI_ = std::make_unique<PlayerHPUI>();
     playerHPUI_->Initialize(player.get());
@@ -230,45 +185,31 @@ void GameScene::Initialize() {
     cameraController->Initialize(cameraMap_["Main"].get());
     cameraController->SetTarget(player.get());
 
-    // --- 円形レールの設定例 ---
-    cameraRail = std::make_unique<RailPath>();
-    // Initialize内
-    float playerRadius = 25.0f;
-    float cameraRadius = 45.0f; // プレイヤーより遠くに配置
-    float cameraHeight = 5.0f;  // 少し高い位置から見下ろす
-    float h_cam = cameraRadius * 0.5522f;
-
-    // カメラレール (cameraRail) の構築
-    cameraRail->SetLoop(true);
-    cameraRail->AddBezierPoint({ 0, cameraHeight,  cameraRadius }, { h_cam, 0, 0 }, { -h_cam, 0, 0 });
-    cameraRail->AddBezierPoint({ -cameraRadius, cameraHeight, 0 }, { 0, 0,  h_cam }, { 0, 0, -h_cam });
-    cameraRail->AddBezierPoint({ 0, cameraHeight, -cameraRadius }, { -h_cam, 0, 0 }, { h_cam, 0, 0 });
-    cameraRail->AddBezierPoint({ cameraRadius, cameraHeight, 0 }, { 0, 0, -h_cam }, { 0, 0,  h_cam });
-    cameraRail->Update();
-
-    cameraController->SetRailPath(cameraRail.get());
+    // カメラレールは StageManager から設定
+    if (stageManager_->GetCameraRail()) {
+        cameraController->SetRailPath(stageManager_->GetCameraRail());
+    }
 
     debugCameraC = std::make_unique<CameraController>();
     debugCameraC->Initialize(cameraMap_["Debug"].get());
     debugCameraC->SetTarget(player.get());
 
-    player->SetRail(stageRail.get());
-    player->SetRailPosition({ 0.0f, 0.0f });
+    RailPath* currentStageRail = GetStageRaill();
+    if (currentStageRail) {
+        player->SetRail(currentStageRail);
+        player->SetRailPosition(stageManager_->GetPlayerSpawnRailPosition());
+    }
 
     // カメラ初期化直後にプレイヤーを追尾・注視するように更新
     cameraController->Update();
 
-    // テスト用に敵を生成する場合
-    AddEnemy({ 0.5f, 0.0f }, Enemy::EnemyType::Bound);
-    AddEnemy({ 0.2f, 0.0f });
-    AddEnemy({ 0.3f, 0.0f });
-    AddEnemy({ 0.4f, 0.0f });
-
     goal_ = std::make_unique<GoalObject>();
     goal_->Initialize();
     goal_->SetCamera(activeCamera_);
-    goal_->SetRail(stageRail.get());
-    goal_->SetRailPosition({ stageRail->GetMaxT() - 1.0f, 2.0f }); // レールの終端付近に配置
+    if (currentStageRail) {
+        goal_->SetRail(currentStageRail);
+        goal_->SetRailPosition(stageManager_->GetGoalRailPosition());
+    }
 
 
     gaidUI_ = std::make_unique<GaidUI>();
@@ -340,14 +281,40 @@ void GameScene::Update() {
     // camera->SetRotate(Rotate);
 
 
-    Vector3 point1_ = stageRail->GetPointPos(1);
-    Vector3 point2_ = stageRail->GetPointPos(2);
+    RailPath* currentStageRail = GetStageRaill();
+    if (currentStageRail) {
+        Vector3 point1_ = currentStageRail->GetPointPos(1);
+        Vector3 point2_ = currentStageRail->GetPointPos(2);
 
-    ImGui::SliderFloat3("Point1", &(point1_.x), -10.0f, 10.0f);
-    ImGui::SliderFloat3("Point2", &(point2_.x), -10.0f, 1000.0f);
+        ImGui::SliderFloat3("Point1", &(point1_.x), -10.0f, 10.0f);
+        ImGui::SliderFloat3("Point2", &(point2_.x), -10.0f, 1000.0f);
 
-    stageRail->SetPointPos(1, point1_);
-    stageRail->SetPointPos(2, point2_);
+        currentStageRail->SetPointPos(1, point1_);
+        currentStageRail->SetPointPos(2, point2_);
+    }
+
+    // ステージリロードボタン（JSON再読み込み）
+    if (ImGui::Button("Reload Stage (stage1.json)")) {
+        enemies_.clear();
+        stageManager_->Load("resources/Stagemap/stage1.json", activeCamera_,
+            [this](const LevelObjectData& data) {
+                Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
+                AddEnemy(data.railPos, type);
+            }
+        );
+        RailPath* sRail = GetStageRaill();
+        if (sRail && player) {
+            player->SetRail(sRail);
+            player->SetRailPosition(stageManager_->GetPlayerSpawnRailPosition());
+        }
+        if (sRail && goal_) {
+            goal_->SetRail(sRail);
+            goal_->SetRailPosition(stageManager_->GetGoalRailPosition());
+        }
+        if (stageManager_->GetCameraRail() && cameraController) {
+            cameraController->SetRailPath(stageManager_->GetCameraRail());
+        }
+    }
 
     //カメラを切り替えるボタン
     if (ImGui::Button("Switch Camera")) {
@@ -407,21 +374,23 @@ void GameScene::Update() {
 
     ImGui::End();
 
-    ImGui::Begin("Rail Debug");
-    static float r = 20.0f;
-    static float hScale = 0.5522f;
+    if (currentStageRail) {
+        ImGui::Begin("Rail Debug");
+        static float r = 20.0f;
+        static float hScale = 0.5522f;
 
-    if (ImGui::SliderFloat("Radius", &r, 5.0f, 50.0f) || ImGui::SliderFloat("Handle Scale", &hScale, 0.1f, 1.0f)) {
-        // 値が変わったらレールを再構築
-        stageRail->Initialize(); // points_をクリア
-        float h = r * hScale;
-        stageRail->AddBezierPoint({ 0, 0,  r }, { -h, 0, 0 }, { h, 0, 0 });
-        stageRail->AddBezierPoint({ r, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
-        stageRail->AddBezierPoint({ 0, 0, -r }, { h, 0, 0 }, { -h, 0, 0 });
-        stageRail->AddBezierPoint({ -r, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
-        stageRail->Update();
+        if (ImGui::SliderFloat("Radius", &r, 5.0f, 50.0f) || ImGui::SliderFloat("Handle Scale", &hScale, 0.1f, 1.0f)) {
+            // 値が変わったらレールを再構築
+            currentStageRail->Initialize(); // points_をクリア
+            float h = r * hScale;
+            currentStageRail->AddBezierPoint({ 0, 0,  r }, { -h, 0, 0 }, { h, 0, 0 });
+            currentStageRail->AddBezierPoint({ r, 0, 0 }, { 0, 0,  h }, { 0, 0, -h });
+            currentStageRail->AddBezierPoint({ 0, 0, -r }, { h, 0, 0 }, { -h, 0, 0 });
+            currentStageRail->AddBezierPoint({ -r, 0, 0 }, { 0, 0, -h }, { 0, 0,  h });
+            currentStageRail->Update();
+        }
+        ImGui::End();
     }
-    ImGui::End();
 
 
     if (IsHitStopActive())
@@ -445,7 +414,15 @@ void GameScene::Update() {
 
 #endif // USE_IMGUI
 
+    if (stageManager_) {
+        stageManager_->Update(player ? player->GetWorldPosition() : Vector3{ 0.0f, 0.0f, 0.0f });
+    }
+
     triangles_.clear();
+    if (stageManager_) {
+        const auto& stageTris = stageManager_->GetAllTriangles();
+        triangles_.insert(triangles_.end(), stageTris.begin(), stageTris.end());
+    }
 
     // 四角いオブジェクトの更新
     if (boxObject_) {
@@ -457,23 +434,25 @@ void GameScene::Update() {
     }
     if (TestGround_)
     {
-
         TestGround_->Update();
         auto testGroundTris = TestGround_->GetWorldTriangles(); // ワールド変換済み三角形を取得する想定
         triangles_.insert(triangles_.end(), testGroundTris.begin(), testGroundTris.end());
-
     }
     playerHPUI_->Update();
     scoreUI_->Update();
-
 
 }
 void GameScene::Draw() {
 
     skyBox->Draw();
 
-    stageRail->DebugDraw();
-    cameraRail->DebugDraw();
+    if (stageManager_) {
+        stageManager_->Draw();
+        stageManager_->DebugDraw();
+    }
+    if (stageRail) stageRail->DebugDraw();
+    if (cameraRail) cameraRail->DebugDraw();
+
     player->Draw();
 
     if (goal_)
@@ -579,7 +558,8 @@ GameScene::~GameScene() = default;
 
 void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
 {
-    if (stageRail)
+    RailPath* rail = GetStageRaill();
+    if (rail)
     {// 新しい敵を生成（テスト用敵）
         std::unique_ptr<Enemy> newEnemy = nullptr;
 
@@ -603,7 +583,7 @@ void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
 
         // 共通の設定
         newEnemy->SetCamera(cameraMap_["Main"].get());
-        newEnemy->SetRail(stageRail.get());
+        newEnemy->SetRail(rail);
         newEnemy->SetScene(this); // SetRailPosition 内で scene_ のレイキャストを使うため先に設定
         newEnemy->SetRailPosition(pos);
 
@@ -615,7 +595,8 @@ void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
 // GameScene.cpp
 
 void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param, Projectile::ProjectileOwner owner) {
-    if (stageRail) {
+    RailPath* rail = GetStageRaill();
+    if (rail) {
         std::unique_ptr<Projectile> newProjectile = std::make_unique<Projectile>();
 
         // --- 修正箇所 ---
@@ -625,7 +606,7 @@ void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param, Pro
         newProjectile->SetCamera(cameraMap_["Main"].get());
 
         // Projectile側のInitializeにparamを丸ごと渡す
-        newProjectile->Initialize(stageRail.get(), param, owner);
+        newProjectile->Initialize(rail, param, owner);
 
         projectiles_.push_back(std::move(newProjectile));
     }
@@ -653,4 +634,12 @@ void GameScene::UpdateHitStop()
     if (stopTimer_ > 0) {
         stopTimer_ -= DXCommon::kDeltaTime;
     }
+}
+
+RailPath* GameScene::GetStageRaill()
+{
+    if (stageManager_ && stageManager_->GetStageRail()) {
+        return stageManager_->GetStageRail();
+    }
+    return stageRail.get();
 }

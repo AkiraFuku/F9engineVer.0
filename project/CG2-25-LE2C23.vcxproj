@@ -136,6 +136,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="TitlePhase.cpp" />
+    <ClCompile Include="application\level\EventTrigger.cpp" />
+    <ClCompile Include="application\level\LevelLoader.cpp" />
+    <ClCompile Include="application\level\StageBlock.cpp" />
+    <ClCompile Include="application\level\StageManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\object\Boss\MiniBoss.h" />
@@ -243,6 +247,11 @@
     </ClInclude>
     <ClInclude Include="engine\Tool\JsonManager.h" />
     <ClInclude Include="TitlePhase.h" />
+    <ClInclude Include="application\level\EventTrigger.h" />
+    <ClInclude Include="application\level\LevelData.h" />
+    <ClInclude Include="application\level\LevelLoader.h" />
+    <ClInclude Include="application\level\StageBlock.h" />
+    <ClInclude Include="application\level\StageManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
