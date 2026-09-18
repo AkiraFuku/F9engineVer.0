@@ -84,9 +84,11 @@ class OBJECT_PT_file_name(bpy.types.Panel):
     bl_context = "object"
 
     def draw(self, context):
+        from .import_scene import MYADDON_OT_import_scene
         self.layout.operator(MYADDON_OT_stretch_vertex.bl_idname)
         self.layout.operator(MYADDON_OT_ICO_sphere.bl_idname, text=MYADDON_OT_ICO_sphere.bl_label)
         self.layout.operator(MYADDON_OT_export_scene.bl_idname, text=MYADDON_OT_export_scene.bl_label)
+        self.layout.operator(MYADDON_OT_import_scene.bl_idname, text="JSONステージ読み込み", icon='IMPORT')
 
         if "file_name" in context.object:
             self.layout.prop(context.object, '["file_name"]', text=self.bl_label)

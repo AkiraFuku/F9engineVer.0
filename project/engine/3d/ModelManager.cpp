@@ -92,3 +92,18 @@ void ModelManager::CreateBoxModel(const std::string& modelName)
     models.insert(std::make_pair(modelName, std::move(model)));
 }
 
+void ModelManager::CreateTerrainModel(
+    const std::string& modelName,
+    float sizeX, float sizeY,
+    int divisionsX, int divisionsY,
+    const std::string& textureFilePath,
+    float uvTile)
+{
+    if (models.contains(modelName)) return;
+
+    std::shared_ptr<Model> model(Model::CreateTerrainGrid(
+        sizeX, sizeY, divisionsX, divisionsY, textureFilePath, uvTile));
+    model->SetName(modelName);
+
+    models.insert(std::make_pair(modelName, std::move(model)));
+}

@@ -24,6 +24,16 @@ public:
     void CreatePlaneFromTex(const std::string& modelName, const std::string& textureFilePath);
     void CreateBoxModel(const std::string& modelName);
 
+    /// <summary>
+    /// 地形グリッドモデルを頂点データから動的生成して登録する
+    /// </summary>
+    void CreateTerrainModel(
+        const std::string& modelName,
+        float sizeX, float sizeY,
+        int divisionsX, int divisionsY,
+        const std::string& textureFilePath,
+        float uvTile = 1.0f);
+
 
 private:
   

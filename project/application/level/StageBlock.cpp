@@ -13,6 +13,37 @@ void StageBlock::Initialize(const LevelObjectData& data, Camera* camera)
     if (!data.modelName.empty()) {
         if (data.modelName == "box") {
             ModelManager::GetInstance()->CreateBoxModel("box");
+        } else if (data.modelName == "terrain_grid") {
+            // ─── 地形グリッドを頂点データから動的生成 ───────────────────
+            // propertiesから寸法・分割数を取得（なければデフォルト値を使用）
+            auto getFloat = [&](const std::string& key, float def) -> float {
+                auto it = data.properties.find(key);
+                if (it != data.properties.end()) {
+                    try { return std::stof(it->second); }
+                    catch (...) {}
+                }
+                return def;
+            };
+            auto getInt = [&](const std::string& key, int def) -> int {
+                auto it = data.properties.find(key);
+                if (it != data.properties.end()) {
+                    try { return std::stoi(it->second); }
+                    catch (...) {}
+                }
+                return def;
+            };
+
+            float sizeX    = getFloat("size_x",      150.0f);
+            float sizeY    = getFloat("size_y",      150.0f);
+            int   divX     = getInt  ("divisions_x",   20);
+            int   divY     = getInt  ("divisions_y",   20);
+            float uvTile   = getFloat("uv_tile",       1.0f);
+
+            ModelManager::GetInstance()->CreateTerrainModel(
+                "terrain_grid",
+                sizeX, sizeY, divX, divY,
+                data.texturePath,
+                uvTile);
         } else {
             ModelManager::GetInstance()->LoadModel(data.modelDir, data.modelName);
         }

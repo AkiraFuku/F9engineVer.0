@@ -5,7 +5,7 @@
             "name": "StageRail",
             "type": "CURVE",
             "object_type": "STAGE_RAIL",
-            "loop": true,
+            "loop": false,
             "rail_points": [
                 {
                     "co": [0.0, 20.0, 0.0],
@@ -58,17 +58,17 @@
             ]
         },
         {
-            "name": "GroundTerrain",
-            "type": "MESH",
-            "object_type": "TERRAIN",
-            "file_name": "TentativeStage.obj",
-            "model_dir": "resources/Stagemap",
-            "texture": "resources/Stagemap/863603.png",
-            "transform": {
-                "translation": [0.0, 0.0, -0.5],
-                "rotation": [0.0, 0.0, 0.0],
-                "scaling": [1.0, 1.0, 1.0]
-            }
+             "name": "GroundTerrain",
+             "type": "MESH",
+             "object_type": "TERRAIN",
+             "file_name": "TentativeStage.obj",
+             "model_dir": "resources/Stagemap",
+             "texture": "resources/Stagemap/863603.png",
+             "transform": {
+             "translation": [0.0, 0.0, -0.5],
+             "rotation": [0.0, 0.0, 0.0],
+             "scaling": [1.0, 1.0, 1.0]
+             }
         },
         {
             "name": "BoxBlock",

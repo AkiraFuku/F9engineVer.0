@@ -26,6 +26,7 @@ from .operater import OBJECT_PT_file_name
 from .operater import MYADDON_OT_add_filwname
 from .operater import MYADDON_OT_ICO_sphere
 from .export_scene import MYADDON_OT_export_scene
+from .import_scene import MYADDON_OT_import_scene
 
 
 
@@ -39,6 +40,7 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
         self.layout.operator(MYADDON_OT_stretch_vertex.bl_idname, text=MYADDON_OT_stretch_vertex.bl_label)
         self.layout.operator(MYADDON_OT_ICO_sphere.bl_idname, text=MYADDON_OT_ICO_sphere.bl_label)
         self.layout.operator(MYADDON_OT_export_scene.bl_idname, text=MYADDON_OT_export_scene.bl_label)
+        self.layout.operator(MYADDON_OT_import_scene.bl_idname, text=MYADDON_OT_import_scene.bl_label)
          
     def submenu(self, context):
         self.layout.menu(TOPBAR_MT_my_menu.bl_idname)
@@ -47,6 +49,7 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
 classes = (
     TOPBAR_MT_my_menu,
     MYADDON_OT_export_scene,
+    MYADDON_OT_import_scene,
     MYADDON_OT_ICO_sphere,
     MYADDON_OT_stretch_vertex,
     MYADDON_OT_add_filwname,

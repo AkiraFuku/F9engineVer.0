@@ -224,6 +224,21 @@ public: // 外部入出力
     // 四角いモデル（Box）を動的に生成する
     static Model* CreateBox();
 
+    /// <summary>
+    /// 地形グリッドを頂点データから動的生成する（モデルファイル不要）
+    /// </summary>
+    /// <param name="sizeX">X方向のワールドサイズ（中心から±sizeX/2）</param>
+    /// <param name="sizeY">Y方向のワールドサイズ（中心から±sizeY/2）</param>
+    /// <param name="divisionsX">X方向の分割数</param>
+    /// <param name="divisionsY">Y方向の分割数</param>
+    /// <param name="textureFilePath">テクスチャファイルパス</param>
+    /// <param name="uvTile">UVタイリング回数（1.0でメッシュ全体で0〜1）</param>
+    static Model* CreateTerrainGrid(
+        float sizeX, float sizeY,
+        int divisionsX, int divisionsY,
+        const std::string& textureFilePath,
+        float uvTile = 1.0f);
+
     void SetTexture(std::string textureFilePath);
 
 private:

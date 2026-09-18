@@ -105,8 +105,13 @@ LevelObjectData ParseObject(const json& node)
     // ── モデルファイル名 & ディレクトリ & テクスチャ ──
     if (node.contains("file_name")) {
         std::string fn = node["file_name"].get<std::string>();
-        // "box" 等の組み込みモデル名でなく、拡張子もなければ .obj を補完
-        if (fn != "box" && fn.find('.') == std::string::npos) {
+        // "box", "terrain_grid" 等の組み込みモデル名は拡張子を補完しない
+        static const std::vector<std::string> kBuiltinNames = { "box", "terrain_grid" };
+        bool isBuiltin = false;
+        for (const auto& bn : kBuiltinNames) {
+            if (fn == bn) { isBuiltin = true; break; }
+        }
+        if (!isBuiltin && fn.find('.') == std::string::npos) {
             fn += ".obj";
         }
         data.modelName = fn;
