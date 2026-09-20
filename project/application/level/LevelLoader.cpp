@@ -60,12 +60,12 @@ LevelObjectType ParseObjectType(const std::string& blenderType, const std::strin
 }
 
 // 前方宣言
-LevelObjectData ParseObject(const json& node);
+LevelObjectData ParseObject(const json& node, bool isGameCoords);
 
 // ─────────────────────────────────────────────────────────────────────
 // JSON ノードを 1 オブジェクトにパース（再帰）
 // ─────────────────────────────────────────────────────────────────────
-LevelObjectData ParseObject(const json& node)
+LevelObjectData ParseObject(const json& node, bool isGameCoords)
 {
     LevelObjectData data;
 
@@ -97,9 +97,16 @@ LevelObjectData ParseObject(const json& node)
         auto ro = getArr3(t, "rotation");
         auto sc = getArr3(t, "scaling");
 
-        data.transform.translation = ConvertTranslation(tr[0], tr[1], tr[2]);
-        data.transform.rotation    = ConvertRotation(ro[0], ro[1], ro[2]);
-        data.transform.scale       = ConvertScale(sc[0], sc[1], sc[2]);
+        if (isGameCoords) {
+            constexpr float deg2rad = static_cast<float>(std::numbers::pi) / 180.0f;
+            data.transform.translation = { tr[0], tr[1], tr[2] };
+            data.transform.rotation    = { ro[0] * deg2rad, ro[1] * deg2rad, ro[2] * deg2rad };
+            data.transform.scale       = { sc[0], sc[1], sc[2] };
+        } else {
+            data.transform.translation = ConvertTranslation(tr[0], tr[1], tr[2]);
+            data.transform.rotation    = ConvertRotation(ro[0], ro[1], ro[2]);
+            data.transform.scale       = ConvertScale(sc[0], sc[1], sc[2]);
+        }
     }
 
     // ── モデルファイル名 & ディレクトリ & テクスチャ ──
@@ -132,28 +139,17 @@ LevelObjectData ParseObject(const json& node)
             ? LevelColliderData::Shape::Sphere
             : LevelColliderData::Shape::Box;
 
-        auto getVec3 = [](const json& j, const std::string& key) -> Vector3 {
-            if (j.contains(key) && j[key].is_array() && j[key].size() >= 3) {
-                return { j[key][0].get<float>(), j[key][2].get<float>(), j[key][1].get<float>() }; // Z/Y swap
-            }
-            return { 1.f, 1.f, 1.f };
-        };
-
-        // center: Blender座標系 → DX座標系
         if (col.contains("center") && col["center"].is_array() && col["center"].size() >= 3) {
-            data.collider.center = ConvertTranslation(
-                col["center"][0].get<float>(),
-                col["center"][1].get<float>(),
-                col["center"][2].get<float>()
-            );
+            float cx = col["center"][0].get<float>();
+            float cy = col["center"][1].get<float>();
+            float cz = col["center"][2].get<float>();
+            data.collider.center = isGameCoords ? Vector3{ cx, cy, cz } : ConvertTranslation(cx, cy, cz);
         }
-        // size: スケール変換（軸マッピング）
         if (col.contains("size") && col["size"].is_array() && col["size"].size() >= 3) {
-            data.collider.size = ConvertScale(
-                col["size"][0].get<float>(),
-                col["size"][1].get<float>(),
-                col["size"][2].get<float>()
-            );
+            float sx = col["size"][0].get<float>();
+            float sy = col["size"][1].get<float>();
+            float sz = col["size"][2].get<float>();
+            data.collider.size = isGameCoords ? Vector3{ sx, sy, sz } : ConvertScale(sx, sy, sz);
         }
     }
 
@@ -181,7 +177,10 @@ LevelObjectData ParseObject(const json& node)
 
             auto getPos = [&](const std::string& key) -> Vector3 {
                 if (pbd.contains(key) && pbd[key].is_array() && pbd[key].size() >= 3) {
-                    return ConvertTranslation(pbd[key][0], pbd[key][1], pbd[key][2]);
+                    float px = pbd[key][0].get<float>();
+                    float py = pbd[key][1].get<float>();
+                    float pz = pbd[key][2].get<float>();
+                    return isGameCoords ? Vector3{ px, py, pz } : ConvertTranslation(px, py, pz);
                 }
                 return data.transform.translation;
             };
@@ -208,7 +207,10 @@ LevelObjectData ParseObject(const json& node)
                 LevelRailPoint pt;
                 auto getV3 = [&](const json& j, const std::string& key) -> Vector3 {
                     if (j.contains(key) && j[key].is_array() && j[key].size() >= 3) {
-                        return ConvertTranslation(j[key][0], j[key][1], j[key][2]);
+                        float rx = j[key][0].get<float>();
+                        float ry = j[key][1].get<float>();
+                        float rz = j[key][2].get<float>();
+                        return isGameCoords ? Vector3{ rx, ry, rz } : ConvertTranslation(rx, ry, rz);
                     }
                     return { 0,0,0 };
                 };
@@ -239,7 +241,7 @@ LevelObjectData ParseObject(const json& node)
     // ── 子オブジェクト（再帰） ──
     if (node.contains("children") && node["children"].is_array()) {
         for (const auto& child : node["children"]) {
-            data.children.push_back(ParseObject(child));
+            data.children.push_back(ParseObject(child, isGameCoords));
         }
     }
 
@@ -263,10 +265,11 @@ LevelData LevelLoader::Load(const std::string& filePath)
     }
 
     result.sceneName = root.value("name", "unnamed");
+    bool isGameCoords = (root.value("coordinate_system", "BLENDER") == "GAME");
 
     if (root.contains("objects") && root["objects"].is_array()) {
         for (const auto& obj : root["objects"]) {
-            LevelObjectData data = ParseObject(obj);
+            LevelObjectData data = ParseObject(obj, isGameCoords);
             if (data.type != LevelObjectType::kUnknown) {
                 result.objects.push_back(std::move(data));
             }

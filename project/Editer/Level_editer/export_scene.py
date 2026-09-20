@@ -12,11 +12,23 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
     filename_ext = ".json"
     
 
+    convert_to_game_coords: bpy.props.BoolProperty(
+        name="ゲーム座標系に変換 (Blender -> Game)",
+        description="Blender座標系(Z-up)からゲーム座標系(Y-up)に変換して出力します",
+        default=True,
+    )
+
+    def draw(self, context):
+        self.layout.prop(self, "convert_to_game_coords")
+
     def execute(self, context):
-        print("--- シーン情報Export開始 ---")
+        print("--- シーン情報Export開始 (ゲーム座標系変換: " + ("ON" if self.convert_to_game_coords else "OFF") + ") ---")
         self.export_json()
         print("--- シーン情報Export完了 ---")
-        self.report({'INFO'}, "シーン情報をExportしました")
+        if self.convert_to_game_coords:
+            self.report({'INFO'}, "シーン情報をゲーム座標系(Y-up: X->X, Y->Z, Z->Y)に変換してExportしました！")
+        else:
+            self.report({'INFO'}, "シーン情報をExportしました (Blender座標のまま)")
         return {'FINISHED'}   
 
     def export(self):
@@ -33,55 +45,124 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
     def export_json(self):
         """"JSON形式でファイルに出力"""
 
-        json_object_root =dict()
-
-        json_object_root["name"]="scene"
-        json_object_root["objects"]=list()
+        json_object_root = dict()
+        json_object_root["name"] = "scene"
+        json_object_root["coordinate_system"] = "GAME" if self.convert_to_game_coords else "BLENDER"
+        json_object_root["objects"] = list()
+        
         # シーンのオブジェクト走査してパック
         for object in bpy.context.scene.objects:
              if (object.parent):
                 continue
-             self.parse_scene_recursive_json(json_object_root["objects"],object,0)
+             self.parse_scene_recursive_json(json_object_root["objects"], object, 0)
         #エンコード
-        json_text=json.dumps(json_object_root,ensure_ascii=False,cls=json.JSONEncoder,indent=4)
+        json_text = json.dumps(json_object_root, ensure_ascii=False, cls=json.JSONEncoder, indent=4)
         print(json_text)
 
         with open(self.filepath, 'wt', encoding='utf-8') as file:
             file.write(json_text)
 
-    
-
     def Write_and_print(self, file, text):
         print(text)
         file.write(text + "\n")
+
     def parse_scene_recursive_json(self, data_parent, object, level):
-        json_object=dict()
+        json_object = dict()
 
-        json_object["type"]=object.type
-        json_object["name"]=object.name
+        if object.get("object_type") in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
+            json_object["type"] = "EMPTY"
+        else:
+            json_object["type"] = object.type
+        json_object["name"] = object.name
 
-        #その他情報
-        trans, rot, scale = object.matrix_local.decompose()
+        # ワールドトランスフォームを取得（親子のズレを防止）
+        trans, rot, scale = object.matrix_world.decompose()
         rot = rot.to_euler()
-        rot.x = math.degrees(rot.x)
-        rot.y = math.degrees(rot.y)
-        rot.z = math.degrees(rot.z)
-        transform =dict()
-        transform["translation"]=(trans.x,trans.y,trans.z)
-        transform["rotation"]=(rot.x,rot.y,rot.z)
-        transform["scaling"]=(scale.x,scale.y,scale.z)
+        deg_x = math.degrees(rot.x)
+        deg_y = math.degrees(rot.y)
+        deg_z = math.degrees(rot.z)
 
-        json_object["transform"]=transform
+        transform = dict()
+        if self.convert_to_game_coords:
+            # Blender (X右, Y奥, Z上) -> ゲーム (X右, Y上, Z奥)
+            transform["translation"] = [round(trans.x, 4), round(trans.z, 4), round(trans.y, 4)]
+            transform["rotation"]    = [round(-deg_x, 4),  round(deg_z, 4),   round(deg_y, 4)]
+            transform["scaling"]     = [round(scale.x, 4), round(scale.z, 4), round(scale.y, 4)]
+            print(f"  [Export] {object.name}: Blender({trans.x:.2f}, {trans.y:.2f}, {trans.z:.2f}) -> Game({trans.x:.2f}, {trans.z:.2f}, {trans.y:.2f})")
+        else:
+            transform["translation"] = [round(trans.x, 4), round(trans.y, 4), round(trans.z, 4)]
+            transform["rotation"]    = [round(deg_x, 4),   round(deg_y, 4),   round(deg_z, 4)]
+            transform["scaling"]     = [round(scale.x, 4), round(scale.y, 4), round(scale.z, 4)]
 
+        json_object["transform"] = transform
+
+        # 各種プロパティの出力
+        if "object_type" in object:
+            json_object["object_type"] = object["object_type"]
+        if "disabled" in object:
+            json_object["disabled"] = bool(object["disabled"])
         if "file_name" in object:
-            json_object["file_name"]= object["file_name"]
-                    
+            json_object["file_name"] = object["file_name"]
+        if "model_dir" in object:
+            json_object["model_dir"] = object["model_dir"]
+        if "texture" in object:
+            json_object["texture"] = object["texture"]
+        if "enemy_type" in object:
+            json_object["enemy_type"] = object["enemy_type"]
+        if "rail_pos" in object:
+            json_object["rail_pos"] = list(object["rail_pos"])
+        if "loop" in object:
+            json_object["loop"] = bool(object["loop"])
+        if "event_name" in object:
+            json_object["event_name"] = object["event_name"]
+        if "fire_mode" in object:
+            json_object["fire_mode"] = object["fire_mode"]
+
+        # コライダー
         if "collider" in object:
-            collider=dict()
-            collider["type"]=object["collider"]
-            collider["center"]=object["collider_center"].to_list()
-            collider["size"]=object["collider_size"].to_list()
-            json_object["collider"]=collider
+            collider = dict()
+            collider["type"] = object["collider"]
+            cc = object.get("collider_center", [0, 0, 0])
+            cs = object.get("collider_size", [1, 1, 1])
+            cc_list = list(cc) if hasattr(cc, "__iter__") else [0, 0, 0]
+            cs_list = list(cs) if hasattr(cs, "__iter__") else [1, 1, 1]
+            if self.convert_to_game_coords:
+                collider["center"] = [cc_list[0], cc_list[2], cc_list[1]]
+                collider["size"]   = [cs_list[0], cs_list[2], cs_list[1]]
+            else:
+                collider["center"] = cc_list
+                collider["size"]   = cs_list
+            json_object["collider"] = collider
+
+        # レール (CURVE) の制御点出力
+        if object.type == "CURVE" and object.data:
+            curve = object.data
+            rail_points = []
+            is_cyclic = False
+            for spline in curve.splines:
+                if spline.use_cyclic_u:
+                    is_cyclic = True
+                if spline.type == 'BEZIER':
+                    for bp in spline.bezier_points:
+                        co = bp.co
+                        hl = bp.handle_left
+                        hr = bp.handle_right
+                        if self.convert_to_game_coords:
+                            pt_co = [co.x, co.z, co.y]
+                            pt_hl = [hl.x, hl.z, hl.y]
+                            pt_hr = [hr.x, hr.z, hr.y]
+                        else:
+                            pt_co = [co.x, co.y, co.z]
+                            pt_hl = [hl.x, hl.y, hl.z]
+                            pt_hr = [hr.x, hr.y, hr.z]
+                        rail_points.append({
+                            "co": pt_co,
+                            "handle_left": pt_hl,
+                            "handle_right": pt_hr,
+                        })
+            if rail_points:
+                json_object["rail_points"] = rail_points
+                json_object["loop"] = is_cyclic
 
 
         # ビヘイビアツリー出力判定（JSON版）
