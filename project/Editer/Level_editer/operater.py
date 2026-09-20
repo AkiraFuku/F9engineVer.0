@@ -1,6 +1,11 @@
 import bpy
-from .stretch_vertex import MYADDON_OT_stretch_vertex
-from .export_scene import MYADDON_OT_export_scene
+
+try:
+    from .stretch_vertex import MYADDON_OT_stretch_vertex
+    from .export_scene import MYADDON_OT_export_scene
+except ImportError:
+    from stretch_vertex import MYADDON_OT_stretch_vertex
+    from export_scene import MYADDON_OT_export_scene
 # ==========================================
 # 3. ビヘイビアツリー設定パネル＆自動セットオペレーター（強化）
 # ==========================================
@@ -84,7 +89,10 @@ class OBJECT_PT_file_name(bpy.types.Panel):
     bl_context = "object"
 
     def draw(self, context):
-        from .import_scene import MYADDON_OT_import_scene
+        try:
+            from .import_scene import MYADDON_OT_import_scene
+        except ImportError:
+            from import_scene import MYADDON_OT_import_scene
         self.layout.operator(MYADDON_OT_stretch_vertex.bl_idname)
         self.layout.operator(MYADDON_OT_ICO_sphere.bl_idname, text=MYADDON_OT_ICO_sphere.bl_label)
         self.layout.operator(MYADDON_OT_export_scene.bl_idname, text=MYADDON_OT_export_scene.bl_label)

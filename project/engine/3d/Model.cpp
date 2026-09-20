@@ -776,11 +776,11 @@ Model* Model::CreateTerrainGrid(
         TextureManager::GetInstance()->GetTextureIndexByFilePath(texPath);
 
     // ─── 頂点生成 ────────────────────────────────────────────────────
-    // XY平面上のグリッド。法線は Z-方向（カメラへ向かう面）
+    // XZ平面上のグリッド（水平な地面）。法線は Y+ 方向（上向き）
     const float halfX = sizeX * 0.5f;
-    const float halfY = sizeY * 0.5f;
-    const int colCount = divisionsX + 1;  // 横方向頂点数
-    const int rowCount = divisionsY + 1;  // 縦方向頂点数
+    const float halfZ = sizeY * 0.5f;   // 引数 sizeY を Z方向奥行きとして使用
+    const int colCount = divisionsX + 1;  // X方向頂点数
+    const int rowCount = divisionsY + 1;  // Z方向頂点数
 
     model->modelData_.vertices.reserve(static_cast<size_t>(colCount) * rowCount);
 
@@ -791,36 +791,36 @@ Model* Model::CreateTerrainGrid(
 
             VertexData v;
             v.position.x = -halfX + t * sizeX;   // X: 左端→右端
-            v.position.y = -halfY + s * sizeY;   // Y: 下端→上端
-            v.position.z = 0.0f;
+            v.position.y = 0.0f;                  // Y: 高さ固定（地面）
+            v.position.z = -halfZ + s * sizeY;    // Z: 手前→奥
             v.position.w = 1.0f;
             v.texcord.x  = t * uvTile;
-            v.texcord.y  = (1.0f - s) * uvTile;  // DirectXはUV原点が左上
-            v.normal     = { 0.0f, 0.0f, -1.0f }; // Z-方向（カメラ側へ向く面）
+            v.texcord.y  = s * uvTile;            // Z方向にそのままタイリング
+            v.normal     = { 0.0f, 1.0f, 0.0f };  // Y+ 上向き法線
             model->modelData_.vertices.push_back(v);
         }
     }
 
     // ─── インデックス生成 ─────────────────────────────────────────────
-    // 各セルを2三角形で構成（時計回り = 表面が Z- 方向）
+    // XZ 平面の各セルを2三角形で構成（Y+ 法線に合わせ反時計回り = 上面が表）
     model->modelData_.indices.reserve(static_cast<size_t>(divisionsX) * divisionsY * 6);
 
     for (int row = 0; row < divisionsY; ++row) {
         for (int col = 0; col < divisionsX; ++col) {
-            uint32_t lb = static_cast<uint32_t>(row * colCount + col);       // 左下
-            uint32_t rb = static_cast<uint32_t>(row * colCount + col + 1);   // 右下
-            uint32_t lt = static_cast<uint32_t>((row + 1) * colCount + col); // 左上
-            uint32_t rt = static_cast<uint32_t>((row + 1) * colCount + col + 1); // 右上
+            uint32_t lb = static_cast<uint32_t>( row      * colCount + col);       // 左手前
+            uint32_t rb = static_cast<uint32_t>( row      * colCount + col + 1);   // 右手前
+            uint32_t lt = static_cast<uint32_t>((row + 1) * colCount + col);       // 左奥
+            uint32_t rt = static_cast<uint32_t>((row + 1) * colCount + col + 1);   // 右奥
 
-            // 三角形1: 左下 → 右下 → 左上
+            // 三角形1: 左手前 → 左奥 → 右手前（Y+法線・反時計回り）
             model->modelData_.indices.push_back(lb);
-            model->modelData_.indices.push_back(rb);
             model->modelData_.indices.push_back(lt);
+            model->modelData_.indices.push_back(rb);
 
-            // 三角形2: 右下 → 右上 → 左上
+            // 三角形2: 右手前 → 左奥 → 右奥
             model->modelData_.indices.push_back(rb);
-            model->modelData_.indices.push_back(rt);
             model->modelData_.indices.push_back(lt);
+            model->modelData_.indices.push_back(rt);
         }
     }
 

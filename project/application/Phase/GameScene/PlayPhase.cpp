@@ -53,32 +53,32 @@ void PlayPhase::Update(Scene* scene)
     const auto& goal_ = gameScene->GetGoal();
 
 
-    if (player && player->GetCollider()) {
-        colliders.push_back(player->GetCollider());
+    if (player) {
+        if (Collider* col = player->GetCollider()) {
+            colliders.push_back(col);
+        }
     }
 
     for (auto& enemy : enemies) {
-        if (enemy && !enemy->IsDead() && enemy->GetCollider()) {
-            //ミニボスのパーツも含めて衝突判定を行う
-            if (auto miniBoss = dynamic_cast<MiniBoss*>(enemy.get())) {
-                for (const auto& collider : miniBoss->GetColliders()) {
-                    colliders.push_back(collider);
-                }
-                continue; // ミニボスのパーツを追加したので、次の敵へ
+        if (enemy && !enemy->IsDead()) {
+            if (Collider* col = enemy->GetCollider()) {
+                colliders.push_back(col);
             }
-
-            colliders.push_back(enemy->GetCollider());
         }
     }
 
     for (auto& projectile : projectiles) {
-        if (projectile && !projectile->IsDead() && projectile->GetCollider()) {
-            colliders.push_back(projectile->GetCollider());
+        if (projectile && !projectile->IsDead()) {
+            if (Collider* col = projectile->GetCollider()) {
+                colliders.push_back(col);
+            }
         }
     }
 
-    if (goal_ && goal_->GetCollider()) {
-        colliders.push_back(goal_->GetCollider());
+    if (goal_) {
+        if (Collider* col = goal_->GetCollider()) {
+            colliders.push_back(col);
+        }
     }
     colManager->CheckAllCollisions(colliders);
 

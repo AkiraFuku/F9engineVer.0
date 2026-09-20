@@ -202,10 +202,10 @@ def create_texture_material(mat_name, texture_path):
     return mat
 
 
-def load_obj_mesh_converted(filepath, tex_path=None, mesh_name=None):
+def load_obj_mesh_converted(filepath, tex_path=None, mesh_name=None, convert_coords=True):
     """
-    ゲーム座標系(Y-up: X右, Y上, Z奥)で作られたOBJファイルを読み込み、
-    Blender座標系(Z-up: X右, Y奥, Z上)へ頂点・法線を変換したメッシュを生成
+    OBJファイルを読み込み、ゲーム座標系 (X右, Y上, Z奥) から
+    Blender座標系 (X右, Y奥, Z上) へ頂点軸変換 & 法線補正したメッシュデータを生成。
     """
     if not os.path.exists(filepath):
         return None
@@ -216,6 +216,7 @@ def load_obj_mesh_converted(filepath, tex_path=None, mesh_name=None):
     imported_objects = []
     try:
         if hasattr(bpy.ops.wm, "obj_import"):
+            # 軸変換なし（生データそのまま）でインポート
             try:
                 bpy.ops.wm.obj_import(filepath=filepath, forward_axis='Y', up_axis='Z')
             except Exception:
@@ -248,15 +249,16 @@ def load_obj_mesh_converted(filepath, tex_path=None, mesh_name=None):
     if mesh_name:
         mesh_data.name = mesh_name
 
-    # ゲーム座標系 (X右, Y上, Z奥) -> Blender座標系 (X右, Y奥, Z上) への座標軸変換
-    mat_game_to_blender = mathutils.Matrix((
-        (1.0, 0.0, 0.0, 0.0),
-        (0.0, 0.0, 1.0, 0.0),
-        (0.0, 1.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0, 1.0)
-    ))
-    mesh_data.transform(mat_game_to_blender)
-    mesh_data.flip_normals()
+    # ゲーム座標系 (X右, Y上, Z奥) -> Blender座標系 (X右, Y奥, Z上) への頂点座標変換
+    if convert_coords:
+        for v in mesh_data.vertices:
+            x, y, z = v.co.x, v.co.y, v.co.z
+            v.co.x = x
+            v.co.y = z
+            v.co.z = y
+        # YとZのスワップで面の巻き順が裏返るため法線を反転
+        mesh_data.flip_normals()
+
     mesh_data.update()
 
     if tex_path and os.path.exists(tex_path):
@@ -280,16 +282,22 @@ def load_obj_mesh_converted(filepath, tex_path=None, mesh_name=None):
     return mesh_data
 
 
-def get_or_load_preview_mesh(obj_type):
+def get_or_load_preview_mesh(obj_type, force_reload=False):
     """ENEMY, PLAYER_SPAWN, GOAL 用のプレビューメッシュを取得（ゲーム座標 -> Blender座標変換済み・キャッシュ付き）"""
     global _preview_mesh_cache
-    if obj_type in _preview_mesh_cache:
+    mesh_name = f"Mesh_Preview_{obj_type}"
+
+    if force_reload:
+        _preview_mesh_cache.pop(obj_type, None)
+        if mesh_name in bpy.data.meshes:
+            bpy.data.meshes.remove(bpy.data.meshes[mesh_name], do_unlink=True)
+
+    if not force_reload and obj_type in _preview_mesh_cache:
         mesh = _preview_mesh_cache[obj_type]
         if mesh and mesh.name in bpy.data.meshes:
             return mesh
 
-    mesh_name = f"Mesh_Preview_{obj_type}"
-    if mesh_name in bpy.data.meshes:
+    if not force_reload and mesh_name in bpy.data.meshes:
         _preview_mesh_cache[obj_type] = bpy.data.meshes[mesh_name]
         return bpy.data.meshes[mesh_name]
 
@@ -317,7 +325,7 @@ def get_or_load_preview_mesh(obj_type):
     tex_path = os.path.join(root, cfg["tex_rel"]) if root else ""
 
     if os.path.exists(obj_path):
-        mesh_data = load_obj_mesh_converted(obj_path, tex_path, mesh_name=mesh_name)
+        mesh_data = load_obj_mesh_converted(obj_path, tex_path, mesh_name=mesh_name, convert_coords=True)
         if mesh_data:
             _preview_mesh_cache[obj_type] = mesh_data
             return mesh_data
@@ -331,6 +339,58 @@ def get_or_load_preview_mesh(obj_type):
     mesh_data.update()
     _preview_mesh_cache[obj_type] = mesh_data
     return mesh_data
+
+
+def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_path="", uv_tile=4.0):
+    """terrain_grid 用のメッシュ（面・UV・テクスチャ付き）を直接生成"""
+    mesh = bpy.data.meshes.new(mesh_name)
+    div_x = max(int(div_x), 1)
+    div_y = max(int(div_y), 1)
+    step_x = size_x / div_x
+    step_y = size_y / div_y
+    start_x = -size_x * 0.5
+    start_y = -size_y * 0.5
+
+    # 頂点生成（ローカル原点中心: Z=0）
+    verts = []
+    for iy in range(div_y + 1):
+        for ix in range(div_x + 1):
+            verts.append((start_x + ix * step_x, start_y + iy * step_y, 0.0))
+
+    # 面生成（反時計回り: Z+ 上向き法線）
+    faces = []
+    for iy in range(div_y):
+        for ix in range(div_x):
+            i0 = iy * (div_x + 1) + ix
+            i1 = i0 + 1
+            i2 = i0 + (div_x + 1)
+            i3 = i2 + 1
+            faces.append((i0, i1, i3, i2))
+
+    mesh.from_pydata(verts, [], faces)
+
+    # UV座標の設定（タイリング反映）
+    uv_layer = mesh.uv_layers.new(name="UVMap")
+    for poly in mesh.polygons:
+        for loop_idx in poly.loop_indices:
+            vert_idx = mesh.loops[loop_idx].vertex_index
+            ix = vert_idx % (div_x + 1)
+            iy = vert_idx // (div_x + 1)
+            u = (ix / div_x) * uv_tile
+            v = (iy / div_y) * uv_tile
+            uv_layer.data[loop_idx].uv = (u, v)
+
+    mesh.update()
+
+    # テクスチャマテリアル適用
+    if texture_path:
+        root = get_project_root()
+        tex_full = os.path.join(root, texture_path) if (root and not os.path.isabs(texture_path)) else texture_path
+        mat = create_texture_material(f"Mat_{mesh_name}", tex_full)
+        if mat:
+            mesh.materials.append(mat)
+
+    return mesh
 
 
 # ==========================================
@@ -413,6 +473,21 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             blender_obj = bpy.data.objects.new(name, curve_data)
             bpy.context.collection.objects.link(blender_obj)
 
+        # 2. 地形グリッド (terrain_grid)
+        # JSONの type が EMPTY でも MESH でも、確実にメッシュオブジェクトとして生成する！
+        elif file_name == "terrain_grid" or (obj_type == "TERRAIN" and "size_x" in properties):
+            sx = float(properties.get("size_x", 150.0))
+            sy = float(properties.get("size_y", 150.0))
+            dx = int(float(properties.get("divisions_x", 20)))
+            dy = int(float(properties.get("divisions_y", 20)))
+            uv = float(properties.get("uv_tile", 4.0))
+
+            t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv)
+            blender_obj = bpy.data.objects.new(name, t_mesh)
+            blender_obj.show_wire = True
+            bpy.context.collection.objects.link(blender_obj)
+            print(f"[import_scene] 地形グリッドメッシュを生成: {name} ({sx}x{sy}m, div={dx}x{dy}, tex={texture})")
+
         elif type_str == "EMPTY":
             # ENEMY, PLAYER_SPAWN, GOAL は 3D座標(Empty)ではなくモデルメッシュで描画
             preview_mesh = None
@@ -427,22 +502,25 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             bpy.context.collection.objects.link(blender_obj)
 
         else:
-            # MESH オブジェクト (file_name がある場合はモデルを読み込んでゲーム座標変換)
+            # MESH オブジェクト (file_name がある場合はモデルを読み込む)
             loaded_mesh = None
-            if file_name and convert_coords:
+            if file_name and file_name != "terrain_grid":
                 root = get_project_root()
                 possible_paths = []
                 if model_dir:
                     possible_paths.append(os.path.join(root, model_dir, file_name))
                     possible_paths.append(os.path.join(root, model_dir, file_name + ".obj"))
                 possible_paths.append(os.path.join(root, "resources", "Stagemap", file_name))
+                possible_paths.append(os.path.join(root, "resources", "Stagemap", file_name + ".obj"))
                 possible_paths.append(os.path.join(root, "resources", file_name))
+                possible_paths.append(os.path.join(root, "resources", file_name + ".obj"))
                 possible_paths.append(os.path.join(root, file_name))
+                possible_paths.append(os.path.join(root, file_name + ".obj"))
 
                 for p in possible_paths:
                     if os.path.exists(p) and p.lower().endswith(".obj"):
                         tex_full = os.path.join(root, texture) if (texture and root) else ""
-                        loaded_mesh = load_obj_mesh_converted(p, tex_full, mesh_name=f"Mesh_{name}")
+                        loaded_mesh = load_obj_mesh_converted(p, tex_full, mesh_name=f"Mesh_{name}", convert_coords=convert_coords)
                         if loaded_mesh:
                             break
 
@@ -493,7 +571,13 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
                     blender_obj["collider_size"]   = cs
 
             for k, v in properties.items():
-                blender_obj[k] = v
+                # terrain_grid の properties（size_x 等）は prop_ プレフィックス付きで
+                # 保存する（エクスポート時に export_scene.py が prop_* を収集するため）。
+                # それ以外の汎用プロパティはキー名をそのまま使う。
+                if file_name == "terrain_grid" and obj_type == "TERRAIN":
+                    blender_obj["prop_" + k] = str(v)
+                else:
+                    blender_obj[k] = v
 
             if parent:
                 blender_obj.parent = parent
@@ -542,6 +626,14 @@ class MYADDON_OT_import_scene(bpy.types.Operator, bpy_extras.io_utils.ImportHelp
         if not objects:
             self.report({"WARNING"}, "オブジェクトが見つかりませんでした")
             return {"FINISHED"}
+
+        # プレビューメッシュのキャッシュをクリアして再変換を保証
+        global _preview_mesh_cache
+        _preview_mesh_cache.clear()
+        for ot in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
+            m_name = f"Mesh_Preview_{ot}"
+            if m_name in bpy.data.meshes:
+                bpy.data.meshes.remove(bpy.data.meshes[m_name], do_unlink=True)
 
         should_convert = self.convert_from_game_coords
         _import_object_recursive(objects, parent=None, clear_existing=self.clear_scene, convert_coords=should_convert)

@@ -40,6 +40,9 @@ public:
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() const {
         return commandList_.Get();
     }
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetCommandQueue() const {
+        return commandQueue_.Get();
+    }
     // コンパイルシェーダー
     Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath,
         const wchar_t* profile);

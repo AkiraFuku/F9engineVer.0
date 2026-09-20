@@ -37,6 +37,8 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
             for object in bpy.context.scene.objects:
                 if object.parent:
                     continue
+                if object.name.endswith("_Preview") or object.name.endswith("_preview"):
+                    continue
                 self.parse_scene_recursive(file, object, 0)
                 if object.parent is not None:
                     self.Write_and_print(file, "parent: " + object.parent.name)
@@ -54,6 +56,8 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
         for object in bpy.context.scene.objects:
              if (object.parent):
                 continue
+             if object.name.endswith("_Preview") or object.name.endswith("_preview"):
+                continue
              self.parse_scene_recursive_json(json_object_root["objects"], object, 0)
         #エンコード
         json_text = json.dumps(json_object_root, ensure_ascii=False, cls=json.JSONEncoder, indent=4)
@@ -70,6 +74,8 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
         json_object = dict()
 
         if object.get("object_type") in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
+            json_object["type"] = "EMPTY"
+        elif object.get("file_name") == "terrain_grid":
             json_object["type"] = "EMPTY"
         else:
             json_object["type"] = object.type
@@ -118,7 +124,30 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
         if "fire_mode" in object:
             json_object["fire_mode"] = object["fire_mode"]
 
-        # コライダー
+        # properties マップ（汎用カスタムプロパティ）
+        # "prop_" プレフィックスのカスタムプロパティを自動収集し、
+        # ゲーム側 LevelLoader が参照する "properties" キーに出力する。
+        # 例: prop_size_x="160.0" → properties["size_x"] = "160.0"
+        _known_keys = {
+            "object_type", "disabled", "file_name", "model_dir", "texture",
+            "enemy_type", "rail_pos", "loop", "event_name", "fire_mode",
+            "collider", "collider_center", "collider_size", "behavior_tree",
+            "_RNA_UI",
+        }
+        properties_map = {}
+        for key in object.keys():
+            if key in _known_keys:
+                continue
+            if key.startswith("_"):
+                continue
+            if key.startswith("prop_"):
+                # "prop_size_x" → "size_x" としてゲームに渡す
+                prop_key = key[len("prop_"):]
+                properties_map[prop_key] = str(object[key])
+            # prop_ 以外の未知カスタムプロパティも出力したい場合はここで追加可能
+        if properties_map:
+            json_object["properties"] = properties_map
+
         if "collider" in object:
             collider = dict()
             collider["type"] = object["collider"]
@@ -181,11 +210,12 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
                 print(f"⚠ {object.name}: 指定されたツリー名 '{tree_name}' が存在しません。")
         # 親オブジェクトに登録する
         data_parent.append(json_object)       
-        #子供リスト
-        if len(object.children)>0:
-            json_object["children"] =list()
-            for child in object.children:
-                self.parse_scene_recursive_json(json_object["children"],child,level+1)
+        #子供リスト（プレビュー用メッシュ等は除外）
+        valid_children = [c for c in object.children if not (c.name.endswith("_Preview") or c.name.endswith("_preview"))]
+        if len(valid_children) > 0:
+            json_object["children"] = list()
+            for child in valid_children:
+                self.parse_scene_recursive_json(json_object["children"], child, level+1)
         
       
 

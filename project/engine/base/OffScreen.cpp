@@ -6,7 +6,9 @@
 #include "Camera.h"
 #include "mathfunction.h"
 #include "TextureManager.h"
-#include "ImGui.h"
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif // USE_IMGUI
 // インスタンス定義
 std::unique_ptr<OffScreen> OffScreen::instance = nullptr;
 

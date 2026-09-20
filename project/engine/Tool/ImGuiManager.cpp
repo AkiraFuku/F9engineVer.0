@@ -25,29 +25,33 @@ ImGuiManager* ImGuiManager::GetInstance() {
 void ImGuiManager::Initialize() {
     #ifdef USE_IMGUI
 
-   
-   
-  
-
-  
-
     ImGui::CreateContext();
     ImGui::GetIO().IniFilename = "externals/imgui/my_imgui_settings.ini";
     ImGui::StyleColorsDark();
     ImGui_ImplWin32_Init(WinApp::GetInstance()->GetHwnd());
-    uint32_t fontSrvIndex =
-        SrvManager::GetInstance()->AllocateSRV(); // フォント用SRVを確保
 
-    // descriptorHeap_=;
-    ImGui_ImplDX12_Init(
-        DXCommon::GetInstance()->GetDevice().Get(),
-        static_cast<int>(DXCommon::GetInstance()->GetSwapChainBufferCount()),
-        DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-        SrvManager::GetInstance()->GetDescriptorHeap().Get(),
-        SrvManager::GetInstance()->GetCPUDescriptorHandle(fontSrvIndex),
-        SrvManager::GetInstance()->GetGPUDescriptorHandle(fontSrvIndex)
+    // InitInfo をスタック変数で初期化（newによるメモリリークを修正）
+    ImGui_ImplDX12_InitInfo initInfo = {};
+    initInfo.Device = DXCommon::GetInstance()->GetDevice().Get();
+    initInfo.CommandQueue = DXCommon::GetInstance()->GetCommandQueue().Get(); // 必須: テクスチャアップロード用
+    initInfo.NumFramesInFlight =
+        static_cast<int>(DXCommon::GetInstance()->GetSwapChainBufferCount());
+    initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    initInfo.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    initInfo.SrvDescriptorHeap = SrvManager::GetInstance()->GetDescriptorHeap().Get();
 
-    );
+    // SRVアロケーターコールバックを SrvManager と連携して設定
+    initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu) {
+        uint32_t index = SrvManager::GetInstance()->AllocateSRV();
+        *out_cpu = SrvManager::GetInstance()->GetCPUDescriptorHandle(index);
+        *out_gpu = SrvManager::GetInstance()->GetGPUDescriptorHandle(index);
+    };
+    initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE) {
+        // 現在の SrvManager は解放機能未実装のためノーオップ
+    };
+
+    ImGui_ImplDX12_Init(&initInfo);
+
 #endif // USE_IMGUI
 
 }

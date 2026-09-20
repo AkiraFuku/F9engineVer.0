@@ -74,7 +74,11 @@ void Object3d::Draw()
 {
 
 
-    if (model_->HasSkinning())
+    if (!model_ && !box_) {
+        return;
+    }
+
+    if (model_ && model_->HasSkinning())
     {
         psoName_ = "SkiningObj3d";
 
