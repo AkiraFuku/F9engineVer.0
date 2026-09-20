@@ -25,6 +25,12 @@ class OBJECT_PT_collider(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
 
+    @classmethod
+    def poll(cls, context):
+        # レール（CURVE）にはコライダー設定は不要
+        obj = context.object
+        return obj is not None and obj.type != 'CURVE'
+
     def draw(self, context):
         if "collider" in context.object:
             layout = self.layout

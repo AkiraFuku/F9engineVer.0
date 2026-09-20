@@ -22,17 +22,29 @@ class OBJECT_PT_type_settings(bpy.types.Panel):
             layout.operator("myaddon.init_object_type", text="オブジェクトタイプを初期化")
         else:
             row = layout.row(align=True)
-            row.label(text=f"現在のタイプ: {obj['object_type']}")
+            row.label(text=f"現在のタイプ: {obj['object_type']}", icon='OBJECT_DATA')
             
             layout.separator()
-            row = layout.row(align=True)
-            row.operator("myaddon.set_object_type", text="ENEMYにする").target_type = "ENEMY"
-            row.operator("myaddon.set_object_type", text="PLAYERにする").target_type = "PLAYER_SPAWN"
-            row.operator("myaddon.set_object_type", text="GOALにする").target_type = "GOAL"
-            row.operator("myaddon.set_object_type", text="PROP(背景)にする").target_type = "PROP"
+            if obj.type == 'CURVE':
+                box_rail = layout.box()
+                box_rail.label(text="レール種別設定:")
+                row = box_rail.row(align=True)
+                row.operator("myaddon.set_object_type", text="STAGE_RAIL (ステージレール)", icon='CURVE_BEZCURVE').target_type = "STAGE_RAIL"
+                row.operator("myaddon.set_object_type", text="CAMERA_RAIL (カメラレール)", icon='CAMERA_DATA').target_type = "CAMERA_RAIL"
+            else:
+                box_types = layout.box()
+                box_types.label(text="オブジェクト種別設定:")
+                row1 = box_types.row(align=True)
+                row1.operator("myaddon.set_object_type", text="ENEMY", icon='COMMUNITY').target_type = "ENEMY"
+                row1.operator("myaddon.set_object_type", text="PLAYER", icon='USER').target_type = "PLAYER_SPAWN"
+                row1.operator("myaddon.set_object_type", text="GOAL", icon='CHECKMARK').target_type = "GOAL"
+                row2 = box_types.row(align=True)
+                row2.operator("myaddon.set_object_type", text="BLOCK (地形ブロック)", icon='MESH_CUBE').target_type = "BLOCK"
+                row2.operator("myaddon.set_object_type", text="PROP (背景)", icon='SCENE_DATA').target_type = "PROP"
 
-        layout.separator()
-        layout.operator("myaddon.apply_all_preview_models", text="全Enemy/Playerをモデル表示に更新", icon='MESH_DATA')
+        if obj.type != 'CURVE':
+            layout.separator()
+            layout.operator("myaddon.apply_all_preview_models", text="全Enemy/Playerをモデル表示に更新", icon='MESH_DATA')
 
         # メッシュオブジェクトの場合、地形グリッドへの変換ボタンを表示
         if obj and obj.type == 'MESH':

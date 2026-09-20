@@ -67,16 +67,35 @@ public:
     }
     void Update();
 
-    // ベジェ曲線として点を追加
-    void AddBezierPoint(const Vector3& pos, const Vector3& offsetIn, const Vector3& offsetOut) {
+    // ベジェ/直線/CatmullRom等の補間タイプを指定して点を追加
+    void AddBezierPoint(const Vector3& pos, const Vector3& offsetIn, const Vector3& offsetOut, InterpolationType type = InterpolationType::Bezier) {
         points_.push_back({
             pos,
-            InterpolationType::Bezier,
+            type,
             pos + offsetOut, // 出ていくハンドル
             pos + offsetIn   // 入ってくるハンドル
             });
     }
     void SetBezierHandles(size_t index, const Vector3& offsetIn, const Vector3& offsetOut);
+
+    void SetPointType(size_t index, InterpolationType type) {
+        if (index < points_.size()) {
+            points_[index].type = type;
+        }
+    }
+    InterpolationType GetPointType(size_t index) const {
+        if (index < points_.size()) {
+            return points_[index].type;
+        }
+        return InterpolationType::Linear;
+    }
+    size_t GetPointCount() const { return points_.size(); }
+
+    void SetAllInterpolationType(InterpolationType type) {
+        for (auto& pt : points_) {
+            pt.type = type;
+        }
+    }
 
     Vector3 GetPosition(float globalT) const {
         if (points_.size() < 2) return points_.empty() ? Vector3{ 0,0,0 } : points_[0].position;

@@ -217,6 +217,16 @@ LevelObjectData ParseObject(const json& node, bool isGameCoords)
                 pt.position  = getV3(rp, "co");
                 pt.handleIn  = getV3(rp, "handle_left");
                 pt.handleOut = getV3(rp, "handle_right");
+
+                std::string typeStr = rp.value("type", "BEZIER");
+                if (typeStr == "LINEAR" || typeStr == "Linear") {
+                    pt.type = RailPath::InterpolationType::Linear;
+                } else if (typeStr == "CATMULL_ROM" || typeStr == "CatmullRom") {
+                    pt.type = RailPath::InterpolationType::CatmullRom;
+                } else {
+                    pt.type = RailPath::InterpolationType::Bezier;
+                }
+
                 data.railPoints.push_back(pt);
             }
         }

@@ -379,6 +379,26 @@ void GameScene::Update() {
         static float r = 20.0f;
         static float hScale = 0.5522f;
 
+        // ── 補間モード一括切替 ──
+        ImGui::Text("Point Count: %zu", currentStageRail->GetPointCount());
+        ImGui::Text("Interpolation Mode Switch:");
+        if (ImGui::Button("All Linear (Straight)")) {
+            currentStageRail->SetAllInterpolationType(RailPath::InterpolationType::Linear);
+            currentStageRail->Update();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("All Bezier (Smooth)")) {
+            currentStageRail->SetAllInterpolationType(RailPath::InterpolationType::Bezier);
+            currentStageRail->Update();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("All CatmullRom")) {
+            currentStageRail->SetAllInterpolationType(RailPath::InterpolationType::CatmullRom);
+            currentStageRail->Update();
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Circle Preset Test:");
         if (ImGui::SliderFloat("Radius", &r, 5.0f, 50.0f) || ImGui::SliderFloat("Handle Scale", &hScale, 0.1f, 1.0f)) {
             // 値が変わったらレールを再構築
             currentStageRail->Initialize(); // points_をクリア

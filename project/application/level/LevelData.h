@@ -5,6 +5,7 @@
 #include <functional>
 #include "Vector3.h"
 #include "Vector2.h"
+#include "RailPath.h"
 
 /// <summary>
 /// レベルエディター（Blenderアドオン）からエクスポートされたJSONを
@@ -53,6 +54,7 @@ struct LevelRailPoint {
     Vector3 position;     ///< 制御点座標
     Vector3 handleIn;     ///< 入りハンドル（絶対座標）
     Vector3 handleOut;    ///< 出しハンドル（絶対座標）
+    RailPath::InterpolationType type = RailPath::InterpolationType::Bezier; ///< 補間方式 (Linear / Bezier / CatmullRom)
 };
 
 // ─── PBD設定 ─────────────────────────────────────────────────────────

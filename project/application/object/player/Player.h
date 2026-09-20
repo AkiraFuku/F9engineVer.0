@@ -223,9 +223,15 @@ private:
     const float kGravity = -50.0f;
     const float kJumpAcceleration = 24.0f;
     bool isGrounded_ = true;
+    bool isJumping_ = false; // ジャンプ中フラグ（吸着解除用）
 
     GameObject::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f;
+
+    // 傾斜・段差対応パラメータ
+    const float kMaxStepHeight = 0.35f;       // 乗り越えられる段差の最大高さ (m)
+    const float kGroundSnapDistance = 0.5f;   // 下り坂で地面に吸着する最大距離 (m)
+    const float kMaxSlopeCos = 0.65f;         // 登れる最大傾斜（cos約49度。これより急な崖は滑り落ち/壁判定）
 
     std::unique_ptr<RailMover> railMover_;
     float playerAngle_ = -10.0f;

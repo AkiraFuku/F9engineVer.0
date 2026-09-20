@@ -453,11 +453,15 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             curve_data.resolution_u = 12
             spline = curve_data.splines.new("BEZIER")
             spline.use_cyclic_u = loop
-            spline.bezier_points.add(len(rail_points) - 1)
+            if len(rail_points) > 1:
+                spline.bezier_points.add(len(rail_points) - 1)
+            interp_types = []
             for i, rp in enumerate(rail_points):
                 co = rp.get("co", [0, 0, 0])
                 hl = rp.get("handle_left",  co)
                 hr = rp.get("handle_right", co)
+                pt_type = rp.get("type", "BEZIER")
+                interp_types.append(pt_type)
                 bpt = spline.bezier_points[i]
                 if convert_coords:
                     # ゲーム (X右, Y上, Z奥) -> Blender (X右, Y奥, Z上)
@@ -468,9 +472,17 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
                     bpt.co           = (co[0], co[1], co[2])
                     bpt.handle_left  = (hl[0], hl[1], hl[2])
                     bpt.handle_right = (hr[0], hr[1], hr[2])
-                bpt.handle_left_type  = "FREE"
-                bpt.handle_right_type = "FREE"
+                if pt_type == "LINEAR":
+                    bpt.handle_left_type  = "VECTOR"
+                    bpt.handle_right_type = "VECTOR"
+                elif pt_type == "CATMULL_ROM":
+                    bpt.handle_left_type  = "ALIGNED"
+                    bpt.handle_right_type = "ALIGNED"
+                else:
+                    bpt.handle_left_type  = "FREE"
+                    bpt.handle_right_type = "FREE"
             blender_obj = bpy.data.objects.new(name, curve_data)
+            blender_obj["interp_types"] = interp_types
             bpy.context.collection.objects.link(blender_obj)
 
         # 2. 地形グリッド (terrain_grid)

@@ -32,6 +32,8 @@ from .operater import (
     OBJECT_PT_file_name,
     MYADDON_OT_add_filwname,
     MYADDON_OT_ICO_sphere,
+    MYADDON_OT_add_slope_block,
+    MYADDON_OT_add_stairs_block,
 )
 from .export_scene import MYADDON_OT_export_scene
 from .import_scene import MYADDON_OT_import_scene
@@ -45,7 +47,15 @@ from .rail_snap import (
     MYADDON_OT_add_rail_pos,
     MYADDON_OT_sync_camera_rail,
     MYADDON_OT_unlink_camera_rail,
-    OBJECT_PT_rail_settings,
+    MYADDON_OT_set_interpolation_type,
+    MYADDON_OT_set_rail_mode,
+    MYADDON_OT_make_rail_arc,
+    MYADDON_OT_enter_rail_draw_tool,
+    MYADDON_OT_extend_rail_end,
+    MYADDON_OT_subdivide_rail_segment,
+    MYADDON_OT_create_preset_rail,
+    OBJECT_PT_rail_curve_settings,
+    OBJECT_PT_rail_position_settings,
     rail_magnet_snap_handler,
     register_rail_snap,
     unregister_rail_snap,
@@ -68,7 +78,11 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
         self.layout.operator(MYADDON_OT_generate_terrain.bl_idname, text=MYADDON_OT_generate_terrain.bl_label, icon='MESH_GRID')
         self.layout.operator(MYADDON_OT_convert_obj_to_terrain.bl_idname, text=MYADDON_OT_convert_obj_to_terrain.bl_label, icon='MOD_OCEAN')
         self.layout.separator()
+        self.layout.operator(MYADDON_OT_add_slope_block.bl_idname, text=MYADDON_OT_add_slope_block.bl_label, icon='MOD_SOLIDIFY')
+        self.layout.operator(MYADDON_OT_add_stairs_block.bl_idname, text=MYADDON_OT_add_stairs_block.bl_label, icon='MOD_BEVEL')
+        self.layout.separator()
         self.layout.operator(MYADDON_OT_sync_camera_rail.bl_idname, text=MYADDON_OT_sync_camera_rail.bl_label, icon='CAMERA_DATA')
+        self.layout.operator(MYADDON_OT_enter_rail_draw_tool.bl_idname, text="カーブペン描画ツール起動", icon='EDITMODE_HLT')
 
 def draw_my_menu(self, context):
     self.layout.menu(TOPBAR_MT_my_menu.bl_idname)
@@ -79,6 +93,8 @@ classes = (
     MYADDON_OT_export_scene,
     MYADDON_OT_import_scene,
     MYADDON_OT_ICO_sphere,
+    MYADDON_OT_add_slope_block,
+    MYADDON_OT_add_stairs_block,
     MYADDON_OT_stretch_vertex,
     MYADDON_OT_add_filwname,
     OBJECT_PT_file_name,
@@ -98,7 +114,15 @@ classes = (
     MYADDON_OT_add_rail_pos,
     MYADDON_OT_sync_camera_rail,
     MYADDON_OT_unlink_camera_rail,
-    OBJECT_PT_rail_settings,
+    MYADDON_OT_set_interpolation_type,
+    MYADDON_OT_set_rail_mode,
+    MYADDON_OT_make_rail_arc,
+    MYADDON_OT_enter_rail_draw_tool,
+    MYADDON_OT_extend_rail_end,
+    MYADDON_OT_subdivide_rail_segment,
+    MYADDON_OT_create_preset_rail,
+    OBJECT_PT_rail_curve_settings,
+    OBJECT_PT_rail_position_settings,
 )
 
 

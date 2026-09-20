@@ -162,6 +162,7 @@ void Player::Jump()
     if (isGrounded_) {
         velocity_.y = kJumpAcceleration;
         isGrounded_ = false;
+        isJumping_ = true;
     }
 }
 
@@ -207,24 +208,43 @@ void Player::CheckGroundCollision()
     auto floorRay = GetRayInfo("Floor");
     bool hitFloor = floorRay && floorRay->isColide;
 
-    if (hitFloor && velocity_.y <= 0.0f) {
-        rayHitPalamata_.groundY = floorRay->crossPoint.y;
-        const float kGroundEpsilon = 0.05f;
-        float playerBottomY = worldY_ - kHeightOffset;
+    float playerBottomY = worldY_ - kHeightOffset;
 
-        if (playerBottomY <= rayHitPalamata_.groundY + kGroundEpsilon) {
-            isGrounded_ = true;
+    if (hitFloor) {
+        // 急すぎる斜面（崖・壁）は地面として扱わない（登れる傾斜角の制限: cos約49度以上で歩行可能）
+        bool isWalkableSlope = (floorRay->hitNormal.y >= kMaxSlopeCos);
+
+        if (isWalkableSlope) {
+            rayHitPalamata_.groundY = floorRay->crossPoint.y;
+            const float kGroundEpsilon = 0.05f;
+
+            // 1. 通常の接地（足元が地面付近、またはめり込んでいる場合）
+            if (playerBottomY <= rayHitPalamata_.groundY + kGroundEpsilon && velocity_.y <= 0.0f) {
+                isGrounded_ = true;
+                isJumping_ = false;
+            }
+            // 2. 下り坂・段差下り吸着（Ground Snapping）:
+            // 直前に接地しており、現在ジャンプ中でなく、地面が下がった距離がスナップ範囲内であれば吸着
+            else if (isGrounded_ && !isJumping_ && velocity_.y <= 0.0f &&
+                     playerBottomY <= rayHitPalamata_.groundY + kGroundSnapDistance) {
+                isGrounded_ = true;
+            } else {
+                isGrounded_ = false;
+            }
         } else {
+            // 急斜面のため接地不可（滑り落ち）
             isGrounded_ = false;
+            rayHitPalamata_.groundY = -FLT_MAX;
         }
     } else {
         isGrounded_ = false;
         rayHitPalamata_.groundY = -FLT_MAX;
     }
 
-    // めり込み補正（接地時に地面の高さに合わせる）
+    // めり込み補正・下り坂吸着補正（接地時に地面の高さに合わせる）
     if (isGrounded_ && hitFloor) {
         worldY_ = rayHitPalamata_.groundY + kHeightOffset;
+        velocity_.y = 0.0f;
     }
 
     // 奈落の最低保証（落下・死の防止処理：既存のコードを維持）
@@ -232,6 +252,7 @@ void Player::CheckGroundCollision()
         worldY_ = rayHitPalamata_.minY + kHeightOffset;
         velocity_.y = 0.0f;
         isGrounded_ = true;
+        isJumping_ = false;
     }
 }
 
@@ -412,6 +433,58 @@ void Player::UpdateRayCollisions()
                 if (penetration > 0.0f) {
                     // 後方の壁にぶつかったら進行方向（前方）へ押し戻す
                     maxPushBackProgress = (std::min)(maxPushBackProgress, -penetration);
+                }
+            }
+        }
+    }
+
+    // ─── 段差ステップアップ（Step-up / 階段・段差登り）処理 ──────────
+    // プレイヤーが接地しており、ジャンプ中でない場合、足元の小さな段差（階段など）をスムーズに乗り越える
+    if (isGrounded_ && !isJumping_ && !triangles.empty()) {
+        int moveDir = GetMoveDirection();
+        if (moveDir != 0) {
+            Vector3 stepForward = (moveDir > 0) ? forwardDir : Multiply(-1.0f, forwardDir);
+            float stepCheckDist = Radius * 0.6f; // 前方検知距離
+
+            Ray stepRay;
+            stepRay.origin = Add(center, Multiply(stepCheckDist, stepForward));
+            float playerBottomY = worldY_ - kHeightOffset;
+            stepRay.origin.y = playerBottomY + kMaxStepHeight + 0.05f;
+            stepRay.diff = { 0.0f, -(kMaxStepHeight + 0.2f), 0.0f };
+
+            float closestStepDist = FLT_MAX;
+            Vector3 bestStepHit = {};
+            bool hitStep = false;
+
+            for (const auto& tri : triangles) {
+                Vector3 tmpHit = {};
+                float dist = 0.0f;
+                RayTriangleCollisionResult result;
+                if (CheckRayTriangle(stepRay, tri, &dist, &tmpHit, &result)) {
+                    if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
+                        Vector3 v01 = Subtract(tri.vertices[1], tri.vertices[0]);
+                        Vector3 v12 = Subtract(tri.vertices[2], tri.vertices[1]);
+                        Vector3 normal = Normalize(Cross(v01, v12));
+                        if (result == RayTriangleCollisionResult::BackFace) {
+                            normal = Multiply(-1.0f, normal);
+                        }
+                        // 登れる緩やかな上面のみ段差として認識
+                        if (normal.y >= kMaxSlopeCos && dist < closestStepDist) {
+                            closestStepDist = dist;
+                            bestStepHit = tmpHit;
+                            hitStep = true;
+                        }
+                    }
+                }
+            }
+
+            if (hitStep) {
+                float stepHeight = bestStepHit.y - playerBottomY;
+                // 足元より高く、かつ許容段差高さ以内であればステップアップ
+                if (stepHeight > 0.02f && stepHeight <= kMaxStepHeight) {
+                    worldY_ = bestStepHit.y + kHeightOffset;
+                    // ステップアップ時は壁の押し戻しを無効化してスムーズに登らせる
+                    maxPushBackProgress = 0.0f;
                 }
             }
         }

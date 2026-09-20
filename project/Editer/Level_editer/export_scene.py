@@ -168,11 +168,12 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
             curve = object.data
             rail_points = []
             is_cyclic = False
+            saved_types = object.get("interp_types", [])
             for spline in curve.splines:
                 if spline.use_cyclic_u:
                     is_cyclic = True
                 if spline.type == 'BEZIER':
-                    for bp in spline.bezier_points:
+                    for i, bp in enumerate(spline.bezier_points):
                         co = bp.co
                         hl = bp.handle_left
                         hr = bp.handle_right
@@ -184,10 +185,19 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
                             pt_co = [co.x, co.y, co.z]
                             pt_hl = [hl.x, hl.y, hl.z]
                             pt_hr = [hr.x, hr.y, hr.z]
+                        # 補間タイプ判定 (saved_types または ハンドル形状)
+                        if i < len(saved_types) and saved_types[i]:
+                            interp_type = str(saved_types[i]).upper()
+                        elif bp.handle_left_type == 'VECTOR' and bp.handle_right_type == 'VECTOR':
+                            interp_type = "LINEAR"
+                        else:
+                            interp_type = "BEZIER"
+
                         rail_points.append({
                             "co": pt_co,
                             "handle_left": pt_hl,
                             "handle_right": pt_hr,
+                            "type": interp_type,
                         })
             if rail_points:
                 json_object["rail_points"] = rail_points

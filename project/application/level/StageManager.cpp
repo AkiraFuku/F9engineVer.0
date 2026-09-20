@@ -156,7 +156,7 @@ void StageManager::ProcessObject(const LevelObjectData& data, Camera* camera, Sp
             Vector3 offsetIn  = { rp.handleIn.x - rp.position.x,
                                   rp.handleIn.y - rp.position.y,
                                   rp.handleIn.z - rp.position.z };
-            stageRail_->AddBezierPoint(rp.position, offsetIn, offsetOut);
+            stageRail_->AddBezierPoint(rp.position, offsetIn, offsetOut, rp.type);
         }
         stageRail_->Update();
         break;
@@ -174,7 +174,7 @@ void StageManager::ProcessObject(const LevelObjectData& data, Camera* camera, Sp
             Vector3 offsetIn  = { rp.handleIn.x - rp.position.x,
                                   rp.handleIn.y - rp.position.y,
                                   rp.handleIn.z - rp.position.z };
-            cameraRail_->AddBezierPoint(rp.position, offsetIn, offsetOut);
+            cameraRail_->AddBezierPoint(rp.position, offsetIn, offsetOut, rp.type);
         }
         cameraRail_->Update();
         break;
