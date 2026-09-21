@@ -217,6 +217,7 @@ def _create_grid_mesh_data(
             faces.append((i0, i1, i3, i2))
 
     mesh.from_pydata(verts, [], faces)
+    mesh.validate(verbose=False)
 
     # UV座標の設定（タイリング反映）
     uv_layer = mesh.uv_layers.new(name="UVMap")
@@ -229,7 +230,11 @@ def _create_grid_mesh_data(
             v = (iy / div_y) * uv_tile
             uv_layer.data[loop_idx].uv = (u, v)
 
-    mesh.update()
+    # 法線を更新し、上面（Z+ > 0）が表面になるよう保証
+    mesh.update(calc_edges=True)
+    if mesh.polygons and mesh.polygons[0].normal.z < 0:
+        mesh.flip_normals()
+        mesh.update()
 
     # テクスチャマテリアル適用
     if texture_path:
@@ -286,6 +291,27 @@ def _create_preview_grid_mesh(
 # メイン生成関数
 # ------------------------------------------
 
+def _find_existing_terrain_objects(target_name=_TERRAIN_OBJECT_NAME):
+    """
+    シーン内から既存の地形オブジェクトを網羅的に検出して返す。
+    1. 名前が target_name または target_name で始まるオブジェクト (例: "TerrainGround", "TerrainGround.001")
+    2. object_type == "TERRAIN" または file_name == "terrain_grid" のオブジェクト
+    3. プレビューオブジェクト ("TerrainGround_Preview")
+    """
+    found = []
+    for obj in bpy.data.objects:
+        if obj.name == target_name or obj.name.startswith(target_name + "."):
+            if obj not in found:
+                found.append(obj)
+        elif obj.name.startswith(target_name + "_Preview"):
+            if obj not in found:
+                found.append(obj)
+        elif obj.get("object_type") == "TERRAIN" or obj.get("file_name") == "terrain_grid":
+            if obj not in found:
+                found.append(obj)
+    return found
+
+
 def generate_terrain_grid(
     margin=10.0,
     divisions_per_unit=2.0,
@@ -299,68 +325,132 @@ def generate_terrain_grid(
     """
     StageRail の形状を読み取り、コースを包む terrain_grid TERRAIN オブジェクトを
     Blenderシーンに直接メッシュオブジェクト（MESH）として配置する。
+    既存の地形オブジェクトが存在する場合は安全に上書き更新する。
     """
-    rail = _get_stage_rail()
-    if rail is None:
-        return False, "StageRail が見つかりません。STAGE_RAIL タイプのカーブをシーンに配置してください。"
+    try:
+        if bpy.context.mode != 'OBJECT':
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception:
+                pass
 
-    sampled = _sample_curve_points(rail, num_samples=128)
-    if not sampled:
-        return False, "カーブのサンプリングに失敗しました。"
+        rail = _get_stage_rail()
+        if rail is None:
+            return False, "StageRail が見つかりません。STAGE_RAIL タイプのカーブをシーンに配置してください。"
 
-    cx, cy, raw_sx, raw_sy = _compute_rail_bounds(sampled)
+        sampled = _sample_curve_points(rail, num_samples=128)
+        if not sampled:
+            return False, "カーブのサンプリングに失敗しました。"
 
-    size_x = max(raw_sx + margin * 2.0, 10.0)
-    size_y = max(raw_sy + margin * 2.0, 10.0)
+        cx, cy, raw_sx, raw_sy = _compute_rail_bounds(sampled)
 
-    div_x = min(int(size_x * divisions_per_unit), max_divisions)
-    div_y = min(int(size_y * divisions_per_unit), max_divisions)
-    div_x = max(div_x, 4)
-    div_y = max(div_y, 4)
+        size_x = max(raw_sx + margin * 2.0, 10.0)
+        size_y = max(raw_sy + margin * 2.0, 10.0)
 
-    # 既存の同名オブジェクトを削除
-    if terrain_name in bpy.data.objects:
-        bpy.data.objects.remove(bpy.data.objects[terrain_name], do_unlink=True)
-    preview_name = terrain_name + "_Preview"
-    if preview_name in bpy.data.objects:
-        bpy.data.objects.remove(bpy.data.objects[preview_name], do_unlink=True)
+        div_x = min(int(size_x * divisions_per_unit), max_divisions)
+        div_y = min(int(size_y * divisions_per_unit), max_divisions)
+        div_x = max(div_x, 4)
+        div_y = max(div_y, 4)
 
-    # ─── TERRAIN メッシュオブジェクトを直接生成 ───
-    # エディター上でも直接面・UV・テクスチャ付きの実体メッシュオブジェクトとして配置。
-    t_mesh = _create_grid_mesh_data(
-        f"Mesh_{terrain_name}",
-        size_x=size_x, size_y=size_y,
-        div_x=min(div_x, 32), div_y=min(div_y, 32),
-        texture_path=texture_path,
-        uv_tile=uv_tile,
-    )
-    obj = bpy.data.objects.new(terrain_name, t_mesh)
-    obj.show_wire = True
-    obj.location = (cx, cy, floor_z_offset)
+        # 既存の地形オブジェクトを検出（上書き対象）
+        existing_terrains = _find_existing_terrain_objects(terrain_name)
+        primary_obj = None
+        target_col = None
 
-    # ゲームに渡すカスタムプロパティを設定
-    obj["object_type"]      = "TERRAIN"
-    obj["file_name"]        = "terrain_grid"
-    obj["texture"]          = texture_path
-    obj["prop_size_x"]      = str(round(size_x, 2))
-    obj["prop_size_y"]      = str(round(size_y, 2))
-    obj["prop_divisions_x"] = str(div_x)
-    obj["prop_divisions_y"] = str(div_y)
-    obj["prop_uv_tile"]     = str(round(uv_tile, 2))
+        if existing_terrains:
+            # MESHタイプのオブジェクトがあれば最優先で上書き対象にする
+            mesh_terrains = [o for o in existing_terrains if o.type == 'MESH']
+            if mesh_terrains:
+                primary_obj = mesh_terrains[0]
+            else:
+                primary_obj = existing_terrains[0]
 
-    bpy.context.collection.objects.link(obj)
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
+            if primary_obj.users_collection:
+                target_col = primary_obj.users_collection[0]
 
-    msg = (
-        f"地形生成完了！\n"
-        f"  サイズ: {size_x:.1f} x {size_y:.1f} m\n"
-        f"  分割数: {div_x} x {div_y}\n"
-        f"  中心: ({cx:.1f}, {cy:.1f}), 高さ(Z): {floor_z_offset:.2f}\n"
-        f"  テクスチャ: {texture_path}"
-    )
-    print(f"[TerrainGen] {msg}")
-    return True, msg
+            # primary_obj 以外の余分な重複オブジェクトは安全にクリーンアップ
+            for extra_obj in existing_terrains:
+                if extra_obj != primary_obj and extra_obj.name in bpy.data.objects:
+                    try:
+                        bpy.data.objects.remove(extra_obj, do_unlink=True)
+                    except Exception:
+                        pass
+
+        # ─── TERRAIN メッシュオブジェクトを生成 ───
+        t_mesh = _create_grid_mesh_data(
+            f"Mesh_{terrain_name}",
+            size_x=size_x, size_y=size_y,
+            div_x=min(div_x, 32), div_y=min(div_y, 32),
+            texture_path=texture_path,
+            uv_tile=uv_tile,
+        )
+
+        obj = None
+        is_overwrite = False
+        if primary_obj and primary_obj.name in bpy.data.objects:
+            if primary_obj.type == 'MESH':
+                # 既存の MESH オブジェクトを安全に上書き
+                old_mesh = primary_obj.data
+                primary_obj.data = t_mesh
+                primary_obj.name = terrain_name
+                primary_obj.show_wire = True
+                primary_obj.location = (cx, cy, floor_z_offset)
+                primary_obj.rotation_euler = (0.0, 0.0, 0.0)
+                primary_obj.scale = (1.0, 1.0, 1.0)
+                obj = primary_obj
+                is_overwrite = True
+
+                # 孤立した古いメッシュを安全に削除
+                if old_mesh and old_mesh != t_mesh and old_mesh.users == 0:
+                    try:
+                        bpy.data.meshes.remove(old_mesh, do_unlink=True)
+                    except Exception:
+                        pass
+            else:
+                # EMPTY 等の場合は古いオブジェクトを削除し、同じコレクションに MESH を再作成
+                if primary_obj.users_collection:
+                    target_col = primary_obj.users_collection[0]
+                try:
+                    bpy.data.objects.remove(primary_obj, do_unlink=True)
+                except Exception:
+                    pass
+                is_overwrite = True
+
+        if obj is None:
+            # 新規作成（またはEMPTYからMESHへの再作成）
+            obj = bpy.data.objects.new(terrain_name, t_mesh)
+            obj.show_wire = True
+            obj.location = (cx, cy, floor_z_offset)
+            col = target_col or bpy.context.collection
+            col.objects.link(obj)
+
+        # ゲームに渡すカスタムプロパティを設定
+        obj["object_type"]      = "TERRAIN"
+        obj["file_name"]        = "terrain_grid"
+        obj["texture"]          = texture_path
+        obj["prop_size_x"]      = str(round(size_x, 2))
+        obj["prop_size_y"]      = str(round(size_y, 2))
+        obj["prop_divisions_x"] = str(div_x)
+        obj["prop_divisions_y"] = str(div_y)
+        obj["prop_uv_tile"]     = str(round(uv_tile, 2))
+
+        bpy.context.view_layer.objects.active = obj
+        obj.select_set(True)
+
+        msg = (
+            f"地形{'上書き更新' if is_overwrite else '生成'}完了！\n"
+            f"  サイズ: {size_x:.1f} x {size_y:.1f} m\n"
+            f"  分割数: {div_x} x {div_y}\n"
+            f"  中心: ({cx:.1f}, {cy:.1f}), 高さ(Z): {floor_z_offset:.2f}\n"
+            f"  テクスチャ: {texture_path}"
+        )
+        print(f"[TerrainGen] {msg}")
+        return True, msg
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return False, f"地形生成処理中にエラーが発生しました: {e}"
 
 
 # ==========================================
@@ -900,15 +990,13 @@ def export_terrain_mesh_to_obj(terrain_obj, rel_path="resources/Stagemap/terrain
             nor = poly.normal
             f.write(f"vn {nor.x:.4f} {nor.z:.4f} {nor.y:.4f}\n")
 
-        # 面
-        uv_idx = 1
+        # 面（ゲーム側DirectXは時計回りが表面のため、Blenderの反時計回りを反転して出力）
         for face_idx, poly in enumerate(mesh.polygons, start=1):
             f.write("f")
-            for loop_idx in poly.loop_indices:
+            for loop_idx in reversed(poly.loop_indices):
                 v_idx = poly.vertices[loop_idx - poly.loop_start] + 1
                 if has_uv:
-                    f.write(f" {v_idx}/{uv_idx}/{face_idx}")
-                    uv_idx += 1
+                    f.write(f" {v_idx}/{loop_idx + 1}/{face_idx}")
                 else:
                     f.write(f" {v_idx}//{face_idx}")
             f.write("\n")
@@ -939,7 +1027,7 @@ def deform_terrain_mesh_to_rail(
     except ImportError:
         from road_generator import sample_curve_frenet
 
-    samples = sample_curve_frenet(rail_obj, step_distance=0.4)
+    samples = sample_curve_frenet(rail_obj, step_distance=0.2)  # 0.4m → 0.2m で精度向上
     if not samples:
         return False, "レールのサンプリングに失敗しました。"
 
@@ -947,8 +1035,9 @@ def deform_terrain_mesh_to_rail(
     mat_world = terrain_obj.matrix_world
     mat_inv = mat_world.inverted()
 
-    # レール点列のXY座標とZ座標
+    # レール点列のXY座標とZ座標（ワールド座標系）
     rail_pts = [(s["pos"].x, s["pos"].y, s["pos"].z) for s in samples]
+    num_rail = len(rail_pts)
 
     half_road_w = road_width * 0.5
     total_radius = half_road_w + max(slope_width, 0.1)
@@ -960,16 +1049,50 @@ def deform_terrain_mesh_to_rail(
         w_pos = mat_world @ v.co
         vx, vy, vz = w_pos.x, w_pos.y, w_pos.z
 
-        # 最も近いレールサンプル点を探索 (XY平面上の最短距離)
+        # XY平面上で最も近いレール上の点を探索する
+        # 線分への垂線の足（最近点投影）を使って精度を向上
         min_dist_sq = 1e9
         target_z = vz
-        for rx, ry, rz in rail_pts:
-            dx = vx - rx
-            dy = vy - ry
+
+        for k in range(num_rail - 1):
+            ax, ay, az = rail_pts[k]
+            bx, by, bz = rail_pts[k + 1]
+            # 線分 AB の方向ベクトル（XY成分のみ）
+            abx = bx - ax
+            aby = by - ay
+            ab_len_sq = abx * abx + aby * aby
+            if ab_len_sq < 1e-8:
+                # 縮退した線分：端点で判定
+                dx, dy = vx - ax, vy - ay
+                d_sq = dx*dx + dy*dy
+                if d_sq < min_dist_sq:
+                    min_dist_sq = d_sq
+                    target_z = az + offset_z
+                continue
+
+            # 垂線の足のパラメータ t ∈ [0, 1]
+            t = ((vx - ax) * abx + (vy - ay) * aby) / ab_len_sq
+            t = max(0.0, min(1.0, t))
+
+            # 垂線の足の XY 座標と Z（線形補間）
+            foot_x = ax + t * abx
+            foot_y = ay + t * aby
+            foot_z = az + t * (bz - az)
+
+            dx = vx - foot_x
+            dy = vy - foot_y
             d_sq = dx*dx + dy*dy
             if d_sq < min_dist_sq:
                 min_dist_sq = d_sq
-                target_z = rz + offset_z
+                target_z = foot_z + offset_z
+
+        # 最後の点との距離もチェック（ループ終端）
+        lx, ly, lz = rail_pts[-1]
+        dx, dy = vx - lx, vy - ly
+        d_sq = dx*dx + dy*dy
+        if d_sq < min_dist_sq:
+            min_dist_sq = d_sq
+            target_z = lz + offset_z
 
         if min_dist_sq <= total_radius_sq:
             d = math.sqrt(min_dist_sq)
@@ -1158,15 +1281,68 @@ def auto_create_terrain_ground_for_rail(rail_obj):
         uv_tile=4.0,
     )
 
-    t_obj = bpy.data.objects.new("TerrainGround", t_mesh)
-    t_obj.location = (cx, cy, min_z - 1.0)
+    # 既存の地形オブジェクトを検出（上書き対象）
+    existing_terrains = _find_existing_terrain_objects("TerrainGround")
+    primary_obj = None
+    target_col = None
+
+    if existing_terrains:
+        mesh_terrains = [o for o in existing_terrains if o.type == 'MESH']
+        if mesh_terrains:
+            primary_obj = mesh_terrains[0]
+        else:
+            primary_obj = existing_terrains[0]
+
+        if primary_obj.users_collection:
+            target_col = primary_obj.users_collection[0]
+
+        for extra_obj in existing_terrains:
+            if extra_obj != primary_obj and extra_obj.name in bpy.data.objects:
+                try:
+                    bpy.data.objects.remove(extra_obj, do_unlink=True)
+                except Exception:
+                    pass
+
+    t_obj = None
+    is_overwrite = False
+    if primary_obj and primary_obj.name in bpy.data.objects:
+        if primary_obj.type == 'MESH':
+            old_mesh = primary_obj.data
+            primary_obj.data = t_mesh
+            primary_obj.name = "TerrainGround"
+            primary_obj.location = (cx, cy, min_z - 1.0)
+            primary_obj.rotation_euler = (0.0, 0.0, 0.0)
+            primary_obj.scale = (1.0, 1.0, 1.0)
+            t_obj = primary_obj
+            is_overwrite = True
+
+            if old_mesh and old_mesh != t_mesh and old_mesh.users == 0:
+                try:
+                    bpy.data.meshes.remove(old_mesh, do_unlink=True)
+                except Exception:
+                    pass
+        else:
+            if primary_obj.users_collection:
+                target_col = primary_obj.users_collection[0]
+            try:
+                bpy.data.objects.remove(primary_obj, do_unlink=True)
+            except Exception:
+                pass
+            is_overwrite = True
+
+    if t_obj is None:
+        t_obj = bpy.data.objects.new("TerrainGround", t_mesh)
+        t_obj.location = (cx, cy, min_z - 1.0)
+        col = target_col or bpy.context.collection
+        col.objects.link(t_obj)
+
     t_obj["object_type"] = "BLOCK"
     t_obj["file_name"] = "terrain_deformed.obj"
     t_obj["model_dir"] = "resources/Stagemap"
     t_obj["texture"] = "resources/Stagemap/863603.png"
 
-    bpy.context.collection.objects.link(t_obj)
-    return True, "TerrainGround を作成しました"
+    msg = "TerrainGround を上書き更新しました" if is_overwrite else "TerrainGround を作成しました"
+    return True, msg
 
 
 class MYADDON_OT_enter_terrain_sculpt(bpy.types.Operator):

@@ -904,6 +904,7 @@ class MYADDON_OT_set_interpolation_type(bpy.types.Operator):
                 continue
 
             num_pts = len(spline.bezier_points)
+            is_loop = spline.use_cyclic_u
             has_selected = any(bp.select_control_point for bp in spline.bezier_points) if in_edit else False
 
             target_indices = []
@@ -917,26 +918,109 @@ class MYADDON_OT_set_interpolation_type(bpy.types.Operator):
             while len(types_list) < num_pts:
                 types_list.append("BEZIER")
 
-            if self.interp_type == 'LINEAR':
-                for i in target_indices:
-                    bp = spline.bezier_points[i]
-                    bp.handle_left_type = 'VECTOR'
-                    bp.handle_right_type = 'VECTOR'
+            # --- 区間単位の補間切替 ---
+            # 「点 i → 次の点 next_i の区間のみ」を変更する。
+            # 始点 i の handle_right (次区間へ向かうハンドル) と
+            # 終点 next_i の handle_left (前区間から来るハンドル) のみを変更し、
+            # 前の点との区間 [i-1, i] には一切触れない。
+            for i in target_indices:
+                # ループ末尾処理: ループなら先頭に戻る、非ループなら最後の点はスキップ
+                if is_loop:
+                    next_i = (i + 1) % num_pts
+                else:
+                    if i >= num_pts - 1:
+                        continue
+                    next_i = i + 1
+
+                bp_start = spline.bezier_points[i]
+                bp_end   = spline.bezier_points[next_i]
+
+                if self.interp_type == 'LINEAR':
+                    # 始点のhandle_right: VECTORにして直線化
+                    # 終点のhandle_left:  VECTORにして直線化
+                    # 前区間のhandle_leftには触れないためFREEで現座標を保護
+                    start_hl_co = bp_start.handle_left.copy()
+                    bp_start.handle_left_type  = 'FREE'
+                    bp_start.handle_left       = start_hl_co
+                    bp_start.handle_right_type = 'VECTOR'
+
+                    end_hr_co = bp_end.handle_right.copy()
+                    bp_end.handle_right_type = 'FREE'
+                    bp_end.handle_right      = end_hr_co
+                    bp_end.handle_left_type  = 'VECTOR'
+
                     types_list[i] = "LINEAR"
                     modified_count += 1
 
-            elif self.interp_type == 'CATMULL_ROM':
-                apply_catmull_rom_handles(spline, target_indices)
-                for i in target_indices:
-                    types_list[i] = "CATMULL_ROM"
-                modified_count += len(target_indices)
+                elif self.interp_type == 'CATMULL_ROM':
+                    # Catmull-Romは接線 T = (P_next - P_prev) / 6.0 を使う
+                    # 始点: handle_right を ALIGNED に設定
+                    if is_loop:
+                        prev_i_start = (i - 1 + num_pts) % num_pts
+                        next_i_start = next_i
+                    else:
+                        prev_i_start = max(0, i - 1)
+                        next_i_start = min(num_pts - 1, i + 1)
 
-            elif self.interp_type == 'BEZIER':
-                for i in target_indices:
-                    bp = spline.bezier_points[i]
-                    if bp.handle_left_type == 'VECTOR':
-                        bp.handle_left_type = 'AUTO'
-                        bp.handle_right_type = 'AUTO'
+                    p_prev_s = spline.bezier_points[prev_i_start].co
+                    p_next_s = spline.bezier_points[next_i_start].co
+                    if i == 0 and not is_loop:
+                        tangent_s = (p_next_s - bp_start.co) / 3.0
+                    elif i == num_pts - 1 and not is_loop:
+                        tangent_s = (bp_start.co - p_prev_s) / 3.0
+                    else:
+                        tangent_s = (p_next_s - p_prev_s) / 6.0
+
+                    # 始点の handle_left は前区間を守るため FREE で座標保護
+                    start_hl_co = bp_start.handle_left.copy()
+                    bp_start.handle_left_type  = 'FREE'
+                    bp_start.handle_left       = start_hl_co
+                    bp_start.handle_right_type = 'FREE'
+                    bp_start.handle_right      = bp_start.co + tangent_s
+
+                    # 終点: handle_left を ALIGNED に設定
+                    if is_loop:
+                        prev_i_end = i
+                        next_i_end = (next_i + 1) % num_pts
+                    else:
+                        prev_i_end = max(0, next_i - 1)
+                        next_i_end = min(num_pts - 1, next_i + 1)
+
+                    p_prev_e = spline.bezier_points[prev_i_end].co
+                    p_next_e = spline.bezier_points[next_i_end].co
+                    if next_i == 0 and not is_loop:
+                        tangent_e = (p_next_e - bp_end.co) / 3.0
+                    elif next_i == num_pts - 1 and not is_loop:
+                        tangent_e = (bp_end.co - p_prev_e) / 3.0
+                    else:
+                        tangent_e = (p_next_e - p_prev_e) / 6.0
+
+                    bp_end.handle_left_type  = 'FREE'
+                    bp_end.handle_left       = bp_end.co - tangent_e
+                    # 終点の handle_right は次区間を守るため FREE で座標保護
+                    end_hr_co = bp_end.handle_right.copy()
+                    bp_end.handle_right_type = 'FREE'
+                    bp_end.handle_right      = end_hr_co
+
+                    types_list[i] = "CATMULL_ROM"
+                    modified_count += 1
+
+                elif self.interp_type == 'BEZIER':
+                    # 始点: handle_right を AUTO または ALIGNED に
+                    start_hl_co = bp_start.handle_left.copy()
+                    bp_start.handle_left_type  = 'FREE'
+                    bp_start.handle_left       = start_hl_co
+                    if bp_start.handle_right_type in ('VECTOR',):
+                        bp_start.handle_right_type = 'AUTO'
+                    # AUTO のままで良い（既にBEZIERハンドルがあれば維持）
+
+                    # 終点: handle_left を AUTO に
+                    end_hr_co = bp_end.handle_right.copy()
+                    bp_end.handle_right_type = 'FREE'
+                    bp_end.handle_right      = end_hr_co
+                    if bp_end.handle_left_type in ('VECTOR',):
+                        bp_end.handle_left_type = 'AUTO'
+
                     types_list[i] = "BEZIER"
                     modified_count += 1
 
@@ -1133,19 +1217,24 @@ class MYADDON_OT_extend_rail_end(bpy.types.Operator):
         if not curve_data.splines:
             return {"CANCELLED"}
 
+        was_in_edit = (obj.mode == 'EDIT')
+        if was_in_edit:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # モード切替後にスプラインと頂点データを安全に取得（RNA参照無効化を防ぐ）
         spline = curve_data.splines[0]
         if spline.use_cyclic_u:
+            if was_in_edit:
+                bpy.ops.object.mode_set(mode='EDIT')
             self.report({"WARNING"}, "ループレール（閉じた周回レール）のため終端がありません。細分化ボタンをご使用ください")
             return {"CANCELLED"}
 
         points = spline.bezier_points
         num_pts = len(points)
         if num_pts == 0:
+            if was_in_edit:
+                bpy.ops.object.mode_set(mode='EDIT')
             return {"CANCELLED"}
-
-        was_in_edit = (obj.mode == 'EDIT')
-        if was_in_edit:
-            bpy.ops.object.mode_set(mode='OBJECT')
 
         last_pt = points[num_pts - 1]
         if num_pts >= 2:
@@ -1181,13 +1270,126 @@ class MYADDON_OT_extend_rail_end(bpy.types.Operator):
 
         curve_data.update_tag()
 
+        # 新しく追加された点を選択状態にし、元のモード（EDIT等）に復帰
+        for i, p in enumerate(spline.bezier_points):
+            is_new = (i == num_pts)
+            p.select_control_point = is_new
+            p.select_left_handle = is_new
+            p.select_right_handle = is_new
+
         if was_in_edit:
             bpy.ops.object.mode_set(mode='EDIT')
-            for p in spline.bezier_points:
-                p.select_control_point = False
-            spline.bezier_points[num_pts].select_control_point = True
 
         self.report({"INFO"}, f"レールの終端に接続点を追加し、+{self.distance:.1f}m 延伸しました（全{len(spline.bezier_points)}点）")
+        return {"FINISHED"}
+
+
+class MYADDON_OT_extrude_rail_point(bpy.types.Operator):
+    bl_idname = "myaddon.extrude_rail_point"
+    bl_label = "選択点から新しく点を伸ばす (押し出し)"
+    bl_description = "選択している制御点から進行方向に新しい接続点を追加して伸ばします（編集モード・オブジェクトモード両対応）"
+    bl_options = {"REGISTER", "UNDO"}
+
+    distance: bpy.props.FloatProperty(name="延伸距離 (m)", default=5.0, min=0.5, max=100.0)
+
+    def execute(self, context):
+        obj = context.object
+        if not obj or obj.type != 'CURVE':
+            obj = find_stage_rail_object()
+        if not obj or obj.type != 'CURVE':
+            self.report({"WARNING"}, "レール（CURVE）オブジェクトが選択されていないか、見つかりません")
+            return {"CANCELLED"}
+
+        curve_data = obj.data
+        if not curve_data.splines:
+            return {"CANCELLED"}
+
+        was_in_edit = (obj.mode == 'EDIT')
+        if was_in_edit:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        spline = curve_data.splines[0]
+        points = spline.bezier_points
+        num_pts = len(points)
+        if num_pts == 0:
+            if was_in_edit:
+                bpy.ops.object.mode_set(mode='EDIT')
+            return {"CANCELLED"}
+
+        # 選択中のインデックスを検出（複数選択時は最後の点）
+        sel_idx = -1
+        for i, p in enumerate(points):
+            if p.select_control_point:
+                sel_idx = i
+
+        # 選択がない場合は終端を選択
+        if sel_idx == -1:
+            sel_idx = num_pts - 1
+
+        curr_pt = points[sel_idx]
+        if sel_idx > 0:
+            prev_pt = points[sel_idx - 1]
+            direction = (curr_pt.co - prev_pt.co)
+            if direction.length > 1e-4:
+                direction = direction.normalized()
+            else:
+                direction = mathutils.Vector((0.0, 0.0, 1.0))
+        elif num_pts > 1:
+            next_pt = points[1]
+            direction = (curr_pt.co - next_pt.co)
+            if direction.length > 1e-4:
+                direction = direction.normalized()
+            else:
+                direction = mathutils.Vector((0.0, 0.0, -1.0))
+        else:
+            direction = mathutils.Vector((0.0, 0.0, 1.0))
+
+        # 終端の場合は add(1)
+        if sel_idx == num_pts - 1:
+            new_co = curr_pt.co + direction * self.distance
+            spline.bezier_points.add(1)
+            new_pt = spline.bezier_points[num_pts]
+            new_pt.co = new_co
+            new_pt.handle_left_type = curr_pt.handle_left_type
+            new_pt.handle_right_type = curr_pt.handle_right_type
+            handle_offset = direction * (self.distance * 0.3)
+            new_pt.handle_left = new_co - handle_offset
+            new_pt.handle_right = new_co + handle_offset
+
+            types_list = get_curve_interp_types(obj)
+            types_list.append(types_list[-1] if types_list else "BEZIER")
+            set_curve_interp_types(obj, types_list)
+
+            target_idx = num_pts
+        else:
+            # 途中の点の場合、選択点と次の点の間を細分化して新しい点を配置
+            context.view_layer.objects.active = obj
+            obj.select_set(True)
+            for i, p in enumerate(points):
+                p.select_control_point = (i in (sel_idx, sel_idx + 1))
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.curve.subdivide()
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+            target_idx = sel_idx + 1
+            types_list = get_curve_interp_types(obj)
+            while len(types_list) < len(spline.bezier_points):
+                types_list.insert(target_idx, types_list[sel_idx] if sel_idx < len(types_list) else "BEZIER")
+            set_curve_interp_types(obj, types_list)
+
+        curve_data.update_tag()
+
+        # 新規点を選択
+        for i, p in enumerate(spline.bezier_points):
+            is_new = (i == target_idx)
+            p.select_control_point = is_new
+            p.select_left_handle = is_new
+            p.select_right_handle = is_new
+
+        if was_in_edit:
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        self.report({"INFO"}, f"新しい接続点を追加しました（位置: 点#{target_idx+1} / 全{len(spline.bezier_points)}点）")
         return {"FINISHED"}
 
 
@@ -1210,32 +1412,57 @@ class MYADDON_OT_subdivide_rail_segment(bpy.types.Operator):
             return {"CANCELLED"}
 
         was_in_edit = (obj.mode == 'EDIT')
-        if not was_in_edit:
-            context.view_layer.objects.active = obj
-            obj.select_set(True)
-            bpy.ops.object.mode_set(mode='EDIT')
-            # 選択が無ければ全選択
-            bpy.ops.curve.select_all(action='SELECT')
 
-        # Blender標準の細分化オペレーターを実行
+        # 一旦 OBJECT モードにして選択状態を確認
+        if was_in_edit:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        spline = curve_data.splines[0]
+        points = spline.bezier_points
+        num_pts = len(points)
+        if num_pts < 2:
+            if was_in_edit:
+                bpy.ops.object.mode_set(mode='EDIT')
+            self.report({"WARNING"}, "細分化するにはレールに2点以上の接続点が必要です")
+            return {"CANCELLED"}
+
+        sel_indices = [i for i, p in enumerate(points) if p.select_control_point]
+
+        # 選択が0個の場合は全選択にする
+        if len(sel_indices) == 0:
+            for p in points:
+                p.select_control_point = True
+        # 選択が1個だけの場合は、隣接する点も選択してセグメントを形成する
+        elif len(sel_indices) == 1:
+            idx = sel_indices[0]
+            if idx + 1 < num_pts:
+                points[idx + 1].select_control_point = True
+            elif idx - 1 >= 0:
+                points[idx - 1].select_control_point = True
+
+        # EDITモードにして細分化を実行
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+        bpy.ops.object.mode_set(mode='EDIT')
+
         try:
             bpy.ops.curve.subdivide()
         except Exception as e:
             self.report({"WARNING"}, f"細分化に失敗しました: {e}")
             return {"CANCELLED"}
 
-        # 補間タイプリストの再同期
+        # OBJECTモードで補間タイプリストの再同期
         bpy.ops.object.mode_set(mode='OBJECT')
-        num_pts = len(curve_data.splines[0].bezier_points)
+        new_num_pts = len(curve_data.splines[0].bezier_points)
         types_list = get_curve_interp_types(obj)
-        while len(types_list) < num_pts:
+        while len(types_list) < new_num_pts:
             types_list.append("BEZIER")
         set_curve_interp_types(obj, types_list)
 
         if was_in_edit:
             bpy.ops.object.mode_set(mode='EDIT')
 
-        self.report({"INFO"}, f"接続点を追加（細分化）しました（全{num_pts}点）")
+        self.report({"INFO"}, f"接続点を追加（細分化）しました（全{new_num_pts}点）")
         return {"FINISHED"}
 
 
@@ -1451,14 +1678,24 @@ class OBJECT_PT_rail_curve_settings(bpy.types.Panel):
         box_points = layout.box()
         box_points.label(text="✨ 接続点操作 & レール延伸:", icon='CURVE_BEZCIRCLE')
 
-        # 終端延伸ボタン
+        # 終端延伸・押し出しボタン
         row_ext = box_points.row(align=True)
-        op_ext = row_ext.operator(MYADDON_OT_extend_rail_end.bl_idname, text="終端に接続点を追加 (+5m延伸)", icon='FORWARD')
+        op_ext = row_ext.operator(MYADDON_OT_extend_rail_end.bl_idname, text="終端に接続点を追加 (+5m)", icon='FORWARD')
         op_ext.distance = 5.0
+
+        op_extrude = row_ext.operator(MYADDON_OT_extrude_rail_point.bl_idname, text="選択点から新しく点を伸ばす", icon='EXPORT')
+        op_extrude.distance = 5.0
 
         # 細分化ボタン
         row_sub = box_points.row(align=True)
         row_sub.operator(MYADDON_OT_subdivide_rail_segment.bl_idname, text="接続点を1つ追加 (細分化)", icon='SELECT_EXTEND')
+
+        # 編集モードでのショートカット案内
+        box_hint = box_points.box()
+        box_hint.label(text="💡 編集モード (Tab) のショートカット:", icon='HELP')
+        col_h = box_hint.column(align=True)
+        col_h.label(text="・点を選択して E キー: マウス位置へ新しい接続点を押し出し")
+        col_h.label(text="・Ctrl + クリック: クリックした位置に直接新しい接続点を追加")
 
         # 作図ツール & 形状調整
         row_tools = box_points.row(align=True)
@@ -1626,6 +1863,97 @@ class OBJECT_PT_rail_position_settings(bpy.types.Panel):
 
 
 # ==========================================
+# 6b. Nパネル（3Dビューサイドバー）カメラレール同期パネル
+# ==========================================
+
+class VIEW3D_PT_camera_rail_sync(bpy.types.Panel):
+    """3DビューのNパネル（サイドバー）にカメラ・ステージレール自動連携を常時表示するパネル"""
+    bl_idname = "VIEW3D_PT_camera_rail_sync"
+    bl_label = "カメラ・レール同期"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "カメラ・レール"  # Nパネルのタブ名
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+
+        stage_rail = find_stage_rail_object()
+        camera_rail = find_camera_rail_object()
+
+        # ステータス表示
+        box_status = layout.box()
+        box_status.label(text="📸 カメラ・ステージレール自動連携:", icon='CAMERA_DATA')
+
+        if stage_rail:
+            box_status.label(text=f"StageRail: ✅ {stage_rail.name}", icon='CHECKMARK')
+        else:
+            box_status.label(text="StageRail: ❌ 未検出", icon='ERROR')
+
+        if camera_rail:
+            box_status.label(text=f"CameraRail: ✅ {camera_rail.name}", icon='CHECKMARK')
+        else:
+            box_status.label(text="CameraRail: ❌ 未生成", icon='INFO')
+
+        is_sync = getattr(scene, "rail_camera_auto_sync", False)
+        row_state = box_status.row()
+        if is_sync:
+            row_state.label(text="状態: 🟢 リアルタイム連携中", icon='LINKED')
+        else:
+            row_state.label(text="状態: ⚪ 分離中", icon='UNLINKED')
+
+        layout.separator()
+
+        # パラメータ設定
+        box_param = layout.box()
+        box_param.label(text="オフセット設定:", icon='DRIVER_DISTANCE')
+        col = box_param.column(align=True)
+        col.prop(scene, "rail_camera_distance", text="カメラ距離 (m)")
+        col.prop(scene, "rail_camera_height", text="カメラ高さ (m)")
+        col.prop(scene, "rail_camera_flip_side", text="オフセット向きを反転 (内側)")
+
+        layout.separator()
+
+        # 操作ボタン
+        box_btn = layout.box()
+        box_btn.label(text="操作:", icon='TOOL_SETTINGS')
+
+        col_btn = box_btn.column(align=True)
+        col_btn.scale_y = 1.4
+        col_btn.operator(
+            MYADDON_OT_sync_camera_rail.bl_idname,
+            text="🔄 StageRail から CameraRail を生成・同期",
+            icon='FILE_REFRESH'
+        )
+
+        row_toggle = box_btn.row(align=True)
+        if is_sync:
+            row_toggle.operator(
+                MYADDON_OT_unlink_camera_rail.bl_idname,
+                text="分離する（個別編集モード）",
+                icon='UNLINKED'
+            )
+        else:
+            row_toggle.prop(
+                scene, "rail_camera_auto_sync",
+                text="リアルタイム連携 ON/OFF",
+                icon='LINKED',
+                toggle=True
+            )
+
+        layout.separator()
+
+        # 球体ワイヤー表示設定
+        box_wire = layout.box()
+        box_wire.label(text="🔮 接続点ワイヤー表示:", icon='SHADING_WIRE')
+        row_w = box_wire.row()
+        row_w.prop(scene, "rail_draw_wire_sphere", text="球体ワイヤー表示")
+        if getattr(scene, "rail_draw_wire_sphere", True):
+            box_wire.prop(scene, "rail_wire_sphere_radius", text="球体サイズ (m)")
+            box_wire.label(text="🟡 Linear  |  🟢 Bezier  |  🔴 CatmullRom")
+
+
+# ==========================================
 # 7. 登録・解除
 # ==========================================
 
@@ -1641,10 +1969,12 @@ classes = (
     MYADDON_OT_make_rail_arc,
     MYADDON_OT_enter_rail_draw_tool,
     MYADDON_OT_extend_rail_end,
+    MYADDON_OT_extrude_rail_point,
     MYADDON_OT_subdivide_rail_segment,
     MYADDON_OT_create_preset_rail,
     OBJECT_PT_rail_curve_settings,
     OBJECT_PT_rail_position_settings,
+    VIEW3D_PT_camera_rail_sync,
 )
 
 def register_rail_snap():

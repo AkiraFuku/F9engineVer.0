@@ -334,15 +334,27 @@ def get_or_load_preview_mesh(obj_type, force_reload=False):
     mesh_data = bpy.data.meshes.new(mesh_name)
     verts = [(-0.5, -0.5, -0.5), (0.5, -0.5, -0.5), (0.5, 0.5, -0.5), (-0.5, 0.5, -0.5),
              (-0.5, -0.5,  0.5), (0.5, -0.5,  0.5), (0.5, 0.5,  0.5), (-0.5, 0.5,  0.5)]
-    faces = [(0, 1, 2, 3), (4, 7, 6, 5), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (4, 0, 3, 7)]
+    faces = [
+        (0, 3, 2, 1),  # 底面 (Z-, 法線 -Z)
+        (4, 5, 6, 7),  # 上面 (Z+, 法線 +Z)
+        (0, 1, 5, 4),  # 前面 (Y-, 法線 -Y)
+        (2, 3, 7, 6),  # 後面 (Y+, 法線 +Y)
+        (1, 2, 6, 5),  # 右面 (X+, 法線 +X)
+        (0, 4, 7, 3),  # 左面 (X-, 法線 -X)
+    ]
     mesh_data.from_pydata(verts, [], faces)
-    mesh_data.update()
+    mesh_data.validate(verbose=False)
+    mesh_data.update(calc_edges=True)
     _preview_mesh_cache[obj_type] = mesh_data
     return mesh_data
 
 
 def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_path="", uv_tile=4.0):
     """terrain_grid 用のメッシュ（面・UV・テクスチャ付き）を直接生成"""
+    # 既存の同名メッシュは削除してから再生成（重複防止）
+    if mesh_name in bpy.data.meshes:
+        bpy.data.meshes.remove(bpy.data.meshes[mesh_name], do_unlink=True)
+
     mesh = bpy.data.meshes.new(mesh_name)
     div_x = max(int(div_x), 1)
     div_y = max(int(div_y), 1)
@@ -357,7 +369,11 @@ def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_pa
         for ix in range(div_x + 1):
             verts.append((start_x + ix * step_x, start_y + iy * step_y, 0.0))
 
-    # 面生成（反時計回り: Z+ 上向き法線）
+    # 面生成
+    # 頂点インデックス:
+    #   i0=(ix,   iy  )  i1=(ix+1, iy  )
+    #   i2=(ix,   iy+1)  i3=(ix+1, iy+1)
+    # 反時計回り: i0(左下) -> i1(右下) -> i3(右上) -> i2(左上) で法線が Z+ 上向き
     faces = []
     for iy in range(div_y):
         for ix in range(div_x):
@@ -368,6 +384,7 @@ def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_pa
             faces.append((i0, i1, i3, i2))
 
     mesh.from_pydata(verts, [], faces)
+    mesh.validate(verbose=False)
 
     # UV座標の設定（タイリング反映）
     uv_layer = mesh.uv_layers.new(name="UVMap")
@@ -380,7 +397,11 @@ def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_pa
             v = (iy / div_y) * uv_tile
             uv_layer.data[loop_idx].uv = (u, v)
 
-    mesh.update()
+    # 法線を確実に更新し、上面（Z+ > 0）を表向きにする
+    mesh.update(calc_edges=True)
+    if mesh.polygons and mesh.polygons[0].normal.z < 0:
+        mesh.flip_normals()
+        mesh.update()
 
     # テクスチャマテリアル適用
     if texture_path:
@@ -393,12 +414,15 @@ def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_pa
     return mesh
 
 
+
 # ==========================================
 # JSON ステージデータ インポーター
 # ==========================================
 
-def _import_object_recursive(objects_json, parent=None, clear_existing=True, convert_coords=True):
+def _import_object_recursive(objects_json, parent=None, clear_existing=True, convert_coords=True, target_collection=None):
     """JSON オブジェクトリストを再帰的に Blender オブジェクトへ変換"""
+    col = target_collection or bpy.context.collection
+
     for obj_data in objects_json:
         name        = obj_data.get("name", "Unnamed")
         type_str    = obj_data.get("type", "MESH")
@@ -483,7 +507,7 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
                     bpt.handle_right_type = "FREE"
             blender_obj = bpy.data.objects.new(name, curve_data)
             blender_obj["interp_types"] = interp_types
-            bpy.context.collection.objects.link(blender_obj)
+            col.objects.link(blender_obj)
 
         # 2. 地形グリッド (terrain_grid)
         # JSONの type が EMPTY でも MESH でも、確実にメッシュオブジェクトとして生成する！
@@ -497,7 +521,7 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv)
             blender_obj = bpy.data.objects.new(name, t_mesh)
             blender_obj.show_wire = True
-            bpy.context.collection.objects.link(blender_obj)
+            col.objects.link(blender_obj)
             print(f"[import_scene] 地形グリッドメッシュを生成: {name} ({sx}x{sy}m, div={dx}x{dy}, tex={texture})")
 
         elif type_str == "EMPTY":
@@ -511,7 +535,7 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             else:
                 blender_obj = bpy.data.objects.new(name, None)
                 blender_obj.empty_display_type = 'PLAIN_AXES'
-            bpy.context.collection.objects.link(blender_obj)
+            col.objects.link(blender_obj)
 
         else:
             # MESH オブジェクト (file_name がある場合はモデルを読み込む)
@@ -538,6 +562,16 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
 
             if loaded_mesh:
                 blender_obj = bpy.data.objects.new(name, loaded_mesh)
+            elif "size_x" in properties:
+                # OBJファイルが見つからないが properties にサイズ情報がある場合、地形グリッドを生成
+                sx = float(properties.get("size_x", 100.0))
+                sy = float(properties.get("size_y", 100.0))
+                dx = int(float(properties.get("divisions_x", 20)))
+                dy = int(float(properties.get("divisions_y", 20)))
+                uv = float(properties.get("uv_tile", 4.0))
+                t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv)
+                blender_obj = bpy.data.objects.new(name, t_mesh)
+                blender_obj.show_wire = True
             else:
                 mesh_data = bpy.data.meshes.new(name)
                 verts = [
@@ -545,13 +579,28 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
                     (-1, -1,  1), (1, -1,  1), (1, 1,  1), (-1, 1,  1)
                 ]
                 faces = [
-                    (0, 1, 2, 3), (4, 7, 6, 5), (0, 4, 5, 1),
-                    (1, 5, 6, 2), (2, 6, 7, 3), (4, 0, 3, 7)
+                    (0, 3, 2, 1),  # 底面 (Z-, 法線 -Z)
+                    (4, 5, 6, 7),  # 上面 (Z+, 法線 +Z)
+                    (0, 1, 5, 4),  # 前面 (Y-, 法線 -Y)
+                    (2, 3, 7, 6),  # 後面 (Y+, 法線 +Y)
+                    (1, 2, 6, 5),  # 右面 (X+, 法線 +X)
+                    (0, 4, 7, 3),  # 左面 (X-, 法線 -X)
                 ]
                 mesh_data.from_pydata(verts, [], faces)
-                mesh_data.update()
+                mesh_data.validate(verbose=False)
+                mesh_data.update(calc_edges=True)
+
+                # テクスチャが指定されていればマテリアル適用
+                if texture:
+                    root = get_project_root()
+                    tex_full = os.path.join(root, texture) if (texture and root and not os.path.isabs(texture)) else texture
+                    if os.path.exists(tex_full):
+                        mat = create_texture_material(f"Mat_{name}", tex_full)
+                        if mat:
+                            mesh_data.materials.append(mat)
+
                 blender_obj = bpy.data.objects.new(name, mesh_data)
-            bpy.context.collection.objects.link(blender_obj)
+            col.objects.link(blender_obj)
 
         if blender_obj:
             blender_obj.location       = loc
@@ -597,7 +646,8 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             if children:
                 _import_object_recursive(children, parent=blender_obj,
                                          clear_existing=clear_existing,
-                                         convert_coords=convert_coords)
+                                         convert_coords=convert_coords,
+                                         target_collection=col)
 
 
 class MYADDON_OT_import_scene(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
@@ -647,15 +697,30 @@ class MYADDON_OT_import_scene(bpy.types.Operator, bpy_extras.io_utils.ImportHelp
             if m_name in bpy.data.meshes:
                 bpy.data.meshes.remove(bpy.data.meshes[m_name], do_unlink=True)
 
+        # JSON ファイル名（拡張子なし）からシーンごとのコレクション名を取得（例: "stage3"）
+        scene_col_name = os.path.splitext(os.path.basename(self.filepath))[0]
+        if not scene_col_name:
+            scene_col_name = data.get("name", "Scene")
+
+        # コレクションを取得または新規作成してシーンにリンク
+        if scene_col_name in bpy.data.collections:
+            target_col = bpy.data.collections[scene_col_name]
+        else:
+            target_col = bpy.data.collections.new(scene_col_name)
+            # 現在のシーンのマスターコレクション配下に接続
+            if target_col.name not in context.scene.collection.children:
+                context.scene.collection.children.link(target_col)
+
         should_convert = self.convert_from_game_coords
-        _import_object_recursive(objects, parent=None, clear_existing=self.clear_scene, convert_coords=should_convert)
+        _import_object_recursive(objects, parent=None, clear_existing=self.clear_scene,
+                                 convert_coords=should_convert, target_collection=target_col)
 
         # rail_pos を持つオブジェクトをベジェレール上に自動スナップ
         snapped_count = 0
         if self.snap_to_rails:
             snapped_count = snap_all_objects_to_rail()
 
-        msg = f"{len(objects)} 個のオブジェクトを配置しました"
+        msg = f"コレクション '{scene_col_name}' に {len(objects)} 個のオブジェクトを配置しました"
         if snapped_count > 0:
             msg += f" (レール自動配置: {snapped_count}個)"
         msg += f" (ゲーム座標変換: {'ON' if should_convert else 'OFF'})"

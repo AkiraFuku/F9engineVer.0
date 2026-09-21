@@ -3,6 +3,101 @@
     "coordinate_system": "GAME",
     "objects": [
         {
+            "type": "MESH",
+            "name": "Cube",
+            "transform": {
+                "translation": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotation": [
+                    -0.0,
+                    0.0,
+                    -0.0
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "type": "LIGHT",
+            "name": "Light",
+            "transform": {
+                "translation": [
+                    4.0762,
+                    5.9039,
+                    1.0055
+                ],
+                "rotation": [
+                    -37.261,
+                    106.9363,
+                    3.1637
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "type": "CAMERA",
+            "name": "Camera",
+            "transform": {
+                "translation": [
+                    7.3589,
+                    4.9583,
+                    -6.9258
+                ],
+                "rotation": [
+                    -63.5593,
+                    46.6919,
+                    0.0
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "type": "MESH",
+            "name": "TerrainGround",
+            "transform": {
+                "translation": [
+                    -1.6818,
+                    -0.5,
+                    -18.2389
+                ],
+                "rotation": [
+                    -0.0,
+                    0.0,
+                    -0.0
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "object_type": "BLOCK",
+            "file_name": "terrain_deformed.obj",
+            "model_dir": "resources/Stagemap",
+            "texture": "resources/Stagemap/863603.png",
+            "properties": {
+                "size_x": "60.53",
+                "size_y": "96.48",
+                "divisions_x": "60",
+                "divisions_y": "64",
+                "uv_tile": "4.0"
+            }
+        },
+        {
             "type": "CURVE",
             "name": "StageRail",
             "transform": {
@@ -379,38 +474,6 @@
                 0.4,
                 1.403
             ]
-        },
-        {
-            "type": "MESH",
-            "name": "TerrainGround",
-            "transform": {
-                "translation": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    -0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            },
-            "object_type": "BLOCK",
-            "file_name": "terrain_deformed.obj",
-            "model_dir": "resources/Stagemap",
-            "texture": "resources/Stagemap/863603.png",
-            "properties": {
-                "size_x": "60.4",
-                "size_y": "96.53",
-                "divisions_x": "60",
-                "divisions_y": "64",
-                "uv_tile": "4.0"
-            }
         }
     ]
 }
