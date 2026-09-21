@@ -22,8 +22,11 @@ from .object_type import (
 )
 from .colider import (
     MYADDON_OT_add_collider,
+    MYADDON_OT_snap_to_ground,
+    MYADDON_OT_snap_all_to_ground,
     OBJECT_PT_collider,
     DrawCollider,
+    ground_auto_snap_handler,
 )
 from .operater import (
     MYADDON_OT_add_behavior_tree,
@@ -40,6 +43,12 @@ from .import_scene import MYADDON_OT_import_scene
 from .terrain_generator import (
     MYADDON_OT_generate_terrain,
     MYADDON_OT_convert_obj_to_terrain,
+    MYADDON_OT_deform_terrain_to_rail,
+    MYADDON_OT_enter_terrain_sculpt,
+    MYADDON_OT_draw_rail_mode,
+)
+from .road_generator import (
+    MYADDON_OT_generate_road_along_rail,
 )
 from .rail_snap import (
     MYADDON_OT_snap_to_rail,
@@ -75,8 +84,16 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
         self.layout.separator()
         self.layout.operator(MYADDON_OT_apply_all_preview_models.bl_idname, text=MYADDON_OT_apply_all_preview_models.bl_label, icon='MESH_DATA')
         self.layout.separator()
+        self.layout.operator(MYADDON_OT_deform_terrain_to_rail.bl_idname, text="レール沿いに地面を変形して道をつくる", icon='MOD_SMOOTH')
+        self.layout.operator(MYADDON_OT_draw_rail_mode.bl_idname, text="ペンでなぞってレールを描く", icon='GREASEPENCIL')
+        self.layout.operator(MYADDON_OT_enter_terrain_sculpt.bl_idname, text="なぞって地形変形 (スカルプト)", icon='SCULPTMODE_HLT')
+        self.layout.separator()
+        self.layout.operator(MYADDON_OT_snap_all_to_ground.bl_idname, text="全オブジェクトの地面埋まりを一括解消", icon='SNAP_ON')
+        self.layout.separator()
         self.layout.operator(MYADDON_OT_generate_terrain.bl_idname, text=MYADDON_OT_generate_terrain.bl_label, icon='MESH_GRID')
         self.layout.operator(MYADDON_OT_convert_obj_to_terrain.bl_idname, text=MYADDON_OT_convert_obj_to_terrain.bl_label, icon='MOD_OCEAN')
+        self.layout.separator()
+        self.layout.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="（補助）独立道路メッシュを生成", icon='ROAD')
         self.layout.separator()
         self.layout.operator(MYADDON_OT_add_slope_block.bl_idname, text=MYADDON_OT_add_slope_block.bl_label, icon='MOD_SOLIDIFY')
         self.layout.operator(MYADDON_OT_add_stairs_block.bl_idname, text=MYADDON_OT_add_stairs_block.bl_label, icon='MOD_BEVEL')
@@ -99,6 +116,8 @@ classes = (
     MYADDON_OT_add_filwname,
     OBJECT_PT_file_name,
     MYADDON_OT_add_collider,
+    MYADDON_OT_snap_to_ground,
+    MYADDON_OT_snap_all_to_ground,
     OBJECT_PT_collider,
     MYADDON_OT_add_behavior_tree,
     MYADDON_OT_open_behavior_editor_window,
@@ -109,6 +128,10 @@ classes = (
     MYADDON_OT_apply_all_preview_models,
     MYADDON_OT_generate_terrain,
     MYADDON_OT_convert_obj_to_terrain,
+    MYADDON_OT_deform_terrain_to_rail,
+    MYADDON_OT_enter_terrain_sculpt,
+    MYADDON_OT_draw_rail_mode,
+    MYADDON_OT_generate_road_along_rail,
     MYADDON_OT_snap_to_rail,
     MYADDON_OT_calculate_rail_pos,
     MYADDON_OT_add_rail_pos,
@@ -132,6 +155,26 @@ def register():
             bpy.utils.register_class(cls)
         except ValueError:
             pass
+
+    # シーンプロパティ初期化（コライダー・レイキャスト・自動接地）
+    bpy.types.Scene.draw_collider_always = bpy.props.BoolProperty(
+        name="コライダー自動表示",
+        description="3Dビューポートにコライダーのワイヤーフレームを自動常時表示します（埋まっている場合は赤色で警告）",
+        default=True,
+    )
+    bpy.types.Scene.draw_raycast_always = bpy.props.BoolProperty(
+        name="レイキャスト自動表示",
+        description="足元から地面表面へのレイキャストと接地マーカーを自動常時表示します",
+        default=True,
+    )
+    bpy.types.Scene.auto_ground_snap = bpy.props.BoolProperty(
+        name="自動地面接地（埋まり防止）",
+        description="オブジェクト移動時に地面メッシュを検知し、地面に埋まらないよう自動的に表面にピッタリ乗せます",
+        default=True,
+    )
+
+    if ground_auto_snap_handler not in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.append(ground_auto_snap_handler)
 
     # トップバーメニューに追加
     try:
@@ -159,7 +202,7 @@ def register():
         )
 
     register_rail_snap()
-    print("レベルエディタが有効化されました。（地形グリッド・レール自動吸着対応）")
+    print("レベルエディタが有効化されました。（コライダー・レイキャスト自動表示＆地面埋まり防止対応）")
 
 
 def unregister():
@@ -168,6 +211,13 @@ def unregister():
     if DrawCollider.handle:
         bpy.types.SpaceView3D.draw_handler_remove(DrawCollider.handle, "WINDOW")
         DrawCollider.handle = None
+
+    if ground_auto_snap_handler in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(ground_auto_snap_handler)
+
+    for prop in ["draw_collider_always", "draw_raycast_always", "auto_ground_snap"]:
+        if hasattr(bpy.types.Scene, prop):
+            delattr(bpy.types.Scene, prop)
 
     try:
         bpy.types.TOPBAR_MT_editor_menus.remove(draw_my_menu)

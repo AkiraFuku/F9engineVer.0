@@ -130,8 +130,10 @@ public:
     }
 
     void SetVelocity(Vector3 velocity) {
-
         velocity_ = velocity;
+        if (velocity_.y > 0.0f) {
+            isGrounded_ = false;
+        }
     }
     void AddVelocity(Vector3 velocity) {
 

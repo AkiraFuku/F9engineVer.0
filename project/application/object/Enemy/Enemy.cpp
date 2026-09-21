@@ -74,6 +74,9 @@ void Enemy::Update()
 void Enemy::UpdateTransform()
 {
     RayCastUpdate();
+    if (isRayHit_) {
+        worldY_ = rayHitPoint_.y + kHeightOffset;
+    }
     UpdatePhysics();
     if (collider_) {
         collider_->Update();
@@ -274,19 +277,19 @@ void Enemy::RayCastUpdate()
         return;
     }
 
+    // 始点を敵の位置から少し高めに持ち上げる（めり込み時でも確実に地面の上から下向きに照射）
     ray_.origin = object_->GetTranslate();
-    ray_.origin.y += rayHitPalamata_.rayOffset; // 始点を上に持ち上げる
+    ray_.origin.y += 2.0f;
 
-    // 持ち上げた分、レイの長さを伸ばす（あるいは床の下まで届く十分な長さに設定）
-    ray_.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
+    // 下方向へ十分な長さのレイを飛ばす
+    ray_.diff = { 0.0f, -25.0f, 0.0f };
+
     // 毎フレーム初期化
     isRayHit_ = false;
     rayHitDistance_ = FLT_MAX;
     result_ = RayTriangleCollisionResult::NoCollision;
-
     rayHitPoint_ = { 0.0f, 0.0f, 0.0f };
     rayHitTriangle_ = Triangle{};
-
 
     for (const auto& tri : triangles) {
         Vector3 tmpHit = {};
@@ -294,20 +297,33 @@ void Enemy::RayCastUpdate()
         RayTriangleCollisionResult result;
 
         if (CheckRayTriangle(ray_, tri, &dist, &tmpHit, &result)) {
-            // 【重要】表面（FrontFace）に当たったときだけを処理対象にする
-            // 裏面（BackFace）は立方体の内側などなので、接地用の床としては無視する
-            if (result == RayTriangleCollisionResult::FrontFace) {
+            // FrontFace と BackFace の両方を対象にする（左手系・モデルの巻き順差異への対応）
+            if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
 
-                // 表面に当たった中で、最も近い（最も高い位置にある）床を選択
+                // 面法線を計算して上向き（床面）であることを確認（垂直な壁や急崖は除外）
+                Vector3 v01 = Subtract(tri.vertices[1], tri.vertices[0]);
+                Vector3 v12 = Subtract(tri.vertices[2], tri.vertices[1]);
+                Vector3 normal = Cross(v01, v12);
+                float nLen = Length(normal);
+                if (nLen > 0.0001f) {
+                    normal = Normalize(normal);
+                    if (result == RayTriangleCollisionResult::BackFace) {
+                        normal = Multiply(-1.0f, normal);
+                    }
+                    if (normal.y < 0.2f) {
+                        continue; // 壁や天井面は床判定から除外
+                    }
+                }
+
+                // 最も近い（最も高い位置にある）床を選択
                 if (dist < rayHitDistance_) {
                     rayHitDistance_ = dist;
                     rayHitTriangle_ = tri;
                     rayHitPoint_ = tmpHit;
-
-                    isRayHit_ = true; // 表面に最短で当たっているので確実に true
+                    result_ = result;
+                    isRayHit_ = true;
                 }
             }
-            result_ = result;
         }
     }
 
@@ -321,47 +337,50 @@ void Enemy::RayCastUpdate()
 
 void Enemy::UpdateGravity()
 {
-    // 1. レイ判定の結果から「前回のフレームで接地していたか」を仮定するが、
-    //    もし上に向かう速度（velocity_.y > 0）があるなら強制的に接地を解除する
-    if (isRayHit_ && velocity_.y <= 0.0f) {
+    if (isRayHit_) {
         rayHitPalamata_.groundY = rayHitPoint_.y;
-
-        const float kGroundEpsilon = 0.05f;
+        float targetY = rayHitPalamata_.groundY + kHeightOffset;
         float enemyBottomY = worldY_ - kHeightOffset;
 
-        if (enemyBottomY <= rayHitPalamata_.groundY + kGroundEpsilon) {
-            isGrounded_ = true;
-        } else {
+        // 1. 上昇中（ジャンプ中 velocity_.y > 0.0f）の処理
+        if (velocity_.y > 0.0f) {
             isGrounded_ = false;
+            velocity_.y += (kGravity * gravityScale_) * deltaTime_;
+            worldY_ += velocity_.y * deltaTime_;
+        }
+        else {
+            // 2. 下降中または静止中（velocity_.y <= 0.0f）の着地・吸着処理
+            // 地面以下に達した場合、または接地中の下り坂吸着範囲内にある場合
+            if (worldY_ <= targetY + 0.05f || (isGrounded_ && enemyBottomY <= rayHitPalamata_.groundY + 0.5f)) {
+                isGrounded_ = true;
+                worldY_ = targetY; // 地面に確実にスナップ
+                velocity_.y = 0.0f;
+            } else {
+                // 空中から落下中の場合
+                isGrounded_ = false;
+                velocity_.y += (kGravity * gravityScale_) * deltaTime_;
+                worldY_ += velocity_.y * deltaTime_;
+
+                // 落下した結果、地面を突き抜けた場合は地面で止める
+                if (worldY_ <= targetY) {
+                    worldY_ = targetY;
+                    velocity_.y = 0.0f;
+                    isGrounded_ = true;
+                }
+            }
         }
     } else {
+        // 地面が検出されない場合（落下中または奈落）
         isGrounded_ = false;
-        rayHitPalamata_.groundY = -FLT_MAX;
-    }
-
-    // 2. 速度の更新（デルタタイムを掛ける）
-    if (!isGrounded_) {
         velocity_.y += (kGravity * gravityScale_) * deltaTime_;
-    } else {
-        // 接地しているなら下方向の速度はリセット（上向きの力が働いていないときだけ）
-        if (velocity_.y < 0.0f) {
+        worldY_ += velocity_.y * deltaTime_;
+
+        // 奈落の最低保証
+        if (worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
+            worldY_ = rayHitPalamata_.minY + kHeightOffset;
             velocity_.y = 0.0f;
+            isGrounded_ = true;
         }
-    }
-
-    // 3. 位置の更新（デルタタイムを掛ける）
-    worldY_ += velocity_.y * deltaTime_;
-
-    // 4. めり込み補正（位置を動かした後に、確定した地面の高さに合わせる）
-    if (isGrounded_ && isRayHit_) {
-        worldY_ = rayHitPalamata_.groundY + kHeightOffset;
-    }
-
-    // 5. 奈落の最低保証
-    if (!isRayHit_ && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
-        worldY_ = rayHitPalamata_.minY + kHeightOffset;
-        velocity_.y = 0.0f;
-        isGrounded_ = true;
     }
 }
 const char* Enemy::GetStateName() const

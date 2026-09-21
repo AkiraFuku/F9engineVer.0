@@ -98,7 +98,7 @@ void Model::Update()
 #endif // USE_IMGUI
 
 }
-void Model::Draw() {
+void Model::Draw(const Matrix4x4& worldMatrix) {
     //VBVの設定
 
     if (hasSkinning_)
@@ -141,7 +141,7 @@ void Model::Draw() {
         DXCommon::GetInstance()->GetCommandList()->DrawInstanced(
             UINT(modelData_.vertices.size()), 1, 0, 0);
     }
-    DebugDrawSkeleton();
+    DebugDrawSkeleton(worldMatrix);
 
 
 }
@@ -304,27 +304,38 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
     Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile(filePath.c_str(),
-        /*aiProcess_FlipWindingOrder |  */            // 三角形化されていないポリゴンを三角形にする
-        aiProcess_FlipUVs      // 法線がない場合、自動計算する
-       // aiProcess_CalcTangentSpace//UV座標を反転させる
+        aiProcess_Triangulate |          // クワッド等を三角形に自動変換
+        aiProcess_FlipUVs      |         // UV上下反転（DirectX座標系対応）
+        aiProcess_GenSmoothNormals       // 法線がない場合は自動生成
     );
     assert(scene->HasMeshes());
     for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh* mesh = scene->mMeshes[meshIndex];
-        assert(mesh->HasNormals());
-        assert(mesh->HasTextureCoords(0));
+        // 注: aiProcess_GenSmoothNormals で法線は必ず生成されるが念のためチェック
+        bool hasNormals = mesh->HasNormals();
+        bool hasUV      = mesh->HasTextureCoords(0);
         modelData.vertices.resize(mesh->mNumVertices);
 
         for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
         {
             aiVector3D& position = mesh->mVertices[i];
-            aiVector3D& normal = mesh->mNormals[i];
-            aiVector3D& texcord = mesh->mTextureCoords[0][i];
             VertexData& vertex = modelData.vertices[i];
-            vertex.position = { position.x,position.y,position.z,1.0f };
-            vertex.normal = { normal.x,normal.y,normal.z };
-            vertex.texcord = { texcord.x,texcord.y };
+            vertex.position = { position.x, position.y, position.z, 1.0f };
+            // 法線
+            if (hasNormals) {
+                aiVector3D& normal = mesh->mNormals[i];
+                vertex.normal = { normal.x, normal.y, normal.z };
+            } else {
+                vertex.normal = { 0.0f, 1.0f, 0.0f }; // 法線がない場合は上向きデフォルト
+            }
+            // UV
+            if (hasUV) {
+                aiVector3D& texcord = mesh->mTextureCoords[0][i];
+                vertex.texcord = { texcord.x, texcord.y };
+            } else {
+                vertex.texcord = { 0.0f, 0.0f };
+            }
         }
         for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
@@ -625,25 +636,27 @@ Model::SkinCluster Model::CreateSkinCluster(const Skeleton& skeleton, const Mode
     ;
 }
 
-void Model::DebugDrawSkeleton()
+void Model::DebugDrawSkeleton(const Matrix4x4& worldMatrix)
 {
     if (HasSkinning())
     {
         for (const Joint& joint : skeleton_.joints) {
-            // 現在のジョイントのワールド座標
-            Vector3 start = { joint.skeletonSpaceMatrix.m[3][0], joint.skeletonSpaceMatrix.m[3][1], joint.skeletonSpaceMatrix.m[3][2] };
+            // 現在のジョイントのローカル座標
+            Vector3 localStart = { joint.skeletonSpaceMatrix.m[3][0], joint.skeletonSpaceMatrix.m[3][1], joint.skeletonSpaceMatrix.m[3][2] };
+            // ワールド座標に変換
+            Vector3 start = vector3Transform(localStart, worldMatrix);
 
             for (int32_t childIndex : joint.children) {
                 const Joint& childJoint = skeleton_.joints[childIndex];
-                // 子ジョイントのワールド座標
-                Vector3 end = { childJoint.skeletonSpaceMatrix.m[3][0], childJoint.skeletonSpaceMatrix.m[3][1], childJoint.skeletonSpaceMatrix.m[3][2] };
+                // 子ジョイントのローカル座標
+                Vector3 localEnd = { childJoint.skeletonSpaceMatrix.m[3][0], childJoint.skeletonSpaceMatrix.m[3][1], childJoint.skeletonSpaceMatrix.m[3][2] };
+                // ワールド座標に変換
+                Vector3 end = vector3Transform(localEnd, worldMatrix);
 
-                PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 0.0f, 0.0f, 10.0f });
+                PrimitiveDrawer::GetInstance()->DrawLine(start, end, { 1.0f, 0.0f, 0.0f, 1.0f });
             }
         }
     }
-
-
 }
 
 std::vector<Triangle> Model::GetLocalTriangles() const {

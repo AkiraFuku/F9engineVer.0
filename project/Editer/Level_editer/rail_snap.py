@@ -1470,6 +1470,36 @@ class OBJECT_PT_rail_curve_settings(bpy.types.Panel):
 
         layout.separator()
 
+        # ── 2. 地面メッシュ道路変形 ＆ なぞり地形造形（★新機能★） ──
+        box_road = layout.box()
+        box_road.label(text="⛰️ 地面メッシュ道路変形 ＆ なぞり造形:", icon='MOD_OCEAN')
+
+        try:
+            from .terrain_generator import MYADDON_OT_draw_rail_mode, MYADDON_OT_deform_terrain_to_rail, MYADDON_OT_enter_terrain_sculpt
+        except ImportError:
+            from terrain_generator import MYADDON_OT_draw_rail_mode, MYADDON_OT_deform_terrain_to_rail, MYADDON_OT_enter_terrain_sculpt
+        try:
+            from .road_generator import MYADDON_OT_generate_road_along_rail
+        except ImportError:
+            from road_generator import MYADDON_OT_generate_road_along_rail
+
+        # メイン：地面メッシュを変形して道をつくる
+        col_main = box_road.column(align=True)
+        col_main.scale_y = 1.3
+        col_main.operator(MYADDON_OT_deform_terrain_to_rail.bl_idname, text="レール沿いに地面を変形して道をつくる", icon='MOD_SMOOTH')
+
+        # サブ：なぞりツール
+        row_draw = box_road.row(align=True)
+        row_draw.operator(MYADDON_OT_draw_rail_mode.bl_idname, text="ペンでなぞってレールを描く", icon='GREASEPENCIL')
+        row_draw.operator(MYADDON_OT_enter_terrain_sculpt.bl_idname, text="なぞって地形変形 (スカルプト)", icon='SCULPTMODE_HLT')
+
+        # （補助）独立した道路メッシュ生成
+        box_sub = box_road.box()
+        box_sub.label(text="（補助パーツ）独立道路オブジェクト生成:")
+        box_sub.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="独立した道路メッシュを生成", icon='ROAD')
+
+        layout.separator()
+
         # ── 2. レール連携ステータス ──
         box_link = layout.box()
         box_link.label(text="📸 カメラ・ステージレール自動連携:", icon='CAMERA_DATA')
@@ -1578,6 +1608,21 @@ class OBJECT_PT_rail_position_settings(bpy.types.Panel):
         if scene.rail_magnet_snap:
             box_magnet.prop(scene, "rail_magnet_distance", text="吸着距離 (m)")
             box_magnet.prop(scene, "rail_magnet_keep_height", text="現在の高さを維持")
+
+        layout.separator()
+
+        # ── 3. 地面への自動接地 ＆ 埋まり防止 ──
+        try:
+            from .colider import MYADDON_OT_snap_to_ground, MYADDON_OT_snap_all_to_ground
+        except ImportError:
+            from colider import MYADDON_OT_snap_to_ground, MYADDON_OT_snap_all_to_ground
+
+        box_ground = layout.box()
+        box_ground.label(text="🎯 地面接地 ＆ 埋まり解消:", icon='SNAP_FACE')
+        box_ground.prop(scene, "auto_ground_snap", text="🧲 移動時に地面へ自動接地 (埋まり防止)")
+        row_g = box_ground.row(align=True)
+        row_g.operator(MYADDON_OT_snap_to_ground.bl_idname, text="地面に接地 (埋まり解消)", icon='EMPTY_SINGLE_ARROW')
+        row_g.operator(MYADDON_OT_snap_all_to_ground.bl_idname, text="全埋まりを一括解消", icon='FILE_REFRESH')
 
 
 # ==========================================

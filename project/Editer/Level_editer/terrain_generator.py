@@ -858,12 +858,399 @@ class MYADDON_OT_convert_obj_to_terrain(bpy.types.Operator):
         return {"FINISHED"}
 
 
+# ==========================================
+# レール沿い地形変形 ＆ なぞりスカルプト連携
+# ==========================================
+
+def export_terrain_mesh_to_obj(terrain_obj, rel_path="resources/Stagemap/terrain_deformed.obj"):
+    """
+    変形後の地形メッシュを、ゲーム側で直接読み込めるOBJファイルとして書き出す。
+    """
+    try:
+        from .road_generator import _get_project_root
+    except ImportError:
+        from road_generator import _get_project_root
+
+    root = _get_project_root()
+    full_path = os.path.join(root, rel_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+
+    mesh = terrain_obj.data
+    mat_world = terrain_obj.matrix_world
+
+    with open(full_path, "w", encoding="utf-8") as f:
+        f.write("# Exported Deformed Terrain from Level Editor\n")
+        f.write(f"o {terrain_obj.name}\n")
+
+        # 頂点 (ローカル座標 Blender X, Y, Z -> Game X, Z, Y)
+        for v in mesh.vertices:
+            f.write(f"v {v.co.x:.4f} {v.co.z:.4f} {v.co.y:.4f}\n")
+
+        # UV
+        uv_layer = mesh.uv_layers.active
+        has_uv = (uv_layer is not None)
+        if has_uv:
+            for poly in mesh.polygons:
+                for loop_idx in poly.loop_indices:
+                    u, v = uv_layer.data[loop_idx].uv
+                    f.write(f"vt {u:.4f} {v:.4f}\n")
+
+        # 面法線 (Blender X, Y, Z -> Game X, Z, Y)
+        for poly in mesh.polygons:
+            nor = poly.normal
+            f.write(f"vn {nor.x:.4f} {nor.z:.4f} {nor.y:.4f}\n")
+
+        # 面
+        uv_idx = 1
+        for face_idx, poly in enumerate(mesh.polygons, start=1):
+            f.write("f")
+            for loop_idx in poly.loop_indices:
+                v_idx = poly.vertices[loop_idx - poly.loop_start] + 1
+                if has_uv:
+                    f.write(f" {v_idx}/{uv_idx}/{face_idx}")
+                    uv_idx += 1
+                else:
+                    f.write(f" {v_idx}//{face_idx}")
+            f.write("\n")
+
+    print(f"[TerrainGen] 変形後地形OBJ(ローカル座標)を保存しました: {full_path}")
+
+
+def deform_terrain_mesh_to_rail(
+    terrain_obj,
+    rail_obj,
+    road_width=4.0,
+    slope_width=4.0,
+    offset_z=0.0,
+    falloff="SMOOTH",
+    auto_export_obj=True,
+):
+    """
+    レール直下の地形メッシュの頂点を変形し、
+    道（中央の平坦な道路天端 + 左右の法面・土手斜面）を地面に直接造形する。
+    """
+    if not terrain_obj or terrain_obj.type != 'MESH':
+        return False, "地形メッシュオブジェクトが見つかりません。"
+    if not rail_obj or rail_obj.type != 'CURVE':
+        return False, "レール（CURVE）オブジェクトが見つかりません。"
+
+    try:
+        from .road_generator import sample_curve_frenet
+    except ImportError:
+        from road_generator import sample_curve_frenet
+
+    samples = sample_curve_frenet(rail_obj, step_distance=0.4)
+    if not samples:
+        return False, "レールのサンプリングに失敗しました。"
+
+    mesh = terrain_obj.data
+    mat_world = terrain_obj.matrix_world
+    mat_inv = mat_world.inverted()
+
+    # レール点列のXY座標とZ座標
+    rail_pts = [(s["pos"].x, s["pos"].y, s["pos"].z) for s in samples]
+
+    half_road_w = road_width * 0.5
+    total_radius = half_road_w + max(slope_width, 0.1)
+    total_radius_sq = total_radius * total_radius
+
+    modified_count = 0
+
+    for v in mesh.vertices:
+        w_pos = mat_world @ v.co
+        vx, vy, vz = w_pos.x, w_pos.y, w_pos.z
+
+        # 最も近いレールサンプル点を探索 (XY平面上の最短距離)
+        min_dist_sq = 1e9
+        target_z = vz
+        for rx, ry, rz in rail_pts:
+            dx = vx - rx
+            dy = vy - ry
+            d_sq = dx*dx + dy*dy
+            if d_sq < min_dist_sq:
+                min_dist_sq = d_sq
+                target_z = rz + offset_z
+
+        if min_dist_sq <= total_radius_sq:
+            d = math.sqrt(min_dist_sq)
+
+            if d <= half_road_w:
+                # 道路天端（中央の平坦部）：レールの高さにピッタリ一致
+                weight = 1.0
+            else:
+                # 法面（斜面部）：道路端から地面へ向かって滑らかに下りる
+                t = (d - half_road_w) / max(slope_width, 0.01)
+                t = min(max(t, 0.0), 1.0)
+                if falloff == "SMOOTH":
+                    weight = 1.0 - (3.0 * t * t - 2.0 * t * t * t)
+                elif falloff == "LINEAR":
+                    weight = 1.0 - t
+                else:  # FLAT
+                    weight = 1.0
+
+            # Z座標を変形（盛土または掘割）
+            new_w_z = vz * (1.0 - weight) + target_z * weight
+            new_w_pos = mathutils.Vector((vx, vy, new_w_z))
+            v.co = mat_inv @ new_w_pos
+            modified_count += 1
+
+    mesh.update()
+
+    # ゲーム連携用にOBJファイルを出力し、オブジェクトプロパティを設定
+    if auto_export_obj:
+        rel_obj_path = "resources/Stagemap/terrain_deformed.obj"
+        try:
+            export_terrain_mesh_to_obj(terrain_obj, rel_obj_path)
+            terrain_obj["file_name"] = "terrain_deformed.obj"
+            terrain_obj["model_dir"] = "resources/Stagemap"
+            terrain_obj["object_type"] = "BLOCK"
+            if "texture" not in terrain_obj:
+                terrain_obj["texture"] = "resources/Stagemap/863603.png"
+        except Exception as e:
+            print(f"[TerrainGen] OBJエクスポート警告: {e}")
+
+    return True, (
+        f"地面メッシュ '{terrain_obj.name}' を変形して道をつくりました！\n"
+        f"  道路幅: {road_width:.1f}m (平坦部), 法面幅: {slope_width:.1f}m\n"
+        f"  変形頂点数: {modified_count} 点\n"
+        f"  ゲーム用モデル: resources/Stagemap/terrain_deformed.obj (自動更新)"
+    )
+
+
+class MYADDON_OT_deform_terrain_to_rail(bpy.types.Operator):
+    bl_idname = "myaddon.deform_terrain_to_rail"
+    bl_label = "レールに沿って地面を変形して道をつくる"
+    bl_description = "既存の地面メッシュ（TerrainGround 等）の頂点を変形し、レールの幅・高さ・勾配に沿った道（土手・道路形状）を直接造形します"
+    bl_options = {"REGISTER", "UNDO"}
+
+    road_width: bpy.props.FloatProperty(
+        name="道路の平坦幅 (m)",
+        description="レール直下の平らな道として歩ける幅（メートル）",
+        default=4.0,
+        min=0.5,
+        max=50.0,
+    )
+    slope_width: bpy.props.FloatProperty(
+        name="法面・土手の斜面幅 (m)",
+        description="道路の端から元の地面へと下りる斜面の幅（メートル）",
+        default=4.0,
+        min=0.1,
+        max=50.0,
+    )
+    offset_z: bpy.props.FloatProperty(
+        name="高さオフセット (m)",
+        description="レールの高さから地面の高さをどれだけずらすか（例: 0.0m でレール高さ一致、-0.1m でレールのわずか下）",
+        default=0.0,
+        min=-10.0,
+        max=10.0,
+    )
+    falloff: bpy.props.EnumProperty(
+        name="斜面の形状（減衰）",
+        description="土手の法面スロープの傾斜形状",
+        items=[
+            ("SMOOTH", "スムーズ（滑らかな土手）", "自然な丸みを持った斜面で地面になじませます"),
+            ("LINEAR", "リニア（台形・直線斜面）", "直線的な台形断面の盛り土にします"),
+        ],
+        default="SMOOTH",
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=360)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="=== 地面メッシュ道路変形パラメータ ===", icon="MOD_OCEAN")
+        col = layout.column(align=True)
+        col.prop(self, "road_width")
+        col.prop(self, "slope_width")
+        col.prop(self, "offset_z")
+        layout.separator()
+        layout.prop(self, "falloff")
+
+    def execute(self, context):
+        # 1. レール取得
+        rail_obj = None
+        if context.object and context.object.type == 'CURVE':
+            rail_obj = context.object
+        elif "StageRail" in bpy.data.objects:
+            rail_obj = bpy.data.objects["StageRail"]
+
+        if not rail_obj:
+            self.report({'ERROR'}, "レール（Curve）が見つかりません。")
+            return {'CANCELLED'}
+
+        # 2. 地面メッシュ取得（未作成なら自動生成）
+        terrain_obj = None
+        if context.object and context.object.type == 'MESH':
+            terrain_obj = context.object
+        elif "TerrainGround" in bpy.data.objects:
+            terrain_obj = bpy.data.objects["TerrainGround"]
+        else:
+            for o in bpy.data.objects:
+                if o.type == 'MESH' and o.get("object_type") in ["TERRAIN", "BLOCK"]:
+                    terrain_obj = o
+                    break
+
+        if not terrain_obj:
+            # 地面メッシュがまだなければ自動で高密度グリッドを生成
+            self.report({'INFO'}, "地面メッシュが見つからないため、新規に高密度地面グリッドを自動作成します...")
+            ok, msg = auto_create_terrain_ground_for_rail(rail_obj)
+            if not ok:
+                self.report({'ERROR'}, f"地面の自動生成に失敗しました: {msg}")
+                return {'CANCELLED'}
+            terrain_obj = bpy.data.objects.get("TerrainGround")
+
+        ok, msg = deform_terrain_mesh_to_rail(
+            terrain_obj=terrain_obj,
+            rail_obj=rail_obj,
+            road_width=self.road_width,
+            slope_width=self.slope_width,
+            offset_z=self.offset_z,
+            falloff=self.falloff,
+            auto_export_obj=True,
+        )
+
+        if not ok:
+            self.report({'ERROR'}, msg)
+            return {'CANCELLED'}
+
+        first_line = msg.split("\n")[0]
+        self.report({'INFO'}, first_line)
+        return {'FINISHED'}
+
+
+def auto_create_terrain_ground_for_rail(rail_obj):
+    """
+    レールに合わせて高密度な地面グリッド（TerrainGround）を自動生成する。
+    """
+    try:
+        from .road_generator import sample_curve_frenet
+    except ImportError:
+        from road_generator import sample_curve_frenet
+
+    samples = sample_curve_frenet(rail_obj, step_distance=1.0)
+    if not samples:
+        return False, "レールのサンプリングに失敗しました。"
+
+    xs = [s["pos"].x for s in samples]
+    ys = [s["pos"].y for s in samples]
+    zs = [s["pos"].z for s in samples]
+
+    margin = 15.0
+    min_x, max_x = min(xs) - margin, max(xs) + margin
+    min_y, max_y = min(ys) - margin, max(ys) + margin
+    min_z = min(zs)
+
+    cx = (min_x + max_x) * 0.5
+    cy = (min_y + max_y) * 0.5
+    sx = max(max_x - min_x, 20.0)
+    sy = max(max_y - min_y, 20.0)
+
+    # 1mあたり約1〜2分割（最大96分割）
+    div_x = min(max(int(sx * 1.5), 32), 96)
+    div_y = min(max(int(sy * 1.5), 32), 96)
+
+    t_mesh = _create_grid_mesh_data(
+        "Mesh_TerrainGround",
+        size_x=sx, size_y=sy,
+        div_x=div_x, div_y=div_y,
+        texture_path="resources/Stagemap/863603.png",
+        uv_tile=4.0,
+    )
+
+    t_obj = bpy.data.objects.new("TerrainGround", t_mesh)
+    t_obj.location = (cx, cy, min_z - 1.0)
+    t_obj["object_type"] = "BLOCK"
+    t_obj["file_name"] = "terrain_deformed.obj"
+    t_obj["model_dir"] = "resources/Stagemap"
+    t_obj["texture"] = "resources/Stagemap/863603.png"
+
+    bpy.context.collection.objects.link(t_obj)
+    return True, "TerrainGround を作成しました"
+
+
+class MYADDON_OT_enter_terrain_sculpt(bpy.types.Operator):
+    bl_idname = "myaddon.enter_terrain_sculpt"
+    bl_label = "なぞって地形変形（スカルプト開始）"
+    bl_description = "地形メッシュを選択し、マウスでなぞって山や谷を直接盛り上げるスカルプトモードに切り替えます"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        terrain_obj = None
+        if context.object and context.object.type == 'MESH':
+            terrain_obj = context.object
+        elif "TerrainGround" in bpy.data.objects:
+            terrain_obj = bpy.data.objects["TerrainGround"]
+        else:
+            for o in bpy.data.objects:
+                if o.type == 'MESH' and o.get("object_type") == "TERRAIN":
+                    terrain_obj = o
+                    break
+
+        if not terrain_obj:
+            self.report({'ERROR'}, "スカルプト対象の地形メッシュが見つかりません。")
+            return {'CANCELLED'}
+
+        bpy.context.view_layer.objects.active = terrain_obj
+        terrain_obj.select_set(True)
+
+        try:
+            bpy.ops.object.mode_set(mode='SCULPT')
+            # ツールをドロー（盛り上げ）に設定
+            bpy.ops.wm.tool_set_by_id(name="builtin_brush.Draw")
+            self.report({'INFO'}, "スカルプトモードを開始しました！マウスでなぞって地形を盛り上げ、Ctrl+なぞりで掘り下げられます。Tabキーで戻ります。")
+        except Exception as e:
+            self.report({'WARNING'}, f"スカルプトモード切替: {e}")
+
+        return {'FINISHED'}
+
+
+class MYADDON_OT_draw_rail_mode(bpy.types.Operator):
+    bl_idname = "myaddon.draw_rail_mode"
+    bl_label = "フリーハンドでなぞってレールを描く"
+    bl_description = "ペンでなぞって空間や地面にレール（カーブ）を描画するドローツールを起動します"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        rail_obj = None
+        if context.object and context.object.type == 'CURVE':
+            rail_obj = context.object
+        elif "StageRail" in bpy.data.objects:
+            rail_obj = bpy.data.objects["StageRail"]
+        else:
+            # 新規レール作成
+            curve_data = bpy.data.curves.new(name="StageRail", type='CURVE')
+            curve_data.dimensions = '3D'
+            rail_obj = bpy.data.objects.new("StageRail", curve_data)
+            context.collection.objects.link(rail_obj)
+            rail_obj["object_type"] = "STAGE_RAIL"
+
+        bpy.context.view_layer.objects.active = rail_obj
+        rail_obj.select_set(True)
+
+        # エディットモードに移行してドローツール起動
+        try:
+            bpy.ops.object.mode_set(mode='EDIT')
+            try:
+                bpy.ops.wm.tool_set_by_id(name="builtin.draw")
+            except Exception:
+                bpy.ops.wm.tool_set_by_id(name="builtin.curve_pen")
+            self.report({'INFO'}, "ドローツールを起動しました！マウスやペンでなぞってレールを描いてください。描き終わったらTabキーでオブジェクトモードに戻り「レールに沿って道をつくる」を押してください。")
+        except Exception as e:
+            self.report({'WARNING'}, f"ドローツール起動: {e}")
+
+        return {'FINISHED'}
+
+
 # ------------------------------------------
 # 登録・解除（単体実行用）
 # ------------------------------------------
 classes = (
     MYADDON_OT_generate_terrain,
     MYADDON_OT_convert_obj_to_terrain,
+    MYADDON_OT_deform_terrain_to_rail,
+    MYADDON_OT_enter_terrain_sculpt,
+    MYADDON_OT_draw_rail_mode,
 )
 
 def register():
@@ -882,5 +1269,6 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+
 
 

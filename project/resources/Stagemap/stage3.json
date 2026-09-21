@@ -3,69 +3,6 @@
     "coordinate_system": "GAME",
     "objects": [
         {
-            "type": "MESH",
-            "name": "Cube",
-            "transform": {
-                "translation": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    -0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "type": "MESH",
-            "name": "Light",
-            "transform": {
-                "translation": [
-                    4.0762,
-                    5.9039,
-                    1.0055
-                ],
-                "rotation": [
-                    -37.261,
-                    106.9363,
-                    3.1637
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "type": "MESH",
-            "name": "Camera",
-            "transform": {
-                "translation": [
-                    7.3589,
-                    4.9583,
-                    -6.9258
-                ],
-                "rotation": [
-                    -63.5593,
-                    46.6919,
-                    -0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
             "type": "CURVE",
             "name": "StageRail",
             "transform": {
@@ -102,7 +39,8 @@
                         -11.043999671936035,
                         0.0,
                         20.0
-                    ]
+                    ],
+                    "type": "BEZIER"
                 },
                 {
                     "co": [
@@ -119,7 +57,8 @@
                         -20.0,
                         0.0,
                         -11.043999671936035
-                    ]
+                    ],
+                    "type": "BEZIER"
                 },
                 {
                     "co": [
@@ -136,7 +75,8 @@
                         22.877717971801758,
                         5.4814839363098145,
                         -18.340993881225586
-                    ]
+                    ],
+                    "type": "BEZIER"
                 },
                 {
                     "co": [
@@ -153,7 +93,8 @@
                         28.26290512084961,
                         7.712955039096414e-07,
                         -58.93538284301758
-                    ]
+                    ],
+                    "type": "BEZIER"
                 }
             ],
             "loop": false
@@ -179,7 +120,6 @@
                 ]
             },
             "object_type": "CAMERA_RAIL",
-            "loop": false,
             "rail_points": [
                 {
                     "co": [
@@ -196,7 +136,8 @@
                         -19.23512077331543,
                         5.0,
                         45.0
-                    ]
+                    ],
+                    "type": "BEZIER"
                 },
                 {
                     "co": [
@@ -213,7 +154,8 @@
                         -21.015050888061523,
                         7.03206729888916,
                         -28.897192001342773
-                    ]
+                    ],
+                    "type": "BEZIER"
                 },
                 {
                     "co": [
@@ -230,7 +172,8 @@
                         14.023723602294922,
                         8.440110206604004,
                         -55.364601135253906
-                    ]
+                    ],
+                    "type": "BEZIER"
                 },
                 {
                     "co": [
@@ -247,40 +190,11 @@
                         9.31822395324707,
                         17.22247314453125,
                         -86.75810241699219
-                    ]
+                    ],
+                    "type": "BEZIER"
                 }
-            ]
-        },
-        {
-            "type": "EMPTY",
-            "name": "GroundTerrain",
-            "transform": {
-                "translation": [
-                    0.0,
-                    -0.5,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    -0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            },
-            "object_type": "TERRAIN",
-            "file_name": "terrain_grid",
-            "texture": "resources/Stagemap/863603.png",
-            "properties": {
-                "size_x": "60.0",
-                "size_y": "60.0",
-                "divisions_x": "30",
-                "divisions_y": "30",
-                "uv_tile": "4.0"
-            }
+            ],
+            "loop": false
         },
         {
             "type": "MESH",
@@ -311,9 +225,9 @@
             "name": "PlayerSpawn",
             "transform": {
                 "translation": [
-                    0.0,
-                    0.0,
-                    20.0
+                    -3.1169,
+                    0.616,
+                    19.7585
                 ],
                 "rotation": [
                     -0.0,
@@ -328,8 +242,8 @@
             },
             "object_type": "PLAYER_SPAWN",
             "rail_pos": [
-                0.0,
-                0.0
+                0.096,
+                0.616
             ]
         },
         {
@@ -337,9 +251,9 @@
             "name": "Goal",
             "transform": {
                 "translation": [
-                    11.641,
-                    -1.7756,
-                    -39.8906
+                    12.1562,
+                    1.3756,
+                    -54.1254
                 ],
                 "rotation": [
                     -0.0,
@@ -354,8 +268,8 @@
             },
             "object_type": "GOAL",
             "rail_pos": [
-                2.473,
-                -1.776
+                2.76,
+                0.58
             ]
         },
         {
@@ -363,9 +277,9 @@
             "name": "BoundEnemy_0",
             "transform": {
                 "translation": [
-                    -15.4579,
-                    1.9501,
-                    12.6903
+                    -15.4617,
+                    1.95,
+                    12.6856
                 ],
                 "rotation": [
                     -0.0,
@@ -391,7 +305,7 @@
             "transform": {
                 "translation": [
                     -6.3209,
-                    0.0,
+                    2.436,
                     18.9802
                 ],
                 "rotation": [
@@ -409,7 +323,7 @@
             "enemy_type": "Normal",
             "rail_pos": [
                 0.2,
-                0.0
+                2.436
             ]
         },
         {
@@ -418,7 +332,7 @@
             "transform": {
                 "translation": [
                     -9.1904,
-                    0.0,
+                    1.964,
                     17.7673
                 ],
                 "rotation": [
@@ -436,7 +350,7 @@
             "enemy_type": "Normal",
             "rail_pos": [
                 0.3,
-                0.0
+                1.964
             ]
         },
         {
@@ -445,7 +359,7 @@
             "transform": {
                 "translation": [
                     -11.811,
-                    0.0,
+                    1.403,
                     16.1407
                 ],
                 "rotation": [
@@ -463,17 +377,17 @@
             "enemy_type": "Normal",
             "rail_pos": [
                 0.4,
-                0.0
+                1.403
             ]
         },
         {
-            "type": "EMPTY",
+            "type": "MESH",
             "name": "TerrainGround",
             "transform": {
                 "translation": [
-                    -1.6148,
-                    -0.5,
-                    -18.266
+                    0.0,
+                    0.0,
+                    0.0
                 ],
                 "rotation": [
                     -0.0,
@@ -486,8 +400,9 @@
                     1.0
                 ]
             },
-            "object_type": "TERRAIN",
-            "file_name": "terrain_grid",
+            "object_type": "BLOCK",
+            "file_name": "terrain_deformed.obj",
+            "model_dir": "resources/Stagemap",
             "texture": "resources/Stagemap/863603.png",
             "properties": {
                 "size_x": "60.4",

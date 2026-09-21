@@ -71,6 +71,7 @@ _SUBMODULES = [
     "export_scene",
     "import_scene",
     "terrain_generator",
+    "road_generator",
     "rail_snap",
     "operater",
     "object_type",

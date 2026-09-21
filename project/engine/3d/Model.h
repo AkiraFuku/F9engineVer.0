@@ -128,7 +128,7 @@ public:
     void Initialize(const std::string& directryPath, const std::string& filename);
     void Update();
 
-    void Draw();
+    void Draw(const Matrix4x4& worldMatrix = Makeidentity4x4());
     void SetAnimation(Animation* animation) {
         animation_ = animation;
     }
@@ -243,7 +243,7 @@ public: // 外部入出力
 
 private:
 
-    void DebugDrawSkeleton();
+    void DebugDrawSkeleton(const Matrix4x4& worldMatrix);
 
     ModelData modelData_;
 

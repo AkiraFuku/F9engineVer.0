@@ -56,9 +56,7 @@ public:
     const std::vector<std::unique_ptr<Projectile>>& GetProjectile() {
         return projectiles_;
     }
-    const std::vector<Triangle>& GetTriangle() {
-        return triangles_;
-    }
+    const std::vector<Triangle>& GetTriangle();
     GoalObject* GetGoal() {
         return goal_.get();
     }

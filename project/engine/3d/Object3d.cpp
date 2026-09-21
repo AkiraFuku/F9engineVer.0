@@ -112,7 +112,7 @@ void Object3d::Draw()
 
 
     if (model_) {
-        model_->Draw();
+        model_->Draw(GetWorldMatrix());
     }
 }
 

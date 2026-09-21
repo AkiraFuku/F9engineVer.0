@@ -125,6 +125,24 @@ class OBJECT_PT_file_name(bpy.types.Panel):
         row_stage.operator(MYADDON_OT_add_slope_block.bl_idname, text="傾斜スロープ追加", icon='MOD_SOLIDIFY')
         row_stage.operator(MYADDON_OT_add_stairs_block.bl_idname, text="階段ブロック追加", icon='MOD_BEVEL')
 
+        # 地形変形・スカルプト
+        try:
+            from .terrain_generator import MYADDON_OT_enter_terrain_sculpt, MYADDON_OT_deform_terrain_to_rail
+        except ImportError:
+            from terrain_generator import MYADDON_OT_enter_terrain_sculpt, MYADDON_OT_deform_terrain_to_rail
+        try:
+            from .road_generator import MYADDON_OT_generate_road_along_rail
+        except ImportError:
+            from road_generator import MYADDON_OT_generate_road_along_rail
+
+        box_terrain = self.layout.box()
+        box_terrain.label(text="⛰️ 地面メッシュ変形 ＆ 造形:", icon='MOD_OCEAN')
+        row_t1 = box_terrain.row(align=True)
+        row_t1.operator(MYADDON_OT_deform_terrain_to_rail.bl_idname, text="レール沿いに地面を変形して道をつくる", icon='MOD_SMOOTH')
+        row_t2 = box_terrain.row(align=True)
+        row_t2.operator(MYADDON_OT_enter_terrain_sculpt.bl_idname, text="なぞって地形変形 (スカルプト)", icon='SCULPTMODE_HLT')
+        row_t2.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="（補助）独立道路メッシュ", icon='ROAD')
+
 class MYADDON_OT_add_filwname(bpy.types.Operator):
     bl_idname = "myaddon.myaddon_ot_add_filename"
     bl_label = "FileName 追加"

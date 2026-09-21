@@ -637,6 +637,14 @@ void GameScene::AddTriangles(std::vector<Triangle> triangles)
     triangles_.insert(triangles_.end(), triangles.begin(), triangles.end());
 }
 
+const std::vector<Triangle>& GameScene::GetTriangle()
+{
+    if (stageManager_) {
+        return stageManager_->GetAllTriangles();
+    }
+    return triangles_;
+}
+
 void GameScene::CheckClear()
 {
     // 2. シーン遷移の実行
