@@ -144,7 +144,9 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
                 # "prop_size_x" → "size_x" としてゲームに渡す
                 prop_key = key[len("prop_"):]
                 properties_map[prop_key] = str(object[key])
-            # prop_ 以外の未知カスタムプロパティも出力したい場合はここで追加可能
+            elif key in {"size_x", "size_y", "divisions_x", "divisions_y", "uv_tile"}:
+                # 地形サイズ・分割数プロパティを確実に properties に出力
+                properties_map[key] = str(object[key])
         if properties_map:
             json_object["properties"] = properties_map
 

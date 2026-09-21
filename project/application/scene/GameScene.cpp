@@ -161,7 +161,7 @@ void GameScene::Initialize() {
 
     // --- ステージマネージャーによるJSONステージデータの読み込み ---
     stageManager_ = std::make_unique<StageManager>();
-    stageManager_->Load("resources/Stagemap/stage3.json", activeCamera_,
+    stageManager_->Load("resources/Stagemap/stage4.json", activeCamera_,
         [this](const LevelObjectData& data) {
             Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
             AddEnemy(data.railPos, type);

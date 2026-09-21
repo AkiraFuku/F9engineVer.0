@@ -253,27 +253,7 @@ def sync_camera_rail_from_stage(stage_rail, distance=25.0, height=5.0, flip_side
         print("[RailSync] 新規 CameraRail を作成しました")
 
     c_data = cam_obj.data
-    if not c_data.splines:
-        c_spline = c_data.splines.new('BEZIER')
-    else:
-        c_spline = c_data.splines[0]
-
-    # スプライン点数を StageRail に合わせる
-    c_pts = c_spline.bezier_points
-    diff = num_pts - len(c_pts)
-    if diff > 0:
-        c_pts.add(diff)
-    elif diff < 0:
-        # 点数が多い場合はスプラインを再生成して合わせる
-        c_data.splines.clear()
-        c_spline = c_data.splines.new('BEZIER')
-        c_pts = c_spline.bezier_points
-        c_pts.add(num_pts - 1)
-
-    c_spline.use_cyclic_u = is_cyclic
-    cam_obj["loop"] = is_cyclic
-    cam_obj["object_type"] = "CAMERA_RAIL"
-    cam_obj.matrix_world = stage_rail.matrix_world.copy()
+    s_types = get_curve_interp_types(stage_rail)
 
     # 全制御点の重心（X-Y中心）を計算して内外判定に使用
     center_xy = mathutils.Vector((0.0, 0.0, 0.0))
@@ -283,59 +263,152 @@ def sync_camera_rail_from_stage(stage_rail, distance=25.0, height=5.0, flip_side
     center_xy.x /= num_pts
     center_xy.y /= num_pts
 
-    side_sign = -1.0 if flip_side else 1.0
-
-    # 各制御点の法線オフセット計算
+    # 1. 各 StageRail 制御点に対応するオフセット候補点を計算
+    raw_candidates = []
     for i in range(num_pts):
         sp = s_points[i]
-        cp = c_pts[i]
-
         co = sp.co
         hl = sp.handle_left
         hr = sp.handle_right
 
-        # 進行方向の接線ベクトル T
-        tangent = (hr - hl).copy()
-        tangent.z = 0.0  # 水平基準
-        if tangent.length_squared < 1e-6:
+        # 進行方向の接線ベクトル T（非ループ時は端点で前後の点を正しく参照し反転を防ぐ）
+        if is_cyclic:
             prev_p = s_points[(i - 1 + num_pts) % num_pts].co
             next_p = s_points[(i + 1) % num_pts].co
             tangent = (next_p - prev_p).copy()
-            tangent.z = 0.0
+        else:
+            if i == 0:
+                tangent = (s_points[1].co - s_points[0].co).copy()
+            elif i == num_pts - 1:
+                tangent = (s_points[-1].co - s_points[-2].co).copy()
+            else:
+                tangent = (s_points[i + 1].co - s_points[i - 1].co).copy()
 
+        tangent.z = 0.0  # 水平基準
         if tangent.length_squared > 1e-6:
             tangent.normalize()
         else:
-            tangent = mathutils.Vector((1.0, 0.0, 0.0))
+            # ハンドルからのフォールバック
+            tangent = (hr - hl).copy()
+            tangent.z = 0.0
+            if tangent.length_squared > 1e-6:
+                tangent.normalize()
+            else:
+                tangent = mathutils.Vector((0.0, 1.0, 0.0))
 
-        # 水平法線 N (反時計回りに90度)
-        normal = mathutils.Vector((-tangent.y, tangent.x, 0.0))
+        # 水平右手法線 N (進行方向に対して時計回りに90度 = プレイヤーの右側)
+        normal = mathutils.Vector((tangent.y, -tangent.x, 0.0))
 
-        # 重心から外側を向くように法線の符号を自動補正
-        from_center = mathutils.Vector((co.x - center_xy.x, co.y - center_xy.y, 0.0))
-        if from_center.dot(normal) < 0.0:
+        if is_cyclic:
+            from_center = mathutils.Vector((co.x - center_xy.x, co.y - center_xy.y, 0.0))
+            if from_center.dot(normal) < 0.0:
+                normal = -normal
+
+        if flip_side:
             normal = -normal
 
-        normal *= side_sign
-
-        # 新しい制御点の位置
+        # オフセット位置
         new_co = co + normal * distance
         new_co.z += height
 
-        # ハンドルのスケーリング (外周への拡大に伴う曲率比率)
-        radius_est = from_center.length
-        scale_h = 1.0 + (distance / max(radius_est, 10.0)) if radius_est > 0.1 else 1.0
-        scale_h = max(0.5, min(scale_h, 3.0))
+        # 補間タイプ判定
+        itype = s_types[i] if i < len(s_types) else "BEZIER"
+        if sp.handle_left_type == 'VECTOR' and sp.handle_right_type == 'VECTOR':
+            itype = "LINEAR"
 
-        new_hl = new_co + (hl - co) * scale_h
-        new_hr = new_co + (hr - co) * scale_h
+        raw_candidates.append({
+            "co": new_co,
+            "type": itype,
+            "tangent": tangent,
+            "stage_idx": i
+        })
 
-        cp.co = new_co
-        cp.handle_left = new_hl
-        cp.handle_right = new_hr
-        cp.handle_left_type = sp.handle_left_type
-        cp.handle_right_type = sp.handle_right_type
+    # 2. 直線区間の中間点を間引き（カーブ区間はすべて保持、直線は始点・終点のみ残す）
+    filtered = []
+    for i in range(num_pts):
+        if i == 0 or i == num_pts - 1 or is_cyclic:
+            filtered.append(raw_candidates[i])
+            continue
 
+        curr = raw_candidates[i]
+        prev = raw_candidates[i - 1]
+        next_cand = raw_candidates[i + 1]
+
+        # カーブ区間（BEZIER）およびその接続点は円弧を滑らかにするため全て残す
+        if curr["type"] == "BEZIER" or prev["type"] == "BEZIER" or next_cand["type"] == "BEZIER":
+            filtered.append(curr)
+            continue
+
+        # 前後も自身も LINEAR（直線）の場合、一直線上にあれば中間の点をスキップ（間引き）
+        v1 = (curr["co"] - prev["co"]).normalized()
+        v2 = (next_cand["co"] - curr["co"]).normalized()
+        if v1.dot(v2) > 0.98:
+            # 同一直線上の中間点として省略
+            continue
+
+        filtered.append(curr)
+
+    # 3. CameraRail のスプラインを再構築
+    c_data.splines.clear()
+    c_spline = c_data.splines.new('BEZIER')
+    c_spline.use_cyclic_u = is_cyclic
+    c_pts = c_spline.bezier_points
+    N = len(filtered)
+    if N > 1:
+        c_pts.add(N - 1)
+
+    cam_obj["loop"] = is_cyclic
+    cam_obj["object_type"] = "CAMERA_RAIL"
+    cam_obj.matrix_world = stage_rail.matrix_world.copy()
+
+    # 4. 各制御点の座標、補間タイプ、ハンドルを設定
+    cam_types = []
+    for k in range(N):
+        cp = c_pts[k]
+        curr_info = filtered[k]
+        curr_co = curr_info["co"]
+        cp.co = curr_co
+
+        is_curve_pt = (curr_info["type"] == "BEZIER")
+
+        if is_curve_pt:
+            # カーブ区間: BEZIER（円弧接線に沿ってハンドルを設定）
+            cam_types.append("BEZIER")
+
+            if is_cyclic:
+                prev_co = filtered[(k - 1 + N) % N]["co"]
+                next_co = filtered[(k + 1) % N]["co"]
+            else:
+                prev_co = filtered[k - 1]["co"] if k > 0 else (curr_co - (filtered[1]["co"] - curr_co))
+                next_co = filtered[k + 1]["co"] if k < N - 1 else (curr_co + (curr_co - filtered[N - 2]["co"]))
+
+            c_tan = (next_co - prev_co).copy()
+            c_tan.z = 0.0
+            if c_tan.length_squared > 1e-6:
+                c_tan.normalize()
+            else:
+                c_tan = curr_info["tangent"]
+
+            dist_prev = (curr_co - prev_co).length if k > 0 or is_cyclic else (next_co - curr_co).length
+            dist_next = (next_co - curr_co).length if k < N - 1 or is_cyclic else (curr_co - prev_co).length
+
+            hl_len = max(dist_prev * 0.35, 1.0)
+            hr_len = max(dist_next * 0.35, 1.0)
+
+            cp.handle_left = curr_co - c_tan * hl_len
+            cp.handle_right = curr_co + c_tan * hr_len
+            cp.handle_left_type = 'ALIGNED'
+            cp.handle_right_type = 'ALIGNED'
+        else:
+            # 直線区間: LINEAR（直線補間 / VECTOR ハンドル）
+            cam_types.append("LINEAR")
+            cp.handle_left_type = 'VECTOR'
+            cp.handle_right_type = 'VECTOR'
+
+    # カメラレールの補間設定を保存
+    set_curve_interp_types(cam_obj, cam_types)
+
+    c_data.resolution_u = 12
     c_data.update_tag()
     return cam_obj
 
@@ -633,26 +706,25 @@ class DrawRailConnectionPoints:
                 DrawRailConnectionPoints._render_spheres(c_world_pts, base_verts, base_indices, color=(1.0, 0.7, 0.1, 0.9))
 
                 # 3. 対応する接続点同士を結ぶ連携ライン描画 (半透明イエロー)
-                pair_count = min(len(s_world_pts), len(c_world_pts))
-                if pair_count > 0:
+                if s_world_pts and c_world_pts:
                     link_verts = []
                     link_indices = []
-                    for i in range(pair_count):
-                        p1 = s_world_pts[i]
-                        p2 = c_world_pts[i]
+                    for cp in c_world_pts:
+                        best_sp = min(s_world_pts, key=lambda sp: (sp - cp).length_squared)
                         idx = len(link_verts)
-                        link_verts.append((p1.x, p1.y, p1.z))
-                        link_verts.append((p2.x, p2.y, p2.z))
+                        link_verts.append((best_sp.x, best_sp.y, best_sp.z))
+                        link_verts.append((cp.x, cp.y, cp.z))
                         link_indices.append((idx, idx + 1))
 
-                    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
-                    batch = gpu_extras.batch.batch_for_shader(
-                        shader, 'LINES', {"pos": link_verts}, indices=link_indices
-                    )
-                    shader.bind()
-                    shader.uniform_float("color", (1.0, 1.0, 0.3, 0.5))
-                    gpu.state.line_width_set(1.5)
-                    batch.draw(shader)
+                    if link_verts:
+                        shader = gpu.shader.from_builtin('UNIFORM_COLOR')
+                        batch = gpu_extras.batch.batch_for_shader(
+                            shader, 'LINES', {"pos": link_verts}, indices=link_indices
+                        )
+                        shader.bind()
+                        shader.uniform_float("color", (1.0, 1.0, 0.3, 0.5))
+                        gpu.state.line_width_set(1.5)
+                        batch.draw(shader)
 
     @staticmethod
     def _render_spheres(center_positions, base_verts, base_indices, color):
@@ -1786,6 +1858,25 @@ class OBJECT_PT_rail_curve_settings(bpy.types.Panel):
         op.preset_type = 'LINE'
 
         box_preset.operator(MYADDON_OT_snap_all_to_rail.bl_idname, text="全オブジェクトをレールへ再配置", icon='FILE_REFRESH')
+
+        layout.separator()
+
+        # ── 5. 星のカービィ64風 AIステージ自動生成・伸長 ──
+        try:
+            from .stage_generator import MYADDON_OT_ai_generate_stage
+        except ImportError:
+            try:
+                from stage_generator import MYADDON_OT_ai_generate_stage
+            except ImportError:
+                MYADDON_OT_ai_generate_stage = None
+
+        if MYADDON_OT_ai_generate_stage:
+            box_ai = layout.box()
+            box_ai.label(text="🌟 星のカービィ64風 AIコース自動生成・伸長:", icon='OUTLINER_OB_LIGHTPROBE')
+            col_ai = box_ai.column(align=True)
+            col_ai.scale_y = 1.2
+            col_ai.operator(MYADDON_OT_ai_generate_stage.bl_idname, text="🚀 コースをAI自動生成・伸長", icon='PLAY')
+
 
 
 class OBJECT_PT_rail_position_settings(bpy.types.Panel):

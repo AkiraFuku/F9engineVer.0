@@ -50,6 +50,9 @@ from .terrain_generator import (
 from .road_generator import (
     MYADDON_OT_generate_road_along_rail,
 )
+from .stage_generator import (
+    MYADDON_OT_ai_generate_stage,
+)
 from .rail_snap import (
     MYADDON_OT_snap_to_rail,
     MYADDON_OT_calculate_rail_pos,
@@ -82,6 +85,8 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
         self.layout.operator(MYADDON_OT_export_scene.bl_idname, text=MYADDON_OT_export_scene.bl_label)
         self.layout.operator(MYADDON_OT_import_scene.bl_idname, text=MYADDON_OT_import_scene.bl_label, icon='IMPORT')
         self.layout.separator()
+        self.layout.operator(MYADDON_OT_ai_generate_stage.bl_idname, text="🌟 AIコース自動生成・伸長", icon='PLAY')
+        self.layout.separator()
         self.layout.operator(MYADDON_OT_apply_all_preview_models.bl_idname, text=MYADDON_OT_apply_all_preview_models.bl_label, icon='MESH_DATA')
         self.layout.separator()
         self.layout.operator(MYADDON_OT_deform_terrain_to_rail.bl_idname, text="レール沿いに地面を変形して道をつくる", icon='MOD_SMOOTH')
@@ -107,6 +112,7 @@ def draw_my_menu(self, context):
 
 classes = (
     TOPBAR_MT_my_menu,
+    MYADDON_OT_ai_generate_stage,
     MYADDON_OT_export_scene,
     MYADDON_OT_import_scene,
     MYADDON_OT_ICO_sphere,
