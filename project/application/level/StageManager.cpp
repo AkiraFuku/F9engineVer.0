@@ -3,6 +3,8 @@
 #include "ModelManager.h"
 #include "TextureManager.h"
 #include "PrimitiveDrawer.h"
+#include "PrefabManager.h"
+#include "InstancedBlockRenderer.h"
 #include <Windows.h>   // OutputDebugStringA
 
 // ─────────────────────────────────────────────────────────────────────
@@ -10,6 +12,10 @@
 // ─────────────────────────────────────────────────────────────────────
 void StageManager::Load(const std::string& jsonPath, Camera* camera, SpawnEnemyFunc spawnEnemy)
 {
+    // プレハブマネージャー & インスタンシングレンダラーの初期化
+    PrefabManager::GetInstance()->Initialize();
+    InstancedBlockRenderer::GetInstance()->Initialize();
+
     // 既存リストをクリア（Hot Reload）
     blocks_.clear();
     terrain_.reset();
@@ -257,8 +263,22 @@ void StageManager::Draw()
         terrain_->Draw();
     }
 
-    for (auto& block : blocks_)  block->Draw();
-    for (auto& prop  : props_)   prop->Draw();
+    auto instRenderer = InstancedBlockRenderer::GetInstance();
+    if (instRenderer->IsEnabled()) {
+        // GPU インスタンシングによる一括描画（DrawCall を劇的削減）
+        instRenderer->Begin();
+        for (auto& block : blocks_) {
+            instRenderer->AddBlock(block.get(), camera_);
+        }
+        for (auto& prop : props_) {
+            instRenderer->AddBlock(prop.get(), camera_);
+        }
+        instRenderer->Render(camera_);
+    } else {
+        // フォールバック（個別描画）
+        for (auto& block : blocks_)  block->Draw();
+        for (auto& prop  : props_)   prop->Draw();
+    }
 
     for (auto& rope  : ropes_)   rope->Draw();
     for (auto& cloth : cloths_)  cloth->Draw();

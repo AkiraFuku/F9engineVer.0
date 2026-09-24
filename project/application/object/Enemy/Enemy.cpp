@@ -49,6 +49,12 @@ void Enemy::Initialize()
 
 void Enemy::Update()
 {
+    if (turnCooldownTimer_ > 0.0f) {
+        turnCooldownTimer_ -= deltaTime_;
+        if (turnCooldownTimer_ < 0.0f) {
+            turnCooldownTimer_ = 0.0f;
+        }
+    }
 
     if (hitInvincibilityTimer_ > 0.0f) {
         hitInvincibilityTimer_ -= deltaTime_; // 60FPSを想定した減算
@@ -178,8 +184,8 @@ void Enemy::SetRail(RailPath* rail)
 void Enemy::Move(float ratio)
 {
     if (railMover_) {
-        // 毎フレームの移動量を計算して進める
-        railMover_->Advance(ratio * (kMoveSpeed_ * deltaTime_));
+        // 毎フレームの移動量を計算して進める（進行方向 moveDirection_ を適用）
+        railMover_->Advance(ratio * moveDirection_ * (kMoveSpeed_ * deltaTime_));
     }
 }
 void Enemy::ChangeBehavior(std::unique_ptr<IEnemyBehavior> newBehavior) {
@@ -199,8 +205,11 @@ void Enemy::UpdatePhysics() {
     Vector3 finalPos = { railPos.x, worldY_, railPos.z };
     object_->SetTranslate(finalPos);
 
-    // 回転処理
+    // 回転処理（逆走時は進行方向を反転）
     Vector3 dir = railMover_->GetCurrentDirection();
+    if (moveDirection_ < 0.0f) {
+        dir = Multiply(-1.0f, dir);
+    }
     float angle = atan2f(dir.x, dir.z);
     object_->SetRotate(initialRotationOffset_ + Vector3{ 0.0f, angle, 0.0f });
     object_->Update();
@@ -332,6 +341,78 @@ void Enemy::RayCastUpdate()
         isRayHit_ ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
     if (isRayHit_) {
         PrimitiveDrawer::GetInstance()->DrawSphere({ rayHitPoint_, 0.05f, {} }, { 0,0,1,1 });
+    }
+
+    // ─── 前方壁の判定と押し戻し・反転処理 ───
+    isWallHit_ = false;
+    wallRayDistance_ = FLT_MAX;
+
+    if (railMover_) {
+        Vector3 railDir = railMover_->GetCurrentDirection();
+        Vector3 forwardDir = (Length(railDir) > 0.001f) ? Normalize(railDir) : Vector3{ 0.0f, 0.0f, 1.0f };
+        if (moveDirection_ < 0.0f) {
+            forwardDir = Multiply(-1.0f, forwardDir);
+        }
+
+        float wallLength = radius_ + 0.3f;
+        Ray wallRay;
+        wallRay.origin = object_->GetTranslate();
+        wallRay.origin.y += kHeightOffset;
+        wallRay.diff = Multiply(wallLength, forwardDir);
+
+        Vector3 wallHitPoint = {};
+        float closestWallDist = FLT_MAX;
+        bool hitWall = false;
+
+        for (const auto& tri : triangles) {
+            Vector3 tmpHit = {};
+            float dist = 0.0f;
+            RayTriangleCollisionResult result;
+            if (CheckRayTriangle(wallRay, tri, &dist, &tmpHit, &result)) {
+                if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
+                    Vector3 v01 = Subtract(tri.vertices[1], tri.vertices[0]);
+                    Vector3 v12 = Subtract(tri.vertices[2], tri.vertices[1]);
+                    Vector3 normal = Normalize(Cross(v01, v12));
+                    if (result == RayTriangleCollisionResult::BackFace) {
+                        normal = Multiply(-1.0f, normal);
+                    }
+                    // 垂直に近い面のみ壁とする（床や緩やかな坂は除外）
+                    if (std::abs(normal.y) < 0.7f && dist < closestWallDist) {
+                        closestWallDist = dist;
+                        wallHitPoint = tmpHit;
+                        hitWall = true;
+                    }
+                }
+            }
+        }
+
+        isWallHit_ = hitWall;
+        wallRayDistance_ = closestWallDist;
+
+        // 壁レイのデバッグ描画
+        Vector3 wallEnd = Add(wallRay.origin, wallRay.diff);
+        PrimitiveDrawer::GetInstance()->DrawLine(wallRay.origin, wallEnd,
+            hitWall ? Vector4{ 1.0f, 0.0f, 0.0f, 1.0f } : Vector4{ 0.0f, 1.0f, 1.0f, 1.0f });
+        if (hitWall) {
+            PrimitiveDrawer::GetInstance()->DrawSphere({ wallHitPoint, 0.08f, {} }, { 1.0f, 0.5f, 0.0f, 1.0f });
+
+            // めり込み防止（押し戻し補正）
+            float penetration = wallLength - closestWallDist;
+            if (penetration > 0.0f) {
+                float currentDist = railMover_->GetCurrentDistance();
+                float targetDist = currentDist - (penetration * moveDirection_);
+                const RailPath* path = railMover_->GetRailPath();
+                if (path) {
+                    float targetT = path->GetTFromDistance(targetDist);
+                    railMover_->SetProgress(targetT);
+                }
+            }
+
+            // 壁衝突時の自動反転（クールダウン付き）
+            if (turnCooldownTimer_ <= 0.0f) {
+                Turn();
+            }
+        }
     }
 }
 

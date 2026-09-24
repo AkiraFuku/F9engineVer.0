@@ -134,6 +134,18 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
             "collider", "collider_center", "collider_size", "behavior_tree",
             "_RNA_UI",
         }
+        # 地形専用プロパティの定義
+        _terrain_keys = {
+            "size_x", "size_y", "divisions_x", "divisions_y",
+            "uv_tile", "cell_types", "grass_texture", "road_texture"
+        }
+        # オブジェクトが TERRAIN（地形）かどうかを厳格に判定
+        is_terrain = (
+            object.get("object_type") == "TERRAIN" or
+            object.get("file_name") == "terrain_grid" or
+            object.name.startswith("Terrain")
+        )
+
         properties_map = {}
         for key in object.keys():
             if key in _known_keys:
@@ -143,8 +155,11 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
             if key.startswith("prop_"):
                 # "prop_size_x" → "size_x" としてゲームに渡す
                 prop_key = key[len("prop_"):]
+                # 地形専用キーかつ対象が地形でない場合は混入防止のため除外
+                if prop_key in _terrain_keys and not is_terrain:
+                    continue
                 properties_map[prop_key] = str(object[key])
-            elif key in {"size_x", "size_y", "divisions_x", "divisions_y", "uv_tile", "cell_types", "grass_texture", "road_texture"}:
+            elif is_terrain and key in _terrain_keys:
                 # 地形サイズ・分割数・属性プロパティを確実に properties に出力
                 properties_map[key] = str(object[key])
         if properties_map:

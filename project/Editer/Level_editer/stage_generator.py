@@ -149,6 +149,25 @@ class CurveExtensionHelper:
 # 2. 星のカービィ64風 コースパターンジェネレータ
 # =========================================================================
 
+# プレハブ定義（足場サイズ・属性・テクスチャのテンプレート）
+_BLOCK_PREFABS = {
+    "standard": {
+        "size": (4.0, 3.15, 1.0),
+        "texture": "resources/grass.png",
+        "is_oneway": False,
+    },
+    "oneway_platform": {
+        "size": (3.5, 2.0, 0.2), # 薄型のすり抜け足場
+        "texture": "resources/grass.png",
+        "is_oneway": True,
+    },
+    "floating_island": {
+        "size": (6.5, 5.0, 1.5), # 広めの浮島ベース
+        "texture": "resources/grass.png",
+        "is_oneway": False,
+    },
+}
+
 class StageAIGenerator:
     """
     カービィ64風のコース構造（レール、足場、敵）をプロシージャル生成するエンジン
@@ -264,9 +283,9 @@ class StageAIGenerator:
                 if curve_prob > 0.6:
                     candidates.append("S_CURVE")
 
-                # 浮遊アスレチックモードのみ坂道を含める（平原では地面を活かすため平坦を優先）
-                if environment == "PLATFORM" and slope_prob > 0.5:
-                    candidates.extend(["SLOPE_UP", "SLOPE_DOWN"])
+                # 浮遊アスレチックモードのみ坂道・階段を含める（平原では地面を活かすため平坦を優先）
+                if environment == "PLATFORM" and slope_prob > 0.4:
+                    candidates.extend(["SLOPE_UP", "SLOPE_DOWN", "SLOPE_UP_STEP"])
 
                 chosen = self.rng.choice(candidates)
                 # 連続で同じ方向に直角に曲がってループするのを抑制
@@ -584,6 +603,16 @@ class StageAIGenerator:
             height_loss = self.rng.uniform(3.0, 4.5)
             end_pos = pos + h_fwd * length - up * height_loss
             end_fwd = h_fwd.copy()
+            sub_points.append((end_pos, end_fwd, length * 0.35))
+
+        elif sec_type == "SLOPE_UP_STEP":
+            # 階段状に登るアスレチックセクション（PLATFORMモード専用）
+            length = self.rng.uniform(16.0, 20.0)
+            height_gain = self.rng.uniform(3.5, 5.0)
+            end_pos = pos + h_fwd * length + up * height_gain
+            end_fwd = h_fwd.copy()
+            meta["high_platform"] = True
+            meta["is_step"] = True
             sub_points.append((end_pos, end_fwd, length * 0.35))
 
         else:
@@ -927,16 +956,20 @@ class StageAIGenerator:
                 yaw = math.atan2(interp_fwd.y, interp_fwd.x) - (math.pi / 2.0)
 
                 # ─── 足場ブロック生成 ───
+                is_step_section = sec.get("is_step", False)
                 # 穴セクションの場合、中央のブロックを抜いてジャンプ穴にする
                 is_hole = is_gap_section and (0.3 <= t <= 0.7)
 
-                # PLAINS モードでは落とし穴ブロックは配置しない
-
                 # PLATFORM モードのみ空中ブロックを配置（PLAINSモードでは平原地面を活かすため直方体ブロックは置かない）
-                elif environment == "PLATFORM" and spawn_blocks and not is_hole:
+                if environment == "PLATFORM" and spawn_blocks and not is_hole:
+                    # 階段セクションの場合、ステップ段差を強調して階段状に配置
+                    blk_z_offset = -block_thickness * 0.5
+                    if is_step_section:
+                        blk_z_offset += (step * 0.25)
+
                     blk = self._create_stage_block(
                         f"StageBlock_S{s_idx}_{step}",
-                        interp_pos + mathutils.Vector((0, 0, -block_thickness * 0.5)),
+                        interp_pos + mathutils.Vector((0, 0, blk_z_offset)),
                         (block_width, block_spacing * 1.05, block_thickness),
                         yaw,
                         block_texture,
@@ -944,17 +977,50 @@ class StageAIGenerator:
                     )
                     blocks.append(blk)
 
-                # 穴セクションで真ん中に1つだけ浮遊足場を作る演出 (PLATFORMのみ)
-                if environment == "PLATFORM" and spawn_blocks and is_hole and step == num_steps // 2 and self.rng.random() < 0.6:
-                    float_blk = self._create_stage_block(
-                        f"FloatBlock_S{s_idx}_{step}",
-                        interp_pos + mathutils.Vector((0, 0, -block_thickness * 0.5)),
-                        (block_width * 0.7, block_spacing * 0.8, block_thickness),
-                        yaw,
-                        block_texture,
-                        collection
-                    )
-                    blocks.append(float_blk)
+                    # 稀に頭上にすり抜け足場（ボーナス足場）を配置
+                    if self.rng.random() < 0.25 and not is_step_section:
+                        oneway_prefab = _BLOCK_PREFABS["oneway_platform"]
+                        oneway_blk = self._create_stage_block(
+                            f"OneWayPlatform_S{s_idx}_{step}",
+                            interp_pos + mathutils.Vector((0, 0, 2.5)),
+                            oneway_prefab["size"],
+                            yaw,
+                            oneway_prefab["texture"],
+                            collection,
+                            is_oneway=True
+                        )
+                        blocks.append(oneway_blk)
+
+                # 穴セクションで真ん中に浮島や浮遊足場を作る演出 (PLATFORMのみ)
+                if environment == "PLATFORM" and spawn_blocks and is_hole and step == num_steps // 2:
+                    if self.rng.random() < 0.4:
+                        # 浮島（広めの島）
+                        island_prefab = _BLOCK_PREFABS["floating_island"]
+                        island_blk = self._create_stage_block(
+                            f"IslandBlock_S{s_idx}_{step}",
+                            interp_pos + mathutils.Vector((0, 0, -island_prefab["size"][2] * 0.5)),
+                            island_prefab["size"],
+                            yaw,
+                            island_prefab["texture"],
+                            collection,
+                            is_oneway=False
+                        )
+                        blocks.append(island_blk)
+                    elif self.rng.random() < 0.6:
+                        # すり抜け足場または通常浮遊足場
+                        use_oneway = (self.rng.random() < 0.5)
+                        prefab_key = "oneway_platform" if use_oneway else "standard"
+                        chosen_p = _BLOCK_PREFABS[prefab_key]
+                        float_blk = self._create_stage_block(
+                            f"FloatBlock_S{s_idx}_{step}",
+                            interp_pos + mathutils.Vector((0, 0, -chosen_p["size"][2] * 0.5)),
+                            (chosen_p["size"][0] * 0.8, chosen_p["size"][1] * 0.8, chosen_p["size"][2]),
+                            yaw,
+                            chosen_p["texture"],
+                            collection,
+                            is_oneway=chosen_p["is_oneway"]
+                        )
+                        blocks.append(float_blk)
 
                 # ─── 敵の配置 ───
                 # スタート地点（最初の2セクション s_idx < 2、および始点から25m以内）は完全な安全地帯として絶対に敵を湧かせない
@@ -1007,7 +1073,7 @@ class StageAIGenerator:
 
         return blocks, enemies
 
-    def _create_stage_block(self, name, pos, size, yaw, texture_path, collection):
+    def _create_stage_block(self, name, pos, size, yaw, texture_path, collection, is_oneway=False):
         """直方体または小道プレートの足場ブロック（BLOCK）を生成"""
         mesh = bpy.data.meshes.new(name)
         obj = bpy.data.objects.new(name, mesh)
@@ -1036,6 +1102,8 @@ class StageAIGenerator:
         obj["object_type"] = "BLOCK"
         obj["file_name"] = "box"
         obj["texture"] = texture_path
+        if is_oneway:
+            obj["prop_is_oneway"] = "true"
 
         return obj
 

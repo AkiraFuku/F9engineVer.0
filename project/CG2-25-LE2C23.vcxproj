@@ -141,6 +141,8 @@
     <ClCompile Include="application\level\StageBlock.cpp" />
     <ClCompile Include="application\level\StageManager.cpp" />
     <ClCompile Include="application\level\Terrain.cpp" />
+    <ClCompile Include="application\level\PrefabManager.cpp" />
+    <ClCompile Include="application\level\InstancedBlockRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\object\Boss\MiniBoss.h" />
@@ -254,6 +256,8 @@
     <ClInclude Include="application\level\StageBlock.h" />
     <ClInclude Include="application\level\StageManager.h" />
     <ClInclude Include="application\level\Terrain.h" />
+    <ClInclude Include="application\level\PrefabManager.h" />
+    <ClInclude Include="application\level\InstancedBlockRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -356,6 +360,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="resources\shaders\Object3d\SkinningObj3D.VS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Object3d\InstancedObject3d.vs.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

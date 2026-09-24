@@ -161,7 +161,7 @@ void GameScene::Initialize() {
 
     // --- ステージマネージャーによるJSONステージデータの読み込み ---
     stageManager_ = std::make_unique<StageManager>();
-    stageManager_->Load("resources/Stagemap/stage4.json", activeCamera_,
+    stageManager_->Load("resources/Stagemap/test_stage.json", activeCamera_,
         [this](const LevelObjectData& data) {
             Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
             AddEnemy(data.railPos, type);
@@ -294,6 +294,28 @@ void GameScene::Update() {
     }
 
     // ステージリロードボタン（JSON再読み込み）
+    if (ImGui::Button("Reload Test Stage (test_stage.json)")) {
+        enemies_.clear();
+        stageManager_->Load("resources/Stagemap/test_stage.json", activeCamera_,
+            [this](const LevelObjectData& data) {
+                Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
+                AddEnemy(data.railPos, type);
+            }
+        );
+        RailPath* sRail = GetStageRaill();
+        if (sRail && player) {
+            player->SetRail(sRail);
+            player->SetRailPosition(stageManager_->GetPlayerSpawnRailPosition());
+        }
+        if (sRail && goal_) {
+            goal_->SetRail(sRail);
+            goal_->SetRailPosition(stageManager_->GetGoalRailPosition());
+        }
+        if (stageManager_->GetCameraRail() && cameraController) {
+            cameraController->SetRailPath(stageManager_->GetCameraRail());
+        }
+    }
+
     if (ImGui::Button("Reload Stage (stage1.json)")) {
         enemies_.clear();
         stageManager_->Load("resources/Stagemap/stage1.json", activeCamera_,

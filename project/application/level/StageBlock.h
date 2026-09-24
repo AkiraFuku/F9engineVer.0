@@ -38,6 +38,8 @@ public:
     void SetCamera(Camera* camera) { if (object_) object_->SetCamera(camera); }
     void SetDisabled(bool disabled) { disabled_ = disabled; }
     void SetCollisionEnabled(bool enabled) { isCollisionEnabled_ = enabled; }
+    void SetOneway(bool oneway)            { isOneway_ = oneway; }
+    void SetPrefabId(const std::string& id){ prefabId_ = id; }
     void SetTranslate(const Vector3& pos) { if (object_) object_->SetTranslate(pos); }
     void SetRotate(const Vector3& rot)    { if (object_) object_->SetRotate(rot); }
     void SetScale(const Vector3& scl)     { if (object_) object_->SetScale(scl); }
@@ -45,6 +47,8 @@ public:
     // ─── ゲッター ─────────────────────────────────────────────────────
     bool IsDisabled()          const { return disabled_; }
     bool IsCollisionEnabled()  const { return isCollisionEnabled_; }
+    bool IsOneway()            const { return isOneway_; }
+    const std::string& GetPrefabId() const { return prefabId_; }
     const std::string& GetName() const { return name_; }
     LevelObjectType GetType()  const { return type_; }
 
@@ -60,9 +64,11 @@ private:
     std::unique_ptr<Object3d> object_ = nullptr;
 
     std::string     name_               = "";
+    std::string     prefabId_           = "";     ///< 適用されたプレハブID
     LevelObjectType type_               = LevelObjectType::kBlock;
     bool            disabled_           = false;  ///< 無効化フラグ（trueなら更新・描画・判定をスキップ）
     bool            isCollisionEnabled_ = true;   ///< false にすると三角形判定を提供しない
+    bool            isOneway_           = false;  ///< すり抜け足場フラグ（上から着地可・下から上昇通過可）
 
     /// キャッシュされたワールド空間三角形リスト
     mutable std::vector<Triangle> triangles_;

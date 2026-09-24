@@ -129,6 +129,7 @@ public:
     void Update();
 
     void Draw(const Matrix4x4& worldMatrix = Makeidentity4x4());
+    void DrawInstanced(uint32_t instanceCount);
     void SetAnimation(Animation* animation) {
         animation_ = animation;
     }

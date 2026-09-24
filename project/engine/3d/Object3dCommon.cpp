@@ -88,6 +88,52 @@ void Object3dCommon::Initialize()
     // PSOManagerに名前を付けて登録
     PSOManager::GetInstance()->RegisterPsoGenerator("Object3d", config);
 
+    // ─── GPU インスタンシング用 PSO の登録 ───
+    {
+        PsoConfig instConfig{};
+        PsoConfig::ShaderPath instVsPath{ ShaderType::VS, L"resources/shaders/Object3d/InstancedObject3d.vs.hlsl", "main", L"vs_6_0" };
+        instConfig.shaderPaths.push_back(instVsPath);
+        instConfig.shaderPaths.push_back(psPath);
+
+        instConfig.rootSignatureGenerator = []() {
+            return RootSignatureBuilder()
+                // 0. kMaterial (CBV b0, Pixel)
+                .AddCBV(0, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 1. kInstanceData (Table t5, Vertex: StructuredBuffer<InstanceData>)
+                .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5, D3D12_SHADER_VISIBILITY_VERTEX)
+
+                // 2. kTexture (Table t0, Pixel)
+                .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 3. DirectionalLight (SRV t1, Pixel)
+                .AddSRV(1, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 4. PointLight (SRV t2, Pixel)
+                .AddSRV(2, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 5. SpotLight (SRV t3, Pixel)
+                .AddSRV(3, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 6. LightCounts (CBV b3, Pixel)
+                .AddCBV(3, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 7. kCamera (CBV b2, Pixel)
+                .AddCBV(2, D3D12_SHADER_VISIBILITY_PIXEL)
+
+                // 8. kEnvironment (Table t4, Pixel)
+                .AddDescriptorTable(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, D3D12_SHADER_VISIBILITY_PIXEL)
+                .AddStaticSampler(PSOManager::GetInstance()->StaticSamplers())
+                .Build(DXCommon::GetInstance()->GetDevice().Get());
+        };
+
+        instConfig.inputLayoutGenerator = config.inputLayoutGenerator;
+        instConfig.depthEnable = true;
+        instConfig.depthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+
+        PSOManager::GetInstance()->RegisterPsoGenerator("InstancedObject3d", instConfig);
+    }
+
     //スキニング
     vsPath = { ShaderType::VS, L"resources/shaders/Object3d/SkinningObj3D.vs.hlsl", "main", L"vs_6_0" };
 

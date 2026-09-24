@@ -142,8 +142,22 @@ void Model::Draw(const Matrix4x4& worldMatrix) {
             UINT(modelData_.vertices.size()), 1, 0, 0);
     }
     DebugDrawSkeleton(worldMatrix);
+}
 
+void Model::DrawInstanced(uint32_t instanceCount)
+{
+    if (instanceCount == 0) return;
 
+    auto commandList = DXCommon::GetInstance()->GetCommandList();
+    commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    commandList->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+
+    if (!modelData_.indices.empty()) {
+        commandList->IASetIndexBuffer(&indexBufferView_);
+        commandList->DrawIndexedInstanced(UINT(modelData_.indices.size()), instanceCount, 0, 0, 0);
+    } else {
+        commandList->DrawInstanced(UINT(modelData_.vertices.size()), instanceCount, 0, 0);
+    }
 }
 
 void Model::CreateVertexBuffer() {

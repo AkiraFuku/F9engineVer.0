@@ -30,7 +30,7 @@ struct Plane
 struct Triangle
 {
 	Vector3 vertices[3];//頂点1
-
+	bool isOneway = false; // すり抜け足場フラグ
 };
 struct AABB{
 	Vector3 min;

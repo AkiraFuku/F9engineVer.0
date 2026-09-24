@@ -14,6 +14,7 @@
 #include "GameScene.h"
 #include "EffectManager.h"
 #include "collider.h"
+#include "Input.h"
 
 Player::Player() = default;
 Player::~Player() = default;
@@ -57,6 +58,13 @@ void Player::Update()
 
     if (!isAlive_) {
         ChangeState(std::make_unique<StateDead>());
+    }
+
+    if (dropThroughTimer_ > 0.0f) {
+        dropThroughTimer_ -= deltaTime_;
+        if (dropThroughTimer_ < 0.0f) {
+            dropThroughTimer_ = 0.0f;
+        }
     }
 
     HandleDamage();
@@ -160,9 +168,38 @@ void Player::Move(float ratio)
 void Player::Jump()
 {
     if (isGrounded_) {
-        velocity_.y = kJumpAcceleration;
-        isGrounded_ = false;
-        isJumping_ = true;
+        // すり抜け足場の上で「下入力＋ジャンプ」を行った場合は下層へすり抜け降下
+        Input* input = Input::GetInstance();
+        bool isDownPressed = false;
+        if (input) {
+            if (input->PushedKeyDown(DIK_S) || input->PushedKeyDown(DIK_DOWN)) {
+                isDownPressed = true;
+            }
+            XINPUT_STATE state;
+            if (input->GetJoyStick(0, state)) {
+                float rawY = (float)state.Gamepad.sThumbLY / 32767.0f;
+                if (rawY < -0.5f) {
+                    isDownPressed = true;
+                }
+            }
+            if (input->PushPadDown(0, XINPUT_GAMEPAD_DPAD_DOWN)) {
+                isDownPressed = true;
+            }
+        }
+
+        if (isDownPressed && isCurrentGroundOneway_) {
+            // 下層へすり抜け降下
+            isGrounded_ = false;
+            isJumping_ = false;
+            dropThroughTimer_ = 0.3f; // 0.3秒間すり抜け足場の床判定を無視
+            velocity_.y = -6.0f;     // 下向き初速を与えてスムーズに降りる
+            worldY_ -= 0.1f;
+        } else {
+            // 通常ジャンプ
+            velocity_.y = kJumpAcceleration;
+            isGrounded_ = false;
+            isJumping_ = true;
+        }
     }
 }
 
@@ -394,6 +431,30 @@ void Player::UpdateRayCollisions()
                         normal = Multiply(-1.0f, normal);
                     }
 
+                    // 【すり抜け足場（OneWay）の判定制御】
+                    if (tri.isOneway) {
+                        // 1. 壁判定（側面・下面）はすり抜け足場を無視（通過）
+                        if (rayInfo.name != "Floor") {
+                            continue;
+                        }
+
+                        // 2. 下層へのすり抜け降下中は床判定を無視
+                        if (dropThroughTimer_ > 0.0f) {
+                            continue;
+                        }
+
+                        // 3. 上昇中（ジャンプで飛び上がる最中）は下から通過するため床判定を無視
+                        if (velocity_.y > 0.0f) {
+                            continue;
+                        }
+
+                        // 4. プレイヤーの足元が足場上面より低い場合は通過（下から頭や体がめり込んだときの引っかかり防止）
+                        float playerBottomY = worldY_ - kHeightOffset;
+                        if (playerBottomY < tmpHit.y - 0.1f) {
+                            continue;
+                        }
+                    }
+
                     // 床・天井などの傾斜面を弾く（ほぼ垂直な壁のみ壁判定とする）
                     if (rayInfo.name != "Floor" && std::abs(normal.y) >= 0.7f) {
                         continue;
@@ -513,6 +574,9 @@ void Player::UpdateRayCollisions()
         rayHitPoint_ = floorRay->crossPoint;
         rayHitTriangle_ = floorRay->hitTriangle;
         result_ = RayTriangleCollisionResult::FrontFace;
+        isCurrentGroundOneway_ = (floorRay->isColide && floorRay->hitTriangle.isOneway);
+    } else {
+        isCurrentGroundOneway_ = false;
     }
 }
 void Player::HandleInput()

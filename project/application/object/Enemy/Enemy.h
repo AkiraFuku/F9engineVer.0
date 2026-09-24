@@ -159,8 +159,19 @@ public:
         return rayHitPalamata_.groundY;
     }
 
+    float GetMoveDirection() const { return moveDirection_; }
+    void SetMoveDirection(float dir) { moveDirection_ = (dir >= 0.0f) ? 1.0f : -1.0f; }
+    void Turn() { moveDirection_ *= -1.0f; turnCooldownTimer_ = kTurnCooldown_; }
+    bool IsWallHit() const { return isWallHit_; }
+
 protected:
     float deltaTime_ = DXCommon::kDeltaTime; // フレームレートに合わせたデルタタイム
+
+    float moveDirection_ = 1.0f;             // 進行方向 (1.0f: 順方向, -1.0f: 逆方向)
+    float turnCooldownTimer_ = 0.0f;         // 連続反転防止タイマー
+    const float kTurnCooldown_ = 0.5f;       // 反転クールダウン（秒）
+    bool isWallHit_ = false;                 // 前方壁衝突フラグ
+    float wallRayDistance_ = FLT_MAX;        // 前方壁までの距離
 
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更

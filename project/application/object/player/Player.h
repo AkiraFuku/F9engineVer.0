@@ -224,6 +224,8 @@ private:
     const float kJumpAcceleration = 24.0f;
     bool isGrounded_ = true;
     bool isJumping_ = false; // ジャンプ中フラグ（吸着解除用）
+    float dropThroughTimer_ = 0.0f;          // すり抜け足場（OneWay）下層降下タイマー
+    bool isCurrentGroundOneway_ = false;     // 現在乗っている床がすり抜け足場かどうか
 
     GameObject::GroundRayPalamata rayHitPalamata_;
     const float kHeightOffset = 0.5f;
