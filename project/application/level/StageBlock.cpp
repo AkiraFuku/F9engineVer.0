@@ -38,6 +38,7 @@ void StageBlock::Initialize(const LevelObjectData& data, Camera* camera)
     std::string texturePath = data.texturePath;
     Vector3 scale = data.transform.scale;
     bool isOneway = false;
+    bool isCollisionEnabled = true;
 
     if (prefabDef) {
         prefabId_ = prefabDef->prefabId;
@@ -48,6 +49,7 @@ void StageBlock::Initialize(const LevelObjectData& data, Camera* camera)
             scale = prefabDef->defaultScale;
         }
         isOneway = prefabDef->isOneway;
+        isCollisionEnabled = prefabDef->collisionEnabled;
     } else {
         prefabId_ = modelName.empty() ? "box" : modelName;
     }
@@ -58,6 +60,17 @@ void StageBlock::Initialize(const LevelObjectData& data, Camera* camera)
         isOneway = (onewayIt->second == "true" || onewayIt->second == "1" || onewayIt->second == "True");
     }
     isOneway_ = isOneway;
+
+    // JSON側の properties["is_collision"] または ["collision"] による明示的オーバーライド
+    auto colIt = data.properties.find("is_collision");
+    if (colIt != data.properties.end()) {
+        isCollisionEnabled = (colIt->second == "true" || colIt->second == "1" || colIt->second == "True");
+    }
+    auto colIt2 = data.properties.find("collision");
+    if (colIt2 != data.properties.end()) {
+        isCollisionEnabled = (colIt2->second == "true" || colIt2->second == "1" || colIt2->second == "True");
+    }
+    isCollisionEnabled_ = isCollisionEnabled;
 
     // モデルの読み込みと Object3d 初期化
     if (!modelName.empty()) {

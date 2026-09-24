@@ -2,6 +2,9 @@
 #include "RailMover.h"
 #include "ModelManager.h"
 #include "Collider.h"
+#include "GameScene.h"
+#include "DrawFunction.h"
+
 Projectile::Projectile() {
     railMover_ = std::make_unique<RailMover>();
     object_ = std::make_unique<Object3d>();
@@ -42,6 +45,10 @@ void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& pa
     railMover_->SetProgress(param.position.x);
     worldY_ = param.position.y;
 
+    // 初期位置を設定
+    Vector3 railPos = railMover_->GetCurrentPosition();
+    object_->SetTranslate({ railPos.x, worldY_, railPos.z });
+
     collider_ = std::make_unique<Collider>();
     collider_->initialize(this, radius_);
 
@@ -49,6 +56,8 @@ void Projectile::Initialize(const RailPath* path, const ProjectileSpawnParam& pa
 
 void Projectile::Update() {
     if (isDead_) return;
+
+    Vector3 prevPos = GetWorldPosition();
 
     // レール上の位置を更新
     railMover_->Advance(speed_);
@@ -63,6 +72,10 @@ void Projectile::Update() {
 
     object_->Update();
     collider_->Update();
+
+    // 壁・地形との衝突判定
+    CheckMapCollision(prevPos, finalPos);
+
     if (--lifeTimer_ <= 0) {
         isDead_ = true;
     }
@@ -79,4 +92,43 @@ Vector3 Projectile::GetWorldPosition() const {
 void Projectile::OnCollision( GameObject* other) {
     other; // 使わない場合は警告回避のために記述
     isDead_ = true; // 何かに当たったら消える
+}
+
+void Projectile::CheckMapCollision(const Vector3& prevPos, const Vector3& finalPos) {
+    if (!scene_ || isDead_) return;
+    auto gs = dynamic_cast<GameScene*>(scene_);
+    if (!gs) return;
+
+    const auto& triangles = gs->GetTriangle();
+    if (triangles.empty()) return;
+
+    Vector3 moveVec = Subtract(finalPos, prevPos);
+    float moveDist = Length(moveVec);
+    if (moveDist <= 0.0001f) return;
+
+    // 移動線分レイ（進行方向に半径分少し伸ばすことで、めり込む前に衝突判定を取る）
+    Vector3 moveDir = Normalize(moveVec);
+    Ray ray;
+    ray.origin = prevPos;
+    ray.diff = Multiply(moveDist + radius_, moveDir);
+
+    for (const auto& tri : triangles) {
+        // すり抜け足場(isOneway)は弾が貫通
+        if (tri.isOneway) {
+            continue;
+        }
+
+        float dist = 0.0f;
+        Vector3 hitPoint = {};
+        RayTriangleCollisionResult result;
+        if (CheckRayTriangle(ray, tri, &dist, &hitPoint, &result)) {
+            if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
+                // レイの有効範囲内でヒットしたら消滅
+                if (dist >= 0.0f && dist <= 1.0f) {
+                    isDead_ = true;
+                    break;
+                }
+            }
+        }
+    }
 }

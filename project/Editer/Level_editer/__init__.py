@@ -37,6 +37,7 @@ from .operater import (
     MYADDON_OT_ICO_sphere,
     MYADDON_OT_add_slope_block,
     MYADDON_OT_add_stairs_block,
+    MYADDON_OT_add_prefab_block,
 )
 from .export_scene import MYADDON_OT_export_scene
 from .import_scene import MYADDON_OT_import_scene
@@ -46,6 +47,7 @@ from .terrain_generator import (
     MYADDON_OT_deform_terrain_to_rail,
     MYADDON_OT_enter_terrain_sculpt,
     MYADDON_OT_draw_rail_mode,
+    MYADDON_OT_carve_prism_depression,
 )
 from .road_generator import (
     MYADDON_OT_generate_road_along_rail,
@@ -98,7 +100,7 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
         self.layout.operator(MYADDON_OT_generate_terrain.bl_idname, text=MYADDON_OT_generate_terrain.bl_label, icon='MESH_GRID')
         self.layout.operator(MYADDON_OT_convert_obj_to_terrain.bl_idname, text=MYADDON_OT_convert_obj_to_terrain.bl_label, icon='MOD_OCEAN')
         self.layout.separator()
-        self.layout.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="（補助）独立道路メッシュを生成", icon='ROAD')
+        self.layout.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="（補助）独立道路メッシュを生成", icon='CURVE_PATH')
         self.layout.separator()
         self.layout.operator(MYADDON_OT_add_slope_block.bl_idname, text=MYADDON_OT_add_slope_block.bl_label, icon='MOD_SOLIDIFY')
         self.layout.operator(MYADDON_OT_add_stairs_block.bl_idname, text=MYADDON_OT_add_stairs_block.bl_label, icon='MOD_BEVEL')
@@ -118,6 +120,7 @@ classes = (
     MYADDON_OT_ICO_sphere,
     MYADDON_OT_add_slope_block,
     MYADDON_OT_add_stairs_block,
+    MYADDON_OT_add_prefab_block,
     MYADDON_OT_stretch_vertex,
     MYADDON_OT_add_filwname,
     OBJECT_PT_file_name,
@@ -137,6 +140,7 @@ classes = (
     MYADDON_OT_deform_terrain_to_rail,
     MYADDON_OT_enter_terrain_sculpt,
     MYADDON_OT_draw_rail_mode,
+    MYADDON_OT_carve_prism_depression,
     MYADDON_OT_generate_road_along_rail,
     MYADDON_OT_snap_to_rail,
     MYADDON_OT_calculate_rail_pos,

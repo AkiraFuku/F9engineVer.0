@@ -1419,6 +1419,228 @@ class MYADDON_OT_draw_rail_mode(bpy.types.Operator):
 
 
 # ------------------------------------------
+# 多角柱の窪み彫り込み（押し下げ）機能
+# ------------------------------------------
+
+def carve_prism_depression_in_terrain(
+    terrain_obj,
+    center_pos,
+    sides=6,
+    radius=3.0,
+    depth=1.5,
+    bevel_ratio=0.2,
+    rotation_rad=0.0,
+    auto_subdivide=True,
+    auto_export_obj=False
+):
+    """
+    指定された地形メッシュの頂点を、3D空間の中心座標を中心とする正多角柱（sides角形）の形状で
+    下方向へ押し下げて窪み（ピット/穴）を彫り込む。
+    """
+    if not terrain_obj or terrain_obj.type != 'MESH':
+        return False, "対象のメッシュオブジェクトが見つかりません。"
+
+    mesh = terrain_obj.data
+    mat_world = terrain_obj.matrix_world
+    mat_inv = mat_world.inverted()
+
+    # ワールド座標での中心
+    cx, cy, cz = center_pos.x, center_pos.y, center_pos.z
+
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
+
+    # 正多角形の幾何パラメータ
+    sides = max(3, min(sides, 16))
+    alpha = math.pi / float(sides)
+    cos_alpha = math.cos(alpha)
+    two_alpha = 2.0 * alpha
+
+    # 自動細分化: 粗いポリゴンの場合、窪み範囲内(半径の1.3倍)の面を細分化して綺麗な輪郭を出す
+    if auto_subdivide:
+        subdiv_faces = []
+        for f in bm.faces:
+            fc = mat_world @ f.calc_center_median()
+            if (fc.x - cx)**2 + (fc.y - cy)**2 <= (radius * 1.3)**2:
+                subdiv_faces.append(f)
+        if subdiv_faces:
+            edges_to_subdiv = list({e for f in subdiv_faces for e in f.edges})
+            if edges_to_subdiv:
+                bmesh.ops.subdivide_edges(
+                    bm,
+                    edges=edges_to_subdiv,
+                    cuts=1,
+                    use_grid_fill=True
+                )
+                bm.verts.ensure_lookup_table()
+                bm.faces.ensure_lookup_table()
+
+    modified_count = 0
+    clamped_bevel = max(0.0, min(bevel_ratio, 1.0))
+
+    for v in bm.verts:
+        w_pos = mat_world @ v.co
+        dx = w_pos.x - cx
+        dy = w_pos.y - cy
+        dist = math.sqrt(dx * dx + dy * dy)
+
+        # 粗判定
+        if dist > radius * 1.5:
+            continue
+
+        phi = math.atan2(dy, dx) - rotation_rad
+        # [-pi, pi] の範囲に正規化
+        phi = (phi + math.pi) % (2.0 * math.pi) - math.pi
+        # セグメント内ローカル角 theta (-alpha <= theta <= alpha)
+        theta = (phi % two_alpha) - alpha
+
+        cos_theta = math.cos(theta)
+        if abs(cos_theta) < 1e-6:
+            continue
+
+        r_poly = radius * (cos_alpha / cos_theta)
+
+        if dist <= r_poly:
+            # 多角形内部
+            r_core = r_poly * (1.0 - clamped_bevel)
+            if dist <= r_core or clamped_bevel <= 1e-4:
+                # コア平坦底面
+                target_offset_z = -depth
+            else:
+                # 傾斜部分
+                t = (dist - r_core) / max(r_poly - r_core, 1e-4)
+                # スムーズなコサインカーブでフチをブレンド
+                w = 0.5 * (1.0 + math.cos(math.pi * t))
+                target_offset_z = -depth * w
+
+            # ローカル座標に逆変換して適用
+            new_w_pos = mathutils.Vector((w_pos.x, w_pos.y, w_pos.z + target_offset_z))
+            v.co = mat_inv @ new_w_pos
+            modified_count += 1
+
+    if modified_count == 0:
+        bm.free()
+        return False, "窪み範囲内に変形対象となる頂点がありませんでした。3Dカーソルの位置または半径を確認してください。"
+
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+
+    if auto_export_obj:
+        try:
+            _export_terrain_obj(terrain_obj)
+        except Exception:
+            pass
+
+    return True, f"多角柱の窪みを彫り込みました（{modified_count}個の頂点を押し下げ）"
+
+
+class MYADDON_OT_carve_prism_depression(bpy.types.Operator):
+    bl_idname = "myaddon.carve_prism_depression"
+    bl_label = "面を多角柱に押し下げる"
+    bl_description = "3Dカーソル位置の地面（地形）メッシュの面を、多角柱（3〜12角形）の形状で下方向に押し下げて窪みを作ります"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    sides: bpy.props.IntProperty(
+        name="角数 (多角柱)",
+        description="窪みの形状（3=三角柱, 4=四角柱, 6=六角柱, 8=八角柱...）",
+        default=6,
+        min=3,
+        max=12
+    )
+
+    radius: bpy.props.FloatProperty(
+        name="半径 (m)",
+        description="多角柱の窪みの半径サイズ",
+        default=3.0,
+        min=0.5,
+        max=50.0,
+        unit='LENGTH'
+    )
+
+    depth: bpy.props.FloatProperty(
+        name="押し下げ深さ (m)",
+        description="下方向へ押し下げる深さ",
+        default=1.5,
+        min=0.1,
+        max=30.0,
+        unit='LENGTH'
+    )
+
+    bevel_ratio: bpy.props.FloatProperty(
+        name="側面の傾斜割合",
+        description="側面（フチ）の傾斜度合い（0.0で垂直な段差、1.0ですり鉢状）",
+        default=0.2,
+        min=0.0,
+        max=1.0,
+        subtype='FACTOR'
+    )
+
+    rotation_deg: bpy.props.FloatProperty(
+        name="回転角度 (度)",
+        description="多角形の向き（Z軸回転角）",
+        default=0.0,
+        min=-180.0,
+        max=180.0
+    )
+
+    auto_subdivide: bpy.props.BoolProperty(
+        name="周囲の面を自動細分化",
+        description="粗いグリッド地面でもきれいな多角形のフチが出るように範囲内の面を細分化します",
+        default=True
+    )
+
+    def execute(self, context):
+        # 対象メッシュの取得（選択中メッシュ、または TerrainGround / TERRAIN）
+        target_obj = None
+        if context.active_object and context.active_object.type == 'MESH':
+            target_obj = context.active_object
+        elif "TerrainGround" in bpy.data.objects:
+            target_obj = bpy.data.objects["TerrainGround"]
+        else:
+            for obj in bpy.data.objects:
+                if obj.type == 'MESH' and (obj.get("object_type") == "TERRAIN" or "terrain" in obj.name.lower()):
+                    target_obj = obj
+                    break
+
+        if not target_obj:
+            self.report({'ERROR'}, "対象の地面メッシュが見つかりません。地形メッシュを選択するか、TerrainGround を作成してください。")
+            return {'CANCELLED'}
+
+        # オブジェクトモードにして変形
+        if context.mode != 'OBJECT':
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception:
+                pass
+
+        center_pos = context.scene.cursor.location
+        rot_rad = math.radians(self.rotation_deg)
+
+        success, msg = carve_prism_depression_in_terrain(
+            terrain_obj=target_obj,
+            center_pos=center_pos,
+            sides=self.sides,
+            radius=self.radius,
+            depth=self.depth,
+            bevel_ratio=self.bevel_ratio,
+            rotation_rad=rot_rad,
+            auto_subdivide=self.auto_subdivide,
+            auto_export_obj=False
+        )
+
+        if success:
+            self.report({'INFO'}, f"✅ {msg}")
+            return {'FINISHED'}
+        else:
+            self.report({'WARNING'}, msg)
+            return {'CANCELLED'}
+
+
+# ------------------------------------------
 # 登録・解除（単体実行用）
 # ------------------------------------------
 classes = (
@@ -1427,6 +1649,7 @@ classes = (
     MYADDON_OT_deform_terrain_to_rail,
     MYADDON_OT_enter_terrain_sculpt,
     MYADDON_OT_draw_rail_mode,
+    MYADDON_OT_carve_prism_depression,
 )
 
 def register():

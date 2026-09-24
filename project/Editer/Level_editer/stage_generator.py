@@ -152,19 +152,39 @@ class CurveExtensionHelper:
 # プレハブ定義（足場サイズ・属性・テクスチャのテンプレート）
 _BLOCK_PREFABS = {
     "standard": {
+        "prefab_id": "standard_block",
         "size": (4.0, 3.15, 1.0),
         "texture": "resources/grass.png",
         "is_oneway": False,
+        "is_collision": True,
     },
     "oneway_platform": {
-        "size": (3.5, 2.0, 0.2), # 薄型のすり抜け足場
+        "prefab_id": "oneway_platform",
+        "size": (3.5, 2.0, 0.25), # 薄型のすり抜け足場
         "texture": "resources/grass.png",
         "is_oneway": True,
+        "is_collision": True,
     },
     "floating_island": {
+        "prefab_id": "floating_island",
         "size": (6.5, 5.0, 1.5), # 広めの浮島ベース
         "texture": "resources/grass.png",
         "is_oneway": False,
+        "is_collision": True,
+    },
+    "stair_step": {
+        "prefab_id": "stair_step",
+        "size": (4.0, 2.0, 0.5), # 階段用ステップ
+        "texture": "resources/grass.png",
+        "is_oneway": False,
+        "is_collision": True,
+    },
+    "deco_cube": {
+        "prefab_id": "deco_cube",
+        "size": (2.0, 2.0, 2.0), # 背景装飾キューブ（当たり判定なし）
+        "texture": "resources/grass.png",
+        "is_oneway": False,
+        "is_collision": False,
     },
 }
 
@@ -249,6 +269,16 @@ class StageAIGenerator:
         # 基準高さ（平原では常に水平フラットを維持）
         base_z = getattr(helper, "base_z", helper.current_pos.z)
 
+        # 既存コースの終点から延長（伸長）する場合、終点の進行方向を基準に少し向きを変える（約15〜28度）
+        if not settings.get("reset_existing", True):
+            turn_deg = self.rng.choice([-1.0, 1.0]) * self.rng.uniform(16.0, 28.0)
+            turn_rad = math.radians(turn_deg)
+            cos_t = math.cos(turn_rad)
+            sin_t = math.sin(turn_rad)
+            fwd_x = helper.current_fwd.x * cos_t - helper.current_fwd.y * sin_t
+            fwd_y = helper.current_fwd.x * sin_t + helper.current_fwd.y * cos_t
+            helper.current_fwd = mathutils.Vector((fwd_x, fwd_y, 0.0)).normalized()
+
         # 直線主体シーケンス制御:
         # 初期の直線カウントを1〜2に設定（カーブが適切に挟まり、単調な直線ばかりになるのを防止）
         straight_count = self.rng.randint(1, 2)
@@ -259,9 +289,12 @@ class StageAIGenerator:
             start_pos = helper.current_pos.copy()
             start_fwd = helper.current_fwd.copy()
 
-            # 平原ステージではZ方向のブレや沈み込みを完全に排除（常に基準高さを維持）
+            # 平原ステージでも自然な起伏・高低差を許容（極端な上下沈み込みのみ防ぐ）
             if environment == "PLAINS":
-                start_pos.z = base_z
+                # 基準高さからの乖離が大きくなりすぎないようソフトに補正
+                h_diff = helper.current_pos.z - base_z
+                if abs(h_diff) > 5.5:
+                    start_pos.z = base_z + (h_diff * 0.5)
                 h_fwd = mathutils.Vector((start_fwd.x, start_fwd.y, 0.0))
                 start_fwd = h_fwd.normalized() if h_fwd.length > 1e-4 else mathutils.Vector((0.0, 1.0, 0.0))
 
@@ -269,23 +302,29 @@ class StageAIGenerator:
             if sec_i < 2 or sec_i == num_sections - 1:
                 sec_type = "STRAIGHT"
             elif straight_count > 0:
-                # 快適に走れるまとまった直線区間
-                sec_type = "STRAIGHT"
+                # 快適に走れるまとまった直線区間（基本はフラット主体。高低差は適度なアクセントとしてのみ発生）
+                if slope_prob > 0.2 and self.rng.random() < slope_prob * 0.22:
+                    slope_choices = ["HILL_SMALL", "DIP_SMALL", "SLOPE_GENTLE_UP", "SLOPE_GENTLE_DOWN"]
+                    if slope_prob > 0.6:
+                        slope_choices.extend(["SLOPE_STEEP_UP", "SLOPE_STEEP_DOWN", "HILL_LARGE", "DIP_DEEP"])
+                    sec_type = self.rng.choice(slope_choices)
+                else:
+                    sec_type = "STRAIGHT"
                 straight_count -= 1
             else:
-                # 直線が十分続いたので、アクセントとしてカーブ/コーナーを1区間挟む
+                # アクセントとしてカーブ/コーナーを1区間挟む（左右折を主役に）
                 candidates = []
                 if curve_prob > 0.35:
-                    # 90°コーナー
                     candidates.extend(["CORNER_LEFT_90", "CORNER_RIGHT_90"])
-                # 緩やかな30°〜45°カーブ
                 candidates.extend(["CURVE_LEFT", "CURVE_RIGHT", "CURVE_LEFT", "CURVE_RIGHT"])
                 if curve_prob > 0.6:
                     candidates.append("S_CURVE")
 
-                # 浮遊アスレチックモードのみ坂道・階段を含める（平原では地面を活かすため平坦を優先）
-                if environment == "PLATFORM" and slope_prob > 0.4:
-                    candidates.extend(["SLOPE_UP", "SLOPE_DOWN", "SLOPE_UP_STEP"])
+                # カーブ区間での高低差は稀なアクセント程度に抑制
+                if slope_prob > 0.4 and self.rng.random() < 0.25:
+                    candidates.extend(["HILL_SMALL", "DIP_SMALL"])
+                    if slope_prob > 0.7:
+                        candidates.extend(["SLOPE_GENTLE_UP", "SLOPE_GENTLE_DOWN"])
 
                 chosen = self.rng.choice(candidates)
                 # 連続で同じ方向に直角に曲がってループするのを抑制
@@ -306,7 +345,8 @@ class StageAIGenerator:
 
             # 終端位置と進行方向を計算（カーブ・コーナーは中間点を含む円弧ステップ列を返す）
             sub_points, sec_meta = self._compute_section_geometry(
-                start_pos, start_fwd, sec_type, base_z=base_z, environment=environment, gap_prob=sec_gap_prob
+                start_pos, start_fwd, sec_type, base_z=base_z, environment=environment,
+                gap_prob=sec_gap_prob, slope_prob=slope_prob
             )
 
             sec_interp = "LINEAR" if sec_type == "STRAIGHT" else "BEZIER"
@@ -355,8 +395,14 @@ class StageAIGenerator:
             print(f"[stage_generator] 補間タイプ設定エラー: {ex}")
 
         # 🌿 平原ステージ (PLAINS) の場合、コース全体を包み込む草原地面メッシュ (terrain_grid) を自動配置/更新
+        ground_obj = None
         if environment == "PLAINS":
-            ground_obj = self._ensure_plains_ground(context, rail_obj, target_col, section_infos=section_infos)
+            ground_obj = self._ensure_plains_ground(
+                context, rail_obj, target_col,
+                section_infos=section_infos,
+                size_scale=settings.get("terrain_margin_scale", 1.0),
+                grid_density=settings.get("terrain_density", 1.2)
+            )
             if ground_obj and ground_obj not in created_objects:
                 created_objects.append(ground_obj)
 
@@ -389,8 +435,81 @@ class StageAIGenerator:
                     except Exception as ex:
                         print(f"[stage_generator] 地面自動変形スキップ/エラー: {ex}")
 
-                # PLAINS モードでは落とし穴（穴あけ）は行わず、平面Terrainとして維持
+                # 🕳️ コースレール上および背景地形の多角柱彫り込み（盛り上げ・押し下げ）
+                try:
+                    from .terrain_generator import carve_prism_depression_in_terrain
+                except ImportError:
+                    try:
+                        from terrain_generator import carve_prism_depression_in_terrain
+                    except ImportError:
+                        carve_prism_depression_in_terrain = None
 
+                if carve_prism_depression_in_terrain and ground_obj:
+                    # 背景方向の決定（カメラがRIGHTなら背景は左奥、LEFTなら右奥）
+                    bg_sign = 1.0 if camera_side == "RIGHT" else -1.0
+
+                    for s_idx, sec in enumerate(section_infos):
+                        if s_idx < 1 or s_idx >= len(section_infos) - 1:
+                            continue
+
+                        p0 = sec["start_pos"]
+                        p1 = sec["end_pos"]
+                        sec_center = (p0 + p1) * 0.5
+                        sec_fwd = (p1 - p0).normalized() if (p1 - p0).length > 1e-4 else sec.get("start_fwd", mathutils.Vector((0, 1, 0)))
+
+                        # 背景方向の水平法線ベクトル
+                        bg_normal = mathutils.Vector((-sec_fwd.y * bg_sign, sec_fwd.x * bg_sign, 0.0)).normalized()
+
+                        # ── 1. コースレール上の多角柱窪み（穴や直線の一定確率） ──
+                        sec_type = sec.get("sec_type", "")
+                        is_straight = (sec_type == "STRAIGHT" or "HILL" in sec_type or "DIP" in sec_type)
+                        if sec.get("is_gap", False) or (is_straight and self.rng.random() < 0.25):
+                            pit_sides = self.rng.choice([6, 8])
+                            pit_radius = self.rng.uniform(2.5, 3.8)
+                            pit_depth = self.rng.uniform(1.2, 2.2)
+                            carve_prism_depression_in_terrain(
+                                terrain_obj=ground_obj,
+                                center_pos=sec_center,
+                                sides=pit_sides,
+                                radius=pit_radius,
+                                depth=pit_depth,
+                                bevel_ratio=0.25,
+                                rotation_rad=self.rng.uniform(0, 3.14),
+                                auto_subdivide=True,
+                                auto_export_obj=False
+                            )
+
+                        # ── 2. 背景部分地形の盛り上げ（丘・高台・段差）と押し下げ（窪み・谷） ──
+                        # レールから奥側へ 7m〜15m 離れた背景エリアに立体的な起伏を自動造成
+                        if self.rng.random() < 0.65:
+                            bg_dist = self.rng.uniform(7.5, 14.5)
+                            bg_center = sec_center + bg_normal * bg_dist
+                            # Z座標はレールの高さを基準に設定
+                            bg_center.z = sec_center.z
+
+                            bg_sides = self.rng.choice([5, 6, 8])
+                            bg_radius = self.rng.uniform(3.5, 5.5)
+
+                            # 60%の確率で「盛り上げ（丘・高台・段差）」、40%の確率で「押し下げ（窪み・谷）」
+                            is_mound = (self.rng.random() < 0.60)
+                            if is_mound:
+                                # 負のdepthで上方向に押し上げて丘・高台・段差を形成
+                                bg_depth = -self.rng.uniform(1.3, 2.6)
+                            else:
+                                # 正のdepthで下方向に押し下げて窪み・盆地を形成
+                                bg_depth = self.rng.uniform(1.2, 2.2)
+
+                            carve_prism_depression_in_terrain(
+                                terrain_obj=ground_obj,
+                                center_pos=bg_center,
+                                sides=bg_sides,
+                                radius=bg_radius,
+                                depth=bg_depth,
+                                bevel_ratio=self.rng.uniform(0.2, 0.35),
+                                rotation_rad=self.rng.uniform(0, 3.14),
+                                auto_subdivide=True,
+                                auto_export_obj=False
+                            )
 
                 # ✂️ レール（進行ルート）から離れたゲーム中に見えない不要メッシュを一括削除
                 self._trim_unseen_terrain_mesh(ground_obj, rail_obj, max_distance=24.0)
@@ -409,6 +528,13 @@ class StageAIGenerator:
             )
             created_objects.extend(blocks)
             created_objects.extend(enemies)
+
+        # 🏰 背景の段差・テラス・当たり判定なし装飾プレハブの自動配置（カメラ被り防止＆奥側背景演出）
+        bg_elements = self._spawn_background_elements(
+            context, rail_obj, section_infos, environment, target_col,
+            camera_side=camera_side, ground_obj=ground_obj
+        )
+        created_objects.extend(bg_elements)
 
         # カメラレールの同期（進行方向の右側 = flip_side=False, 左側 = flip_side=True）
         if update_camera:
@@ -436,17 +562,15 @@ class StageAIGenerator:
 
         return len(section_infos), len(created_objects)
 
-    def _compute_section_geometry(self, pos, fwd, sec_type, base_z=None, environment="PLAINS", gap_prob=0.3):
+    def _compute_section_geometry(self, pos, fwd, sec_type, base_z=None, environment="PLAINS", gap_prob=0.3, slope_prob=0.4):
         """
         セクションの幾何形状を計算。
-        カーブ・コーナー区間では2点間の直線にならず、中間点を含む滑らかな円弧カーブレール（sub_points列）を返す。
-        戻り値: (sub_points, meta)
-        sub_points は [(point_pos, forward_vec, handle_length), ...] のリスト
+        カーブ・コーナー区間でも slope_prob に応じてランダムに高低差（上り・下り・起伏）を生成可能。
         """
-        meta = {"is_gap": False, "high_platform": False}
+        meta = {"is_gap": False, "high_platform": False, "is_step": False}
         up = mathutils.Vector((0.0, 0.0, 1.0))
 
-        # 水平進行方向（Z成分は常に0にし、下り・上りの傾き累積を完全排除）
+        # 水平進行方向
         h_fwd = mathutils.Vector((fwd.x, fwd.y, 0.0))
         if h_fwd.length < 1e-4:
             h_fwd = mathutils.Vector((0.0, 1.0, 0.0))
@@ -456,135 +580,179 @@ class StageAIGenerator:
         if base_z is None:
             base_z = pos.z
 
+        # 曲線セクションでのランダム高低差計算（slope_prob に基づきランダムに上り・下りを付与）
+        curve_dz = 0.0
+        if slope_prob > 0.15 and self.rng.random() < slope_prob:
+            curr_diff = pos.z - base_z
+            if curr_diff < -1.0:
+                curve_dz = self.rng.uniform(1.2, 2.5)  # 基準より低ければ登りやすい
+            elif curr_diff > 3.0:
+                curve_dz = -self.rng.uniform(1.2, 2.2) # 基準より高ければ下りやすい
+            else:
+                curve_dz = self.rng.uniform(1.2, 2.5) if self.rng.random() < 0.5 else -self.rng.uniform(1.2, 2.2)
+
         sub_points = []
 
         if sec_type == "STRAIGHT":
-            # 快適に走れる真っ直ぐな直線区間（約14〜20m）
             length = self.rng.uniform(14.0, 20.0)
             end_pos = pos + h_fwd * length
-            if environment == "PLAINS":
-                end_pos.z = base_z
             end_fwd = h_fwd.copy()
             h_len = length * 0.35
 
-            # 落とし穴判定（平原・アスレチック双方で有効）
             if self.rng.random() < gap_prob:
                 meta["is_gap"] = True
 
             sub_points.append((end_pos, end_fwd, h_len))
 
+        elif sec_type == "HILL_SMALL":
+            # ⛰️ 小さな丘（直線上でなだらかに登って下りる: 始点 → 頂上 → 終点）
+            length = self.rng.uniform(16.0, 22.0)
+            hill_h = self.rng.uniform(1.8, 3.0)
+            p_mid = pos + h_fwd * (length * 0.5) + up * hill_h
+            p_end = pos + h_fwd * length
+            h_len = length * 0.25
+            sub_points.append((p_mid, h_fwd, h_len))
+            sub_points.append((p_end, h_fwd, h_len))
+            meta["high_platform"] = True
+
+        elif sec_type == "DIP_SMALL":
+            # 🥣 小さな窪み・谷（直線上でなだらかに窪んで戻る: 始点 → 最下点 → 終点）
+            length = self.rng.uniform(16.0, 22.0)
+            dip_d = self.rng.uniform(1.5, 2.5)
+            p_mid = pos + h_fwd * (length * 0.5) - up * dip_d
+            p_end = pos + h_fwd * length
+            h_len = length * 0.25
+            sub_points.append((p_mid, h_fwd, h_len))
+            sub_points.append((p_end, h_fwd, h_len))
+
+        elif sec_type == "SLOPE_GENTLE_UP":
+            length = self.rng.uniform(14.0, 18.0)
+            h_gain = self.rng.uniform(1.8, 2.8)
+            end_pos = pos + h_fwd * length + up * h_gain
+            end_fwd = h_fwd.copy()
+            meta["high_platform"] = True
+            sub_points.append((end_pos, end_fwd, length * 0.35))
+
+        elif sec_type == "SLOPE_GENTLE_DOWN":
+            length = self.rng.uniform(14.0, 18.0)
+            h_loss = self.rng.uniform(1.8, 2.6)
+            end_pos = pos + h_fwd * length - up * h_loss
+            end_fwd = h_fwd.copy()
+            sub_points.append((end_pos, end_fwd, length * 0.35))
+
+        elif sec_type == "SLOPE_STEEP_UP":
+            # 🧗 急な上り坂（ダイナミックな高低差の緩急）
+            length = self.rng.uniform(14.0, 18.0)
+            h_gain = self.rng.uniform(4.5, 6.5)
+            end_pos = pos + h_fwd * length + up * h_gain
+            end_fwd = h_fwd.copy()
+            meta["high_platform"] = True
+            sub_points.append((end_pos, end_fwd, length * 0.35))
+
+        elif sec_type == "SLOPE_STEEP_DOWN":
+            # 🎢 急な下り坂
+            length = self.rng.uniform(14.0, 18.0)
+            h_loss = self.rng.uniform(4.5, 6.5)
+            end_pos = pos + h_fwd * length - up * h_loss
+            end_fwd = h_fwd.copy()
+            sub_points.append((end_pos, end_fwd, length * 0.35))
+
+        elif sec_type == "HILL_LARGE":
+            # 🏔️ ダイナミックな大丘（一気に登って頂上を駆け抜けて下る）
+            length = self.rng.uniform(22.0, 30.0)
+            hill_h = self.rng.uniform(5.5, 8.0)
+            p_mid = pos + h_fwd * (length * 0.5) + up * hill_h
+            p_end = pos + h_fwd * length
+            h_len = length * 0.28
+            sub_points.append((p_mid, h_fwd, h_len))
+            sub_points.append((p_end, h_fwd, h_len))
+            meta["high_platform"] = True
+
+        elif sec_type == "DIP_DEEP":
+            # 🕳️ 深い谷・大窪み（一気に沈み込んで駆け上がる）
+            length = self.rng.uniform(22.0, 30.0)
+            dip_d = self.rng.uniform(4.0, 6.0)
+            p_mid = pos + h_fwd * (length * 0.5) - up * dip_d
+            p_end = pos + h_fwd * length
+            h_len = length * 0.28
+            sub_points.append((p_mid, h_fwd, h_len))
+            sub_points.append((p_end, h_fwd, h_len))
+
         elif sec_type == "CORNER_LEFT_90":
-            # 🌀 カービィ64風の滑らかな直角90°左円弧カーブレール
-            # 始点(0°) → 中間点(45°) → 終点(90°) の2ステップ分割で完璧な円弧を描く
             radius = self.rng.uniform(12.0, 16.0)
             center = pos - right * radius
-            center.z = base_z if environment == "PLAINS" else pos.z
-
-            # 45度円弧の理想的なベジェハンドル長
+            center.z = pos.z
             h_len = radius * 0.276
 
-            # 中間点 (45°)
             rot45 = mathutils.Matrix.Rotation(math.radians(45), 3, 'Z')
-            p_mid = center + (rot45 @ (right * radius))
+            p_mid = center + (rot45 @ (right * radius)) + up * (curve_dz * 0.5)
             f_mid = (rot45 @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_mid.z = base_z
             sub_points.append((p_mid, f_mid, h_len))
 
-            # 終点 (90°)
             rot90 = mathutils.Matrix.Rotation(math.radians(90), 3, 'Z')
-            p_end = center + (rot90 @ (right * radius))
+            p_end = center + (rot90 @ (right * radius)) + up * curve_dz
             f_end = (rot90 @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_end.z = base_z
             sub_points.append((p_end, f_end, h_len))
 
         elif sec_type == "CORNER_RIGHT_90":
-            # 🌀 カービィ64風の滑らかな直角90°右円弧カーブレール
-            # 始点(0°) → 中間点(-45°) → 終点(-90°) の2ステップ分割
             radius = self.rng.uniform(12.0, 16.0)
             center = pos + right * radius
-            center.z = base_z if environment == "PLAINS" else pos.z
-
+            center.z = pos.z
             h_len = radius * 0.276
 
-            # 中間点 (-45°)
             rot45 = mathutils.Matrix.Rotation(-math.radians(45), 3, 'Z')
-            p_mid = center + (rot45 @ (-right * radius))
+            p_mid = center + (rot45 @ (-right * radius)) + up * (curve_dz * 0.5)
             f_mid = (rot45 @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_mid.z = base_z
             sub_points.append((p_mid, f_mid, h_len))
 
-            # 終点 (-90°)
             rot90 = mathutils.Matrix.Rotation(-math.radians(90), 3, 'Z')
-            p_end = center + (rot90 @ (-right * radius))
+            p_end = center + (rot90 @ (-right * radius)) + up * curve_dz
             f_end = (rot90 @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_end.z = base_z
             sub_points.append((p_end, f_end, h_len))
 
         elif sec_type == "CURVE_LEFT":
-            # 緩やかな左円弧カーブ（30°〜45°）
             total_angle = self.rng.uniform(30.0, 45.0)
             radius = self.rng.uniform(16.0, 22.0)
             center = pos - right * radius
-            center.z = base_z if environment == "PLAINS" else pos.z
+            center.z = pos.z
 
             half_angle = total_angle * 0.5
             h_len = radius * math.tan(math.radians(half_angle) * 0.5) * (4.0 / 3.0)
 
-            # 中間点
             rot_half = mathutils.Matrix.Rotation(math.radians(half_angle), 3, 'Z')
-            p_mid = center + (rot_half @ (right * radius))
+            p_mid = center + (rot_half @ (right * radius)) + up * (curve_dz * 0.5)
             f_mid = (rot_half @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_mid.z = base_z
             sub_points.append((p_mid, f_mid, h_len))
 
-            # 終点
             rot_full = mathutils.Matrix.Rotation(math.radians(total_angle), 3, 'Z')
-            p_end = center + (rot_full @ (right * radius))
+            p_end = center + (rot_full @ (right * radius)) + up * curve_dz
             f_end = (rot_full @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_end.z = base_z
             sub_points.append((p_end, f_end, h_len))
 
         elif sec_type == "CURVE_RIGHT":
-            # 緩やかな右円弧カーブ（30°〜45°）
             total_angle = self.rng.uniform(30.0, 45.0)
             radius = self.rng.uniform(16.0, 22.0)
             center = pos + right * radius
-            center.z = base_z if environment == "PLAINS" else pos.z
+            center.z = pos.z
 
             half_angle = total_angle * 0.5
             h_len = radius * math.tan(math.radians(half_angle) * 0.5) * (4.0 / 3.0)
 
-            # 中間点
             rot_half = mathutils.Matrix.Rotation(-math.radians(half_angle), 3, 'Z')
-            p_mid = center + (rot_half @ (-right * radius))
+            p_mid = center + (rot_half @ (-right * radius)) + up * (curve_dz * 0.5)
             f_mid = (rot_half @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_mid.z = base_z
             sub_points.append((p_mid, f_mid, h_len))
 
-            # 終点
             rot_full = mathutils.Matrix.Rotation(-math.radians(total_angle), 3, 'Z')
-            p_end = center + (rot_full @ (-right * radius))
+            p_end = center + (rot_full @ (-right * radius)) + up * curve_dz
             f_end = (rot_full @ h_fwd).normalized()
-            if environment == "PLAINS":
-                p_end.z = base_z
             sub_points.append((p_end, f_end, h_len))
 
         elif sec_type == "S_CURVE":
-            # S字カーブ（左右にうねって元の向きに戻る）
             length = self.rng.uniform(20.0, 26.0)
             sway = self.rng.uniform(4.5, 6.5) * (1.0 if self.rng.random() > 0.5 else -1.0)
-            p_mid = pos + h_fwd * (length * 0.5) + right * sway
-            p_end = pos + h_fwd * length
-            if environment == "PLAINS":
-                p_mid.z = base_z
-                p_end.z = base_z
+            p_mid = pos + h_fwd * (length * 0.5) + right * sway + up * (curve_dz * 0.5)
+            p_end = pos + h_fwd * length + up * curve_dz
             sub_points.append((p_mid, h_fwd, length * 0.2))
             sub_points.append((p_end, h_fwd, length * 0.2))
 
@@ -625,7 +793,7 @@ class StageAIGenerator:
 
         return sub_points, meta
 
-    def _ensure_plains_ground(self, context, rail_obj, collection, section_infos=None):
+    def _ensure_plains_ground(self, context, rail_obj, collection, section_infos=None, size_scale=1.0, grid_density=1.2):
         """平原ステージ用の高密度草原地面メッシュ（TERRAIN: terrain_grid）を配置または更新"""
         sampled_points = []
         if rail_obj and rail_obj.type == 'CURVE' and rail_obj.data.splines:
@@ -644,16 +812,18 @@ class StageAIGenerator:
         min_y, max_y = min(ys), max(ys)
         min_z = min(zs)
 
-        # レール全域を十分に覆うサイズ（余白マージン +80m）
-        size_x = max(120.0, (max_x - min_x) + 90.0)
-        size_y = max(120.0, (max_y - min_y) + 90.0)
+        # ユーザー設定およびレール全域に応じた可変サイズ（余白マージン倍率を適用）
+        margin = 90.0 * max(0.5, float(size_scale))
+        size_x = max(100.0, (max_x - min_x) + margin)
+        size_y = max(100.0, (max_y - min_y) + margin)
         center_x = (min_x + max_x) * 0.5
         center_y = (min_y + max_y) * 0.5
         center_z = min_z - 0.2  # レールの最低点より少し下
 
-        # 頂点変形・スカルプトが綺麗に効くよう、高密度分割（約1.5m間隔、最大80分割）
-        div_x = min(max(int(size_x / 1.5), 32), 80)
-        div_y = min(max(int(size_y / 1.5), 32), 80)
+        # 頂点変形・スカルプト・多角柱彫り込みが綺麗に効くよう、可変分割数（最大120分割）
+        step = max(0.6, float(grid_density))
+        div_x = min(max(int(size_x / step), 32), 120)
+        div_y = min(max(int(size_y / step), 32), 120)
         uv_tile = max(4.0, round(size_x / 12.0, 1))
 
         obj_name = "Terrain_PlainsGround"
@@ -957,10 +1127,12 @@ class StageAIGenerator:
 
                 # ─── 足場ブロック生成 ───
                 is_step_section = sec.get("is_step", False)
+                sec_type = sec.get("sec_type", "STRAIGHT")
+                is_straight_sec = (sec_type == "STRAIGHT" or "HILL" in sec_type or "DIP" in sec_type)
                 # 穴セクションの場合、中央のブロックを抜いてジャンプ穴にする
                 is_hole = is_gap_section and (0.3 <= t <= 0.7)
 
-                # PLATFORM モードのみ空中ブロックを配置（PLAINSモードでは平原地面を活かすため直方体ブロックは置かない）
+                # PLATFORM モードのみ空中ブロックを配置（PLAINSモードでは平原地面を活かすため接地ブロックは置かない）
                 if environment == "PLATFORM" and spawn_blocks and not is_hole:
                     # 階段セクションの場合、ステップ段差を強調して階段状に配置
                     blk_z_offset = -block_thickness * 0.5
@@ -973,27 +1145,68 @@ class StageAIGenerator:
                         (block_width, block_spacing * 1.05, block_thickness),
                         yaw,
                         block_texture,
-                        collection
+                        collection,
+                        is_oneway=False,
+                        prefab_id="standard_block",
+                        is_collision=True
                     )
                     blocks.append(blk)
 
-                    # 稀に頭上にすり抜け足場（ボーナス足場）を配置
-                    if self.rng.random() < 0.25 and not is_step_section:
-                        oneway_prefab = _BLOCK_PREFABS["oneway_platform"]
-                        oneway_blk = self._create_stage_block(
-                            f"OneWayPlatform_S{s_idx}_{step}",
-                            interp_pos + mathutils.Vector((0, 0, 2.5)),
-                            oneway_prefab["size"],
-                            yaw,
-                            oneway_prefab["texture"],
-                            collection,
-                            is_oneway=True
-                        )
-                        blocks.append(oneway_blk)
+                # ─── コースレール上のプレハブ障害物・足場配置（PLAINS / PLATFORM 共通、直線優先） ───
+                # ユーザー要望: コースレール上にプレハブの障害物や足場を配置する
+                oneway_prob = 0.35 if is_straight_sec else 0.06
+                if spawn_blocks and not is_hole and not is_step_section and s_idx >= 1 and s_idx < len(section_infos) - 1:
+                    if self.rng.random() < oneway_prob and (step == num_steps // 2 or (is_straight_sec and step == 1)):
+                        # 直線区間では頭上すり抜け足場、レール上階段ステップ、または障害物ブロックを配置
+                        choice = self.rng.choice(["oneway", "stair", "obstacle"])
+                        if choice == "oneway":
+                            oneway_prefab = _BLOCK_PREFABS["oneway_platform"]
+                            oneway_blk = self._create_stage_block(
+                                f"OneWayPlatform_S{s_idx}_{step}",
+                                interp_pos + mathutils.Vector((0, 0, 2.5)),
+                                oneway_prefab["size"],
+                                yaw,
+                                oneway_prefab["texture"],
+                                collection,
+                                is_oneway=True,
+                                prefab_id="oneway_platform",
+                                is_collision=True
+                            )
+                            blocks.append(oneway_blk)
+                        elif choice == "stair":
+                            stair_prefab = _BLOCK_PREFABS["stair_step"]
+                            stair_z = 0.3 if environment == "PLAINS" else 1.5
+                            stair_blk = self._create_stage_block(
+                                f"StairObstacle_S{s_idx}_{step}",
+                                interp_pos + mathutils.Vector((0, 0, stair_z)),
+                                stair_prefab["size"],
+                                yaw,
+                                stair_prefab["texture"],
+                                collection,
+                                is_oneway=False,
+                                prefab_id="stair_step",
+                                is_collision=True
+                            )
+                            blocks.append(stair_blk)
+                        elif choice == "obstacle" and environment == "PLAINS":
+                            # 平原レール脇の木箱・障害物
+                            obs_x = self.rng.choice([-1.2, 1.2])
+                            obs_blk = self._create_stage_block(
+                                f"ObstacleBlock_S{s_idx}_{step}",
+                                interp_pos + mathutils.Vector((obs_x, 0, 0.6)),
+                                (1.4, 1.4, 1.2),
+                                yaw,
+                                "resources/grass.png",
+                                collection,
+                                is_oneway=False,
+                                prefab_id="standard_block",
+                                is_collision=True
+                            )
+                            blocks.append(obs_blk)
 
-                # 穴セクションで真ん中に浮島や浮遊足場を作る演出 (PLATFORMのみ)
+                # 穴セクションで真ん中に浮島や浮遊足場を作る演出 (PLATFORMのみ、直線区間優先)
                 if environment == "PLATFORM" and spawn_blocks and is_hole and step == num_steps // 2:
-                    if self.rng.random() < 0.4:
+                    if self.rng.random() < (0.6 if is_straight_sec else 0.2):
                         # 浮島（広めの島）
                         island_prefab = _BLOCK_PREFABS["floating_island"]
                         island_blk = self._create_stage_block(
@@ -1003,10 +1216,12 @@ class StageAIGenerator:
                             yaw,
                             island_prefab["texture"],
                             collection,
-                            is_oneway=False
+                            is_oneway=False,
+                            prefab_id="floating_island",
+                            is_collision=True
                         )
                         blocks.append(island_blk)
-                    elif self.rng.random() < 0.6:
+                    elif self.rng.random() < 0.5:
                         # すり抜け足場または通常浮遊足場
                         use_oneway = (self.rng.random() < 0.5)
                         prefab_key = "oneway_platform" if use_oneway else "standard"
@@ -1018,7 +1233,9 @@ class StageAIGenerator:
                             yaw,
                             chosen_p["texture"],
                             collection,
-                            is_oneway=chosen_p["is_oneway"]
+                            is_oneway=chosen_p["is_oneway"],
+                            prefab_id=prefab_key,
+                            is_collision=True
                         )
                         blocks.append(float_blk)
 
@@ -1073,7 +1290,7 @@ class StageAIGenerator:
 
         return blocks, enemies
 
-    def _create_stage_block(self, name, pos, size, yaw, texture_path, collection, is_oneway=False):
+    def _create_stage_block(self, name, pos, size, yaw, texture_path, collection, is_oneway=False, prefab_id="standard_block", is_collision=True):
         """直方体または小道プレートの足場ブロック（BLOCK）を生成"""
         mesh = bpy.data.meshes.new(name)
         obj = bpy.data.objects.new(name, mesh)
@@ -1102,10 +1319,190 @@ class StageAIGenerator:
         obj["object_type"] = "BLOCK"
         obj["file_name"] = "box"
         obj["texture"] = texture_path
+        obj["prop_prefab_id"] = prefab_id
+        obj["prop_is_collision"] = "true" if is_collision else "false"
         if is_oneway:
             obj["prop_is_oneway"] = "true"
 
         return obj
+
+    def _create_prism_pit(self, name, pos, radius, depth, sides, yaw, texture_path, collection, is_collision=False):
+        """
+        多角柱（正多角形）の形状をした窪み（ピット/穴）メッシュオブジェクトを生成
+        内壁面と底面を持ち、地面や背景に多角形の窪みを表現する。
+        """
+        mesh = bpy.data.meshes.new(name)
+        obj = bpy.data.objects.new(name, mesh)
+        collection.objects.link(obj)
+
+        verts = []
+        faces = []
+
+        # 上面のフチ頂点 (z = 0) と 底面頂点 (z = -depth)
+        angle_step = 2.0 * math.pi / sides
+        for i in range(sides):
+            angle = i * angle_step
+            vx = radius * math.cos(angle)
+            vy = radius * math.sin(angle)
+            verts.append((vx, vy, 0.0))          # 上面外周 (インデックス: 0 .. sides-1)
+            verts.append((vx * 0.85, vy * 0.85, -depth)) # 底面外周 (インデックス: sides .. 2*sides-1)
+
+        # 内壁面（上面から底面への側面四角形）
+        for i in range(sides):
+            next_i = (i + 1) % sides
+            top_curr = i * 2
+            bot_curr = i * 2 + 1
+            top_next = next_i * 2
+            bot_next = next_i * 2 + 1
+            faces.append((top_curr, top_next, bot_next, bot_curr))
+
+        # 底面（底面頂点を結ぶ多角形面）
+        bot_face = [i * 2 + 1 for i in range(sides)]
+        faces.append(bot_face)
+
+        mesh.from_pydata(verts, [], faces)
+        mesh.update()
+
+        obj.location = pos
+        obj.rotation_euler = (0, 0, yaw)
+
+        obj["object_type"] = "BLOCK"
+        obj["file_name"] = "box"
+        obj["texture"] = texture_path
+        obj["prop_prefab_id"] = "prism_pit"
+        obj["prop_is_collision"] = "true" if is_collision else "false"
+
+        return obj
+
+    def _spawn_background_elements(self, context, rail_obj, section_infos, environment, collection, camera_side="RIGHT", ground_obj=None):
+        """
+        背景の段差・テラス・多角柱の窪み・当たり判定なし装飾プレハブ（deco_cube）を自動配置
+        【カメラ被り防止】: カメラが存在する手前側を避け、カメラと反対側の「奥側（背景側）」に集中配置する。
+        【地面彫り込み】: 地面メッシュがある場合、多角柱の窪みを手動と同じ方式で直接押し下げて彫り込む。
+        """
+        bg_objs = []
+        deco_prefab = _BLOCK_PREFABS.get("deco_cube", {
+            "size": (2.0, 2.0, 2.0),
+            "texture": "resources/blocks/deco_cube.png",
+            "is_collision": False
+        })
+
+        try:
+            from .terrain_generator import carve_prism_depression_in_terrain
+        except ImportError:
+            try:
+                from terrain_generator import carve_prism_depression_in_terrain
+            except ImportError:
+                carve_prism_depression_in_terrain = None
+
+        # カメラが右側 (RIGHT) の場合、手前は side_dir > 0、奥側（背景側）は side_dir < 0 (-1.0)
+        # カメラが左側 (LEFT) の場合、手前は side_dir < 0、奥側（背景側）は side_dir > 0 (1.0)
+        back_side_dir = -1.0 if camera_side == "RIGHT" else 1.0
+
+        for s_idx, sec in enumerate(section_infos):
+            # スタート直後とゴール直前は視界を確保するため控えめに
+            if s_idx < 1 or s_idx >= len(section_infos) - 1:
+                continue
+
+            p0 = sec["start_pos"]
+            p1 = sec["end_pos"]
+            mid_pos = (p0 + p1) * 0.5
+            fwd = (p1 - p0).normalized() if (p1 - p0).length > 1e-4 else mathutils.Vector((0, 1, 0))
+            right = mathutils.Vector((fwd.y, -fwd.x, 0.0)).normalized()
+            yaw = math.atan2(fwd.y, fwd.x) - (math.pi / 2.0)
+
+            # ユーザー要望: カメラと被る位置（手前）には背景プレハブを置かず、奥側（背景側）に重点配置！
+            # 奥側は高確率 (0.85) で生成、カメラ側（手前）は遠方に限定
+            target_sides = [back_side_dir]
+            if self.rng.random() < 0.15:
+                target_sides.append(-back_side_dir) # 稀に遠方手前にも配置
+
+            for side_dir in target_sides:
+                is_foreground = (side_dir != back_side_dir)
+                # カメラ手前側はカメラを遮らないよう、より遠く（18m以上離す）
+                if is_foreground:
+                    offset_dist = self.rng.uniform(18.0, 26.0)
+                else:
+                    offset_dist = self.rng.uniform(8.0, 16.0)
+
+                bg_pos = mid_pos + right * (offset_dist * side_dir)
+
+                # 1. 背景の段差・テラス（起伏のあるステップ構造ブロック群）
+                if self.rng.random() < (0.65 if not is_foreground else 0.2):
+                    step_height = self.rng.uniform(2.0, 5.0)
+                    step_w = self.rng.uniform(5.0, 9.0)
+                    step_l = self.rng.uniform(7.0, 12.0)
+                    terrace_z = mid_pos.z + (step_height * 0.5) - (0.5 if environment == "PLAINS" else 1.0)
+                    terrace_pos = mathutils.Vector((bg_pos.x, bg_pos.y, terrace_z))
+
+                    terrace_blk = self._create_stage_block(
+                        f"BG_Terrace_S{s_idx}_{'R' if side_dir > 0 else 'L'}",
+                        terrace_pos,
+                        (step_w, step_l, step_height),
+                        yaw + self.rng.uniform(-0.2, 0.2),
+                        "resources/Stagemap/863603.png" if environment == "PLAINS" else "resources/grass.png",
+                        collection,
+                        is_oneway=False,
+                        prefab_id="standard_block",
+                        is_collision=False  # 背景用なので当たり判定オフ
+                    )
+                    bg_objs.append(terrace_blk)
+
+                # 2. 多角柱の窪み（手動と同じ carve_prism_depression_in_terrain で地面押し下げ彫り込み）
+                if self.rng.random() < 0.45:
+                    pit_sides = self.rng.choice([5, 6, 8])
+                    pit_radius = self.rng.uniform(2.5, 4.2)
+                    pit_depth = self.rng.uniform(1.2, 2.5)
+                    pit_pos = bg_pos + mathutils.Vector((self.rng.uniform(-2, 2), self.rng.uniform(-2, 2), 0.0))
+
+                    if ground_obj and carve_prism_depression_in_terrain:
+                        # 地面メッシュが存在する場合は手動と同じ方式で直接押し下げ彫り込み
+                        carve_prism_depression_in_terrain(
+                            terrain_obj=ground_obj,
+                            center_pos=pit_pos,
+                            sides=pit_sides,
+                            radius=pit_radius,
+                            depth=pit_depth,
+                            bevel_ratio=0.25,
+                            rotation_rad=self.rng.uniform(0, 3.14),
+                            auto_subdivide=True,
+                            auto_export_obj=False
+                        )
+                    else:
+                        # メッシュオブジェクトとしてのフォールバック配置
+                        pit_obj = self._create_prism_pit(
+                            f"BG_PrismPit_S{s_idx}_{'R' if side_dir > 0 else 'L'}",
+                            pit_pos,
+                            radius=pit_radius,
+                            depth=pit_depth,
+                            sides=pit_sides,
+                            yaw=yaw + self.rng.uniform(-0.5, 0.5),
+                            texture_path="resources/Stagemap/863603.png",
+                            collection=collection,
+                            is_collision=False
+                        )
+                        bg_objs.append(pit_obj)
+
+                # 3. 背景に浮かぶ装飾キューブ（当たり判定なしプレハブ）
+                if self.rng.random() < (0.55 if not is_foreground else 0.15):
+                    deco_z = mid_pos.z + self.rng.uniform(2.5, 7.0)
+                    deco_pos = bg_pos + mathutils.Vector((self.rng.uniform(-3, 3), self.rng.uniform(-3, 3), deco_z))
+                    cube_sz = self.rng.uniform(1.2, 2.6)
+
+                    deco_obj = self._create_stage_block(
+                        f"BG_DecoCube_S{s_idx}_{'R' if side_dir > 0 else 'L'}",
+                        deco_pos,
+                        (cube_sz, cube_sz, cube_sz),
+                        yaw + self.rng.uniform(-0.8, 0.8),
+                        deco_prefab["texture"],
+                        collection,
+                        is_oneway=False,
+                        prefab_id="deco_cube",
+                        is_collision=False  # 当たり判定なし装飾
+                    )
+                    bg_objs.append(deco_obj)
+
+        return bg_objs
 
     def _create_enemy(self, name, pos, yaw, enemy_type, rail_pos, preview_mesh, collection):
         """エネミー（ENEMY）オブジェクトを生成"""
@@ -1355,6 +1752,24 @@ class MYADDON_OT_ai_generate_stage(bpy.types.Operator):
         default=True
     )
 
+    terrain_margin_scale: bpy.props.FloatProperty(
+        name="地面の広さ (余白倍率)",
+        description="レール全体に対する地面メッシュ（外周）の広さ倍率（可変）",
+        default=1.0,
+        min=0.5,
+        max=3.0,
+        subtype='FACTOR'
+    )
+
+    terrain_density: bpy.props.FloatProperty(
+        name="地面メッシュ密度 (m間隔)",
+        description="地面グリッドの頂点間隔（数値が小さいほど高密度・滑らかな変形・多角柱彫り込みが可能）",
+        default=1.2,
+        min=0.6,
+        max=3.0,
+        unit='LENGTH'
+    )
+
     reset_existing: bpy.props.BoolProperty(
         name="既存コースをリセットして新規作成",
         description="既存のステージレールや生成オブジェクトを初期化し、新しいコースを最初から生成します（オフの場合は現在の終端から伸長）",
@@ -1382,6 +1797,8 @@ class MYADDON_OT_ai_generate_stage(bpy.types.Operator):
         box_env.prop(self, "environment")
         if self.environment == 'PLAINS':
             box_env.prop(self, "deform_terrain_auto")
+            box_env.prop(self, "terrain_margin_scale")
+            box_env.prop(self, "terrain_density")
         box_env.prop(self, "camera_side")
 
         box_params = layout.box()
@@ -1425,6 +1842,8 @@ class MYADDON_OT_ai_generate_stage(bpy.types.Operator):
             "update_camera": self.update_camera,
             "move_goal": self.move_goal,
             "deform_terrain_auto": self.deform_terrain_auto,
+            "terrain_margin_scale": self.terrain_margin_scale,
+            "terrain_density": self.terrain_density,
             "reset_existing": self.reset_existing,
         }
 

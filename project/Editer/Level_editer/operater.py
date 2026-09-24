@@ -125,11 +125,36 @@ class OBJECT_PT_file_name(bpy.types.Panel):
         row_stage.operator(MYADDON_OT_add_slope_block.bl_idname, text="傾斜スロープ追加", icon='MOD_SOLIDIFY')
         row_stage.operator(MYADDON_OT_add_stairs_block.bl_idname, text="階段ブロック追加", icon='MOD_BEVEL')
 
-        # 地形変形・スカルプト
+        # プレハブブロック手動配置
+        box_prefab = self.layout.box()
+        box_prefab.label(text="📦 プレハブブロック手動配置:", icon='PACKAGE')
+        row_p1 = box_prefab.row(align=True)
+        op_std = row_p1.operator(MYADDON_OT_add_prefab_block.bl_idname, text="標準足場", icon='MESH_CUBE')
+        op_std.prefab_type = 'STANDARD'
+        op_ow = row_p1.operator(MYADDON_OT_add_prefab_block.bl_idname, text="すり抜け足場", icon='RESTRICT_VIEW_OFF')
+        op_ow.prefab_type = 'ONEWAY'
+        row_p2 = box_prefab.row(align=True)
+        op_isl = row_p2.operator(MYADDON_OT_add_prefab_block.bl_idname, text="浮島", icon='MATSPHERE')
+        op_isl.prefab_type = 'ISLAND'
+        op_stair = row_p2.operator(MYADDON_OT_add_prefab_block.bl_idname, text="階段ステップ", icon='MOD_BEVEL')
+        op_stair.prefab_type = 'STAIR_STEP'
+        row_p3 = box_prefab.row(align=True)
+        op_deco = row_p3.operator(MYADDON_OT_add_prefab_block.bl_idname, text="🎨 背景装飾キューブ (無判定)", icon='COLOR')
+        op_deco.prefab_type = 'DECO_CUBE'
+
+        # 地形変形・スカルプト・多角柱彫り込み
         try:
-            from .terrain_generator import MYADDON_OT_enter_terrain_sculpt, MYADDON_OT_deform_terrain_to_rail
+            from .terrain_generator import (
+                MYADDON_OT_enter_terrain_sculpt,
+                MYADDON_OT_deform_terrain_to_rail,
+                MYADDON_OT_carve_prism_depression
+            )
         except ImportError:
-            from terrain_generator import MYADDON_OT_enter_terrain_sculpt, MYADDON_OT_deform_terrain_to_rail
+            from terrain_generator import (
+                MYADDON_OT_enter_terrain_sculpt,
+                MYADDON_OT_deform_terrain_to_rail,
+                MYADDON_OT_carve_prism_depression
+            )
         try:
             from .road_generator import MYADDON_OT_generate_road_along_rail
         except ImportError:
@@ -141,7 +166,9 @@ class OBJECT_PT_file_name(bpy.types.Panel):
         row_t1.operator(MYADDON_OT_deform_terrain_to_rail.bl_idname, text="レール沿いに地面を変形して道をつくる", icon='MOD_SMOOTH')
         row_t2 = box_terrain.row(align=True)
         row_t2.operator(MYADDON_OT_enter_terrain_sculpt.bl_idname, text="なぞって地形変形 (スカルプト)", icon='SCULPTMODE_HLT')
-        row_t2.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="（補助）独立道路メッシュ", icon='ROAD')
+        row_t2.operator(MYADDON_OT_generate_road_along_rail.bl_idname, text="（補助）独立道路メッシュ", icon='CURVE_PATH')
+        row_t3 = box_terrain.row(align=True)
+        row_t3.operator(MYADDON_OT_carve_prism_depression.bl_idname, text="面を多角柱に押し下げる (3Dカーソル位置)", icon='MOD_SOLIDIFY')
 
 class MYADDON_OT_add_filwname(bpy.types.Operator):
     bl_idname = "myaddon.myaddon_ot_add_filename"
@@ -257,4 +284,110 @@ class MYADDON_OT_add_stairs_block(bpy.types.Operator):
         context.view_layer.objects.active = obj
         obj.select_set(True)
         self.report({"INFO"}, f"階段ブロック '{obj.name}' (幅:{self.width}m, 奥行:{self.length}m, 高:{self.height}m) を配置しました")
+        return {"FINISHED"}
+
+
+class MYADDON_OT_add_prefab_block(bpy.types.Operator):
+    bl_idname = "myaddon.add_prefab_block"
+    bl_label = "プレハブブロック配置"
+    bl_description = "指定したプレハブ（標準足場、すり抜け足場、浮島、階段ステップ、背景装飾）を3Dカーソル位置に配置します"
+    bl_options = {"REGISTER", "UNDO"}
+
+    prefab_type: bpy.props.EnumProperty(
+        name="プレハブ種別",
+        items=[
+            ('STANDARD', "標準足場 (Standard)", "標準の足場ブロック"),
+            ('ONEWAY', "すり抜け足場 (OneWay)", "下から飛び乗れる薄型足場"),
+            ('ISLAND', "浮島 (Floating Island)", "広めの浮遊島ベース"),
+            ('STAIR_STEP', "階段ステップ (Stair Step)", "段差・階段用ステップ"),
+            ('DECO_CUBE', "背景装飾キューブ (Deco Cube)", "背景に配置する当たり判定なしの装飾キューブ"),
+        ],
+        default='STANDARD'
+    )
+
+    def execute(self, context):
+        cursor_loc = context.scene.cursor.location
+
+        # プレハブ定義テーブル
+        configs = {
+            'STANDARD': {
+                'name': 'StandardBlock',
+                'prefab_id': 'standard_block',
+                'size': (4.0, 3.15, 1.0),
+                'texture': 'resources/grass.png',
+                'is_oneway': False,
+                'is_collision': True,
+            },
+            'ONEWAY': {
+                'name': 'OneWayPlatform',
+                'prefab_id': 'oneway_platform',
+                'size': (3.5, 2.0, 0.25),
+                'texture': 'resources/grass.png',
+                'is_oneway': True,
+                'is_collision': True,
+            },
+            'ISLAND': {
+                'name': 'FloatingIsland',
+                'prefab_id': 'floating_island',
+                'size': (6.5, 5.0, 1.5),
+                'texture': 'resources/grass.png',
+                'is_oneway': False,
+                'is_collision': True,
+            },
+            'STAIR_STEP': {
+                'name': 'StairStep',
+                'prefab_id': 'stair_step',
+                'size': (4.0, 2.0, 0.5),
+                'texture': 'resources/grass.png',
+                'is_oneway': False,
+                'is_collision': True,
+            },
+            'DECO_CUBE': {
+                'name': 'DecoCube',
+                'prefab_id': 'deco_cube',
+                'size': (2.0, 2.0, 2.0),
+                'texture': 'resources/grass.png',
+                'is_oneway': False,
+                'is_collision': False, # 当たり判定なし
+            },
+        }
+
+        cfg = configs.get(self.prefab_type, configs['STANDARD'])
+        size = cfg['size']
+
+        # 直方体メッシュの生成
+        mesh = bpy.data.meshes.new(f"Mesh_{cfg['name']}")
+        obj = bpy.data.objects.new(cfg['name'], mesh)
+        context.collection.objects.link(obj)
+
+        hw, hl, hh = size[0] * 0.5, size[1] * 0.5, size[2] * 0.5
+        verts = [
+            (-hw, -hl, -hh), (hw, -hl, -hh), (hw, hl, -hh), (-hw, hl, -hh),
+            (-hw, -hl, hh),  (hw, -hl, hh),  (hw, hl, hh),  (-hw, hl, hh),
+        ]
+        faces = [
+            (0, 1, 2, 3), (4, 7, 6, 5),
+            (0, 4, 5, 1), (1, 5, 6, 2),
+            (2, 6, 7, 3), (3, 7, 4, 0),
+        ]
+        mesh.from_pydata(verts, [], faces)
+        mesh.update()
+
+        obj.location = cursor_loc.copy()
+
+        # ゲームエンジン用メタデータ
+        obj["object_type"] = "BLOCK"
+        obj["file_name"] = "box"
+        obj["texture"] = cfg['texture']
+        obj["prop_prefab_id"] = cfg['prefab_id']
+        if cfg['is_oneway']:
+            obj["prop_is_oneway"] = "true"
+        if not cfg['is_collision']:
+            obj["prop_is_collision"] = "false"
+            obj["prop_collision"] = "false"
+
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+        col_text = "（当たり判定なし）" if not cfg['is_collision'] else ""
+        self.report({"INFO"}, f"プレハブ '{obj.name}' [{cfg['prefab_id']}]{col_text} を配置しました")
         return {"FINISHED"}

@@ -646,6 +646,7 @@ void GameScene::AddProjectile(const Projectile::ProjectileSpawnParam& param, Pro
         // param 自体を Initialize に渡すことで y 方向（高度）の速度も反映させます。
 
         newProjectile->SetCamera(cameraMap_["Main"].get());
+        newProjectile->SetScene(this);
 
         // Projectile側のInitializeにparamを丸ごと渡す
         newProjectile->Initialize(rail, param, owner);

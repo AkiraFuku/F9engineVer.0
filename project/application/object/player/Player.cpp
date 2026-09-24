@@ -376,7 +376,11 @@ void Player::UpdateRayCollisions()
     // ワールドY軸(0,1,0)との外積でプレイヤーの右方向ベクトルを求める
     Vector3 rightDir = Normalize(Cross({ 0.0f, 1.0f, 0.0f }, forwardDir));
 
-    float wallLength = Radius + 0.3f; // レイの長さ（半径 + マージン）
+    // トンネリング（移動速度によるすり抜け）を確実に防ぐため、内部レイ探索長は十分に確保
+    float wallLength = 1.5f;
+
+    // 現在のプレイヤー移動入力方向（1: 前進, -1: 後退, 0: 静止）
+    int moveDir = GetMoveDirection();
 
     // 衝突によるレールの押し戻し量
     float maxPushBackProgress = 0.0f;
@@ -394,20 +398,21 @@ void Player::UpdateRayCollisions()
             rayInfo.ray.origin.y += rayHitPalamata_.rayOffset;
             rayInfo.ray.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
         } else if (rayInfo.name == "FrontWall") {
+            // 足元〜すね・腰の高さ（足元から約+0.35m）から水平に発射し、低い階段や段差の壁面も確実に検知
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.origin.y -= 0.15f;
             rayInfo.ray.diff = Multiply(wallLength, forwardDir);
         } else if (rayInfo.name == "BackWall") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.origin.y -= 0.15f;
             rayInfo.ray.diff = Multiply(-wallLength, forwardDir);
         } else if (rayInfo.name == "LeftWall") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.origin.y -= 0.15f;
             rayInfo.ray.diff = Multiply(-wallLength, rightDir);
         } else if (rayInfo.name == "RightWall") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y += kHeightOffset;
+            rayInfo.ray.origin.y -= 0.15f;
             rayInfo.ray.diff = Multiply(wallLength, rightDir);
         }
 
@@ -472,40 +477,84 @@ void Player::UpdateRayCollisions()
             }
         }
 
-        // デバッグ描画
-        float drawScale = (rayInfo.name == "Floor") ? 1.0f : 1.0f;
-        Vector3 drawEnd = Add(rayInfo.ray.origin, Multiply(drawScale, rayInfo.ray.diff));
-        PrimitiveDrawer::GetInstance()->DrawLine(rayInfo.ray.origin, drawEnd,
-            rayInfo.isColide ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
+        // デバッグ描画: 見た目は黄色の人型モデル幅（modelRadius_）に合わせてスマートに表示
+        Vector3 drawEnd;
+        if (rayInfo.name == "Floor") {
+            drawEnd = Add(rayInfo.ray.origin, rayInfo.ray.diff);
+            PrimitiveDrawer::GetInstance()->DrawLine(rayInfo.ray.origin, drawEnd,
+                rayInfo.isColide ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
+        } else {
+            // 壁レイはモデル幅（+0.05m）の長さでコンパクトに描画
+            float drawLen = modelRadius_ + 0.05f;
+            Vector3 dir = Normalize(rayInfo.ray.diff);
+            drawEnd = Add(rayInfo.ray.origin, Multiply(drawLen, dir));
+            bool isWallNear = rayInfo.isColide && (rayInfo.distance <= drawLen);
+            PrimitiveDrawer::GetInstance()->DrawLine(rayInfo.ray.origin, drawEnd,
+                isWallNear ? Vector4{ 1,0,0,1 } : Vector4{ 0,1,0,1 });
+        }
 
         if (rayInfo.isColide) {
-            PrimitiveDrawer::GetInstance()->DrawSphere({ rayInfo.crossPoint, 0.05f, {} }, { 0,0,1,1 });
-
-            // 【修正点3】めり込み量の計算と押し戻し
+            // 【修正点3】人型モデル実寸幅に合わせた押し戻し（モデルの表面が壁にピッタリ密着）
+            float targetWallDist = modelRadius_ + 0.005f;
             if (rayInfo.name == "FrontWall") {
-                // レイの先端から交差地点までの距離＝めり込み量
-                float penetration = wallLength - rayInfo.distance;
-                if (penetration > 0.0f) {
-                    // 前方の壁にぶつかったら進行方向と逆（後方）へ押し戻す
-                    maxPushBackProgress = (std::max)(maxPushBackProgress, penetration);
+                // 前進中（moveDir >= 0）に前方の壁にぶつかったら進行方向と逆（後方）へ押し戻して止める
+                if (moveDir >= 0) {
+                    float penetration = targetWallDist - rayInfo.distance;
+                    if (penetration > 0.0f) {
+                        penetration = (std::min)(penetration, 0.15f); // 瞬間的な過剰押し出しを防止
+                        maxPushBackProgress = (std::max)(maxPushBackProgress, penetration);
+                    }
                 }
             } else if (rayInfo.name == "BackWall") {
-                float penetration = wallLength - rayInfo.distance;
-                if (penetration > 0.0f) {
-                    // 後方の壁にぶつかったら進行方向（前方）へ押し戻す
-                    maxPushBackProgress = (std::min)(maxPushBackProgress, -penetration);
+                // 後退中（moveDir < 0）に後方の壁にぶつかったら進行方向（前方）へ押し戻して止める
+                // 前進中や停止中に背後の壁から前方に急激に突き飛ばされるのを完全に防止
+                if (moveDir < 0) {
+                    float penetration = targetWallDist - rayInfo.distance;
+                    if (penetration > 0.0f) {
+                        penetration = (std::min)(penetration, 0.15f); // 瞬間的な過剰押し出しを防止
+                        maxPushBackProgress = (std::min)(maxPushBackProgress, -penetration);
+                    }
                 }
+            }
+
+            // モデル幅以内に接触している時だけヒット球を表示
+            if (rayInfo.distance <= (modelRadius_ + 0.05f)) {
+                PrimitiveDrawer::GetInstance()->DrawSphere({ rayInfo.crossPoint, 0.05f, {} }, { 0,0,1,1 });
             }
         }
     }
 
     // ─── 段差ステップアップ（Step-up / 階段・段差登り）処理 ──────────
-    // プレイヤーが接地しており、ジャンプ中でない場合、足元の小さな段差（階段など）をスムーズに乗り越える
+    // プレイヤーが接地しており、ジャンプ中でない場合、足元の小さな段差（階段正面など）をスムーズに乗り越える
     if (isGrounded_ && !isJumping_ && !triangles.empty()) {
-        int moveDir = GetMoveDirection();
-        if (moveDir != 0) {
+
+        // 階段の側面（横壁）からぶつかった場合に乗り上げてしまう不具合の防止：
+        // 前方/後方壁レイ（FrontWall / BackWall）または側壁レイ（LeftWall / RightWall）が壁に衝突している場合、
+        // それは乗り越えるべき小さなステップではなく「壁」なので、ステップアップを禁止する！
+        bool isWallBlocked = false;
+        if (moveDir > 0) {
+            const auto* fw = GetRayInfo("FrontWall");
+            if (fw && fw->isColide && fw->distance <= (modelRadius_ + 0.15f)) {
+                isWallBlocked = true;
+            }
+        } else if (moveDir < 0) {
+            const auto* bw = GetRayInfo("BackWall");
+            if (bw && bw->isColide && bw->distance <= (modelRadius_ + 0.15f)) {
+                isWallBlocked = true;
+            }
+        }
+
+        // 側面の壁に強く接触している場合も階段側面からのよじ登りを禁止
+        const auto* lw = GetRayInfo("LeftWall");
+        const auto* rw = GetRayInfo("RightWall");
+        if ((lw && lw->isColide && lw->distance <= (modelRadius_ + 0.10f)) ||
+            (rw && rw->isColide && rw->distance <= (modelRadius_ + 0.10f))) {
+            isWallBlocked = true;
+        }
+
+        if (moveDir != 0 && !isWallBlocked) {
             Vector3 stepForward = (moveDir > 0) ? forwardDir : Multiply(-1.0f, forwardDir);
-            float stepCheckDist = Radius * 0.6f; // 前方検知距離
+            float stepCheckDist = modelRadius_ + 0.05f; // モデル前方検知距離
 
             Ray stepRay;
             stepRay.origin = Add(center, Multiply(stepCheckDist, stepForward));
@@ -691,6 +740,10 @@ void Player::ImGuiDrawDebugInfo() {
 
     ImGui::Text("Hit Points: %d", hitPoints_.value);
     ImGui::ProgressBar(hitInvincibilityTimer_ / kHitInvincibilityDuration_, ImVec2(0, 0), "Hit Timer");
+
+    ImGui::Separator();
+    ImGui::Text("--- Wall Raycast Settings ---");
+    ImGui::SliderFloat("Model Wall Radius", &modelRadius_, 0.05f, 1.0f, "%.3f m");
 
     ImGui::Separator();
     ImGui::Text("--- Raycast Info ---");

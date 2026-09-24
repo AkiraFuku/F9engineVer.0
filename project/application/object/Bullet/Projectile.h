@@ -6,6 +6,7 @@
 class RailMover;
 class RailPath;
 class Camera;
+class Scene;
 /// <summary>
 /// プレイヤーが射出する弾の基底クラス
 /// </summary>
@@ -48,6 +49,7 @@ public:
             object_->SetCamera(camera);
         }
     }
+    void SetScene(Scene* scene) { scene_ = scene; }
     ProjectileOwner GetOwner() const { return owner_; }
 protected:
     std::unique_ptr<RailMover> railMover_;
@@ -59,6 +61,10 @@ protected:
     float radius_ = 0.5f;
     bool isDead_ = false;
     int lifeTimer_ = 180; // 3秒程度(60fps)
+    Scene* scene_ = nullptr;
+
+    // 地形・壁との衝突判定
+    void CheckMapCollision(const Vector3& prevPos, const Vector3& finalPos);
 
 private:
     ProjectileOwner owner_=ProjectileOwner::Unknown; // 持ち主を保持

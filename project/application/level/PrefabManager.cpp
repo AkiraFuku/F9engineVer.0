@@ -67,6 +67,19 @@ void PrefabManager::Initialize()
         def.collisionEnabled = true;
         RegisterPrefab(def);
     }
+
+    // ─── 5. 背景装飾キューブ (deco_cube / 当たり判定なし) ───
+    {
+        BlockPrefabDefinition def;
+        def.prefabId = "deco_cube";
+        def.modelName = "box";
+        def.modelDir = "resources";
+        def.texturePath = "resources/grass.png";
+        def.defaultScale = { 2.0f, 2.0f, 2.0f };
+        def.isOneway = false;
+        def.collisionEnabled = false; // 当たり判定なし
+        RegisterPrefab(def);
+    }
 }
 
 void PrefabManager::RegisterPrefab(const BlockPrefabDefinition& def)

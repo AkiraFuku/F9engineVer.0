@@ -239,6 +239,7 @@ private:
     float playerAngle_ = -10.0f;
 
     float Radius = 1.0f;
+    float modelRadius_ = 0.28f; // 人型モデルの実際の幅（半径）
     bool isDamaged_ = false;
     Gauge hitPoints_ = { 3, 3 };
     float hitInvincibilityTimer_ = 0.0f;
