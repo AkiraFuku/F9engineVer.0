@@ -471,6 +471,9 @@
     <ClCompile Include="application\level\StageManager.cpp">
       <Filter>App\Level</Filter>
     </ClCompile>
+    <ClCompile Include="application\level\Terrain.cpp">
+      <Filter>App\Level</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -789,6 +792,9 @@
       <Filter>App\Level</Filter>
     </ClInclude>
     <ClInclude Include="application\level\StageManager.h">
+      <Filter>App\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="application\level\Terrain.h">
       <Filter>App\Level</Filter>
     </ClInclude>
   </ItemGroup>

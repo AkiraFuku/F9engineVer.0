@@ -349,8 +349,8 @@ def get_or_load_preview_mesh(obj_type, force_reload=False):
     return mesh_data
 
 
-def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_path="", uv_tile=4.0):
-    """terrain_grid 用のメッシュ（面・UV・テクスチャ付き）を直接生成"""
+def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_path="", uv_tile=4.0, cell_types_str=""):
+    """terrain_grid 用のメッシュ（面・UV・テクスチャ付き）を直接生成。cell_types があれば落とし穴や縁三角を再現"""
     # 既存の同名メッシュは削除してから再生成（重複防止）
     if mesh_name in bpy.data.meshes:
         bpy.data.meshes.remove(bpy.data.meshes[mesh_name], do_unlink=True)
@@ -369,6 +369,17 @@ def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_pa
         for ix in range(div_x + 1):
             verts.append((start_x + ix * step_x, start_y + iy * step_y, 0.0))
 
+    # cell_types のパース
+    cell_types = []
+    if cell_types_str:
+        for val_s in cell_types_str.split(","):
+            val_s = val_s.strip()
+            if val_s:
+                try:
+                    cell_types.append(int(val_s))
+                except ValueError:
+                    cell_types.append(0)
+
     # 面生成
     # 頂点インデックス:
     #   i0=(ix,   iy  )  i1=(ix+1, iy  )
@@ -377,11 +388,27 @@ def create_terrain_grid_mesh(mesh_name, size_x, size_y, div_x, div_y, texture_pa
     faces = []
     for iy in range(div_y):
         for ix in range(div_x):
+            c_idx = iy * div_x + ix
+            ctype = cell_types[c_idx] if c_idx < len(cell_types) else 0
+
+            # 2: 完全な穴 (HOLE) は面を生成しない
+            if ctype == 2:
+                continue
+
             i0 = iy * (div_x + 1) + ix
             i1 = i0 + 1
             i2 = i0 + (div_x + 1)
             i3 = i2 + 1
-            faces.append((i0, i1, i3, i2))
+
+            if ctype == 3:
+                # 3: EDGE_TRI0 (tri0: i0 -> i1 -> i2 の片方三角ポリゴン)
+                faces.append((i0, i1, i2))
+            elif ctype == 4:
+                # 4: EDGE_TRI1 (tri1: i1 -> i3 -> i2 の片方三角ポリゴン)
+                faces.append((i1, i3, i2))
+            else:
+                # 0: GROUND または 1: ROAD (四角形面)
+                faces.append((i0, i1, i3, i2))
 
     mesh.from_pydata(verts, [], faces)
     mesh.validate(verbose=False)
@@ -517,8 +544,9 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             dx = int(float(properties.get("divisions_x", 20)))
             dy = int(float(properties.get("divisions_y", 20)))
             uv = float(properties.get("uv_tile", 4.0))
+            cell_types = properties.get("cell_types", "")
 
-            t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv)
+            t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv, cell_types_str=cell_types)
             blender_obj = bpy.data.objects.new(name, t_mesh)
             blender_obj.show_wire = True
             col.objects.link(blender_obj)
@@ -569,7 +597,8 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
                 dx = int(float(properties.get("divisions_x", 20)))
                 dy = int(float(properties.get("divisions_y", 20)))
                 uv = float(properties.get("uv_tile", 4.0))
-                t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv)
+                cell_types = properties.get("cell_types", "")
+                t_mesh = create_terrain_grid_mesh(f"Mesh_{name}", sx, sy, dx, dy, texture, uv, cell_types_str=cell_types)
                 blender_obj = bpy.data.objects.new(name, t_mesh)
                 blender_obj.show_wire = True
             else:

@@ -140,6 +140,7 @@
     <ClCompile Include="application\level\LevelLoader.cpp" />
     <ClCompile Include="application\level\StageBlock.cpp" />
     <ClCompile Include="application\level\StageManager.cpp" />
+    <ClCompile Include="application\level\Terrain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\object\Boss\MiniBoss.h" />
@@ -252,6 +253,7 @@
     <ClInclude Include="application\level\LevelLoader.h" />
     <ClInclude Include="application\level\StageBlock.h" />
     <ClInclude Include="application\level\StageManager.h" />
+    <ClInclude Include="application\level\Terrain.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

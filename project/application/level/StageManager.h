@@ -2,6 +2,7 @@
 #include "LevelData.h"
 #include "LevelLoader.h"
 #include "StageBlock.h"
+#include "Terrain.h"
 #include "EventTrigger.h"
 #include "RailPath.h"
 #include "PbdRope.h"
@@ -84,6 +85,9 @@ public:
     /// ステージブロックリストへの参照
     std::vector<std::unique_ptr<StageBlock>>& GetBlocks() { return blocks_; }
 
+    /// 地形（Terrain）を取得（存在しなければ nullptr）
+    Terrain* GetTerrain() const { return terrain_.get(); }
+
     /// デバッグ描画トグル
     void SetDebugDrawEnabled(bool enabled) { isDebugDrawEnabled_ = enabled; }
     bool IsDebugDrawEnabled() const { return isDebugDrawEnabled_; }
@@ -99,7 +103,8 @@ private:
     void RebuildTriangles();
 
     // ─── 管理リスト ──────────────────────────────────────────────────
-    std::vector<std::unique_ptr<StageBlock>>   blocks_;   ///< kBlock / kTerrain
+    std::unique_ptr<Terrain>                  terrain_;  ///< kTerrain
+    std::vector<std::unique_ptr<StageBlock>>   blocks_;   ///< kBlock
     std::vector<std::unique_ptr<StageBlock>>   props_;    ///< kProp（当たり判定なし装飾）
     std::vector<std::unique_ptr<EventTrigger>> triggers_; ///< kTrigger
     std::vector<std::unique_ptr<PbdRope>>      ropes_;    ///< kPbdRope

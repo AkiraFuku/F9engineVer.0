@@ -337,7 +337,7 @@ class StageAIGenerator:
 
         # 🌿 平原ステージ (PLAINS) の場合、コース全体を包み込む草原地面メッシュ (terrain_grid) を自動配置/更新
         if environment == "PLAINS":
-            ground_obj = self._ensure_plains_ground(context, rail_obj, target_col)
+            ground_obj = self._ensure_plains_ground(context, rail_obj, target_col, section_infos=section_infos)
             if ground_obj and ground_obj not in created_objects:
                 created_objects.append(ground_obj)
 
@@ -370,10 +370,8 @@ class StageAIGenerator:
                     except Exception as ex:
                         print(f"[stage_generator] 地面自動変形スキップ/エラー: {ex}")
 
-                # 🕳️ 落とし穴セクション（is_gap）がある場合、進行ルート直下のグリッド面を削除して「メッシュ無しの落とし穴」にする
-                gap_secs = [s for s in section_infos if s.get("is_gap", False)]
-                if gap_secs and ground_obj and ground_obj.type == 'MESH':
-                    self._carve_pitfall_holes_in_terrain(ground_obj, rail_obj, gap_secs, hole_radius=4.2)
+                # PLAINS モードでは落とし穴（穴あけ）は行わず、平面Terrainとして維持
+
 
                 # ✂️ レール（進行ルート）から離れたゲーム中に見えない不要メッシュを一括削除
                 self._trim_unseen_terrain_mesh(ground_obj, rail_obj, max_distance=24.0)
@@ -598,7 +596,7 @@ class StageAIGenerator:
 
         return sub_points, meta
 
-    def _ensure_plains_ground(self, context, rail_obj, collection):
+    def _ensure_plains_ground(self, context, rail_obj, collection, section_infos=None):
         """平原ステージ用の高密度草原地面メッシュ（TERRAIN: terrain_grid）を配置または更新"""
         sampled_points = []
         if rail_obj and rail_obj.type == 'CURVE' and rail_obj.data.splines:
@@ -686,6 +684,65 @@ class StageAIGenerator:
         ground_obj.scale = (1.0, 1.0, 1.0)
         context.view_layer.update()
 
+        # ─── セル属性（cell_types: 0=草, 1=道, 2=穴, 3/4=縁三角）の算出 ───
+        mat_rail = rail_obj.matrix_world if rail_obj else mathutils.Matrix.Identity(4)
+        gap_segments = []
+        if section_infos:
+            for s in section_infos:
+                if s.get("is_gap", False) and "start_pos" in s and "end_pos" in s:
+                    p0 = mat_rail @ s["start_pos"]
+                    p1 = mat_rail @ s["end_pos"]
+                    gap_segments.append((p0, p1))
+
+        # レールスプラインの細分割サンプリング点列（道幅判定用）
+        rail_curve_pts = []
+        if rail_obj and rail_obj.type == 'CURVE' and rail_obj.data.splines:
+            spline = rail_obj.data.splines[0]
+            num_bp = len(spline.bezier_points)
+            for i in range(num_bp - 1):
+                bp0 = spline.bezier_points[i]
+                bp1 = spline.bezier_points[i + 1]
+                for step in range(8):
+                    t = float(step) / 8.0
+                    pt = bp0.co.lerp(bp1.co, t)
+                    rail_curve_pts.append(mat_rail @ pt)
+            if num_bp > 0:
+                rail_curve_pts.append(mat_rail @ spline.bezier_points[-1].co)
+
+        cell_types = []
+        start_x = -size_x * 0.5
+        start_y = -size_y * 0.5
+        step_x = size_x / div_x
+        step_y = size_y / div_y
+
+        road_half_width = 2.4 # 道の半幅（約4.8m幅）
+
+        for iy in range(div_y):
+            for ix in range(div_x):
+                x0 = start_x + ix * step_x
+                x1 = start_x + (ix + 1) * step_x
+                y0 = start_y + iy * step_y
+                y1 = start_y + (iy + 1) * step_y
+
+                # 両方とも穴の外側 -> 通常の床 (道 or 草地)
+                wcx = center_x + (x0 + x1) * 0.5
+                wcy = center_y + (y0 + y1) * 0.5
+
+                min_rail_dist = 1e9
+                for rp in rail_curve_pts:
+                    dx = wcx - rp.x
+                    dy = wcy - rp.y
+                    d_sq = dx * dx + dy * dy
+                    if d_sq < min_rail_dist:
+                        min_rail_dist = d_sq
+                        if min_rail_dist <= road_half_width * road_half_width:
+                            break
+
+                if min_rail_dist <= road_half_width * road_half_width:
+                    cell_types.append(1) # 1: ROAD（道）
+                else:
+                    cell_types.append(0) # 0: GROUND（地面・草）
+
         # ゲームエンジン（C++）動的地形生成用メタデータ
         ground_obj["object_type"] = "TERRAIN"
         ground_obj["file_name"] = "terrain_grid"
@@ -701,6 +758,9 @@ class StageAIGenerator:
         ground_obj["prop_divisions_x"] = str(div_x)
         ground_obj["prop_divisions_y"] = str(div_y)
         ground_obj["prop_uv_tile"] = str(round(uv_tile, 1))
+        ground_obj["prop_grass_texture"] = "resources/Stagemap/863603.png"
+        ground_obj["prop_road_texture"] = "resources/grass.png"
+        ground_obj["prop_cell_types"] = ",".join(str(ct) for ct in cell_types)
 
         return ground_obj
 
@@ -870,17 +930,7 @@ class StageAIGenerator:
                 # 穴セクションの場合、中央のブロックを抜いてジャンプ穴にする
                 is_hole = is_gap_section and (0.3 <= t <= 0.7)
 
-                # PLAINS モードでも、落とし穴の手前と奥に踏み切りプレートを配置して落とし穴の崖を強調
-                if environment == "PLAINS" and is_gap_section and not is_hole:
-                    blk = self._create_stage_block(
-                        f"PitfallEdge_S{s_idx}_{step}",
-                        interp_pos + mathutils.Vector((0, 0, -block_thickness * 0.5)),
-                        (block_width, block_spacing * 0.95, block_thickness),
-                        yaw,
-                        block_texture,
-                        collection
-                    )
-                    blocks.append(blk)
+                # PLAINS モードでは落とし穴ブロックは配置しない
 
                 # PLATFORM モードのみ空中ブロックを配置（PLAINSモードでは平原地面を活かすため直方体ブロックは置かない）
                 elif environment == "PLATFORM" and spawn_blocks and not is_hole:

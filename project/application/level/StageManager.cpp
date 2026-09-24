@@ -12,6 +12,7 @@ void StageManager::Load(const std::string& jsonPath, Camera* camera, SpawnEnemyF
 {
     // 既存リストをクリア（Hot Reload）
     blocks_.clear();
+    terrain_.reset();
     props_.clear();
     triggers_.clear();
     ropes_.clear();
@@ -51,8 +52,15 @@ void StageManager::ProcessObject(const LevelObjectData& data, Camera* camera, Sp
 
     switch (data.type) {
 
-    // ─── 地形 / ブロック ──────────────────────────────────────────
+    // ─── 地形 ────────────────────────────────────────────────────
     case LevelObjectType::kTerrain:
+    {
+        terrain_ = std::make_unique<Terrain>();
+        terrain_->Initialize(data, camera);
+        break;
+    }
+
+    // ─── ブロック ──────────────────────────────────────────────────
     case LevelObjectType::kBlock:
     {
         auto block = std::make_unique<StageBlock>();
@@ -196,6 +204,10 @@ void StageManager::ProcessObject(const LevelObjectData& data, Camera* camera, Sp
 void StageManager::RebuildTriangles()
 {
     allTriangles_.clear();
+    if (terrain_) {
+        const auto& tris = terrain_->GetWorldTriangles();
+        allTriangles_.insert(allTriangles_.end(), tris.begin(), tris.end());
+    }
     for (const auto& block : blocks_) {
         const auto& tris = block->GetWorldTriangles();
         allTriangles_.insert(allTriangles_.end(), tris.begin(), tris.end());
@@ -207,6 +219,11 @@ void StageManager::RebuildTriangles()
 // ─────────────────────────────────────────────────────────────────────
 void StageManager::Update(const Vector3& playerPos)
 {
+    // 地形更新
+    if (terrain_) {
+        terrain_->Update();
+    }
+
     // ブロック更新
     for (auto& block : blocks_)   block->Update();
     for (auto& prop  : props_)    prop->Update();
@@ -235,6 +252,11 @@ void StageManager::Update(const Vector3& playerPos)
 // ─────────────────────────────────────────────────────────────────────
 void StageManager::Draw()
 {
+    // 地形描画（専用PSOによる道/地面テクスチャ割り振り＆穴抜き）
+    if (terrain_) {
+        terrain_->Draw();
+    }
+
     for (auto& block : blocks_)  block->Draw();
     for (auto& prop  : props_)   prop->Draw();
 
