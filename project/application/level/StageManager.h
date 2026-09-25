@@ -88,6 +88,12 @@ public:
     /// 地形（Terrain）を取得（存在しなければ nullptr）
     Terrain* GetTerrain() const { return terrain_.get(); }
 
+    /// ステージ定義のカメラ設定
+    float GetStageCameraDrawDistance() const { return stageCameraDrawDistance_; }
+    const std::string& GetStageCameraMode() const { return stageCameraMode_; }
+    float GetStageCameraDistance() const { return stageCameraDistance_; }
+    float GetStageCameraHeight() const { return stageCameraHeight_; }
+
     /// デバッグ描画トグル
     void SetDebugDrawEnabled(bool enabled) { isDebugDrawEnabled_ = enabled; }
     bool IsDebugDrawEnabled() const { return isDebugDrawEnabled_; }
@@ -128,6 +134,12 @@ private:
 
     // ─── ロードパス（ホットリロード用）──────────────────────────────
     std::string loadedPath_;
+
+    // ─── ステージ定義カメラ設定 ───────────────────────────────────────
+    float stageCameraDrawDistance_ = 80.0f;
+    std::string stageCameraMode_   = "AUTO_OFFSET";
+    float stageCameraDistance_     = 25.0f;
+    float stageCameraHeight_       = 5.0f;
 
     // ─── デバッグ描画フラグ ───────────────────────────────────────────
     bool isDebugDrawEnabled_ = false;

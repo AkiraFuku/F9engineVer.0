@@ -160,11 +160,31 @@ void GameScene::Initialize() {
     object3d->SetCamera(activeCamera_);*/
 
     // --- ステージマネージャーによるJSONステージデータの読み込み ---
+    enemySpawnTriggers_.clear();
     stageManager_ = std::make_unique<StageManager>();
     stageManager_->Load("resources/Stagemap/stage5.json", activeCamera_,
         [this](const LevelObjectData& data) {
             Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
-            AddEnemy(data.railPos, type);
+
+            float triggerDist = 25.0f;
+            auto itDist = data.properties.find("spawn_distance");
+            if (itDist != data.properties.end()) {
+                try { triggerDist = std::stof(itDist->second); } catch (...) {}
+            }
+
+            auto itMode = data.properties.find("spawn_mode");
+            if (itMode != data.properties.end() && itMode->second == "IMMEDIATE") {
+                // 最初から直接配置
+                AddEnemy(data.railPos, type);
+            } else {
+                // カメラ直前スポーン待機リストへ登録
+                EnemySpawnTrigger trigger;
+                trigger.railPos = data.railPos;
+                trigger.enemyType = type;
+                trigger.triggerDistance = triggerDist;
+                trigger.hasSpawned = false;
+                enemySpawnTriggers_.push_back(trigger);
+            }
         }
     );
 
@@ -185,10 +205,25 @@ void GameScene::Initialize() {
     cameraController->Initialize(cameraMap_["Main"].get());
     cameraController->SetTarget(player.get());
 
-    // カメラレールは StageManager から設定
-    if (stageManager_->GetCameraRail()) {
+    // ステージレールおよびカメラ設定の同期
+    cameraController->SetStageRail(stageManager_->GetStageRail());
+    cameraController->SetAutoOffsetParams(
+        stageManager_->GetStageCameraDistance(),
+        stageManager_->GetStageCameraHeight()
+    );
+    cameraController->SetDrawDistance(stageManager_->GetStageCameraDrawDistance());
+
+    // カメラレール追従と自動オフセットの切り替え
+    if (stageManager_->GetStageCameraMode() == "CAMERA_RAIL" && stageManager_->GetCameraRail()) {
+        cameraController->SetCameraMode(CameraController::CameraMode::RailCamera);
         cameraController->SetRailPath(stageManager_->GetCameraRail());
+    } else {
+        cameraController->SetCameraMode(CameraController::CameraMode::AutoOffset);
+        if (stageManager_->GetCameraRail()) {
+            cameraController->SetRailPath(stageManager_->GetCameraRail());
+        }
     }
+
 
     debugCameraC = std::make_unique<CameraController>();
     debugCameraC->Initialize(cameraMap_["Debug"].get());
@@ -243,6 +278,9 @@ void GameScene::Update() {
     {
         currentPhase_->Update(this);
     }
+
+    // カメラ直前エネミースポーンの判定更新
+    UpdateEnemySpawners();
     // 死んだProjectileを削除
     projectiles_.erase(
         std::remove_if(projectiles_.begin(), projectiles_.end(),
@@ -632,7 +670,35 @@ void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
         // ベクターに追加
         enemies_.push_back(std::move(newEnemy));
     }
+}
 
+void GameScene::UpdateEnemySpawners()
+{
+    if (!player) return;
+    const RailMover* pMover = player->GetRailMover();
+    if (!pMover) return;
+
+    RailPath* rail = GetStageRaill();
+    if (!rail) return;
+
+    float playerProgress = pMover->GetProgress();
+    Vector3 playerPos = player->GetTransform().translate;
+
+    for (auto& trigger : enemySpawnTriggers_) {
+        if (trigger.hasSpawned) continue;
+
+        // レール上のエネミー座標を取得
+        Vector3 spawnWorldPos = rail->GetPosition(trigger.railPos.x);
+        Vector3 diff = { spawnWorldPos.x - playerPos.x, spawnWorldPos.y - playerPos.y, spawnWorldPos.z - playerPos.z };
+        float distSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+        float triggerDistSq = trigger.triggerDistance * trigger.triggerDistance;
+
+        // プレイヤーがエネミーの感知距離（カメラ直前）に入った瞬間に実体化
+        if (distSq <= triggerDistSq && trigger.railPos.x >= playerProgress - 0.5f) {
+            AddEnemy(trigger.railPos, trigger.enemyType);
+            trigger.hasSpawned = true; // 一度出現したら機能停止！
+        }
+    }
 }
 // GameScene.cpp
 

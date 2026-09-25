@@ -1961,6 +1961,13 @@ class VIEW3D_PT_camera_rail_sync(bpy.types.Panel):
 
         layout.separator()
 
+        # ゲームカメラ動作・描画設定
+        box_cam = layout.box()
+        box_cam.label(text="ゲームカメラ設定:", icon='CAMERA_DATA')
+        col_cam = box_cam.column(align=True)
+        col_cam.prop(scene, "game_camera_mode", text="カメラ動作モード")
+        col_cam.prop(scene, "game_camera_draw_distance", text="描画距離範囲 (m)")
+
         # パラメータ設定
         box_param = layout.box()
         box_param.label(text="オフセット設定:", icon='DRIVER_DISTANCE')
@@ -2084,6 +2091,22 @@ def register_rail_snap():
         description="オフセット方向を反転（内側向き）にします",
         default=False,
     )
+    bpy.types.Scene.game_camera_mode = bpy.props.EnumProperty(
+        name="カメラ動作モード",
+        description="ゲーム中でのカメラの追従方式",
+        items=[
+            ('AUTO_OFFSET', "自動オフセット計算", "StageRailからリアルタイムに外側・高さオフセットを自動計算追従"),
+            ('CAMERA_RAIL', "カメラレール追従", "CameraRail（専用レール）に沿って追従"),
+        ],
+        default='AUTO_OFFSET',
+    )
+    bpy.types.Scene.game_camera_draw_distance = bpy.props.FloatProperty(
+        name="描画距離範囲",
+        description="カメラの最大描画距離（FarClip / 距離カリング範囲、メートル）",
+        default=80.0,
+        min=10.0,
+        max=500.0,
+    )
 
     # 接続点・球体ワイヤー表示プロパティ
     bpy.types.Scene.rail_draw_wire_sphere = bpy.props.BoolProperty(
@@ -2131,7 +2154,7 @@ def unregister_rail_snap():
 
     for prop in (
         "rail_magnet_snap", "rail_follow_objects", "rail_magnet_distance", "rail_magnet_keep_height",
-        "rail_camera_auto_sync", "rail_camera_distance", "rail_camera_height", "rail_camera_flip_side",
+        "rail_camera_auto_sync", "rail_camera_distance", "rail_camera_height", "rail_camera_flip_side", "game_camera_mode", "game_camera_draw_distance",
         "rail_draw_wire_sphere", "rail_wire_sphere_radius",
     ):
         if hasattr(bpy.types.Scene, prop):

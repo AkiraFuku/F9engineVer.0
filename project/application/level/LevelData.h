@@ -31,6 +31,7 @@ enum class LevelObjectType {
     kPbdCloth,     ///< PBD布物理ギミック
     kRailStage,    ///< ステージ進行用レール（ベジェ曲線）
     kRailCamera,   ///< カメラ用レール（ベジェ曲線）
+    kCamera,       ///< カメラ設定オブジェクト
     kUnknown,      ///< 未知のタイプ（スキップ）
 };
 

@@ -59,6 +59,7 @@ public:
     const std::vector<Triangle>& GetWorldTriangles() const { return triangles_; }
 
     Object3d* GetObject() const { return object_.get(); }
+    Vector3 GetPosition() const { return object_ ? object_->GetTranslate() : Vector3{ 0.0f, 0.0f, 0.0f }; }
 
 private:
     std::unique_ptr<Object3d> object_ = nullptr;

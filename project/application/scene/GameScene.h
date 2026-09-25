@@ -134,14 +134,21 @@ private:
     std::unique_ptr<PlayerHPUI> playerHPUI_;
     std::unique_ptr<ScoreUI> scoreUI_;
 
-    //ヒットストップ用変数
+    // ヒットストップ用変数
     bool isHitStop_ = false;
-
-
-    // GameScene.h (privateメンバ変数に追加)
     float stopTimer_ = 0; // 残りヒットストップフレーム数
 
     void UpdateHitStop();
+
+    // ── エネミースポーン待機（カメラ直前出現・一度で機能停止）──
+    struct EnemySpawnTrigger {
+        Vector2 railPos = { 0.0f, 0.0f };
+        Enemy::EnemyType enemyType = Enemy::EnemyType::Normal;
+        float triggerDistance = 25.0f; // 感知距離
+        bool hasSpawned = false;       // 一度出現したら機能停止
+    };
+    std::vector<EnemySpawnTrigger> enemySpawnTriggers_;
+    void UpdateEnemySpawners();
 
 public:
     // ヒットストップを開始する関数

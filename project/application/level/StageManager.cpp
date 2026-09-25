@@ -194,6 +194,29 @@ void StageManager::ProcessObject(const LevelObjectData& data, Camera* camera, Sp
         break;
     }
 
+    // ─── カメラ設定 ───────────────────────────────────────────────
+    case LevelObjectType::kCamera:
+    {
+        auto getFloat = [&](const std::string& key, float def) -> float {
+            auto it = data.properties.find(key);
+            if (it != data.properties.end()) {
+                try { return std::stof(it->second); } catch (...) {}
+            }
+            return def;
+        };
+        stageCameraDrawDistance_ = getFloat("draw_distance", 80.0f);
+        stageCameraDistance_     = getFloat("camera_distance", 25.0f);
+        stageCameraHeight_       = getFloat("camera_height", 5.0f);
+        auto itMode = data.properties.find("camera_mode");
+        if (itMode != data.properties.end()) {
+            stageCameraMode_ = itMode->second;
+        }
+        if (camera) {
+            camera->SetDrawDistance(stageCameraDrawDistance_);
+        }
+        break;
+    }
+
     default:
         break;
     }
@@ -263,9 +286,32 @@ void StageManager::Draw()
         terrain_->Draw();
     }
 
-    // ブロック＆装飾オブジェクトの個別描画（各プレハブ固有のテクスチャ・モデルを確実に反映）
-    for (auto& block : blocks_)  block->Draw();
-    for (auto& prop  : props_)   prop->Draw();
+    // カメラの描画距離範囲による距離カリング
+    float maxDistSq = 1000000.0f;
+    Vector3 camPos = { 0.0f, 0.0f, 0.0f };
+    if (camera_) {
+        camPos = camera_->GetTranslate();
+        float drawDist = camera_->GetDrawDistance() + 5.0f; // 境界マージン
+        maxDistSq = drawDist * drawDist;
+    }
+
+    // ブロック＆装飾オブジェクトの個別描画（距離カリング適用）
+    for (auto& block : blocks_) {
+        if (block->IsDisabled()) continue;
+        Vector3 bPos = block->GetPosition();
+        Vector3 diff = { bPos.x - camPos.x, bPos.y - camPos.y, bPos.z - camPos.z };
+        if (diff.x * diff.x + diff.y * diff.y + diff.z * diff.z <= maxDistSq) {
+            block->Draw();
+        }
+    }
+    for (auto& prop : props_) {
+        if (prop->IsDisabled()) continue;
+        Vector3 pPos = prop->GetPosition();
+        Vector3 diff = { pPos.x - camPos.x, pPos.y - camPos.y, pPos.z - camPos.z };
+        if (diff.x * diff.x + diff.y * diff.y + diff.z * diff.z <= maxDistSq) {
+            prop->Draw();
+        }
+    }
 
     for (auto& rope  : ropes_)   rope->Draw();
     for (auto& cloth : cloths_)  cloth->Draw();

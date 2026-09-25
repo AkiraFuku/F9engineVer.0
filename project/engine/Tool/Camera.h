@@ -43,8 +43,12 @@ public:
     void SetViewMatrix(const Matrix4x4& viewMatrix) {
         this->viewMatrix = viewMatrix;
     }
-    //描画範囲の設定
-    
+    // 描画範囲の設定（FarClipおよび距離カリング用）
+    void SetDrawDistance(float distance) {
+        drawDistance_ = distance;
+        farCrip = distance;
+    }
+    float GetDrawDistance() const { return drawDistance_; }
 
 
     const Vector3& GetRotate()const{return worldTransform_.rotate;}
@@ -93,6 +97,7 @@ private:
     float aspect ;
     float nearCrip ;
     float farCrip ;
+    float drawDistance_ = 100.0f;
 
     // カメラバッファ管理
     Microsoft::WRL::ComPtr<ID3D12Resource> cameraBufferResource_;

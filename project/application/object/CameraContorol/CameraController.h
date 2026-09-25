@@ -14,6 +14,11 @@ class RailMover;
 class RailPath;
 class CameraController {
 public:
+	enum class CameraMode {
+		AutoOffset, ///< レール形状から外側・高さオフセットを自動計算追従（推奨）
+		RailCamera, ///< 既存のCameraRailに沿って追従
+	};
+
 	struct Rect {
 		float left = 0.0f;   // 左端
 		float right = 1.0f;  // 右端
@@ -37,8 +42,20 @@ public:
 	void SetMoveArea(const Rect area) { moveArea_ = area; }
 
     void SetRailPath(const RailPath* path) ;
+    void SetStageRail(const RailPath* path) { stageRail_ = path; }
     void SetRailProgress(float progress);
     
+    // カメラモード・オフセット設定
+    void SetCameraMode(CameraMode mode) { mode_ = mode; }
+    CameraMode GetCameraMode() const { return mode_; }
+    void SetAutoOffsetParams(float distance, float height, bool flipSide = false) {
+        autoDistance_ = distance;
+        autoHeight_ = height;
+        isFlipSide_ = flipSide;
+    }
+    void SetDrawDistance(float distance);
+    float GetDrawDistance() const { return drawDistance_; }
+    Camera* GetCamera() const { return camera_; }
 
 	void Reset();
 	// シェイクを要求する関数（デフォルトで二次関数的な減衰イージングを指定）
@@ -51,13 +68,20 @@ public:
         RequestShake(duration, power);
     }
 	void SetClearOffset() { 
-        // プレイヤーに近づける（Zを近づけ、少し見上げるような座標にする例）
         targetOffsetGoal_ = {0.0f, 0.0f, -6.0f}; 
     }
 	void TriggerClearFocus() { isClearPhase_ = true; }
 private:
 	// カメラ
 	Camera* camera_ = nullptr;
+    const RailPath* stageRail_ = nullptr; ///< ステージレール（自動オフセット計算用）
+    CameraMode mode_ = CameraMode::AutoOffset; ///< デフォルトは自動オフセット計算カメラ
+    float autoDistance_ = 25.0f;          ///< レールからの水平外側オフセット距離
+    float autoHeight_   = 5.0f;           ///< レールからの高さオフセット
+    float lookAtHeight_ = 2.0f;           ///< 注視点の高さオフセット
+    float smoothSpeed_  = 0.15f;          ///< カメラ位置の追従補間率
+    bool  isFlipSide_   = false;          ///< オフセット向き反転
+    float drawDistance_ = 80.0f;          ///< 描画距離範囲 (FarClip)
 	Player* target_ = nullptr;
     Object3d* target=nullptr;
     std::unique_ptr<RailMover> railMover_;
@@ -75,6 +99,7 @@ private:
 
     void RotateCamera();
     void RailCamera();
+    void AutoOffsetCamera();
     // シェイク用変数
    float shakeTimer_ = 0.0f;
     float shakeDuration_ = 0.0f; // 追加: シェイク開始時のトータル時間を記録

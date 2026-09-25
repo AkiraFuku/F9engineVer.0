@@ -165,6 +165,19 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
             elif is_terrain and key in _terrain_keys:
                 # 地形サイズ・分割数・属性プロパティを確実に properties に出力
                 properties_map[key] = str(object[key])
+        # カメラ専用プロパティ（描画距離・動作モード等）
+        if object.type == 'CAMERA':
+            scene = bpy.context.scene
+            properties_map["draw_distance"] = str(getattr(scene, "game_camera_draw_distance", 80.0))
+            properties_map["camera_mode"] = str(getattr(scene, "game_camera_mode", "AUTO_OFFSET"))
+            properties_map["camera_distance"] = str(getattr(scene, "rail_camera_distance", 25.0))
+            properties_map["camera_height"] = str(getattr(scene, "rail_camera_height", 5.0))
+
+        # エネミー専用プロパティ（カメラ直前スポーン・感知距離）
+        if object.get("object_type") == "ENEMY":
+            properties_map["spawn_mode"] = str(object.get("spawn_mode", "TRIGGER_SPAWN"))
+            properties_map["spawn_distance"] = str(object.get("spawn_distance", 25.0))
+
         if properties_map:
             json_object["properties"] = properties_map
 

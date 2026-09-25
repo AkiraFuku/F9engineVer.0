@@ -83,6 +83,43 @@ class OBJECT_PT_behavior_tree(bpy.types.Panel):
             layout.operator(MYADDON_OT_add_behavior_tree.bl_idname, text="Behavior Tree 追加 ＆ 自動セット")
 
 
+class OBJECT_PT_enemy_spawn_settings(bpy.types.Panel):
+    bl_idname = "OBJECT_PT_enemy_spawn_settings"
+    bl_label = "Enemy Spawn Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj and obj.get("object_type") == "ENEMY"
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+
+        if "spawn_mode" not in obj:
+            obj["spawn_mode"] = "TRIGGER_SPAWN"
+        if "spawn_distance" not in obj:
+            obj["spawn_distance"] = 25.0
+
+        box = layout.box()
+        box.label(text="エネミー出現方式:", icon='OUTLINER_OB_ARMATURE')
+        col = box.column(align=True)
+        col.prop(obj, '["spawn_mode"]', text="出現方式")
+        col.prop(obj, '["spawn_distance"]', text="出現感知距離 (m)")
+
+        box_info = layout.box()
+        mode = obj.get("spawn_mode", "TRIGGER_SPAWN")
+        dist = obj.get("spawn_distance", 25.0)
+        if mode == "TRIGGER_SPAWN":
+            box_info.label(text=f"📷 プレイヤー手前 {dist:.1f}m で自動スポーン", icon='INFO')
+            box_info.label(text="※ 一度出現したらトリガーは機能停止します")
+        else:
+            box_info.label(text="🏁 ステージ開始時に最初から配置", icon='INFO')
+
+
 
 
 

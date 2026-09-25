@@ -55,6 +55,7 @@ LevelObjectType ParseObjectType(const std::string& blenderType, const std::strin
     if (blenderType == "MESH")   return LevelObjectType::kProp;
     if (blenderType == "EMPTY")  return LevelObjectType::kPlayerSpawn;
     if (blenderType == "CURVE")  return LevelObjectType::kRailStage;
+    if (blenderType == "CAMERA") return LevelObjectType::kCamera;
 
     return LevelObjectType::kUnknown;
 }
