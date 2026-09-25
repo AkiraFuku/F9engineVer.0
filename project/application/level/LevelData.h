@@ -111,6 +111,12 @@ struct LevelObjectData {
     // カスタムプロパティ（拡張用汎用マップ）
     std::unordered_map<std::string, std::string> properties;
 
+    // 地形等の動的頂点位置データ（DX座標系）
+    std::vector<Vector3> vertexPositions;
+
+    // 地形等のポリゴン三角形インデックスデータ
+    std::vector<uint32_t> indices;
+
     // 子オブジェクト（Blenderの親子関係）
     std::vector<LevelObjectData> children;
 };

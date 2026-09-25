@@ -34,7 +34,6 @@ public:
 
 private:
     std::unique_ptr<Camera> camera;
-   // std::unique_ptr<Phase> currentPhase_;
 
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<Object3d> object3d;
@@ -46,6 +45,9 @@ private:
      Audio::SoundHandle  handle_ = 0;
     std::unique_ptr<class PbdCloth> cloth_;
     bool clothWindEnabled_ = true;
+    /// <summary>
+    /// 布の　風の強さ（揺れの振幅）
+    /// </summary>
     float clothWindStrength_ = 3.5f;
     float clothTimer_ = 0.0f;
 };

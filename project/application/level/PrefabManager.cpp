@@ -17,8 +17,8 @@ void PrefabManager::Initialize()
         def.prefabId = "standard_block";
         def.modelName = "box";
         def.modelDir = "resources";
-        def.texturePath = "resources/grass.png";
-        def.defaultScale = { 1.0f, 1.0f, 1.0f };
+        def.texturePath = "resources/uvChecker.png"; // 2枚目画像準拠のチェック柄プレハブ
+        def.defaultScale = { 3.0f, 1.0f, 3.6f };
         def.isOneway = false;
         def.collisionEnabled = true;
         RegisterPrefab(def);
@@ -34,7 +34,7 @@ void PrefabManager::Initialize()
         def.prefabId = "oneway_platform";
         def.modelName = "box";
         def.modelDir = "resources";
-        def.texturePath = "resources/grass.png";
+        def.texturePath = "resources/uvChecker.png"; // チェック柄のすり抜けプレート
         def.defaultScale = { 3.5f, 0.25f, 2.0f };
         def.isOneway = true;
         def.collisionEnabled = true;

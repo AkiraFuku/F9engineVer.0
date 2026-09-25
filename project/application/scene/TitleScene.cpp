@@ -51,18 +51,18 @@ void TitleScene::Initialize() {
     Fade::GetInstance()->StartFadeIn(5.0f);
 
 
-    sprite = std::make_unique<Sprite>();
+  /*  sprite = std::make_unique<Sprite>();
     sprite->Initialize("resources/Title/tekutekuTitle.png");
     sprite->SetAnchorPoint(Anchor::Center);
-    sprite->SetPosition(WinApp::GetInstance()->GetWindowCenter());
+    sprite->SetPosition(WinApp::GetInstance()->GetWindowCenter());*/
 
     // PBD 布オブジェクトの初期化
     cloth_ = std::make_unique<PbdCloth>();
     // 幅: 4.0 (x: -2.0 ~ 2.0), 高さ: 3.0 (y: 1.5 ~ -1.5), 格子数: 16x16
-    cloth_->Initialize({ -2.0f, 1.5f, 0.0f }, { 2.0f, -1.5f, 0.0f }, 16, 16, 0.3f, 1.0f / 60.0f, 0.03f, { 0.0f, -9.8f, 0.0f });
-    cloth_->SetTexture("resources/uvChecker.png");
+    cloth_->Initialize({ -2.0f, 2.0f, 0.0f }, { 2.0f, -1.5f, 0.0f }, 16, 16, 0.3f, 1.0f / 60.0f, 0.03f, { 0.0f, -9.8f, 0.0f });
+    cloth_->SetTexture("resources/Title/tekutekuTitle.png");
     cloth_->SetCamera(activeCamera_);
-
+    cloth_->GetSolver().SetSolverIterations(15);
     ChangePhase(std::make_unique<TitlePhase>());
 
     handle_ = Audio::GetInstance()->LoadAudio("resources/Audio/BGM/bgm.mp3");
@@ -100,7 +100,7 @@ void TitleScene::Update() {
         cloth_->Update();
     }
 
-    sprite->Update();
+  //  sprite->Update();
     currentPhase_->Update(this);
 
 #ifdef USE_IMGUI
@@ -133,7 +133,7 @@ void TitleScene::Draw() {
     if (cloth_) {
         cloth_->Draw();
     }
-    sprite->Draw();
+ //   sprite->Draw();
 }
 
 

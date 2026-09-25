@@ -125,60 +125,17 @@ void Terrain::BuildMesh(const LevelObjectData& data)
         }
     }
 
-    // ─── 頂点生成 ─────────────────────────────────────────────────────
+    // ─── 頂点・インデックス生成 ─────────────────────────────────────
     const int colCount = divX_ + 1;
     const int rowCount = divY_ + 1;
     const float halfX = sizeX_ * 0.5f;
     const float halfZ = sizeY_ * 0.5f;
 
+    const bool hasCustomIndices = (!data.indices.empty() && !data.vertexPositions.empty());
+    const bool hasMatchingGridVertices = (!hasCustomIndices && data.vertexPositions.size() == static_cast<size_t>(colCount * rowCount));
+
     vertices_.clear();
-    vertices_.reserve(static_cast<size_t>(colCount) * rowCount);
-
-    for (int row = 0; row < rowCount; ++row) {
-        for (int col = 0; col < colCount; ++col) {
-            float tx = static_cast<float>(col) / static_cast<float>(divX_);
-            float tz = static_cast<float>(row) / static_cast<float>(divY_);
-
-            VertexData v;
-            v.position = { -halfX + tx * sizeX_, 0.0f, -halfZ + tz * sizeY_, 1.0f };
-            v.texCoord = { tx, tz };
-            v.normal   = { 0.0f, 1.0f, 0.0f };
-
-            // この頂点に隣接する4セルのうち、1つでも道なら頂点道属性を1.0にする
-            float roadWeight = 0.0f;
-            int roadCount = 0;
-            int totalNeighbors = 0;
-
-            for (int dy = -1; dy <= 0; ++dy) {
-                for (int dx = -1; dx <= 0; ++dx) {
-                    int c = col + dx;
-                    int r = row + dy;
-                    if (c >= 0 && c < divX_ && r >= 0 && r < divY_) {
-                        int cIdx = r * divX_ + c;
-                        CellType ct = cellTypes_[cIdx];
-                        if (ct == CellType::kRoad) {
-                            roadCount++;
-                        }
-                        totalNeighbors++;
-                    }
-                }
-            }
-            if (totalNeighbors > 0 && roadCount > 0) {
-                roadWeight = static_cast<float>(roadCount) / static_cast<float>(totalNeighbors);
-                // 道の存在感を強調するため、半分以上が道なら1.0に
-                if (roadCount >= 1) {
-                    roadWeight = (std::max)(roadWeight, 0.7f);
-                }
-            }
-            v.roadAttr = roadWeight;
-
-            vertices_.push_back(v);
-        }
-    }
-
-    // ─── インデックス生成 ＆ 当たり判定用三角形構築 ─────────────────
     indices_.clear();
-    indices_.reserve(static_cast<size_t>(totalCells) * 6);
     triangles_.clear();
 
     Matrix4x4 worldMat = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
@@ -188,7 +145,6 @@ void Terrain::BuildMesh(const LevelObjectData& data)
         indices_.push_back(i1);
         indices_.push_back(i2);
 
-        // ワールド座標系に変換した当たり判定三角形を追加
         Triangle tri;
         Vector3 p0 = { vertices_[i0].position.x, vertices_[i0].position.y, vertices_[i0].position.z };
         Vector3 p1 = { vertices_[i1].position.x, vertices_[i1].position.y, vertices_[i1].position.z };
@@ -199,33 +155,158 @@ void Terrain::BuildMesh(const LevelObjectData& data)
         triangles_.push_back(tri);
     };
 
-    for (int row = 0; row < divY_; ++row) {
-        for (int col = 0; col < divX_; ++col) {
-            int cellIdx = row * divX_ + col;
-            CellType ctype = (cellIdx < static_cast<int>(cellTypes_.size())) ? cellTypes_[cellIdx] : CellType::kGround;
+    if (hasCustomIndices) {
+        // ── 【Mode A】Blenderから出力されたポリゴン三角形インデックスによる完全再構築 ──
+        vertices_.reserve(data.vertexPositions.size());
+        for (size_t i = 0; i < data.vertexPositions.size(); ++i) {
+            VertexData v;
+            const auto& pos = data.vertexPositions[i];
+            v.position = { pos.x, pos.y, pos.z, 1.0f };
+            float tx = (pos.x + halfX) / (sizeX_ > 1e-4f ? sizeX_ : 1.0f);
+            float tz = (pos.z + halfZ) / (sizeY_ > 1e-4f ? sizeY_ : 1.0f);
+            v.texCoord = { tx, tz };
+            v.normal   = { 0.0f, 1.0f, 0.0f };
+            v.roadAttr = 0.0f;
+            vertices_.push_back(v);
+        }
 
-            // 穴（HOLE）なら完全にスキップ
-            if (ctype == CellType::kHole) {
-                continue;
+        indices_.reserve(data.indices.size());
+        for (size_t i = 0; i + 2 < data.indices.size(); i += 3) {
+            uint32_t i0 = data.indices[i];
+            uint32_t i1 = data.indices[i + 1];
+            uint32_t i2 = data.indices[i + 2];
+            if (i0 < vertices_.size() && i1 < vertices_.size() && i2 < vertices_.size()) {
+                addTriangle(i0, i1, i2);
             }
+        }
 
-            uint32_t lb = static_cast<uint32_t>(row * colCount + col);
-            uint32_t rb = static_cast<uint32_t>(row * colCount + col + 1);
-            uint32_t lt = static_cast<uint32_t>((row + 1) * colCount + col);
-            uint32_t rt = static_cast<uint32_t>((row + 1) * colCount + col + 1);
+        // 三角形面からスムーズ法線を自動計算
+        std::vector<Vector3> normals(vertices_.size(), { 0.0f, 0.0f, 0.0f });
+        for (size_t i = 0; i + 2 < indices_.size(); i += 3) {
+            uint32_t i0 = indices_[i], i1 = indices_[i + 1], i2 = indices_[i + 2];
+            Vector3 p0 = { vertices_[i0].position.x, vertices_[i0].position.y, vertices_[i0].position.z };
+            Vector3 p1 = { vertices_[i1].position.x, vertices_[i1].position.y, vertices_[i1].position.z };
+            Vector3 p2 = { vertices_[i2].position.x, vertices_[i2].position.y, vertices_[i2].position.z };
+            Vector3 e1 = { p1.x - p0.x, p1.y - p0.y, p1.z - p0.z };
+            Vector3 e2 = { p2.x - p0.x, p2.y - p0.y, p2.z - p0.z };
+            Vector3 fn = { e1.y * e2.z - e1.z * e2.y, e1.z * e2.x - e1.x * e2.z, e1.x * e2.y - e1.y * e2.x };
+            normals[i0] = { normals[i0].x + fn.x, normals[i0].y + fn.y, normals[i0].z + fn.z };
+            normals[i1] = { normals[i1].x + fn.x, normals[i1].y + fn.y, normals[i1].z + fn.z };
+            normals[i2] = { normals[i2].x + fn.x, normals[i2].y + fn.y, normals[i2].z + fn.z };
+        }
+        for (size_t i = 0; i < vertices_.size(); ++i) {
+            Vector3 n = normals[i];
+            float lenSq = n.x * n.x + n.y * n.y + n.z * n.z;
+            if (lenSq > 1e-6f) {
+                float inv = 1.0f / std::sqrt(lenSq);
+                vertices_[i].normal = { n.x * inv, n.y * inv, n.z * inv };
+            }
+        }
+    } else {
+        // ── 【Mode B】グリッド格子による生成（カスタムグリッド座標または平坦グリッド） ──
+        vertices_.reserve(static_cast<size_t>(colCount) * rowCount);
 
-            // tri0: 左手前 → 左奥 → 右手前 (lb, lt, rb)
-            // tri1: 右手前 → 左奥 → 右奥   (rb, lt, rt)
-            if (ctype == CellType::kEdgeTri0) {
-                // 穴の縁: 三角形0のみ生成（片方の三角ポリゴンで縁を埋める）
-                addTriangle(lb, lt, rb);
-            } else if (ctype == CellType::kEdgeTri1) {
-                // 穴の縁: 三角形1のみ生成
-                addTriangle(rb, lt, rt);
-            } else {
-                // 通常の地面または道: 両方の三角形を生成
-                addTriangle(lb, lt, rb);
-                addTriangle(rb, lt, rt);
+        for (int row = 0; row < rowCount; ++row) {
+            for (int col = 0; col < colCount; ++col) {
+                float tx = static_cast<float>(col) / static_cast<float>(divX_);
+                float tz = static_cast<float>(row) / static_cast<float>(divY_);
+                int vIdx = row * colCount + col;
+
+                VertexData v;
+                if (hasMatchingGridVertices && vIdx < static_cast<int>(data.vertexPositions.size())) {
+                    v.position = { data.vertexPositions[vIdx].x, data.vertexPositions[vIdx].y, data.vertexPositions[vIdx].z, 1.0f };
+                } else {
+                    v.position = { -halfX + tx * sizeX_, 0.0f, -halfZ + tz * sizeY_, 1.0f };
+                }
+                v.texCoord = { tx, tz };
+                v.normal   = { 0.0f, 1.0f, 0.0f };
+
+                float roadWeight = 0.0f;
+                int roadCount = 0;
+                int totalNeighbors = 0;
+
+                for (int dy = -1; dy <= 0; ++dy) {
+                    for (int dx = -1; dx <= 0; ++dx) {
+                        int c = col + dx;
+                        int r = row + dy;
+                        if (c >= 0 && c < divX_ && r >= 0 && r < divY_) {
+                            int cIdx = r * divX_ + c;
+                            CellType ct = cellTypes_[cIdx];
+                            if (ct == CellType::kRoad) {
+                                roadCount++;
+                            }
+                            totalNeighbors++;
+                        }
+                    }
+                }
+                if (totalNeighbors > 0 && roadCount > 0) {
+                    roadWeight = static_cast<float>(roadCount) / static_cast<float>(totalNeighbors);
+                    if (roadCount >= 1) {
+                        roadWeight = (std::max)(roadWeight, 0.7f);
+                    }
+                }
+                v.roadAttr = roadWeight;
+
+                vertices_.push_back(v);
+            }
+        }
+
+        if (hasMatchingGridVertices) {
+            for (int row = 0; row < rowCount; ++row) {
+                for (int col = 0; col < colCount; ++col) {
+                    int cL = (std::max)(0, col - 1);
+                    int cR = (std::min)(colCount - 1, col + 1);
+                    int rD = (std::max)(0, row - 1);
+                    int rU = (std::min)(rowCount - 1, row + 1);
+
+                    const auto& pL = vertices_[row * colCount + cL].position;
+                    const auto& pR = vertices_[row * colCount + cR].position;
+                    const auto& pD = vertices_[rD * colCount + col].position;
+                    const auto& pU = vertices_[rU * colCount + col].position;
+
+                    Vector3 tX = { pR.x - pL.x, pR.y - pL.y, pR.z - pL.z };
+                    Vector3 tZ = { pU.x - pD.x, pU.y - pD.y, pU.z - pD.z };
+
+                    Vector3 n = {
+                        tZ.y * tX.z - tZ.z * tX.y,
+                        tZ.z * tX.x - tZ.x * tX.z,
+                        tZ.x * tX.y - tZ.y * tX.x
+                    };
+                    float lenSq = n.x * n.x + n.y * n.y + n.z * n.z;
+                    if (lenSq > 1e-6f) {
+                        float invLen = 1.0f / std::sqrt(lenSq);
+                        n.x *= invLen; n.y *= invLen; n.z *= invLen;
+                    } else {
+                        n = { 0.0f, 1.0f, 0.0f };
+                    }
+                    vertices_[row * colCount + col].normal = n;
+                }
+            }
+        }
+
+        indices_.reserve(static_cast<size_t>(totalCells) * 6);
+        for (int row = 0; row < divY_; ++row) {
+            for (int col = 0; col < divX_; ++col) {
+                int cellIdx = row * divX_ + col;
+                CellType ctype = (cellIdx < static_cast<int>(cellTypes_.size())) ? cellTypes_[cellIdx] : CellType::kGround;
+
+                if (ctype == CellType::kHole) {
+                    continue;
+                }
+
+                uint32_t lb = static_cast<uint32_t>(row * colCount + col);
+                uint32_t rb = static_cast<uint32_t>(row * colCount + col + 1);
+                uint32_t lt = static_cast<uint32_t>((row + 1) * colCount + col);
+                uint32_t rt = static_cast<uint32_t>((row + 1) * colCount + col + 1);
+
+                if (ctype == CellType::kEdgeTri0) {
+                    addTriangle(lb, lt, rb);
+                } else if (ctype == CellType::kEdgeTri1) {
+                    addTriangle(rb, lt, rt);
+                } else {
+                    addTriangle(lb, lt, rb);
+                    addTriangle(rb, lt, rt);
+                }
             }
         }
     }

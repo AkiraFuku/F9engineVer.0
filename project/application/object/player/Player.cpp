@@ -453,9 +453,9 @@ void Player::UpdateRayCollisions()
                             continue;
                         }
 
-                        // 4. プレイヤーの足元が足場上面より低い場合は通過（下から頭や体がめり込んだときの引っかかり防止）
+                        // 4. プレイヤーの足元が足場上面より大幅に下（0.8m以上）にめり込んでいる場合のみ通過（下から頭や体がめり込んだときの引っかかり防止）
                         float playerBottomY = worldY_ - kHeightOffset;
-                        if (playerBottomY < tmpHit.y - 0.1f) {
+                        if (playerBottomY < tmpHit.y - 0.8f) {
                             continue;
                         }
                     }

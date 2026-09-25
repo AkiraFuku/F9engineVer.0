@@ -9,7 +9,6 @@
 #include "Vector4.h"
 #include "Vector3.h"
 #include "Vector2.h"
-//#include "Matrix4x4.h"
 #include "RenderTypes.h"
 #include "PbdSolver.h"
 #include "Camera.h"
@@ -47,9 +46,15 @@ public:
     void SetColor(const Vector4& color);
     void SetEnableLighting(bool enable);
     void SetCamera(Camera* camera) { camera_ = camera; }
-
+    /// 物理パラメータのセッター
+    /// <summary>
+    /// スタート地点
+    /// </summary>
     void SetStartPos(const Vector3& pos) { solver_.SetStartPos(pos); }
     void SetEndPos(const Vector3& pos) { solver_.SetEndPos(pos); }
+    /// <summary>
+    /// 幅・高さ (格子数)
+    /// </summary>
     void SetK(float k) { solver_.SetK(k); }
     void SetDt(float dt) { solver_.SetDt(dt); }
     void SetMass(float mass) { solver_.SetMass(mass); }

@@ -14,21 +14,31 @@ void StageBlock::Initialize(const LevelObjectData& data, Camera* camera)
     PrefabManager* prefabMgr = PrefabManager::GetInstance();
     const BlockPrefabDefinition* prefabDef = nullptr;
 
-    // 1. properties["prefab"] から検索
-    auto propPrefabIt = data.properties.find("prefab");
-    if (propPrefabIt != data.properties.end()) {
-        prefabDef = prefabMgr->FindPrefab(propPrefabIt->second);
+    // 1. properties["prefab_id"] または properties["prefab"] から検索
+    auto propPidIt = data.properties.find("prefab_id");
+    if (propPidIt != data.properties.end()) {
+        prefabDef = prefabMgr->FindPrefab(propPidIt->second);
+    }
+    if (!prefabDef) {
+        auto propPrefabIt = data.properties.find("prefab");
+        if (propPrefabIt != data.properties.end()) {
+            prefabDef = prefabMgr->FindPrefab(propPrefabIt->second);
+        }
     }
     // 2. modelName から検索
     if (!prefabDef && !data.modelName.empty()) {
         prefabDef = prefabMgr->FindPrefab(data.modelName);
     }
-    // 3. name から推測検索（例: "OneWayPlatform" または "Island"）
+    // 3. name から推測検索（例: "OneWay", "Stair", "Obstacle", "Island"）
     if (!prefabDef) {
         if (data.name.find("OneWay") != std::string::npos || data.name.find("oneway") != std::string::npos) {
             prefabDef = prefabMgr->FindPrefab("oneway_platform");
         } else if (data.name.find("Island") != std::string::npos || data.name.find("island") != std::string::npos) {
             prefabDef = prefabMgr->FindPrefab("floating_island");
+        } else if (data.name.find("Stair") != std::string::npos || data.name.find("stair") != std::string::npos) {
+            prefabDef = prefabMgr->FindPrefab("stair_step");
+        } else if (data.name.find("Obstacle") != std::string::npos || data.name.find("obstacle") != std::string::npos) {
+            prefabDef = prefabMgr->FindPrefab("standard_block");
         }
     }
 
@@ -44,7 +54,9 @@ void StageBlock::Initialize(const LevelObjectData& data, Camera* camera)
         prefabId_ = prefabDef->prefabId;
         if (modelName.empty()) modelName = prefabDef->modelName;
         if (modelDir.empty() || modelDir == "resources") modelDir = prefabDef->modelDir;
-        if (texturePath.empty()) texturePath = prefabDef->texturePath;
+        if (texturePath.empty() || texturePath == "resources/grass.png") {
+            texturePath = prefabDef->texturePath;
+        }
         if (scale.x == 1.0f && scale.y == 1.0f && scale.z == 1.0f && prefabDef->defaultScale.x != 1.0f) {
             scale = prefabDef->defaultScale;
         }

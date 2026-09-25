@@ -58,6 +58,9 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
                 continue
              if object.name.endswith("_Preview") or object.name.endswith("_preview"):
                 continue
+             # デフォルトのCubeなど、object_typeが未設定でname=="Cube"の不要オブジェクトを除外
+             if object.name == "Cube" and not object.get("object_type"):
+                continue
              self.parse_scene_recursive_json(json_object_root["objects"], object, 0)
         #エンコード
         json_text = json.dumps(json_object_root, ensure_ascii=False, cls=json.JSONEncoder, indent=4)
@@ -164,6 +167,25 @@ class MYADDON_OT_export_scene(bpy.types.Operator, bpy_extras.io_utils.ExportHelp
                 properties_map[key] = str(object[key])
         if properties_map:
             json_object["properties"] = properties_map
+
+        # ── 地形メッシュの頂点位置データ（高低差・棚田・土手形状）の出力 ──
+        if is_terrain and object.type == 'MESH' and object.data and object.data.vertices:
+            mesh = object.data
+            v_positions = []
+            for v in mesh.vertices:
+                if self.convert_to_game_coords:
+                    # Blender ローカル(X右, Y奥, Z上) -> ゲーム ローカル(X右, Y上, Z奥)
+                    v_positions.append([round(v.co.x, 4), round(v.co.z, 4), round(v.co.y, 4)])
+                else:
+                    v_positions.append([round(v.co.x, 4), round(v.co.y, 4), round(v.co.z, 4)])
+            json_object["vertex_positions"] = v_positions
+
+            # 三角形ポリゴンのインデックスを出力
+            mesh.calc_loop_triangles()
+            indices = []
+            for tri in mesh.loop_triangles:
+                indices.extend([int(tri.vertices[0]), int(tri.vertices[1]), int(tri.vertices[2])])
+            json_object["indices"] = indices
 
         if "collider" in object:
             collider = dict()

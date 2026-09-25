@@ -248,6 +248,31 @@ LevelObjectData ParseObject(const json& node, bool isGameCoords)
         }
     }
 
+    // ── 地形等の頂点位置データ ──
+    if (node.contains("vertex_positions") && node["vertex_positions"].is_array()) {
+        const auto& arr = node["vertex_positions"];
+        data.vertexPositions.reserve(arr.size());
+        for (const auto& item : arr) {
+            if (item.is_array() && item.size() >= 3) {
+                float vx = item[0].get<float>();
+                float vy = item[1].get<float>();
+                float vz = item[2].get<float>();
+                data.vertexPositions.push_back(isGameCoords ? Vector3{ vx, vy, vz } : ConvertTranslation(vx, vy, vz));
+            }
+        }
+    }
+
+    // ── 地形等のポリゴン三角形インデックスデータ ──
+    if (node.contains("indices") && node["indices"].is_array()) {
+        const auto& arr = node["indices"];
+        data.indices.reserve(arr.size());
+        for (const auto& item : arr) {
+            if (item.is_number_integer() || item.is_number_unsigned()) {
+                data.indices.push_back(item.get<uint32_t>());
+            }
+        }
+    }
+
     // ── 子オブジェクト（再帰） ──
     if (node.contains("children") && node["children"].is_array()) {
         for (const auto& child : node["children"]) {

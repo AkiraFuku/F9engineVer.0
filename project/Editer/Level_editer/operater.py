@@ -313,8 +313,8 @@ class MYADDON_OT_add_prefab_block(bpy.types.Operator):
             'STANDARD': {
                 'name': 'StandardBlock',
                 'prefab_id': 'standard_block',
-                'size': (4.0, 3.15, 1.0),
-                'texture': 'resources/grass.png',
+                'size': (3.0, 3.6, 1.0),
+                'texture': 'resources/uvChecker.png',
                 'is_oneway': False,
                 'is_collision': True,
             },
@@ -322,7 +322,7 @@ class MYADDON_OT_add_prefab_block(bpy.types.Operator):
                 'name': 'OneWayPlatform',
                 'prefab_id': 'oneway_platform',
                 'size': (3.5, 2.0, 0.25),
-                'texture': 'resources/grass.png',
+                'texture': 'resources/uvChecker.png',
                 'is_oneway': True,
                 'is_collision': True,
             },
@@ -355,15 +355,14 @@ class MYADDON_OT_add_prefab_block(bpy.types.Operator):
         cfg = configs.get(self.prefab_type, configs['STANDARD'])
         size = cfg['size']
 
-        # 直方体メッシュの生成
+        # 単位キューブ形状（±0.5）でメッシュを生成し、オブジェクトの scale に寸法を反映
         mesh = bpy.data.meshes.new(f"Mesh_{cfg['name']}")
         obj = bpy.data.objects.new(cfg['name'], mesh)
         context.collection.objects.link(obj)
 
-        hw, hl, hh = size[0] * 0.5, size[1] * 0.5, size[2] * 0.5
         verts = [
-            (-hw, -hl, -hh), (hw, -hl, -hh), (hw, hl, -hh), (-hw, hl, -hh),
-            (-hw, -hl, hh),  (hw, -hl, hh),  (hw, hl, hh),  (-hw, hl, hh),
+            (-0.5, -0.5, -0.5), (0.5, -0.5, -0.5), (0.5, 0.5, -0.5), (-0.5, 0.5, -0.5),
+            (-0.5, -0.5, 0.5),  (0.5, -0.5, 0.5),  (0.5, 0.5, 0.5),  (-0.5, 0.5, 0.5),
         ]
         faces = [
             (0, 1, 2, 3), (4, 7, 6, 5),
@@ -374,6 +373,7 @@ class MYADDON_OT_add_prefab_block(bpy.types.Operator):
         mesh.update()
 
         obj.location = cursor_loc.copy()
+        obj.scale = (size[0], size[1], size[2])
 
         # ゲームエンジン用メタデータ
         obj["object_type"] = "BLOCK"

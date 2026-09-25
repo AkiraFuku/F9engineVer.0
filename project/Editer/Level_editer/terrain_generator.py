@@ -1140,6 +1140,177 @@ def deform_terrain_mesh_to_rail(
     )
 
 
+def deform_terrain_terraces_to_rail(
+    terrain_obj,
+    rail_obj,
+    camera_side="RIGHT",
+    terrace_start_dist=3.2,
+    terrace_step_width=3.2,
+    terrace_step_height=1.25,
+    cliff_width=0.5,
+    max_steps=3,
+    auto_export_obj=False
+):
+    """
+    星のカービィ64風の『棚田（ステップ・テラス）段差地形』を地面メッシュに直接造形する。
+    1枚目溶岩画像のように、通路の奥に向かって等高線状に急な崖（高さ1.25m）と
+    平坦なテラス面（幅約3m）がシームレスに多段で連なる美しい棚田ステップを形成する。
+    """
+    if not terrain_obj or terrain_obj.type != 'MESH':
+        return False, "地形メッシュオブジェクトが見つかりません。"
+    if not rail_obj or rail_obj.type != 'CURVE':
+        return False, "レールオブジェクトが見つかりません。"
+
+    try:
+        from .road_generator import sample_curve_frenet
+    except ImportError:
+        from road_generator import sample_curve_frenet
+
+    samples = sample_curve_frenet(rail_obj, step_distance=0.25)
+    if not samples:
+        return False, "レールのサンプリングに失敗しました。"
+
+    mesh = terrain_obj.data
+    mat_world = terrain_obj.matrix_world
+    mat_inv = mat_world.inverted()
+
+    # レールサンプルの座標、接線、累積距離を計算
+    rail_pts = []
+    rail_tans = []
+    rail_dists = []
+    acc_dist = 0.0
+    for i, s in enumerate(samples):
+        p = s["pos"]
+        rail_pts.append((p.x, p.y, p.z))
+        t = s["tangent"]
+        t_xy = mathutils.Vector((t.x, t.y, 0.0))
+        if t_xy.length_squared > 1e-6:
+            t_xy.normalize()
+        else:
+            t_xy = mathutils.Vector((0.0, 1.0, 0.0))
+        rail_tans.append(t_xy)
+
+        if i > 0:
+            prev_p = samples[i - 1]["pos"]
+            acc_dist += (p - prev_p).length
+        rail_dists.append(acc_dist)
+
+    total_rail_len = max(acc_dist, 1.0)
+    num_rail = len(rail_pts)
+
+    # 背景側の符号（カメラがRIGHTなら背景は左奥: +1, LEFTなら右奥: -1）
+    bg_sign = 1.0 if camera_side == "RIGHT" else -1.0
+
+    modified_count = 0
+
+    for v in mesh.vertices:
+        w_pos = mat_world @ v.co
+        vx, vy, vz = w_pos.x, w_pos.y, w_pos.z
+
+        # XY平面上で最近接レール線分を探索
+        min_dist_sq = 1e9
+        best_foot = None
+        best_tan = None
+        best_s = 0.0
+
+        for k in range(num_rail - 1):
+            ax, ay, az = rail_pts[k]
+            bx, by, bz = rail_pts[k + 1]
+            abx = bx - ax
+            aby = by - ay
+            ab_len_sq = abx * abx + aby * aby
+            if ab_len_sq < 1e-8:
+                continue
+
+            t_param = ((vx - ax) * abx + (vy - ay) * aby) / ab_len_sq
+            t_param = max(0.0, min(1.0, t_param))
+
+            foot_x = ax + t_param * abx
+            foot_y = ay + t_param * aby
+            foot_z = az + t_param * (bz - az)
+
+            dx = vx - foot_x
+            dy = vy - foot_y
+            d_sq = dx * dx + dy * dy
+            if d_sq < min_dist_sq:
+                min_dist_sq = d_sq
+                best_foot = (foot_x, foot_y, foot_z)
+                best_tan = rail_tans[k]
+                best_s = rail_dists[k] + t_param * math.sqrt(ab_len_sq)
+
+        if not best_foot:
+            continue
+
+        foot_x, foot_y, foot_z = best_foot
+        rel_x = vx - foot_x
+        rel_y = vy - foot_y
+
+        # 背景法線ベクトル N_bg (進行方向 tan に対して時計回りに90度回転 * bg_sign)
+        n_bg_x = -best_tan.y * bg_sign
+        n_bg_y = best_tan.x * bg_sign
+
+        # 背景側への垂直距離 d_bg
+        d_bg = rel_x * n_bg_x + rel_y * n_bg_y
+
+        # 背景側かつ道（terrace_start_dist）より外側の頂点のみ棚田変形
+        if d_bg <= terrace_start_dist:
+            continue
+
+        # ── 星のカービィ64風の有機的でシームレスな棚田（テラス）計算 ──
+        # 進行方向アーク長 best_s に基づく等高線の自然な湾曲（溶岩画像のような滑らかな円弧）
+        s_norm = best_s / total_rail_len
+        wave1 = 1.8 * math.sin(best_s * 0.12)
+        wave2 = 1.0 * math.cos(best_s * 0.28 + 0.8)
+        wave3 = 0.6 * math.sin(best_s * 0.05 + 1.5)
+        terrace_offset = wave1 + wave2 + wave3
+
+        # 通路端からの有効奥行き距離
+        d_eff = d_bg + terrace_offset - terrace_start_dist
+        if d_eff <= 0.0:
+            continue
+
+        # 進行度に応じた段差のまばらさ（1段〜3段で自然に変化）
+        density_mod = 0.5 * (1.0 + math.sin(s_norm * math.pi * 3.0 + 0.8)) # 0.0〜1.0
+        cur_max_steps = max(1, min(max_steps, int(1.0 + density_mod * (max_steps - 0.5))))
+
+        # 1段目は通路端から直ちに崖（立ち上がり）が始まり、平坦テラスへ乗る
+        step_idx = int(d_eff / terrace_step_width)
+        local_u = d_eff - (step_idx * terrace_step_width)
+
+        if step_idx >= cur_max_steps:
+            # 最終段のテラス面
+            added_h = cur_max_steps * terrace_step_height
+        else:
+            base_h = step_idx * terrace_step_height
+            next_h = (step_idx + 1) * terrace_step_height
+            # 各ステップの先頭 cliff_width 区間で次の段へ一気に立ち上がる（急な崖）
+            if local_u < cliff_width:
+                t = local_u / max(cliff_width, 0.01)
+                t = min(max(t, 0.0), 1.0)
+                # スムーズステップで急崖を形成
+                w = t * t * (3.0 - 2.0 * t)
+                added_h = base_h + (next_h - base_h) * w
+            else:
+                # 崖を登りきった後は、平坦なテラス面（足場）
+                added_h = next_h
+
+        # 地面メッシュの高さに棚田の高さを上乗せ
+        target_z = vz + added_h
+
+        v.co = mat_inv @ mathutils.Vector((vx, vy, target_z))
+        modified_count += 1
+
+    mesh.update()
+
+    if auto_export_obj:
+        try:
+            export_terrain_mesh_to_obj(terrain_obj)
+        except Exception:
+            pass
+
+    return True, f"棚田段差地形を変形造形しました（{modified_count}頂点）"
+
+
 class MYADDON_OT_deform_terrain_to_rail(bpy.types.Operator):
     bl_idname = "myaddon.deform_terrain_to_rail"
     bl_label = "レールに沿って地面を変形して道をつくる"

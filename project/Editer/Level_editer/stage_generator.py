@@ -153,15 +153,15 @@ class CurveExtensionHelper:
 _BLOCK_PREFABS = {
     "standard": {
         "prefab_id": "standard_block",
-        "size": (4.0, 3.15, 1.0),
-        "texture": "resources/grass.png",
+        "size": (3.0, 3.6, 1.0), # 2枚目画像準拠: 幅3.0m, 長さ3.6m, 高さ1.0m のチェック柄プレハブサイズ
+        "texture": "resources/uvChecker.png",
         "is_oneway": False,
         "is_collision": True,
     },
     "oneway_platform": {
         "prefab_id": "oneway_platform",
         "size": (3.5, 2.0, 0.25), # 薄型のすり抜け足場
-        "texture": "resources/grass.png",
+        "texture": "resources/uvChecker.png",
         "is_oneway": True,
         "is_collision": True,
     },
@@ -280,9 +280,9 @@ class StageAIGenerator:
             helper.current_fwd = mathutils.Vector((fwd_x, fwd_y, 0.0)).normalized()
 
         # 直線主体シーケンス制御:
-        # 初期の直線カウントを1〜2に設定（カーブが適切に挟まり、単調な直線ばかりになるのを防止）
         straight_count = self.rng.randint(1, 2)
         last_turn = None
+        slope_cooldown = 0 # 高低差クールダウン（一度坂道・丘が出たら最低4セクションはフラット固定）
 
         # セクションを連続して生成
         for sec_i in range(num_sections):
@@ -302,12 +302,13 @@ class StageAIGenerator:
             if sec_i < 2 or sec_i == num_sections - 1:
                 sec_type = "STRAIGHT"
             elif straight_count > 0:
-                # 快適に走れるまとまった直線区間（基本はフラット主体。高低差は適度なアクセントとしてのみ発生）
-                if slope_prob > 0.2 and self.rng.random() < slope_prob * 0.22:
+                # 快適に走れるまとまった直線区間（基本はフラット水平レール。高低差はクールダウンなし時のみ極めて稀に発生）
+                if slope_cooldown <= 0 and slope_prob > 0.25 and self.rng.random() < slope_prob * 0.10:
                     slope_choices = ["HILL_SMALL", "DIP_SMALL", "SLOPE_GENTLE_UP", "SLOPE_GENTLE_DOWN"]
-                    if slope_prob > 0.6:
-                        slope_choices.extend(["SLOPE_STEEP_UP", "SLOPE_STEEP_DOWN", "HILL_LARGE", "DIP_DEEP"])
+                    if slope_prob > 0.7:
+                        slope_choices.extend(["SLOPE_STEEP_UP", "SLOPE_STEEP_DOWN"])
                     sec_type = self.rng.choice(slope_choices)
+                    slope_cooldown = 4 # 次の高低差まで4セクション間隔を空ける
                 else:
                     sec_type = "STRAIGHT"
                 straight_count -= 1
@@ -320,11 +321,10 @@ class StageAIGenerator:
                 if curve_prob > 0.6:
                     candidates.append("S_CURVE")
 
-                # カーブ区間での高低差は稀なアクセント程度に抑制
-                if slope_prob > 0.4 and self.rng.random() < 0.25:
+                # カーブ区間では原則フラット。超高slope設定かつクールダウン完了時のみ稀に高低差追加
+                if slope_cooldown <= 0 and slope_prob > 0.6 and self.rng.random() < 0.15:
                     candidates.extend(["HILL_SMALL", "DIP_SMALL"])
-                    if slope_prob > 0.7:
-                        candidates.extend(["SLOPE_GENTLE_UP", "SLOPE_GENTLE_DOWN"])
+                    slope_cooldown = 4
 
                 chosen = self.rng.choice(candidates)
                 # 連続で同じ方向に直角に曲がってループするのを抑制
@@ -339,6 +339,9 @@ class StageAIGenerator:
 
                 # カーブを抜けたら、新しい向きで再び1〜3セクション直線が続く！
                 straight_count = self.rng.randint(1, 3)
+
+            if slope_cooldown > 0:
+                slope_cooldown -= 1
 
             # スタート地点周辺（sec_i < 2）およびゴール前は落とし穴確率を0にして安全を保証
             sec_gap_prob = 0.0 if sec_i < 2 or sec_i == num_sections - 1 else gap_prob
@@ -410,7 +413,8 @@ class StageAIGenerator:
             if settings.get("deform_terrain_auto", True) and ground_obj:
                 context.view_layer.update()
                 try:
-                    from .terrain_generator import deform_terrain_mesh_to_rail
+                    from .terrain_generator import deform_terrain_mesh_to_rail, deform_terrain_terraces_to_rail
+                    # 1. レール直下の道路・法面を変形
                     deform_terrain_mesh_to_rail(
                         terrain_obj=ground_obj,
                         rail_obj=rail_obj,
@@ -418,6 +422,18 @@ class StageAIGenerator:
                         slope_width=4.0,
                         offset_z=-0.1,
                         falloff="SMOOTH",
+                        auto_export_obj=False
+                    )
+                    # 2. 星のカービィ64風の棚田（ステップ・テラス）段差地形を地面メッシュに直接造形
+                    deform_terrain_terraces_to_rail(
+                        terrain_obj=ground_obj,
+                        rail_obj=rail_obj,
+                        camera_side=camera_side,
+                        terrace_start_dist=3.2,
+                        terrace_step_width=3.2,
+                        terrace_step_height=1.25,
+                        cliff_width=0.5,
+                        max_steps=3,
                         auto_export_obj=False
                     )
                 except Exception:
@@ -430,6 +446,17 @@ class StageAIGenerator:
                             slope_width=4.0,
                             offset_z=-0.1,
                             falloff="SMOOTH",
+                            auto_export_obj=False
+                        )
+                        terrain_generator.deform_terrain_terraces_to_rail(
+                            terrain_obj=ground_obj,
+                            rail_obj=rail_obj,
+                            camera_side=camera_side,
+                            terrace_start_dist=3.2,
+                            terrace_step_width=3.2,
+                            terrace_step_height=1.25,
+                            cliff_width=0.5,
+                            max_steps=3,
                             auto_export_obj=False
                         )
                     except Exception as ex:
@@ -480,24 +507,24 @@ class StageAIGenerator:
                             )
 
                         # ── 2. 背景部分地形の盛り上げ（丘・高台・段差）と押し下げ（窪み・谷） ──
-                        # レールから奥側へ 7m〜15m 離れた背景エリアに立体的な起伏を自動造成
-                        if self.rng.random() < 0.65:
-                            bg_dist = self.rng.uniform(7.5, 14.5)
+                        # 高台が密集しないよう3〜4セクションに1箇所程度（約32%）に抑え、ゆったり奥側に造成
+                        if self.rng.random() < 0.32:
+                            bg_dist = self.rng.uniform(9.0, 16.0)
                             bg_center = sec_center + bg_normal * bg_dist
                             # Z座標はレールの高さを基準に設定
                             bg_center.z = sec_center.z
 
                             bg_sides = self.rng.choice([5, 6, 8])
-                            bg_radius = self.rng.uniform(3.5, 5.5)
+                            bg_radius = self.rng.uniform(3.2, 4.8)
 
-                            # 60%の確率で「盛り上げ（丘・高台・段差）」、40%の確率で「押し下げ（窪み・谷）」
-                            is_mound = (self.rng.random() < 0.60)
+                            # 高台ばかりにならないよう「高台: 35%」「窪み: 65%」の自然な黄金比率
+                            is_mound = (self.rng.random() < 0.35)
                             if is_mound:
-                                # 負のdepthで上方向に押し上げて丘・高台・段差を形成
-                                bg_depth = -self.rng.uniform(1.3, 2.6)
+                                # 控えめで自然な段差（-0.8m 〜 -1.6m）で高台を形成（壁のような圧迫感を解消）
+                                bg_depth = -self.rng.uniform(0.8, 1.6)
                             else:
-                                # 正のdepthで下方向に押し下げて窪み・盆地を形成
-                                bg_depth = self.rng.uniform(1.2, 2.2)
+                                # 緩やかな窪み・盆地（1.0m 〜 1.8m）
+                                bg_depth = self.rng.uniform(1.0, 1.8)
 
                             carve_prism_depression_in_terrain(
                                 terrain_obj=ground_obj,
@@ -505,7 +532,7 @@ class StageAIGenerator:
                                 sides=bg_sides,
                                 radius=bg_radius,
                                 depth=bg_depth,
-                                bevel_ratio=self.rng.uniform(0.2, 0.35),
+                                bevel_ratio=self.rng.uniform(0.25, 0.40),
                                 rotation_rad=self.rng.uniform(0, 3.14),
                                 auto_subdivide=True,
                                 auto_export_obj=False
@@ -1153,17 +1180,35 @@ class StageAIGenerator:
                     blocks.append(blk)
 
                 # ─── コースレール上のプレハブ障害物・足場配置（PLAINS / PLATFORM 共通、直線優先） ───
-                # ユーザー要望: コースレール上にプレハブの障害物や足場を配置する
-                oneway_prob = 0.35 if is_straight_sec else 0.06
+                # ユーザー要望: コースレール上にプレハブの障害物や足場（特にすり抜け足場）をバランスよく配置する
+                oneway_prob = 0.45 if is_straight_sec else 0.22
                 if spawn_blocks and not is_hole and not is_step_section and s_idx >= 1 and s_idx < len(section_infos) - 1:
                     if self.rng.random() < oneway_prob and (step == num_steps // 2 or (is_straight_sec and step == 1)):
-                        # 直線区間では頭上すり抜け足場、レール上階段ステップ、または障害物ブロックを配置
-                        choice = self.rng.choice(["oneway", "stair", "obstacle"])
+                        # すり抜け足場を最優先に配置
+                        choice = self.rng.choices(["oneway", "obstacle", "stair"], weights=[0.55, 0.30, 0.15])[0]
                         if choice == "oneway":
                             oneway_prefab = _BLOCK_PREFABS["oneway_platform"]
+                            # すり抜け床が地面メッシュのすぐそばに生成されないよう、
+                            # 最低でもレール上面から +3.2m、直下に地面があれば地面から +3.0m 以上の頭上高さを保証
+                            ground_z = interp_pos.z
+                            terrain_mesh_obj = bpy.data.objects.get("TerrainGround")
+                            if terrain_mesh_obj and terrain_mesh_obj.type == 'MESH':
+                                try:
+                                    mw = terrain_mesh_obj.matrix_world
+                                    imw = mw.inverted()
+                                    ray_origin = imw @ mathutils.Vector((interp_pos.x, interp_pos.y, interp_pos.z + 10.0))
+                                    ray_dir = mathutils.Vector((0, 0, -1))
+                                    hit, loc, norm, f_idx = terrain_mesh_obj.ray_cast(ray_origin, ray_dir)
+                                    if hit:
+                                        hit_world = mw @ loc
+                                        ground_z = max(ground_z, hit_world.z)
+                                except Exception:
+                                    pass
+
+                            platform_z = max(interp_pos.z + 3.2, ground_z + 3.0)
                             oneway_blk = self._create_stage_block(
                                 f"OneWayPlatform_S{s_idx}_{step}",
-                                interp_pos + mathutils.Vector((0, 0, 2.5)),
+                                mathutils.Vector((interp_pos.x, interp_pos.y, platform_z)),
                                 oneway_prefab["size"],
                                 yaw,
                                 oneway_prefab["texture"],
@@ -1189,12 +1234,12 @@ class StageAIGenerator:
                             )
                             blocks.append(stair_blk)
                         elif choice == "obstacle" and environment == "PLAINS":
-                            # 平原レール脇の木箱・障害物
-                            obs_x = self.rng.choice([-1.2, 1.2])
+                            # 2枚目画像準拠: レール上に置かれるチェック柄プレハブ（幅3.0m, 長さ3.6m, 高さ1.0m）
+                            # レール中央にジャスト配置（上面がレール+1.0mにちょうど乗れるようZ+0.5m）
                             obs_blk = self._create_stage_block(
                                 f"ObstacleBlock_S{s_idx}_{step}",
-                                interp_pos + mathutils.Vector((obs_x, 0, 0.6)),
-                                (1.4, 1.4, 1.2),
+                                interp_pos + mathutils.Vector((0, 0, 0.5)),
+                                (3.0, 3.6, 1.0),
                                 yaw,
                                 "resources/grass.png",
                                 collection,
@@ -1296,13 +1341,10 @@ class StageAIGenerator:
         obj = bpy.data.objects.new(name, mesh)
         collection.objects.link(obj)
 
-        # キューブ形状を直接頂点で生成（高速かつ確実）
-        hw = size[0] * 0.5
-        hl = size[1] * 0.5
-        hh = size[2] * 0.5
+        # 単位キューブ形状（±0.5）でメッシュを生成し、オブジェクトの scale に寸法を反映
         verts = [
-            (-hw, -hl, -hh), (hw, -hl, -hh), (hw, hl, -hh), (-hw, hl, -hh),
-            (-hw, -hl, hh),  (hw, -hl, hh),  (hw, hl, hh),  (-hw, hl, hh),
+            (-0.5, -0.5, -0.5), (0.5, -0.5, -0.5), (0.5, 0.5, -0.5), (-0.5, 0.5, -0.5),
+            (-0.5, -0.5, 0.5),  (0.5, -0.5, 0.5),  (0.5, 0.5, 0.5),  (-0.5, 0.5, 0.5),
         ]
         faces = [
             (0, 1, 2, 3), (4, 7, 6, 5),
@@ -1314,6 +1356,7 @@ class StageAIGenerator:
 
         obj.location = pos
         obj.rotation_euler = (0, 0, yaw)
+        obj.scale = (size[0], size[1], size[2])
 
         # ゲームエンジン用メタデータ
         obj["object_type"] = "BLOCK"
@@ -1427,12 +1470,13 @@ class StageAIGenerator:
 
                 bg_pos = mid_pos + right * (offset_dist * side_dir)
 
-                # 1. 背景の段差・テラス（起伏のあるステップ構造ブロック群）
-                if self.rng.random() < (0.65 if not is_foreground else 0.2):
+                # 1. 背景の段差・テラス（地面メッシュがない空中足場形式 PLATFORM 等でのみブロック生成）
+                # 平原（PLAINS）では地面メッシュ自体が直接棚田段差に変形するため、外付けブロックは生成しない
+                if environment != "PLAINS" and self.rng.random() < (0.45 if not is_foreground else 0.15):
                     step_height = self.rng.uniform(2.0, 5.0)
                     step_w = self.rng.uniform(5.0, 9.0)
                     step_l = self.rng.uniform(7.0, 12.0)
-                    terrace_z = mid_pos.z + (step_height * 0.5) - (0.5 if environment == "PLAINS" else 1.0)
+                    terrace_z = mid_pos.z + (step_height * 0.5) - 1.0
                     terrace_pos = mathutils.Vector((bg_pos.x, bg_pos.y, terrace_z))
 
                     terrace_blk = self._create_stage_block(
@@ -1440,7 +1484,7 @@ class StageAIGenerator:
                         terrace_pos,
                         (step_w, step_l, step_height),
                         yaw + self.rng.uniform(-0.2, 0.2),
-                        "resources/Stagemap/863603.png" if environment == "PLAINS" else "resources/grass.png",
+                        "resources/grass.png",
                         collection,
                         is_oneway=False,
                         prefab_id="standard_block",

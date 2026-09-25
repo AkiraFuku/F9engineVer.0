@@ -263,22 +263,9 @@ void StageManager::Draw()
         terrain_->Draw();
     }
 
-    auto instRenderer = InstancedBlockRenderer::GetInstance();
-    if (instRenderer->IsEnabled()) {
-        // GPU インスタンシングによる一括描画（DrawCall を劇的削減）
-        instRenderer->Begin();
-        for (auto& block : blocks_) {
-            instRenderer->AddBlock(block.get(), camera_);
-        }
-        for (auto& prop : props_) {
-            instRenderer->AddBlock(prop.get(), camera_);
-        }
-        instRenderer->Render(camera_);
-    } else {
-        // フォールバック（個別描画）
-        for (auto& block : blocks_)  block->Draw();
-        for (auto& prop  : props_)   prop->Draw();
-    }
+    // ブロック＆装飾オブジェクトの個別描画（各プレハブ固有のテクスチャ・モデルを確実に反映）
+    for (auto& block : blocks_)  block->Draw();
+    for (auto& prop  : props_)   prop->Draw();
 
     for (auto& rope  : ropes_)   rope->Draw();
     for (auto& cloth : cloths_)  cloth->Draw();
