@@ -5,6 +5,15 @@ std::vector<std::unique_ptr<ICommand>> InputHandler::HandleInput()
 {
     std::vector<std::unique_ptr<ICommand>> commands;
     Input* input = Input::GetInstance();
+    // 0. ダッシュ入力の処理 (Shiftキー、RB/LBボタン、Lスティック押し込み)
+    if (input->PushedKeyDown(DIK_LSHIFT) || input->PushedKeyDown(DIK_RSHIFT) ||
+        input->PushPadDown(0, XINPUT_GAMEPAD_RIGHT_SHOULDER) ||
+        input->PushPadDown(0, XINPUT_GAMEPAD_LEFT_SHOULDER) ||
+        input->PushPadDown(0, XINPUT_GAMEPAD_LEFT_THUMB))
+    {
+        commands.push_back(std::make_unique<DashCommand>());
+    }
+
     // 1. スティック移動の処理
     XINPUT_STATE state;
     if (input->GetJoyStick(0, state) || (input->PushedKeyDown(DIK_A) || input->PushedKeyDown(DIK_D)))

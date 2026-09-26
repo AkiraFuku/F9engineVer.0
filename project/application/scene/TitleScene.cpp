@@ -133,7 +133,9 @@ void TitleScene::Draw() {
     if (cloth_) {
         cloth_->Draw();
     }
- //   sprite->Draw();
+    if (currentPhase_) {
+        currentPhase_->Draw(this);
+    }
 }
 
 

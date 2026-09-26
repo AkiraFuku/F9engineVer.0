@@ -92,6 +92,15 @@ void Player::Update()
 
     if (baseState_) baseState_->Update(this);
 
+    // 接地状態と移動入力から歩き・ダッシュ・待機の移動状態を決定
+    if (!isGrounded_ || !isMoving_) {
+        moveState_ = MoveState::Idle;
+    } else if (isDashing_) {
+        moveState_ = MoveState::Dash;
+    } else {
+        moveState_ = MoveState::Walk;
+    }
+
     UpdateRailPath();
     ImGuiDrawDebugInfo();
 }
@@ -192,7 +201,11 @@ void Player::SetRail(RailPath* rail)
 
 void Player::Move(float ratio)
 {
-    railMover_->Advance(ratio * (kMoveSpeed_ * deltaTime_));
+    if (std::abs(ratio) > 0.001f) {
+        isMoving_ = true;
+    }
+    float speed = isDashing_ ? kDashSpeed_ : kWalkSpeed_;
+    railMover_->Advance(ratio * (speed * deltaTime_));
 }
 
 void Player::Jump()
@@ -674,6 +687,10 @@ void Player::UpdateRayCollisions()
 }
 void Player::HandleInput()
 {
+    // 毎フレームの入力処理開始時に移動フラグ・ダッシュフラグをリセット
+    isDashing_ = false;
+    isMoving_ = false;
+
     // ノックバック中は操作不能にする
     if (isKnockback_) {
         return;
@@ -772,6 +789,12 @@ void Player::ImGuiDrawDebugInfo() {
     } else {
         ImGui::Text("Behavior: None");
     }
+
+    const char* moveStateStr = "Idle";
+    if (moveState_ == MoveState::Walk) moveStateStr = "Walk";
+    else if (moveState_ == MoveState::Dash) moveStateStr = "Dash (Running)";
+    ImGui::Text("Move State: %s (Dashing: %s)", moveStateStr, isDashing_ ? "YES" : "NO");
+    ImGui::Text("Current Speed: %.1f m/s", isDashing_ ? kDashSpeed_ : kWalkSpeed_);
     ImGui::Separator();
 
     if (isKnockback_) {

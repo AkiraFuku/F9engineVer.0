@@ -27,6 +27,11 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
 
     auto moveAction = state->GetMoveAction();
 
+    if (dynamic_cast<DashCommand*>(command)) {
+        player->SetDashing(true);
+        return;
+    }
+
     if (auto moveCmd = dynamic_cast<MoveCommand*>(command)) {
         if (moveAction) {
             static_cast<NormalMoveAction*>(moveAction)->SetSpeed(moveCmd->GetSpeed());

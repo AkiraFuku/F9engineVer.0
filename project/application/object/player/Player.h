@@ -115,6 +115,19 @@ public:
         return isGrounded_;
     }
 
+    enum class MoveState {
+        Idle, // 待機
+        Walk, // 歩き
+        Dash  // 走り（ダッシュ）
+    };
+
+    MoveState GetMoveState() const { return moveState_; }
+    bool IsDashing() const { return isDashing_; }
+    void SetDashing(bool dashing) { isDashing_ = dashing; }
+    bool IsMoving() const { return isMoving_; }
+    float GetWalkSpeed() const { return kWalkSpeed_; }
+    float GetDashSpeed() const { return kDashSpeed_; }
+
     Vector3 GetDirection() const;
     int GetMoveDirection() const;
     void CheckGroundCollision();
@@ -225,7 +238,14 @@ private:
     std::unique_ptr<Object3d> object_;
     std::unique_ptr<Animation> animation;
 
-    const float kMoveSpeed_ = 12.0f;
+    const float kWalkSpeed_ = 7.5f;   // 通常歩き速度 (m/s)
+    const float kDashSpeed_ = 15.0f;  // ダッシュ走り速度 (m/s)
+    const float kMoveSpeed_ = 12.0f;  // 互換用
+
+    MoveState moveState_ = MoveState::Idle;
+    bool isDashing_ = false;
+    bool isMoving_ = false;
+
     void HandleInput();
     void HandleDamage();
     void HandleKnockback();
