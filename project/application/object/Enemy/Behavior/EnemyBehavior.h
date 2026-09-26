@@ -29,3 +29,19 @@ private:
     std::unique_ptr<IEnemyAction> currentAction_;
 
 };
+
+class EnemyBehaviorChase : public IEnemyBehavior {
+public:
+    EnemyBehaviorChase();
+    ~EnemyBehaviorChase() override;
+
+    void Initialize(Enemy* enemy) override;
+    void Update(Enemy* enemy) override;
+    void Finalize(Enemy* enemy) override;
+    const char* GetName() const override {
+        return "Chase";
+    }
+
+private:
+    std::unique_ptr<IEnemyAction> currentAction_;
+};

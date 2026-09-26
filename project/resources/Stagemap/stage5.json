@@ -80711,7 +80711,7 @@
             "object_type": "ENEMY",
             "file_name": "taru.obj",
             "model_dir": "resources",
-            "enemy_type": "Normal",
+            "enemy_type": "Chase",
             "rail_pos": [
                 2.4,
                 4.592

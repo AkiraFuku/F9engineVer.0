@@ -70,7 +70,7 @@ public:
     GameScene();
     ~GameScene() override;
 
-    void AddEnemy(Vector2 pos, Enemy::EnemyType enemyType = Enemy::EnemyType::Normal);
+    Enemy* AddEnemy(Vector2 pos, Enemy::EnemyType enemyType = Enemy::EnemyType::Normal, const std::unordered_map<std::string, std::string>& properties = {});
     void AddProjectile(const Projectile::ProjectileSpawnParam& param, Projectile::ProjectileOwner owner);
     void AddTriangles(std::vector<Triangle> triangles);
 
@@ -146,6 +146,7 @@ private:
         Enemy::EnemyType enemyType = Enemy::EnemyType::Normal;
         float triggerDistance = 25.0f; // 感知距離
         bool hasSpawned = false;       // 一度出現したら機能停止
+        std::unordered_map<std::string, std::string> properties;
     };
     std::vector<EnemySpawnTrigger> enemySpawnTriggers_;
     void UpdateEnemySpawners();

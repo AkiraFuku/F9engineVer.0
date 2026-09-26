@@ -282,30 +282,49 @@ def load_obj_mesh_converted(filepath, tex_path=None, mesh_name=None, convert_coo
     return mesh_data
 
 
-def get_or_load_preview_mesh(obj_type, force_reload=False):
+def get_or_load_preview_mesh(obj_type, enemy_type=None, force_reload=False):
     """ENEMY, PLAYER_SPAWN, GOAL 用のプレビューメッシュを取得（ゲーム座標 -> Blender座標変換済み・キャッシュ付き）"""
     global _preview_mesh_cache
+
+    cache_key = obj_type
     mesh_name = f"Mesh_Preview_{obj_type}"
 
+    if obj_type == "ENEMY":
+        ekey = enemy_type if enemy_type else "Normal"
+        cache_key = f"ENEMY_{ekey}"
+        mesh_name = f"Mesh_Preview_ENEMY_{ekey}"
+
     if force_reload:
-        _preview_mesh_cache.pop(obj_type, None)
+        _preview_mesh_cache.pop(cache_key, None)
         if mesh_name in bpy.data.meshes:
             bpy.data.meshes.remove(bpy.data.meshes[mesh_name], do_unlink=True)
 
-    if not force_reload and obj_type in _preview_mesh_cache:
-        mesh = _preview_mesh_cache[obj_type]
+    if not force_reload and cache_key in _preview_mesh_cache:
+        mesh = _preview_mesh_cache[cache_key]
         if mesh and mesh.name in bpy.data.meshes:
             return mesh
 
     if not force_reload and mesh_name in bpy.data.meshes:
-        _preview_mesh_cache[obj_type] = bpy.data.meshes[mesh_name]
+        _preview_mesh_cache[cache_key] = bpy.data.meshes[mesh_name]
         return bpy.data.meshes[mesh_name]
 
     root = get_project_root()
+
+    # 敵タイプに応じたテクスチャ選択
+    enemy_tex = "taru.png"
+    if obj_type == "ENEMY":
+        ekey = (enemy_type or "Normal").lower()
+        if "chase" in ekey:
+            enemy_tex = "taru3.png"
+        elif "bound" in ekey:
+            enemy_tex = "taru2.png"
+        else:
+            enemy_tex = "taru.png"
+
     model_configs = {
         "ENEMY": {
             "obj_rel": os.path.join("resources", "taru", "taru.obj"),
-            "tex_rel": os.path.join("resources", "taru", "taru.png"),
+            "tex_rel": os.path.join("resources", "taru", enemy_tex),
         },
         "PLAYER_SPAWN": {
             "obj_rel": os.path.join("resources", "player", "player.obj"),
@@ -327,7 +346,7 @@ def get_or_load_preview_mesh(obj_type, force_reload=False):
     if os.path.exists(obj_path):
         mesh_data = load_obj_mesh_converted(obj_path, tex_path, mesh_name=mesh_name, convert_coords=True)
         if mesh_data:
-            _preview_mesh_cache[obj_type] = mesh_data
+            _preview_mesh_cache[cache_key] = mesh_data
             return mesh_data
 
     # フォールバック
@@ -556,7 +575,7 @@ def _import_object_recursive(objects_json, parent=None, clear_existing=True, con
             # ENEMY, PLAYER_SPAWN, GOAL は 3D座標(Empty)ではなくモデルメッシュで描画
             preview_mesh = None
             if obj_type in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
-                preview_mesh = get_or_load_preview_mesh(obj_type)
+                preview_mesh = get_or_load_preview_mesh(obj_type, enemy_type=enemy_type)
 
             if preview_mesh:
                 blender_obj = bpy.data.objects.new(name, preview_mesh)

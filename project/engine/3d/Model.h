@@ -128,7 +128,7 @@ public:
     void Initialize(const std::string& directryPath, const std::string& filename);
     void Update();
 
-    void Draw(const Matrix4x4& worldMatrix = Makeidentity4x4());
+    void Draw(const Matrix4x4& worldMatrix = Makeidentity4x4(), std::optional<uint32_t> customTextureIndex = std::nullopt);
     void DrawInstanced(uint32_t instanceCount);
     void SetAnimation(Animation* animation) {
         animation_ = animation;

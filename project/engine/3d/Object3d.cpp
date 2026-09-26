@@ -112,14 +112,22 @@ void Object3d::Draw()
 
 
     if (model_) {
-        model_->Draw(GetWorldMatrix());
+        model_->Draw(GetWorldMatrix(), customTextureIndex_);
     }
 }
 
 void Object3d::SetModel(const std::string& filePath)
 {
     model_ = ModelManager::GetInstance()->findModel(filePath);
+    customTextureIndex_ = std::nullopt; // モデル変更時は個別テクスチャをリセット
 }
+
+void Object3d::SetTexture(const std::string& textureFilePath)
+{
+    TextureManager::GetInstance()->LoadTexture(textureFilePath);
+    customTextureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+}
+
 
 
 void Object3d::CreateWVPResource()

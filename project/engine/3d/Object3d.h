@@ -12,7 +12,9 @@
 #include "MathFunction.h"
 #include "SkyBox.h"
 #include <numbers>
+#include <optional>
 #include "RenderTypes.h"
+
 class Animation;
 class Object3d
 {
@@ -161,16 +163,20 @@ void SetRotateDegree(const Vector3& rotateDegree) {
     worldTransform_.rotate.y = ToRadians(rotateDegree.y);
     worldTransform_.rotate.z = ToRadians(rotateDegree.z);
 }
-void SetTexture(std::string textureFilePath){
-
-
-    model_->SetTexture(textureFilePath);
+void SetTexture(const std::string& textureFilePath);
+void SetTextureByIndex(uint32_t textureIndex) {
+    customTextureIndex_ = textureIndex;
+}
+void ResetTexture() {
+    customTextureIndex_ = std::nullopt;
 }
 
 private:
 
     //float radius_ = 1.0f;
     std::shared_ptr<Model> model_ = nullptr;
+    std::optional<uint32_t> customTextureIndex_ = std::nullopt; // 個別オーバーライド用テクスチャ
+
     //WVP行列リソース
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_;
     TransformationMatrix* wvpResource_ = nullptr;

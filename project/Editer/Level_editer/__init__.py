@@ -39,6 +39,8 @@ from .operater import (
     MYADDON_OT_add_slope_block,
     MYADDON_OT_add_stairs_block,
     MYADDON_OT_add_prefab_block,
+    MYADDON_OT_set_enemy_type,
+    MYADDON_OT_add_enemy,
 )
 from .export_scene import MYADDON_OT_export_scene
 from .import_scene import MYADDON_OT_import_scene
@@ -106,6 +108,14 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
         self.layout.operator(MYADDON_OT_add_slope_block.bl_idname, text=MYADDON_OT_add_slope_block.bl_label, icon='MOD_SOLIDIFY')
         self.layout.operator(MYADDON_OT_add_stairs_block.bl_idname, text=MYADDON_OT_add_stairs_block.bl_label, icon='MOD_BEVEL')
         self.layout.separator()
+        row_e = self.layout.row(align=True)
+        op_e1 = row_e.operator(MYADDON_OT_add_enemy.bl_idname, text="通常敵 (Normal)", icon='MESH_CYLINDER')
+        op_e1.enemy_type = 'Normal'
+        op_e2 = row_e.operator(MYADDON_OT_add_enemy.bl_idname, text="バウンド敵 (Bound)", icon='IPO_BOUNCE')
+        op_e2.enemy_type = 'Bound'
+        op_e3 = row_e.operator(MYADDON_OT_add_enemy.bl_idname, text="追跡敵 (Chase - taru3)", icon='TRACKING')
+        op_e3.enemy_type = 'Chase'
+        self.layout.separator()
         self.layout.operator(MYADDON_OT_sync_camera_rail.bl_idname, text=MYADDON_OT_sync_camera_rail.bl_label, icon='CAMERA_DATA')
         self.layout.operator(MYADDON_OT_enter_rail_draw_tool.bl_idname, text="カーブペン描画ツール起動", icon='EDITMODE_HLT')
 
@@ -122,6 +132,8 @@ classes = (
     MYADDON_OT_add_slope_block,
     MYADDON_OT_add_stairs_block,
     MYADDON_OT_add_prefab_block,
+    MYADDON_OT_set_enemy_type,
+    MYADDON_OT_add_enemy,
     MYADDON_OT_stretch_vertex,
     MYADDON_OT_add_filwname,
     OBJECT_PT_file_name,

@@ -75,15 +75,15 @@ class MYADDON_OT_set_object_type(bpy.types.Operator):
         obj = context.object
         obj["object_type"] = self.target_type
 
-        # ENEMY, PLAYER_SPAWN, GOAL に設定された場合、プレビューモデルメッシュを自動適用
         if self.target_type in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
+            enemy_type = obj.get("enemy_type", "Normal")
             try:
                 from .import_scene import get_or_load_preview_mesh
-                mesh = get_or_load_preview_mesh(self.target_type)
+                mesh = get_or_load_preview_mesh(self.target_type, enemy_type=enemy_type)
             except Exception:
                 try:
                     import import_scene
-                    mesh = import_scene.get_or_load_preview_mesh(self.target_type)
+                    mesh = import_scene.get_or_load_preview_mesh(self.target_type, enemy_type=enemy_type)
                 except Exception:
                     mesh = None
 
@@ -125,7 +125,7 @@ class MYADDON_OT_apply_all_preview_models(bpy.types.Operator):
                 get_or_load_preview_mesh = None
 
         # 既存のプレビューメッシュを削除して再読み込みを保証
-        for ot in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
+        for ot in ["ENEMY", "PLAYER_SPAWN", "GOAL", "ENEMY_Normal", "ENEMY_Bound", "ENEMY_Chase"]:
             m_name = f"Mesh_Preview_{ot}"
             if m_name in bpy.data.meshes:
                 bpy.data.meshes.remove(bpy.data.meshes[m_name], do_unlink=True)
@@ -138,7 +138,7 @@ class MYADDON_OT_apply_all_preview_models(bpy.types.Operator):
         for obj in list(bpy.data.objects):
             ot = obj.get("object_type", "")
             if ot in ["ENEMY", "PLAYER_SPAWN", "GOAL"]:
-                mesh = get_or_load_preview_mesh(ot)
+                mesh = get_or_load_preview_mesh(ot, enemy_type=obj.get("enemy_type", "Normal"))
                 if not mesh:
                     continue
 

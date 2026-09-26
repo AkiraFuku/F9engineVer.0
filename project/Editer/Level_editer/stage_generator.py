@@ -1297,12 +1297,24 @@ class StageAIGenerator:
                         # 穴の手前に構える敵
                         if self.rng.random() < enemy_prob * 1.2:
                             should_spawn_enemy = True
-                            enemy_type = "Bound" if self.rng.random() < 0.5 else "Normal"
+                            r = self.rng.random()
+                            if r < 0.4:
+                                enemy_type = "Bound"
+                            elif r < 0.7:
+                                enemy_type = "Chase"
+                            else:
+                                enemy_type = "Normal"
                     elif not is_hole and step == num_steps // 2:
                         # 区間の中央に配置
                         if self.rng.random() < enemy_prob:
                             should_spawn_enemy = True
-                            enemy_type = "Normal" if self.rng.random() < 0.7 else "Bound"
+                            r = self.rng.random()
+                            if r < 0.5:
+                                enemy_type = "Normal"
+                            elif r < 0.8:
+                                enemy_type = "Bound"
+                            else:
+                                enemy_type = "Chase"
 
                 if should_spawn_enemy:
                     # レール上のグローバル進行度 t を正確に計算
@@ -1550,8 +1562,20 @@ class StageAIGenerator:
 
     def _create_enemy(self, name, pos, yaw, enemy_type, rail_pos, preview_mesh, collection):
         """エネミー（ENEMY）オブジェクトを生成"""
-        if preview_mesh:
-            obj = bpy.data.objects.new(name, preview_mesh)
+        # 敵タイプに応じたプレビューメッシュを取得
+        mesh = None
+        try:
+            from .import_scene import get_or_load_preview_mesh
+            mesh = get_or_load_preview_mesh("ENEMY", enemy_type=enemy_type)
+        except Exception:
+            try:
+                import import_scene
+                mesh = import_scene.get_or_load_preview_mesh("ENEMY", enemy_type=enemy_type)
+            except Exception:
+                mesh = preview_mesh
+
+        if mesh:
+            obj = bpy.data.objects.new(name, mesh)
         else:
             obj = bpy.data.objects.new(name, None)
             obj.empty_display_type = 'ARROWS'
@@ -1563,9 +1587,26 @@ class StageAIGenerator:
         # ゲームエンジン用メタデータ
         obj["object_type"] = "ENEMY"
         obj["enemy_type"] = enemy_type
-        obj["file_name"] = "taru.obj"
-        obj["model_dir"] = "resources"
+        obj["file_name"] = "taru"
+        obj["model_dir"] = "resources/taru"
         obj["rail_pos"] = list(rail_pos)
+        obj["spawn_mode"] = "TRIGGER_SPAWN"
+        obj["spawn_distance"] = 25.0
+
+        if enemy_type == "Chase":
+            obj["texture"] = "resources/taru/taru3.png"
+            obj["search_radius"] = 10.0
+            obj["lost_distance"] = 14.0
+            obj["chase_speed"] = 5.5
+            obj["patrol_speed"] = 2.0
+            obj["prop_search_radius"] = "10.0"
+            obj["prop_lost_distance"] = "14.0"
+            obj["prop_chase_speed"] = "5.5"
+            obj["prop_patrol_speed"] = "2.0"
+        elif enemy_type == "Bound":
+            obj["texture"] = "resources/taru/taru2.png"
+        else:
+            obj["texture"] = "resources/taru/taru.png"
 
         return obj
 

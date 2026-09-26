@@ -30,8 +30,10 @@ void Enemy::Initialize()
 
     object_->Initialize();
     object_->SetModel("taru.obj");
+    object_->SetTexture("resources/taru/taru.png"); // 通常エネミー用テクスチャを明示設定
     object_->SetScale({ 0.9f,0.9f,0.9f });
     object_->SetRotate({ 90.0f,0.0f,0.0f });
+
 
 
     railMover_ = std::make_unique<RailMover>();

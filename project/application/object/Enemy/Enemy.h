@@ -21,6 +21,7 @@ public:
     {
         Normal,
         Bound,
+        Chase,
     };
 
 

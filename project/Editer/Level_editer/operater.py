@@ -1,4 +1,6 @@
 import bpy
+import os
+import mathutils
 
 try:
     from .stretch_vertex import MYADDON_OT_stretch_vertex
@@ -83,9 +85,134 @@ class OBJECT_PT_behavior_tree(bpy.types.Panel):
             layout.operator(MYADDON_OT_add_behavior_tree.bl_idname, text="Behavior Tree 追加 ＆ 自動セット")
 
 
+# ==========================================
+# 4. エネミータイプ設定＆追加オペレーター
+# ==========================================
+class MYADDON_OT_set_enemy_type(bpy.types.Operator):
+    bl_idname = "myaddon.set_enemy_type"
+    bl_label = "敵タイプ変更"
+    bl_description = "選択した敵のタイプ（Normal / Bound / Chase）およびテクスチャを切り替えます"
+    bl_options = {"REGISTER", "UNDO"}
+
+    target_type: bpy.props.StringProperty(default="Normal")
+
+    def execute(self, context):
+        obj = context.object
+        if not obj:
+            return {"CANCELLED"}
+
+        obj["enemy_type"] = self.target_type
+
+        # テクスチャとプロパティの自動更新
+        if self.target_type == "Chase":
+            obj["texture"] = "resources/taru/taru3.png"
+            if "search_radius" not in obj: obj["search_radius"] = 10.0
+            if "lost_distance" not in obj: obj["lost_distance"] = 14.0
+            if "chase_speed" not in obj: obj["chase_speed"] = 5.5
+            if "patrol_speed" not in obj: obj["patrol_speed"] = 2.0
+            obj["prop_search_radius"] = str(obj["search_radius"])
+            obj["prop_lost_distance"] = str(obj["lost_distance"])
+            obj["prop_chase_speed"] = str(obj["chase_speed"])
+            obj["prop_patrol_speed"] = str(obj["patrol_speed"])
+        elif self.target_type == "Bound":
+            obj["texture"] = "resources/taru/taru2.png"
+        else:
+            obj["texture"] = "resources/taru/taru.png"
+
+        # プレビューメッシュの更新
+        try:
+            from .import_scene import get_or_load_preview_mesh
+            mesh = get_or_load_preview_mesh("ENEMY", enemy_type=self.target_type)
+        except Exception:
+            try:
+                import import_scene
+                mesh = import_scene.get_or_load_preview_mesh("ENEMY", enemy_type=self.target_type)
+            except Exception:
+                mesh = None
+
+        if mesh and obj.type == 'MESH':
+            obj.data = mesh
+
+        self.report({"INFO"}, f"敵タイプを '{self.target_type}' に変更しました")
+        return {"FINISHED"}
+
+
+class MYADDON_OT_add_enemy(bpy.types.Operator):
+    bl_idname = "myaddon.add_enemy"
+    bl_label = "エネミー配置"
+    bl_description = "指定したタイプのエネミー（Normal / Bound / Chase）を3Dカーソル位置に配置します"
+    bl_options = {"REGISTER", "UNDO"}
+
+    enemy_type: bpy.props.EnumProperty(
+        name="Enemy Type",
+        items=[
+            ("Normal", "通常敵 (Normal)", "標準の樽エネミー (taru.png)"),
+            ("Bound", "バウンド敵 (Bound)", "跳ねるエネミー (taru2.png)"),
+            ("Chase", "追跡敵 (Chase)", "プレイヤー接近で追跡・突進するエネミー (taru3.png)"),
+        ],
+        default="Normal"
+    )
+
+    def execute(self, context):
+        cursor_loc = context.scene.cursor.location
+
+        try:
+            from .import_scene import get_or_load_preview_mesh
+            mesh = get_or_load_preview_mesh("ENEMY", enemy_type=self.enemy_type)
+        except Exception:
+            try:
+                import import_scene
+                mesh = import_scene.get_or_load_preview_mesh("ENEMY", enemy_type=self.enemy_type)
+            except Exception:
+                mesh = None
+
+        name_prefix = f"Enemy_{self.enemy_type}"
+        obj = bpy.data.objects.new(name_prefix, mesh) if mesh else bpy.data.objects.new(name_prefix, None)
+        context.collection.objects.link(obj)
+
+        obj.location = cursor_loc.copy()
+        obj["object_type"] = "ENEMY"
+        obj["enemy_type"] = self.enemy_type
+        obj["file_name"] = "taru"
+        obj["model_dir"] = "resources/taru"
+        obj["spawn_mode"] = "TRIGGER_SPAWN"
+        obj["spawn_distance"] = 25.0
+
+        if self.enemy_type == "Chase":
+            obj["texture"] = "resources/taru/taru3.png"
+            obj["search_radius"] = 10.0
+            obj["lost_distance"] = 14.0
+            obj["chase_speed"] = 5.5
+            obj["patrol_speed"] = 2.0
+            obj["prop_search_radius"] = "10.0"
+            obj["prop_lost_distance"] = "14.0"
+            obj["prop_chase_speed"] = "5.5"
+            obj["prop_patrol_speed"] = "2.0"
+        elif self.enemy_type == "Bound":
+            obj["texture"] = "resources/taru/taru2.png"
+        else:
+            obj["texture"] = "resources/taru/taru.png"
+
+        # レールが存在すればマグネット吸着を実行
+        try:
+            from .rail_snap import apply_rail_position_to_object, calculate_rail_progress_for_world_point, find_target_rail_object
+            rail_obj = find_target_rail_object()
+            if rail_obj:
+                t = calculate_rail_progress_for_world_point(rail_obj, cursor_loc)
+                obj["rail_pos"] = [float(t), 0.0]
+                apply_rail_position_to_object(obj, rail_obj)
+        except Exception:
+            pass
+
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+        self.report({"INFO"}, f"エネミー '{obj.name}' ({self.enemy_type}) を配置しました")
+        return {"FINISHED"}
+
+
 class OBJECT_PT_enemy_spawn_settings(bpy.types.Panel):
     bl_idname = "OBJECT_PT_enemy_spawn_settings"
-    bl_label = "Enemy Spawn Settings"
+    bl_label = "Enemy Settings & Spawn"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -99,16 +226,53 @@ class OBJECT_PT_enemy_spawn_settings(bpy.types.Panel):
         layout = self.layout
         obj = context.object
 
+        cur_type = obj.get("enemy_type", "Normal")
+
+        # 1. 敵種別切り替えボックス
+        box_type = layout.box()
+        box_type.label(text=f"敵タイプ: {cur_type}", icon='COMMUNITY')
+        row_t = box_type.row(align=True)
+        op_norm = row_t.operator(MYADDON_OT_set_enemy_type.bl_idname, text="通常 (Normal)", icon='LAYER_ACTIVE' if cur_type == 'Normal' else 'BLANK1')
+        op_norm.target_type = "Normal"
+        op_bnd = row_t.operator(MYADDON_OT_set_enemy_type.bl_idname, text="バウンド (Bound)", icon='LAYER_ACTIVE' if cur_type == 'Bound' else 'BLANK1')
+        op_bnd.target_type = "Bound"
+        op_chs = row_t.operator(MYADDON_OT_set_enemy_type.bl_idname, text="追跡 (Chase)", icon='LAYER_ACTIVE' if cur_type == 'Chase' else 'BLANK1')
+        op_chs.target_type = "Chase"
+
+        # Chase固有パラメータ
+        if cur_type == "Chase":
+            box_chase = layout.box()
+            box_chase.label(text="追跡エネミー設定 (taru3.png):", icon='FORCE_MAGNETIC')
+            col_c = box_chase.column(align=True)
+            if "search_radius" not in obj: obj["search_radius"] = 10.0
+            if "lost_distance" not in obj: obj["lost_distance"] = 14.0
+            if "chase_speed" not in obj: obj["chase_speed"] = 5.5
+            if "patrol_speed" not in obj: obj["patrol_speed"] = 2.0
+
+            col_c.prop(obj, '["search_radius"]', text="索敵半径 (m)")
+            col_c.prop(obj, '["lost_distance"]', text="見失い距離 (m)")
+            col_c.prop(obj, '["chase_speed"]', text="追跡突進速度 (m/s)")
+            col_c.prop(obj, '["patrol_speed"]', text="巡回移動速度 (m/s)")
+
+            # ゲーム出力用の prop_ プロパティへ即時同期
+            obj["prop_search_radius"] = str(obj["search_radius"])
+            obj["prop_lost_distance"] = str(obj["lost_distance"])
+            obj["prop_chase_speed"] = str(obj["chase_speed"])
+            obj["prop_patrol_speed"] = str(obj["patrol_speed"])
+
+            box_chase.label(text=f"🎯 プレイヤーが {obj['search_radius']:.1f}m 以内に入ると追跡開始", icon='INFO')
+
+        # 2. スポーン方式ボックス
         if "spawn_mode" not in obj:
             obj["spawn_mode"] = "TRIGGER_SPAWN"
         if "spawn_distance" not in obj:
             obj["spawn_distance"] = 25.0
 
-        box = layout.box()
-        box.label(text="エネミー出現方式:", icon='OUTLINER_OB_ARMATURE')
-        col = box.column(align=True)
-        col.prop(obj, '["spawn_mode"]', text="出現方式")
-        col.prop(obj, '["spawn_distance"]', text="出現感知距離 (m)")
+        box_spawn = layout.box()
+        box_spawn.label(text="出現方式 (スポーン):", icon='OUTLINER_OB_ARMATURE')
+        col_s = box_spawn.column(align=True)
+        col_s.prop(obj, '["spawn_mode"]', text="出現方式")
+        col_s.prop(obj, '["spawn_distance"]', text="出現感知距離 (m)")
 
         box_info = layout.box()
         mode = obj.get("spawn_mode", "TRIGGER_SPAWN")
@@ -153,6 +317,18 @@ class OBJECT_PT_file_name(bpy.types.Panel):
             self.layout.prop(context.object, '["file_name"]', text=self.bl_label)
         else:
             self.layout.operator(MYADDON_OT_add_filwname.bl_idname, text=MYADDON_OT_add_filwname.bl_label)
+
+        # エネミー手動配置
+        self.layout.separator()
+        box_enemy = self.layout.box()
+        box_enemy.label(text="👾 エネミー手動配置 (Enemy):", icon='COMMUNITY')
+        row_e = box_enemy.row(align=True)
+        op_e1 = row_e.operator(MYADDON_OT_add_enemy.bl_idname, text="通常敵 (Normal)", icon='MESH_CYLINDER')
+        op_e1.enemy_type = 'Normal'
+        op_e2 = row_e.operator(MYADDON_OT_add_enemy.bl_idname, text="バウンド (Bound)", icon='IPO_BOUNCE')
+        op_e2.enemy_type = 'Bound'
+        op_e3 = row_e.operator(MYADDON_OT_add_enemy.bl_idname, text="追跡敵 (Chase - taru3)", icon='TRACKING')
+        op_e3.enemy_type = 'Chase'
 
         # 傾斜・段差ブロックの追加
         self.layout.separator()

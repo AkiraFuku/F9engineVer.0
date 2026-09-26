@@ -18,6 +18,7 @@
 #include "Enemy.h"
 #include "TestEnemy.h"
 #include "BoundEnemy.h"
+#include "ChaseEnemy.h"
 #include "CollisionManager.h"
 #include "Physics.h"
 #include "Projectile.h"
@@ -160,7 +161,12 @@ void GameScene::Initialize() {
         ();
     stageManager_->Load("resources/Stagemap/stage5.json", activeCamera_,
         [this](const LevelObjectData& data) {
-            Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
+            Enemy::EnemyType type = Enemy::EnemyType::Normal;
+            if (data.enemyType == "Bound") {
+                type = Enemy::EnemyType::Bound;
+            } else if (data.enemyType == "Chase") {
+                type = Enemy::EnemyType::Chase;
+            }
 
             float triggerDist = 25.0f;
             auto itDist = data.properties.find("spawn_distance");
@@ -171,7 +177,7 @@ void GameScene::Initialize() {
             auto itMode = data.properties.find("spawn_mode");
             if (itMode != data.properties.end() && itMode->second == "IMMEDIATE") {
                 // 最初から直接配置
-                AddEnemy(data.railPos, type);
+                AddEnemy(data.railPos, type, data.properties);
             } else {
                 // カメラ直前スポーン待機リストへ登録
                 EnemySpawnTrigger trigger;
@@ -179,6 +185,7 @@ void GameScene::Initialize() {
                 trigger.enemyType = type;
                 trigger.triggerDistance = triggerDist;
                 trigger.hasSpawned = false;
+                trigger.properties = data.properties;
                 enemySpawnTriggers_.push_back(trigger);
             }
         }
@@ -331,10 +338,16 @@ void GameScene::Update() {
     // ステージリロードボタン（JSON再読み込み）
     if (ImGui::Button("Reload Test Stage (test_stage.json)")) {
         enemies_.clear();
+        enemySpawnTriggers_.clear();
         stageManager_->Load("resources/Stagemap/test_stage.json", activeCamera_,
             [this](const LevelObjectData& data) {
-                Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
-                AddEnemy(data.railPos, type);
+                Enemy::EnemyType type = Enemy::EnemyType::Normal;
+                if (data.enemyType == "Bound") {
+                    type = Enemy::EnemyType::Bound;
+                } else if (data.enemyType == "Chase") {
+                    type = Enemy::EnemyType::Chase;
+                }
+                AddEnemy(data.railPos, type, data.properties);
             }
         );
         RailPath* sRail = GetStageRaill();
@@ -353,10 +366,16 @@ void GameScene::Update() {
 
     if (ImGui::Button("Reload Stage (stage1.json)")) {
         enemies_.clear();
+        enemySpawnTriggers_.clear();
         stageManager_->Load("resources/Stagemap/stage1.json", activeCamera_,
             [this](const LevelObjectData& data) {
-                Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
-                AddEnemy(data.railPos, type);
+                Enemy::EnemyType type = Enemy::EnemyType::Normal;
+                if (data.enemyType == "Bound") {
+                    type = Enemy::EnemyType::Bound;
+                } else if (data.enemyType == "Chase") {
+                    type = Enemy::EnemyType::Chase;
+                }
+                AddEnemy(data.railPos, type, data.properties);
             }
         );
         RailPath* sRail = GetStageRaill();
@@ -392,6 +411,16 @@ void GameScene::Update() {
     // 通常状態へ戻すボタン
     if (ImGui::Button("Switch to Normal State")) {
         player->ChangeState(PlayerStateFactory::CreateState(PlayerFormType::RideOnTest));
+    }
+
+    // 追跡エネミー（ChaseEnemy）をプレイヤー近傍に即座にスポーンさせるテストボタン
+    if (ImGui::Button("Spawn Chase Enemy near Player (+12m)")) {
+        if (player) {
+            float playerProgress = player->GetRailProgress();
+            // レール進行度を約 0.08（約12m先）進めた位置にスポーン
+            float spawnProgress = (std::min)(playerProgress + 0.08f, 0.95f);
+            AddEnemy({ spawnProgress, player->GetWorldPosition().y }, Enemy::EnemyType::Chase);
+        }
     }
 
     // テスト用：ステートが保持しているアクション情報を表示
@@ -633,40 +662,65 @@ GameScene::GameScene() = default;
 
 GameScene::~GameScene() = default;
 
-void GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType)
+Enemy* GameScene::AddEnemy(Vector2 pos, Enemy::EnemyType enemyType, const std::unordered_map<std::string, std::string>& properties)
 {
     RailPath* rail = GetStageRaill();
-    if (rail)
-    {// 新しい敵を生成（テスト用敵）
-        std::unique_ptr<Enemy> newEnemy = nullptr;
+    if (!rail) return nullptr;
 
-        // 1. タイプに応じて生成する派生クラスを切り替える (ファクトリー処理)
-        switch (enemyType)
-        {
-        case Enemy::EnemyType::Normal:
-            newEnemy = std::make_unique<TestEnemy>();
-            break;
+    std::unique_ptr<Enemy> newEnemy = nullptr;
 
-        case Enemy::EnemyType::Bound:
-            newEnemy = std::make_unique<BoundEnemy>();
-            break;
+    // 1. タイプに応じて生成する派生クラスを切り替える (ファクトリー処理)
+    switch (enemyType)
+    {
+    case Enemy::EnemyType::Normal:
+        newEnemy = std::make_unique<TestEnemy>();
+        break;
 
-        default:
-            newEnemy = std::make_unique<TestEnemy>();
-            break;
+    case Enemy::EnemyType::Bound:
+        newEnemy = std::make_unique<BoundEnemy>();
+        break;
+
+    case Enemy::EnemyType::Chase:
+    {
+        auto chase = std::make_unique<ChaseEnemy>();
+        // カスタムプロパティ（索敵範囲・見失い距離・追跡速度・巡回速度）があれば反映
+        auto itRad = properties.find("search_radius");
+        if (itRad != properties.end()) {
+            try { chase->SetSearchRadius(std::stof(itRad->second)); } catch (...) {}
         }
-
-        newEnemy->Initialize();
-
-        // 共通の設定
-        newEnemy->SetCamera(cameraMap_["Main"].get());
-        newEnemy->SetRail(rail);
-        newEnemy->SetScene(this); // SetRailPosition 内で scene_ のレイキャストを使うため先に設定
-        newEnemy->SetRailPosition(pos);
-
-        // ベクターに追加
-        enemies_.push_back(std::move(newEnemy));
+        auto itLost = properties.find("lost_distance");
+        if (itLost != properties.end()) {
+            try { chase->SetLostDistance(std::stof(itLost->second)); } catch (...) {}
+        }
+        auto itSpeed = properties.find("chase_speed");
+        if (itSpeed != properties.end()) {
+            try { chase->SetChaseSpeed(std::stof(itSpeed->second)); } catch (...) {}
+        }
+        auto itPatrol = properties.find("patrol_speed");
+        if (itPatrol != properties.end()) {
+            try { chase->SetPatrolSpeed(std::stof(itPatrol->second)); } catch (...) {}
+        }
+        newEnemy = std::move(chase);
+        break;
     }
+
+    default:
+        newEnemy = std::make_unique<TestEnemy>();
+        break;
+    }
+
+    newEnemy->Initialize();
+
+    // 共通の設定
+    newEnemy->SetCamera(cameraMap_["Main"].get());
+    newEnemy->SetRail(rail);
+    newEnemy->SetScene(this); // SetRailPosition 内で scene_ のレイキャストを使うため先に設定
+    newEnemy->SetRailPosition(pos);
+
+    Enemy* enemyPtr = newEnemy.get();
+    // ベクターに追加
+    enemies_.push_back(std::move(newEnemy));
+    return enemyPtr;
 }
 
 void GameScene::UpdateEnemySpawners()
@@ -692,7 +746,7 @@ void GameScene::UpdateEnemySpawners()
 
         // プレイヤーがエネミーの感知距離（カメラ直前）に入った瞬間に実体化
         if (distSq <= triggerDistSq && trigger.railPos.x >= playerProgress - 0.5f) {
-            AddEnemy(trigger.railPos, trigger.enemyType);
+            AddEnemy(trigger.railPos, trigger.enemyType, trigger.properties);
             trigger.hasSpawned = true; // 一度出現したら機能停止！
         }
     }
