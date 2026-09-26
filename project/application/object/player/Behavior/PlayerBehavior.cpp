@@ -54,6 +54,9 @@ void BehaviorRoot::HandleInput(Player* player, ICommand* command) {
 // --- BehaviorAttack ---
 void BehaviorAttack::Initialize(Player* player) {
     timer_ = 0.0f;
+    player->SetInvincible(true); // ダッシュ攻撃中は完全無敵
+    player->SetAttackHitboxActive(true); // 攻撃ヒットボックスを有効化
+
     auto state = player->GetState();
     if (state) {
         auto attackAction = state->GetAttackAction_();
@@ -68,11 +71,23 @@ void BehaviorAttack::Update(Player* player) {
     if (state) {
         auto attackAction = state->GetAttackAction_();
         if (attackAction) {
-            float speedMultiplier = (timer_ < 0.15f) ? 2.5f : 0.2f;
+            // 高速突進（攻撃判定時間）を 0.15f から 0.28f に延長
+            float speedMultiplier = (timer_ < 0.28f) ? 2.5f : 0.2f;
             int attackDir = player->GetMoveDirection();
             player->Move(float(attackDir) * 0.8f * speedMultiplier);
+            player->UpdateRailPath();
+
+            // 高速突進が終了したら攻撃判定をオフ
+            if (timer_ >= 0.28f) {
+                player->SetAttackHitboxActive(false);
+            }
         }
     }
+
+    // ダッシュ移動後の位置で床・壁のレイキャストを更新し、接地スナップと重力を適用（地面へのめり込み防止）
+    player->RayCastUpdate();
+    player->UpdateGravity();
+    player->UpdateRailPath();
 
     timer_ += player->GetDeltaTime();
     if (timer_ >= kAttackDuration) {
@@ -85,7 +100,11 @@ void BehaviorAttack::Update(Player* player) {
     }
 }
 
-void BehaviorAttack::Finalize(Player* player) {}
+void BehaviorAttack::Finalize(Player* player) {
+    player->SetInvincible(false);
+    player->SetAttackHitboxActive(false); // 攻撃終了時にヒットボックスを確実にオフ
+    player->TriggerInvincibility(0.35f); // 攻撃終了後0.35秒間の無敵余韻を付与
+}
 void BehaviorAttack::HandleInput(Player* player, ICommand* command) {}
 
 // --- BehaviorJump ---

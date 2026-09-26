@@ -67,6 +67,7 @@ int CollisionManager::GetCategoryPriority(CollisionCategory category)
 {
     switch (category) {
     case CollisionCategory::Collectible:      return 120; // 収集アイテム最優先
+    case CollisionCategory::PlayerAttack:     return 110; // プレイヤー攻撃最優先（エネミーより先に対処し相打ち防止）
     case CollisionCategory::CollisionObject:  return 100; // めり込めないオブジェクト最優先
     case CollisionCategory::Attackable:       return 100; // 攻撃可能オブジェクト最優先
     case CollisionCategory::InvincibleEnemy:  return 100; // 攻撃（無敵）不可エネミー最優先
@@ -80,32 +81,55 @@ int CollisionManager::GetCategoryPriority(CollisionCategory category)
 }
 
 void CollisionManager::CheckCollision(Collider* a, Collider* b) {
-    Vector3 posA = a->GetWorldPosition();
-    Vector3 posB = b->GetWorldPosition();
-
     if ((!a->IsCollide()) || (!b->IsCollide()))
     {
         return; // どちらかが衝突不可なら判定しない
-
     }
 
-    Vector3 diff = Subtract(posA, posB);
-    float distanceSq = (diff.x * diff.x) + (diff.y * diff.y) + (diff.z * diff.z);
+    auto spheresA = a->GetWorldSpheres();
+    auto spheresB = b->GetWorldSpheres();
 
-    float radiusSum = a->GetRadius() + b->GetRadius();
-    float radiusSumSq = radiusSum * radiusSum; // 半径和も2乗で比較
+    bool isHit = false;
+    for (const auto& sa : spheresA) {
+        for (const auto& sb : spheresB) {
+            Vector3 diff = Subtract(sa.center, sb.center);
+            float distanceSq = (diff.x * diff.x) + (diff.y * diff.y) + (diff.z * diff.z);
+            float radiusSum = sa.radius + sb.radius;
+            if (distanceSq <= (radiusSum * radiusSum)) {
+                isHit = true;
+                break;
+            }
+        }
+        if (isHit) break;
+    }
 
-    if (distanceSq <= radiusSumSq) {
+    if (isHit) {
         // お互いに「相手」を渡して通知する
         a->OnCollision(b);
         b->OnCollision(a);
-
     }
 }
+
 
 bool CollisionManager::ShouldCheckCollision(CollisionCategory catA, CollisionCategory catB) const {
     // 同じカテゴリ同士（敵同士、弾同士など）は判定しない
     if (catA == catB) return false;
+
+    // プレイヤー攻撃 × 敵
+    if ((catA == CollisionCategory::PlayerAttack && catB == CollisionCategory::Enemy) ||
+        (catA == CollisionCategory::Enemy && catB == CollisionCategory::PlayerAttack)) {
+        return true;
+    }
+    // プレイヤー攻撃 × 攻撃可能オブジェクト/弱点 (Attackable)
+    if ((catA == CollisionCategory::PlayerAttack && catB == CollisionCategory::Attackable) ||
+        (catA == CollisionCategory::Attackable && catB == CollisionCategory::PlayerAttack)) {
+        return true;
+    }
+    // プレイヤー攻撃 × 攻撃不可エネミー (InvincibleEnemy)
+    if ((catA == CollisionCategory::PlayerAttack && catB == CollisionCategory::InvincibleEnemy) ||
+        (catA == CollisionCategory::InvincibleEnemy && catB == CollisionCategory::PlayerAttack)) {
+        return true;
+    }
 
     // プレイヤー × 敵[cite: 13, 16]
     if ((catA == CollisionCategory::Player && catB == CollisionCategory::Enemy)||(catA == CollisionCategory::Enemy && catB == CollisionCategory::Player)) {
@@ -158,4 +182,4 @@ bool CollisionManager::ShouldCheckCollision(CollisionCategory catA, CollisionCat
     }
 
     return false; // それ以外は無視
-}
+}

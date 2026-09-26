@@ -89,6 +89,13 @@ public:
         return isGrounded_;
     }
 
+    void SetMoveSpeed(float speed) {
+        moveSpeed_ = speed;
+    }
+    float GetMoveSpeed() const {
+        return moveSpeed_;
+    }
+
     //レイキャスト判定処理
     void RayCastUpdate()override;
     void UpdateGravity(); // 重力の更新処理
@@ -177,7 +184,7 @@ protected:
     std::unique_ptr<RailMover> railMover_; // unique_ptrに変更
     Camera* camera_ = nullptr;
 
-    const float kMoveSpeed_ = 6.0f;
+    float moveSpeed_ = 6.0f;
     std::unique_ptr<IEnemyBehavior> behavior_; // 現在の行動状態
     std::unique_ptr<IEnemyState> state_; // 現在の状態
 

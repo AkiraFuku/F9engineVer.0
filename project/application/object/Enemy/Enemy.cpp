@@ -185,7 +185,7 @@ void Enemy::Move(float ratio)
 {
     if (railMover_) {
         // 毎フレームの移動量を計算して進める（進行方向 moveDirection_ を適用）
-        railMover_->Advance(ratio * moveDirection_ * (kMoveSpeed_ * deltaTime_));
+        railMover_->Advance(ratio * moveDirection_ * (moveSpeed_ * deltaTime_));
     }
 }
 void Enemy::ChangeBehavior(std::unique_ptr<IEnemyBehavior> newBehavior) {
@@ -220,7 +220,7 @@ void Enemy::OnCollision(GameObject* other) {
     // ぶつかった相手がPlayerかどうかを確認
     if (!other || isDamaged_ || IsDead()) return;
 
-    if (other->GetCategory() == CollisionCategory::Player) {
+    if (other->GetCategory() == CollisionCategory::Player || other->GetCategory() == CollisionCategory::PlayerAttack) {
         Player* player = dynamic_cast<Player*>(other);
         if (!player) {
             return;
@@ -229,39 +229,44 @@ void Enemy::OnCollision(GameObject* other) {
         const char* playerBehavior = player->GetBehaviorName();
         const char* playerState = player->GetStateName();
 
-        // プレイヤーが通常状態で攻撃中かチェック
-        if (playerState && strcmp(playerState, "Normal") == 0) {
-            //攻撃中ならエネミーの状態遷移
-            if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
+        // プレイヤーの攻撃ヒットボックスに当たった場合、または攻撃中だった場合
+        bool isHitByAttack = (other->GetCategory() == CollisionCategory::PlayerAttack) ||
+                             (playerBehavior && strcmp(playerBehavior, "Attack") == 0);
 
-                //　ゲームシーンを持っているならヒットストップを起こす
-
-                dynamic_cast<GameScene*>(scene_)->TriggerHitStop(0.1f); // 0.1秒のヒットストップ
-                dynamic_cast<GameScene*>(scene_)->GetCamera()->RequestShake(0.09f, 3.0f, [](float t) {
-                    float inv = 1.0f - t;
-                    return inv * inv * inv; // float型を返す
-                    }); // 0.1秒のシェイク
-
-
-                PlayHitEffect();
-                isDamaged_ = true;
-                hitInvincibilityTimer_ = kHitInvincibilityDuration_;
-                if (robot_) {
-                    // 1. ロボットからプレイヤー用 Factory を取得
-                    auto factory = robot_->CreatePlayerFactory();
-
-                    if (factory) {
-                        // 2. Factory を使って State を生成 (Factoryが自動で State に自身をセットしてくれる)
-                        auto rideOnState = factory->CreateState();
-
-                        // 3. プレイヤーの State を切り替える
-                        player->ChangeState(std::move(rideOnState));
-                    }
+        if (isHitByAttack) {
+            // ゲームシーンを持っているならヒットストップとシェイクを起こす
+            if (auto gs = dynamic_cast<GameScene*>(scene_)) {
+                gs->TriggerHitStop(0.1f); // 0.1秒のヒットストップ
+                if (gs->GetCamera()) {
+                    gs->GetCamera()->RequestShake(0.09f, 3.0f, [](float t) {
+                        float inv = 1.0f - t;
+                        return inv * inv * inv;
+                    });
                 }
-
-                ChangeState(std::make_unique<StateEnemyDead>());
-
             }
+
+            PlayHitEffect();
+            isDamaged_ = true;
+            hitInvincibilityTimer_ = kHitInvincibilityDuration_;
+
+            // プレイヤー側に攻撃ヒット（突進停止＆硬直解除）を通知
+            player->OnAttackHit(this);
+
+            if (robot_) {
+                // 1. ロボットからプレイヤー用 Factory を取得
+                auto factory = robot_->CreatePlayerFactory();
+
+                if (factory) {
+                    // 2. Factory を使って State を生成 (Factoryが自動で State に自身をセットしてくれる)
+                    auto rideOnState = factory->CreateState();
+
+                    // 3. プレイヤーの State を切り替える
+                    player->ChangeState(std::move(rideOnState));
+                }
+            }
+
+            ChangeState(std::make_unique<StateEnemyDead>());
+            return;
         }
     }
     //　弾カテゴリの判定

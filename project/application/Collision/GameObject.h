@@ -20,6 +20,7 @@ enum class CollisionCategory {
     Player=0,// プレイヤー
     Enemy=10,// 敵
     PlayerProjectile=20,// プレイヤーの弾
+    PlayerAttack=25,// プレイヤーの攻撃ヒットボックス
     EnemyProjectile=30,// 敵の弾
     Goal=40,// ゴール
     Collectible=50,// 収集アイテム

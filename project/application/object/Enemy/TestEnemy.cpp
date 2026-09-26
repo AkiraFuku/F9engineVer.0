@@ -15,6 +15,9 @@ void TestEnemy::Initialize() {
 
     // 基底クラスのメソッドを使ってロボットを登録するだけ
     SetRobot(std::make_unique<TestRobot>());
+
+    // テストエネミーの移動速度を低速（2.5f）に設定
+    SetMoveSpeed(2.5f);
 }
 
 void TestEnemy::Update() {

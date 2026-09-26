@@ -19,6 +19,7 @@
 #include "TestEnemy.h"
 #include "BoundEnemy.h"
 #include "CollisionManager.h"
+#include "Physics.h"
 #include "Projectile.h"
 #include "PlayerState.h"
 #include <numbers>
@@ -151,17 +152,12 @@ void GameScene::Initialize() {
     ModelManager::GetInstance()->LoadModel("resources/simpleSkin", "simpleSkin.gltf");
     ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
     ModelManager::GetInstance()->LoadModel("resources/human", "walk.gltf");
-    //  ModelManager::GetInstance()->CreateSphereModel("sphere");
-  /*  object3d = std::make_unique<Object3d>();
-    object3d->Initialize();
-    object3d->SetModel("walk.gltf");
 
-    object3d->SetAnimations(animation.get());
-    object3d->SetCamera(activeCamera_);*/
 
     // --- ステージマネージャーによるJSONステージデータの読み込み ---
     enemySpawnTriggers_.clear();
-    stageManager_ = std::make_unique<StageManager>();
+    stageManager_ = std::make_unique<StageManager>
+        ();
     stageManager_->Load("resources/Stagemap/stage5.json", activeCamera_,
         [this](const LevelObjectData& data) {
             Enemy::EnemyType type = (data.enemyType == "Bound") ? Enemy::EnemyType::Bound : Enemy::EnemyType::Normal;
@@ -263,7 +259,8 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
-    // CheckClear();
+    // 統合物理システム(Physics)にステージの三角ポリゴンリストを登録
+    Physics::SetTriangles(&GetTriangle());
 
     CheckPhaseTransition();
 

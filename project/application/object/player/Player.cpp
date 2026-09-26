@@ -14,6 +14,7 @@
 #include "GameScene.h"
 #include "EffectManager.h"
 #include "collider.h"
+#include "Physics.h"
 #include "Input.h"
 
 Player::Player() = default;
@@ -43,6 +44,18 @@ void Player::Initialize()
 
     collider_ = std::make_unique<Collider>();
     collider_->initialize(this, Radius);
+    collider_->SetOffset({ 0.0f, 0.0f, 0.0f });
+
+    // モデル形状（2頭身）に合わせた頭部・胴体の球体判定（Sphere）を登録
+    collider_->AddSphere("Head", { 0.0f, headOffsetY_, 0.0f }, headRadius_);
+    collider_->AddSphere("Body", { 0.0f, bodyOffsetY_, 0.0f }, bodyRadius_);
+
+    // 攻撃用ヒットボックス（Hitbox）の初期化
+    attackCollider_ = std::make_unique<Collider>();
+    attackCollider_->initialize(this, attackRadius_);
+    attackCollider_->SetCategory(CollisionCategory::PlayerAttack);
+    attackCollider_->SetCollide(false); // 初期状態は非アクティブ（攻撃時のみ有効化）
+    attackCollider_->AddSphere("Attack", { 0.0f, attackOffsetY_, attackOffsetForward_ }, attackRadius_);
 
     object_->Update();
 
@@ -72,6 +85,10 @@ void Player::Update()
     HandleInput();
     RayCastUpdate();
     collider_->Update();
+    if (attackCollider_) {
+        attackCollider_->SetCollide(IsAttackHitboxActive());
+        attackCollider_->Update();
+    }
 
     if (baseState_) baseState_->Update(this);
 
@@ -85,6 +102,9 @@ void Player::UpdateTransform()
     UpdateRailPath();
     if (collider_) {
         collider_->Update();
+    }
+    if (attackCollider_) {
+        attackCollider_->Update();
     }
 }
 
@@ -108,6 +128,16 @@ void Player::Draw()
     if (collider_) {
         collider_->Draw();
     }
+
+    // 攻撃ヒットボックスが有効な場合、オレンジ色のワイヤーフレーム球体を描画
+    if (attackCollider_ && IsAttackHitboxActive()) {
+#ifdef USE_LINE
+        auto attackSpheres = attackCollider_->GetWorldSpheres();
+        for (const auto& sphere : attackSpheres) {
+            PrimitiveDrawer::GetInstance()->DrawSphere(sphere, { 1.0f, 0.6f, 0.0f, 1.0f });
+        }
+#endif // USE_LINE
+    }
 }
 
 void Player::SetRailPosition(const Vector2& position)
@@ -126,7 +156,7 @@ void Player::SetRailPosition(const Vector2& position)
         if (scene_) {
             RayCastUpdate();
             if (isRayHit_) {
-                worldY_ = rayHitPoint_.y + kHeightOffset;
+                worldY_ = rayHitPoint_.y + heightOffset_;
                 UpdateRailPath(); // 重力補正後の高度で再度トランスフォーム更新
                 object_->Update();
             }
@@ -153,7 +183,7 @@ void Player::SetRail(RailPath* rail)
     if (scene_) {
         RayCastUpdate();
         if (isRayHit_) {
-            worldY_ = rayHitPoint_.y + kHeightOffset;
+            worldY_ = rayHitPoint_.y + heightOffset_;
             UpdateRailPath(); // 重力補正後の高度で再度トランスフォーム更新
 
         }
@@ -238,6 +268,25 @@ void Player::UpdateRailPath()
 
     object_->SetRotate({ 0.0f, currentAngle_, 0.0f });
     object_->Update();
+
+    // コライダーの回転（Quaternion）およびモデル形状スフィアの同期
+    if (collider_) {
+        collider_->SetRotation(EulerToQuaternion({ 0.0f, currentAngle_, 0.0f }));
+        collider_->SetSphereOffset("Head", { 0.0f, headOffsetY_, 0.0f });
+        collider_->SetSphereRadius("Head", headRadius_);
+        collider_->SetSphereOffset("Body", { 0.0f, bodyOffsetY_, 0.0f });
+        collider_->SetSphereRadius("Body", bodyRadius_);
+        collider_->Update();
+    }
+
+    // 攻撃用ヒットボックスの回転・位置の同期（前方に突き出し配置）
+    if (attackCollider_) {
+        attackCollider_->SetRotation(EulerToQuaternion({ 0.0f, currentAngle_, 0.0f }));
+        attackCollider_->SetSphereOffset("Attack", { 0.0f, attackOffsetY_, attackOffsetForward_ });
+        attackCollider_->SetSphereRadius("Attack", attackRadius_);
+        attackCollider_->SetCollide(IsAttackHitboxActive());
+        attackCollider_->Update();
+    }
 }
 
 void Player::CheckGroundCollision()
@@ -245,14 +294,14 @@ void Player::CheckGroundCollision()
     auto floorRay = GetRayInfo("Floor");
     bool hitFloor = floorRay && floorRay->isColide;
 
-    float playerBottomY = worldY_ - kHeightOffset;
+    float playerBottomY = worldY_ - heightOffset_;
 
     if (hitFloor) {
         // 急すぎる斜面（崖・壁）は地面として扱わない（登れる傾斜角の制限: cos約49度以上で歩行可能）
         bool isWalkableSlope = (floorRay->hitNormal.y >= kMaxSlopeCos);
+        rayHitPalamata_.groundY = floorRay->crossPoint.y;
 
         if (isWalkableSlope) {
-            rayHitPalamata_.groundY = floorRay->crossPoint.y;
             const float kGroundEpsilon = 0.05f;
 
             // 1. 通常の接地（足元が地面付近、またはめり込んでいる場合）
@@ -269,24 +318,34 @@ void Player::CheckGroundCollision()
                 isGrounded_ = false;
             }
         } else {
-            // 急斜面のため接地不可（滑り落ち）
+            // 急斜面のため歩行接地は不可
             isGrounded_ = false;
-            rayHitPalamata_.groundY = -FLT_MAX;
         }
     } else {
         isGrounded_ = false;
         rayHitPalamata_.groundY = -FLT_MAX;
     }
 
+    // ─── 絶対的地面めり込み防止ガード ─────────────────────────
+    // 窪みや急斜面、通常地面に関わらず、足元が地面ポリゴンの上面より下に潜っている場合は、
+    // 重力落下による床抜けを絶対に防ぐため、即座にポリゴン上面の高さへ押し上げる！
+    if (hitFloor && playerBottomY < floorRay->crossPoint.y) {
+        worldY_ = floorRay->crossPoint.y + heightOffset_;
+        if (velocity_.y < 0.0f) {
+            velocity_.y = 0.0f;
+        }
+        isGrounded_ = true;
+        isJumping_ = false;
+    }
     // めり込み補正・下り坂吸着補正（接地時に地面の高さに合わせる）
-    if (isGrounded_ && hitFloor) {
-        worldY_ = rayHitPalamata_.groundY + kHeightOffset;
+    else if (isGrounded_ && hitFloor) {
+        worldY_ = rayHitPalamata_.groundY + heightOffset_;
         velocity_.y = 0.0f;
     }
 
     // 奈落の最低保証（落下・死の防止処理：既存のコードを維持）
-    if (!hitFloor && worldY_ <= rayHitPalamata_.minY + kHeightOffset) {
-        worldY_ = rayHitPalamata_.minY + kHeightOffset;
+    if (!hitFloor && worldY_ <= rayHitPalamata_.minY + heightOffset_) {
+        worldY_ = rayHitPalamata_.minY + heightOffset_;
         velocity_.y = 0.0f;
         isGrounded_ = true;
         isJumping_ = false;
@@ -395,86 +454,77 @@ void Player::UpdateRayCollisions()
         // レイの起点と方向を設定
         if (rayInfo.name == "Floor") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y += rayHitPalamata_.rayOffset;
-            rayInfo.ray.diff = { 0.0f, -10.0f - rayHitPalamata_.rayOffset, 0.0f };
+            rayInfo.ray.origin.y += 1.5f; // 足元から十分高い位置から発射し、急な坂や窪みでも確実に上面を捉える
+            rayInfo.ray.diff = { 0.0f, -15.0f, 0.0f };
         } else if (rayInfo.name == "FrontWall") {
-            // 足元〜すね・腰の高さ（足元から約+0.35m）から水平に発射し、低い階段や段差の壁面も確実に検知
+            // 足元基準で wallRayHeight_（膝〜腰）から水平に発射し、低い階段や段差の壁面も確実に検知
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y -= 0.15f;
+            rayInfo.ray.origin.y = center.y + wallRayHeight_;
             rayInfo.ray.diff = Multiply(wallLength, forwardDir);
         } else if (rayInfo.name == "BackWall") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y -= 0.15f;
+            rayInfo.ray.origin.y = center.y + wallRayHeight_;
             rayInfo.ray.diff = Multiply(-wallLength, forwardDir);
         } else if (rayInfo.name == "LeftWall") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y -= 0.15f;
+            rayInfo.ray.origin.y = center.y + wallRayHeight_;
             rayInfo.ray.diff = Multiply(-wallLength, rightDir);
         } else if (rayInfo.name == "RightWall") {
             rayInfo.ray.origin = center;
-            rayInfo.ray.origin.y -= 0.15f;
+            rayInfo.ray.origin.y = center.y + wallRayHeight_;
             rayInfo.ray.diff = Multiply(wallLength, rightDir);
         }
 
         if (triangles.empty()) continue;
 
-        for (const auto& tri : triangles) {
-            Vector3 tmpHit = {};
-            float dist = 0.0f;
-            RayTriangleCollisionResult result;
+        // Unityスタイルの Physics::RaycastAll を使って候補となる衝突面を距離昇順で取得
+        auto hits = Physics::RaycastAll(rayInfo.ray, triangles, 1000.0f, CollisionLayer::All);
 
-            if (CheckRayTriangle(rayInfo.ray, tri, &dist, &tmpHit, &result)) {
-                // 【修正点2】FrontFace / BackFace 両方で当たり判定を取る
-                if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
+        for (const auto& hit : hits) {
+            // 【すり抜け足場（OneWay）の判定制御】
+            if (hit.triangle.isOneway) {
+                // 1. 壁判定（側面・下面）はすり抜け足場を無視（通過）
+                if (rayInfo.name != "Floor") {
+                    continue;
+                }
 
-                    Vector3 v01 = Subtract(tri.vertices[1], tri.vertices[0]);
-                    Vector3 v12 = Subtract(tri.vertices[2], tri.vertices[1]);
-                    Vector3 normal = Normalize(Cross(v01, v12));
+                // 2. 下層へのすり抜け降下中は床判定を無視
+                if (dropThroughTimer_ > 0.0f) {
+                    continue;
+                }
 
-                    // 裏面衝突時は法線を裏返す
-                    if (result == RayTriangleCollisionResult::BackFace) {
-                        normal = Multiply(-1.0f, normal);
-                    }
+                // 3. 上昇中（ジャンプで飛び上がる最中）は下から通過するため床判定を無視
+                if (velocity_.y > 0.0f) {
+                    continue;
+                }
 
-                    // 【すり抜け足場（OneWay）の判定制御】
-                    if (tri.isOneway) {
-                        // 1. 壁判定（側面・下面）はすり抜け足場を無視（通過）
-                        if (rayInfo.name != "Floor") {
-                            continue;
-                        }
-
-                        // 2. 下層へのすり抜け降下中は床判定を無視
-                        if (dropThroughTimer_ > 0.0f) {
-                            continue;
-                        }
-
-                        // 3. 上昇中（ジャンプで飛び上がる最中）は下から通過するため床判定を無視
-                        if (velocity_.y > 0.0f) {
-                            continue;
-                        }
-
-                        // 4. プレイヤーの足元が足場上面より大幅に下（0.8m以上）にめり込んでいる場合のみ通過（下から頭や体がめり込んだときの引っかかり防止）
-                        float playerBottomY = worldY_ - kHeightOffset;
-                        if (playerBottomY < tmpHit.y - 0.8f) {
-                            continue;
-                        }
-                    }
-
-                    // 床・天井などの傾斜面を弾く（ほぼ垂直な壁のみ壁判定とする）
-                    if (rayInfo.name != "Floor" && std::abs(normal.y) >= 0.7f) {
-                        continue;
-                    }
-
-                    // 一番近い交差を採用
-                    if (dist < rayInfo.distance) {
-                        rayInfo.distance = dist;
-                        rayInfo.crossPoint = tmpHit;
-                        rayInfo.hitNormal = normal;
-                        rayInfo.hitTriangle = tri;
-                        rayInfo.isColide = true;
-                    }
+                // 4. プレイヤーの足元が足場上面より大幅に下（0.8m以上）にめり込んでいる場合のみ通過
+                float playerBottomY = worldY_ - heightOffset_;
+                if (playerBottomY < hit.point.y - 0.8f) {
+                    continue;
                 }
             }
+
+            // 床レイ（Floor）は上向きの面（hit.normal.y > 0.0f）のみを検知（下向き面や裏面を排除）
+            if (rayInfo.name == "Floor") {
+                if (hit.normal.y <= 0.0f) {
+                    continue;
+                }
+            } else {
+                // 壁レイは登れる緩やかな地面（hit.normal.y >= kMaxSlopeCos）のみを除外し、
+                // 垂直な壁および登れない急斜面（垂直に近い斜めの床）はすべて壁として検知する！
+                if (hit.normal.y >= kMaxSlopeCos) {
+                    continue;
+                }
+            }
+
+            // 最も近い有効な交差面を採用
+            rayInfo.distance = hit.distance;
+            rayInfo.crossPoint = hit.point;
+            rayInfo.hitNormal = hit.normal;
+            rayInfo.hitTriangle = hit.triangle;
+            rayInfo.isColide = true;
+            break;
         }
 
         // デバッグ描画: 見た目は黄色の人型モデル幅（modelRadius_）に合わせてスマートに表示
@@ -558,44 +608,38 @@ void Player::UpdateRayCollisions()
 
             Ray stepRay;
             stepRay.origin = Add(center, Multiply(stepCheckDist, stepForward));
-            float playerBottomY = worldY_ - kHeightOffset;
+            float playerBottomY = worldY_ - heightOffset_;
             stepRay.origin.y = playerBottomY + kMaxStepHeight + 0.05f;
             stepRay.diff = { 0.0f, -(kMaxStepHeight + 0.2f), 0.0f };
 
-            float closestStepDist = FLT_MAX;
-            Vector3 bestStepHit = {};
-            bool hitStep = false;
-
-            for (const auto& tri : triangles) {
-                Vector3 tmpHit = {};
-                float dist = 0.0f;
-                RayTriangleCollisionResult result;
-                if (CheckRayTriangle(stepRay, tri, &dist, &tmpHit, &result)) {
-                    if (result == RayTriangleCollisionResult::FrontFace || result == RayTriangleCollisionResult::BackFace) {
-                        Vector3 v01 = Subtract(tri.vertices[1], tri.vertices[0]);
-                        Vector3 v12 = Subtract(tri.vertices[2], tri.vertices[1]);
-                        Vector3 normal = Normalize(Cross(v01, v12));
-                        if (result == RayTriangleCollisionResult::BackFace) {
-                            normal = Multiply(-1.0f, normal);
-                        }
-                        // 登れる緩やかな上面のみ段差として認識
-                        if (normal.y >= kMaxSlopeCos && dist < closestStepDist) {
-                            closestStepDist = dist;
-                            bestStepHit = tmpHit;
-                            hitStep = true;
-                        }
-                    }
-                }
-            }
-
-            if (hitStep) {
-                float stepHeight = bestStepHit.y - playerBottomY;
+            RaycastHit stepHit;
+            // 地面（歩行可能面）レイヤーを対象に Raycast
+            bool hitStep = Physics::Raycast(stepRay, triangles, &stepHit, kMaxStepHeight + 0.2f, CollisionLayer::Ground | CollisionLayer::OneWay);
+            // 登れる緩やかな上面（法線角度制限）のみ段差として認識
+            if (hitStep && stepHit.normal.y >= kMaxSlopeCos) {
+                float stepHeight = stepHit.point.y - playerBottomY;
                 // 足元より高く、かつ許容段差高さ以内であればステップアップ
                 if (stepHeight > 0.02f && stepHeight <= kMaxStepHeight) {
-                    worldY_ = bestStepHit.y + kHeightOffset;
+                    worldY_ = stepHit.point.y + heightOffset_;
                     // ステップアップ時は壁の押し戻しを無効化してスムーズに登らせる
                     maxPushBackProgress = 0.0f;
                 }
+            }
+        }
+    }
+
+    // ─── 垂直に近い斜めの床（登れない急斜面）への前進阻止 ──────────
+    // 足元の床レイが急斜面（kMaxSlopeCos未満）に触れており、その斜面に向かって前進しようとしている場合、
+    // 斜面を壁とみなして前進を押し戻し・停止する
+    auto floorRayCheck = GetRayInfo("Floor");
+    if (floorRayCheck && floorRayCheck->isColide && floorRayCheck->hitNormal.y < kMaxSlopeCos && floorRayCheck->hitNormal.y > 0.0f) {
+        float dotDir = Dot(floorRayCheck->hitNormal, forwardDir) * float(moveDir);
+        if (dotDir < -0.05f) { // プレイヤーが急斜面に正面からぶつかって前進している
+            float penetration = 0.05f;
+            if (moveDir >= 0) {
+                maxPushBackProgress = (std::max)(maxPushBackProgress, penetration);
+            } else {
+                maxPushBackProgress = (std::min)(maxPushBackProgress, -penetration);
             }
         }
     }
@@ -742,8 +786,25 @@ void Player::ImGuiDrawDebugInfo() {
     ImGui::ProgressBar(hitInvincibilityTimer_ / kHitInvincibilityDuration_, ImVec2(0, 0), "Hit Timer");
 
     ImGui::Separator();
-    ImGui::Text("--- Wall Raycast Settings ---");
+    ImGui::Text("--- Ground & Raycast Settings ---");
+    ImGui::SliderFloat("Height Offset", &heightOffset_, -0.5f, 1.0f, "%.3f m");
+    ImGui::SliderFloat("Wall Ray Height", &wallRayHeight_, 0.1f, 1.2f, "%.3f m");
     ImGui::SliderFloat("Model Wall Radius", &modelRadius_, 0.05f, 1.0f, "%.3f m");
+
+    ImGui::Separator();
+    ImGui::Text("--- Sphere Collider Settings ---");
+    ImGui::SliderFloat("Head Offset Y", &headOffsetY_, 0.5f, 2.0f, "%.3f m");
+    ImGui::SliderFloat("Head Radius", &headRadius_, 0.1f, 0.8f, "%.3f m");
+    ImGui::SliderFloat("Body Offset Y", &bodyOffsetY_, 0.1f, 1.5f, "%.3f m");
+    ImGui::SliderFloat("Body Radius", &bodyRadius_, 0.1f, 0.8f, "%.3f m");
+
+    ImGui::Separator();
+    ImGui::Text("--- Attack Hitbox Settings ---");
+    ImGui::Checkbox("Debug: Force Enable Hitbox", &debugForceAttackHitbox_);
+    ImGui::Text("Active: %s", IsAttackHitboxActive() ? "YES (Attacking!)" : "NO");
+    ImGui::SliderFloat("Attack Offset Y", &attackOffsetY_, 0.1f, 1.5f, "%.3f m");
+    ImGui::SliderFloat("Attack Offset Forward", &attackOffsetForward_, 0.1f, 1.5f, "%.3f m");
+    ImGui::SliderFloat("Attack Radius", &attackRadius_, 0.1f, 1.0f, "%.3f m");
 
     ImGui::Separator();
     ImGui::Text("--- Raycast Info ---");
@@ -786,15 +847,7 @@ void Player::OnCollision(GameObject* other) {
         // プレイヤーが攻撃中の場合
         if (playerBehavior && strcmp(playerBehavior, "Attack") == 0) {
             if (enemyState && strcmp(enemyState, "Dead") != 0) {
-                Vector3 now = velocity_;
-                now.x = 0.0f;
-                velocity_ = now;
-
-
-                // アタック成功時のBehavior復帰
-                if (baseState_) {
-                    baseState_->ChangeBehavior(this, std::make_unique<BehaviorRoot>());
-                }
+                OnAttackHit(enemy);
             }
             return;
         }
@@ -846,3 +899,26 @@ const char* Player::GetBehaviorName() const {
 void Player::SetScene(Scene* scene) {
     scene_ = scene;
 }
+
+void Player::SetAttackHitboxActive(bool active) {
+    isAttackHitboxActive_ = active;
+    if (attackCollider_) {
+        attackCollider_->SetCollide(IsAttackHitboxActive());
+    }
+}
+
+bool Player::IsAttackHitboxActive() const {
+    return isAttackHitboxActive_ || debugForceAttackHitbox_;
+}
+
+void Player::OnAttackHit(GameObject* target) {
+    velocity_.x = 0.0f;
+    velocity_.z = 0.0f;
+
+    // アタック成功時のBehavior復帰
+    if (baseState_ && baseState_->GetFactory()) {
+        baseState_->ChangeBehavior(this, baseState_->GetFactory()->CreateBehavior(BehaviorType::Root));
+    }
+    TriggerInvincibility(0.4f); // 撃破後0.4秒間の無敵余韻を付与
+    SetAttackHitboxActive(false); // ヒット後は直ちに攻撃判定を解除
+}

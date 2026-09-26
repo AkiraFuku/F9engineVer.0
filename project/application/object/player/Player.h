@@ -30,13 +30,24 @@ public:
         return object_->GetTranslate();
     }
 
+    Vector3 GetCenterPosition() const {
+        if (object_) {
+            Vector3 pos = object_->GetTranslate();
+            pos.y += 0.80f; // 足元からモデル中心（身長約1.65mの中間）
+            return pos;
+        }
+        return { 0.0f, 0.0f, 0.0f };
+    }
+
     CollisionCategory GetCategory() const override {
+
         return CollisionCategory::Player;
     }
 
     void Initialize();
     void Update();
     void UpdateTransform();
+    void UpdateRailPath();
     void Draw();
 
     void SetCamera(Camera* camera) {
@@ -111,11 +122,24 @@ public:
     void RayCastUpdate() override; // 互換性のため残し、中でUpdateRayCollisionsを呼ぶ
     const CollisionRayInfo* GetRayInfo(const std::string& name) const;
 
+    Collider* GetAttackCollider() {
+        return attackCollider_.get();
+    }
+    void SetAttackHitboxActive(bool active);
+    bool IsAttackHitboxActive() const;
+    void OnAttackHit(GameObject* target);
+
     bool IsHit() const {
         return isDamaged_;
     }
     float GetHitVisualTimer() const {
         return hitInvincibilityTimer_;
+    }
+    void SetInvincible(bool invincible) {
+        isInvincible_ = invincible;
+    }
+    void TriggerInvincibility(float duration) {
+        hitInvincibilityTimer_ = (std::max)(hitInvincibilityTimer_, duration);
     }
 
     InputHandler* GetInputHandler() {
@@ -202,8 +226,6 @@ private:
     std::unique_ptr<Animation> animation;
 
     const float kMoveSpeed_ = 12.0f;
-
-    void UpdateRailPath();
     void HandleInput();
     void HandleDamage();
     void HandleKnockback();
@@ -228,18 +250,35 @@ private:
     bool isCurrentGroundOneway_ = false;     // 現在乗っている床がすり抜け足場かどうか
 
     GameObject::GroundRayPalamata rayHitPalamata_;
-    const float kHeightOffset = 0.5f;
+    float heightOffset_ = 0.0f;               // 地面からモデル原点（足元）までの高さオフセット
+    float wallRayHeight_ = 0.40f;             // 壁検知レイの発射高さ（足元基準、膝〜腰の高さ）
 
     // 傾斜・段差対応パラメータ
     const float kMaxStepHeight = 0.35f;       // 乗り越えられる段差の最大高さ (m)
-    const float kGroundSnapDistance = 0.5f;   // 下り坂で地面に吸着する最大距離 (m)
+    const float kGroundSnapDistance = 1.2f;   // 下り坂・窪みで地面に吸着する最大距離 (m)
     const float kMaxSlopeCos = 0.65f;         // 登れる最大傾斜（cos約49度。これより急な崖は滑り落ち/壁判定）
 
     std::unique_ptr<RailMover> railMover_;
     float playerAngle_ = -10.0f;
 
-    float Radius = 1.0f;
-    float modelRadius_ = 0.28f; // 人型モデルの実際の幅（半径）
+    float Radius = 0.38f;                     // コライダー互換用基本半径
+    float modelRadius_ = 0.28f;               // 人型モデルの実際の幅（半径）
+
+    // モデル形状（2頭身）にフィットさせた球体判定パラメータ
+    float headOffsetY_ = 1.15f;               // 頭部スフィアの足元からの高さオフセット
+    float headRadius_ = 0.38f;                // 頭部スフィアの半径
+    float bodyOffsetY_ = 0.50f;               // 胴体・腰スフィアの足元からの高さオフセット
+    float bodyRadius_ = 0.30f;                // 胴体・腰スフィアの半径
+
+    // 攻撃用ヒットボックス（Hitbox）
+    std::unique_ptr<Collider> attackCollider_;
+    float attackOffsetY_ = 0.70f;             // 攻撃ヒットボックスの高さ（足元基準）
+    float attackOffsetForward_ = 0.65f;       // 攻撃ヒットボックスの前方突き出しオフセット
+    float attackRadius_ = 0.48f;              // 攻撃ヒットボックスの半径
+    bool isAttackHitboxActive_ = false;       // 攻撃ヒットボックスが現在有効か
+    bool debugForceAttackHitbox_ = false;     // デバッグ用：常時有効化トグル
+
+
     bool isDamaged_ = false;
     Gauge hitPoints_ = { 3, 3 };
     float hitInvincibilityTimer_ = 0.0f;

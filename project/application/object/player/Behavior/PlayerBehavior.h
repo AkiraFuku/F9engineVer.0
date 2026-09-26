@@ -31,7 +31,7 @@ public:
 
 private:
     float timer_ = 0.0f;
-    const float kAttackDuration = 0.5f; // 0.5秒間持続
+    const float kAttackDuration = 0.65f; // 0.65秒間持続
 };
 
 class BehaviorJump : public IPlayerBehavior {

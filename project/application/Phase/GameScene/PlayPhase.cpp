@@ -1,6 +1,7 @@
 #include "PlayPhase.h"
 #include "GameScene.h"
 #include "Player.h"
+#include "Collider.h"
 #include "CollisionManager.h"
 #include "GoalObject.h"
 #include "CameraController.h"
@@ -57,7 +58,13 @@ void PlayPhase::Update(Scene* scene)
         if (Collider* col = player->GetCollider()) {
             colliders.push_back(col);
         }
+        if (Collider* atkCol = player->GetAttackCollider()) {
+            if (atkCol->IsCollide()) {
+                colliders.push_back(atkCol);
+            }
+        }
     }
+
 
     for (auto& enemy : enemies) {
         if (enemy && !enemy->IsDead()) {
